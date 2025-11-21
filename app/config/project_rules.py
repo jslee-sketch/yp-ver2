@@ -142,6 +142,7 @@ DEPOSIT_MAX_AGE_MINUTES: int | None = None
 # True  → 결제 직후 해당 예약 이후 생성된 최신 HELD 1건만 환불(메인 흐름에는 영향 없음)
 # False → 결제 이후에도 HELD가 남아 운영자가 수동 정리
 DEPOSIT_AUTO_REFUND_ON_PAY: bool = True
+DEPOSIT_AUTO_REFUND_SWEEP_PRE_ANCHOR = False #기본은 꺼둠(안전)
 
 # 신선도 앵커(디파짓 인정 기준 시점)
 # - "reservation": 예약 created_at 이후 생성된 디파짓만 인정(권장/현재 구현과 일치)
@@ -170,7 +171,9 @@ __all__ = [
     "apply_deadtime_pause",
     "set_test_now_utc", "_set_now_utc", "_clear_now_utc", "is_test_time_overridden",
     "BUYER_POINT_PER_QTY", "BUYER_POINT_ON_PAID", "SELLER_POINT_ON_CONFIRM",
+    # Deposit 정책 묶음
     "DEPOSIT_REQUIRE_ALWAYS", "DEPOSIT_MIN_AMOUNT", "DEPOSIT_MAX_AGE_MINUTES",
-    "DEPOSIT_AUTO_REFUND_ON_PAY", "DEPOSIT_FRESHNESS_ANCHOR",
+    "DEPOSIT_AUTO_REFUND_ON_PAY", "DEPOSIT_AUTO_REFUND_SWEEP_PRE_ANCHOR",
+    "DEPOSIT_FRESHNESS_ANCHOR",
     "DEV_DEBUG_ERRORS",
 ]

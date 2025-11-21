@@ -53,6 +53,7 @@ def _translate_error(exc: Exception) -> None:
         detail = (str(exc) or "deposit_required")
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
     if isinstance(exc, NotFoundError):
+        # FIX: bitwise OR → logical or
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc) or "not found")
 
     logging.exception("offers router error", exc_info=exc)
@@ -63,14 +64,14 @@ def _translate_error(exc: Exception) -> None:
 
 
 # ─────────────────────────────────────────────────────
-# 공용 CRUD import (실제 프로젝트의 crud 함수 사용)
+# 공용 CRUD import
 # ─────────────────────────────────────────────────────
 from ..crud import (
     get_offer_remaining_capacity,
     create_reservation,
     cancel_reservation,
     expire_reservations,
-    pay_reservation,  # v3.5 규칙 가정
+    pay_reservation,
     confirm_offer_if_soldout,
     refund_paid_reservation,
     get_reservation as crud_get_reservation,
@@ -86,30 +87,12 @@ def _status_norm(s: str | None) -> str:
     return "HELD" if u in {"HELD", "HOLD", "ACTIVE"} else u
 
 
-def _as_utc(dt: Optional[datetime]):
-    """naive -> UTC, aware -> UTC, None -> None (문자열이 와도 fromisoformat 시도)"""
+def _as_utc(dt: Optional[datetime]) -> Optional[datetime]:
     if dt is None:
         return None
-    if isinstance(dt, str):
-        try:
-            if dt.endswith("Z"):
-                dt = dt[:-1]
-                x = datetime.fromisoformat(dt)
-                return x.replace(tzinfo=timezone.utc)
-            x = datetime.fromisoformat(dt)
-            return x if x.tzinfo else x.replace(tzinfo=timezone.utc)
-        except Exception:
-            return None
-    if isinstance(dt, datetime):
-        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
-    return None
-
-
-def _ge_with_tolerance(lhs: Optional[datetime], rhs: Optional[datetime], tol_sec: int = 1) -> bool:
-    """lhs >= rhs - tol_sec (둘 중 하나라도 None이면 True로 간주)"""
-    if lhs is None or rhs is None:
-        return True
-    return lhs >= (rhs - timedelta(seconds=int(tol_sec)))
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def _select_freshness_anchor_dt(db: Session, *, resv) -> Optional[datetime]:
@@ -168,8 +151,8 @@ def _get_fresh_active_deposit(
     anchor_dt: Optional[datetime],  # freshness 앵커(UTC)
 ):
     """
-    1) 모델이 있으면: deal/buyer + HELD 계열만 최신순으로 가져오고 파이썬에서 신선도 판정
-    2) 모델이 없으면: crud.get_active_deposit_for 한 건을 가져와서 파이썬에서 신선도 판정
+    1) 모델이 있으면: created_at >= anchor_dt 조건으로 HELD/HOLD/ACTIVE 중 최신(id desc) 1건
+    2) 모델이 없으면: crud.get_active_deposit_for 한 건을 가져와서 created_at 검사
     조건 불충족이면 None
     """
     dep = None
@@ -183,17 +166,14 @@ def _get_fresh_active_deposit(
                   BuyerDeposit.buyer_id == buyer_id,
                   func.upper(BuyerDeposit.status).in_(("HELD", "HOLD", "ACTIVE")),
               )
-              .order_by(BuyerDeposit.id.desc())
         )
-        cand = q.first()
-        if cand:
-            cad = _as_utc(getattr(cand, "created_at", None))
-            # 1초 관용 허용: 저장/직후조회 간 미세 시차 보완
-            if _ge_with_tolerance(cad, _as_utc(anchor_dt), tol_sec=1):
-                return cand
-            return None
+        if anchor_dt is not None:
+            q = q.filter(BuyerDeposit.created_at >= anchor_dt)
+        dep = q.order_by(BuyerDeposit.id.desc()).first()
+        if dep:
+            return dep
 
-    # 2) CRUD 한 건 가져와 파이썬에서 신선도 확인
+    # 2) CRUD 한 건 가져와 created_at으로 신선도 확인
     fn = getattr(crud, "get_active_deposit_for", None)
     if callable(fn):
         try:
@@ -202,17 +182,14 @@ def _get_fresh_active_deposit(
             dep = fn(db, deal_id, buyer_id)  # 위치 인자 시그니처 대응
         if dep and _status_norm(getattr(dep, "status", None)) == "HELD":
             cad = _as_utc(getattr(dep, "created_at", None))
-            if _ge_with_tolerance(cad, _as_utc(anchor_dt), tol_sec=1):
+            if anchor_dt is None or (cad and cad >= anchor_dt):
                 return dep
 
     return None
 
 
 def _is_deposit_within_age(dep, *, now_utc: datetime) -> bool:
-    """
-    DEPOSIT_MAX_AGE_MINUTES 정책을 적용하여, 디파짓의 '나이'가 허용 범위 이내인지 확인.
-    정책이 None이면 True.
-    """
+    """DEPOSIT_MAX_AGE_MINUTES 정책 검사 (None이면 비활성)."""
     max_age = getattr(R, "DEPOSIT_MAX_AGE_MINUTES", None)
     if not max_age and max_age != 0:
         return True  # 비활성화
@@ -220,12 +197,37 @@ def _is_deposit_within_age(dep, *, now_utc: datetime) -> bool:
         max_age = int(max_age)
     except Exception:
         return True  # 잘못된 설정은 안전하게 무시
-
     created = _as_utc(getattr(dep, "created_at", None))
     if not created:
         return False
     age_min = (now_utc - created).total_seconds() / 60.0
     return age_min <= max_age
+
+
+def _refund_one(db: Session, dep_id: int) -> bool:
+    """여러 CRUD 시그니처에 관대한 자동 환불 시도."""
+    for name in ("refund_deposit", "refund_deposit_by_id", "refund_buyer_deposit"):
+        fn = getattr(crud, name, None)
+        if not callable(fn):
+            continue
+        try:
+            fn(db, deposit_id=dep_id)  # 키워드
+            logging.info("[AUTO_REFUND] %s(deposit_id=%s) OK (kw)", name, dep_id)
+            return True
+        except TypeError:
+            try:
+                fn(db, dep_id)  # 위치 인자
+                logging.info("[AUTO_REFUND] %s(%s) OK (pos)", name, dep_id)
+                return True
+            except TypeError:
+                try:
+                    fn(db, deposit_id=dep_id, actor="auto_on_pay")
+                    logging.info("[AUTO_REFUND] %s(deposit_id=%s,actor=auto_on_pay) OK", name, dep_id)
+                    return True
+                except TypeError:
+                    continue
+    logging.warning("[AUTO_REFUND] refund function not found or wrong signature")
+    return False
 
 
 # ─────────────────────────────────────────────────────
@@ -253,7 +255,7 @@ def api_create_reservation(
             qty=body.qty,
             hold_minutes=body.hold_minutes,
         )
-        # 테스트 고정시간이 있으면 응답용 타임스탬프 보정
+        # 테스트 고정시간 보정
         try:
             base = R.now_utc()
             if hasattr(res, "created_at"):
@@ -281,17 +283,16 @@ def api_pay_reservation(
         # 1) 결제 대상 조회
         resv = crud_get_reservation(db, body.reservation_id)
 
-        # 2) 디파짓 요구 여부 결정 (토글 우선, 아니면 티어 기반)
+        # 2) 디파짓 요구 여부 결정
         require = bool(getattr(R, "DEPOSIT_REQUIRE_ALWAYS", False))
         if not require:
             try:
                 trust = buyer_trust_tier_and_deposit_percent(db, body.buyer_id) or {}
                 require = float(trust.get("deposit_percent") or 0.0) > 0.0
             except Exception:
-                # 조회 실패 시 보수적으로 패스(운영 정책에 따라 변경 가능)
                 require = False
 
-        # 3) 디파짓 필요 시: 앵커 결정 + 신선한 HELD 존재 + (옵션) 최소금액/나이 검증
+        # 3) 디파짓 필요 시: 앵커 + 신선한 HELD + (옵션) 최소금액/나이
         if require:
             anchor_dt = _select_freshness_anchor_dt(db, resv=resv)
             fresh = _get_fresh_active_deposit(
@@ -308,13 +309,13 @@ def api_pay_reservation(
             if min_amount and int(getattr(fresh, "amount", 0) or 0) < int(min_amount):
                 raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="deposit_required")
 
-            # 유효기간(나이 제한) — 결제 시각 기준
+            # 유효기간(나이 제한)
             if getattr(R, "DEPOSIT_MAX_AGE_MINUTES", None) is not None:
                 now = R.now_utc() if callable(getattr(R, "now_utc", None)) else datetime.now(timezone.utc)
                 if not _is_deposit_within_age(fresh, now_utc=now):
                     raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="deposit_required")
 
-        # 4) 결제 실행 (포인트 기본값 명시)
+        # 4) 결제 실행
         paid = pay_reservation(
             db,
             reservation_id=body.reservation_id,
@@ -322,54 +323,54 @@ def api_pay_reservation(
             buyer_point_per_qty=getattr(R, "BUYER_POINT_PER_QTY", 20),
         )
 
-        # 🔁 자동 환불 훅: 정책이 켜져 있으면, '해당 예약 이후 생성된' 최신 HELD만 환불
+        # 🔁 자동 환불: (ON일 때) 앵커 이후 생성된 HELD 전부 스윕하고,
+        #    옵션(DEPOSIT_AUTO_REFUND_SWEEP_PRE_ANCHOR=True)이면 앵커 이전 HELD도 스윕
         try:
-            auto_on = bool(getattr(R, "DEPOSIT_AUTO_REFUND_ON_PAY", False))
-            logging.info(
-                "[AUTO_REFUND] enabled=%s reservation_id=%s deal=%s buyer=%s",
-                auto_on, getattr(paid, "id", None), getattr(paid, "deal_id", None), getattr(paid, "buyer_id", None)
-            )
-            if auto_on:
-                fresh = _get_fresh_active_deposit(
-                    db,
-                    deal_id=paid.deal_id,
-                    buyer_id=paid.buyer_id,
-                    anchor_dt=_as_utc(getattr(paid, "created_at", None)),
-                )
-                dep_id = getattr(fresh, "deposit_id", None) or getattr(fresh, "id", None)
-                logging.info("[AUTO_REFUND] fresh_deposit=%s", dep_id)
+            if bool(getattr(R, "DEPOSIT_AUTO_REFUND_ON_PAY", False)):
+                anchor_dt = _select_freshness_anchor_dt(db, resv=resv)
 
-                if fresh and dep_id:
-                    # 후보 함수명/시그니처를 관대하게 시도
-                    fn_names = ("refund_deposit", "refund_deposit_by_id", "refund_buyer_deposit")
-                    called = False
-                    for name in fn_names:
-                        fn = getattr(crud, name, None)
-                        if not callable(fn):
-                            continue
-                        try:
-                            fn(db, deposit_id=dep_id)  # 키워드 우선
-                            called = True
-                            logging.info("[AUTO_REFUND] %s(deposit_id=%s) OK (kw)", name, dep_id)
+                # 4-1) 앵커 이후 생성된 HELD 모두 환불
+                sweep_count = 0
+                while True:
+                    fresh = _get_fresh_active_deposit(
+                        db,
+                        deal_id=paid.deal_id,
+                        buyer_id=paid.buyer_id,
+                        anchor_dt=anchor_dt,
+                    )
+                    if not fresh:
+                        break
+                    dep_id = getattr(fresh, "deposit_id", None) or getattr(fresh, "id", None)
+                    if not dep_id:
+                        break
+                    if not _refund_one(db, dep_id):
+                        break
+                    sweep_count += 1
+                logging.info("[AUTO_REFUND] post-anchor sweep count=%s", sweep_count)
+
+                # 4-2) (옵션) 앵커 이전 잔여 HELD도 스윕
+                if bool(getattr(R, "DEPOSIT_AUTO_REFUND_SWEEP_PRE_ANCHOR", False)):
+                    sweep_old = 0
+                    guard = 0
+                    while guard < 50:  # 안전 가드
+                        anydep = _get_fresh_active_deposit(
+                            db,
+                            deal_id=paid.deal_id,
+                            buyer_id=paid.buyer_id,
+                            anchor_dt=None,  # 전체 중 최신
+                        )
+                        if not anydep:
                             break
-                        except TypeError:
-                            try:
-                                fn(db, dep_id)  # 위치 인자 백업
-                                called = True
-                                logging.info("[AUTO_REFUND] %s(%s) OK (pos)", name, dep_id)
-                                break
-                            except TypeError:
-                                try:
-                                    fn(db, deposit_id=dep_id, actor="auto_on_pay")  # actor 지원 구현
-                                    called = True
-                                    logging.info("[AUTO_REFUND] %s(deposit_id=%s,actor=auto_on_pay) OK", name, dep_id)
-                                    break
-                                except TypeError:
-                                    continue
-                    if not called:
-                        logging.warning("[AUTO_REFUND] refund function not found or wrong signature")
-                else:
-                    logging.info("[AUTO_REFUND] skip: no fresh HELD deposit for this reservation")
+                        cad = _as_utc(getattr(anydep, "created_at", None))
+                        if anchor_dt and cad and cad < anchor_dt:
+                            dep_id = getattr(anydep, "deposit_id", None) or getattr(anydep, "id", None)
+                            if dep_id and _refund_one(db, dep_id):
+                                sweep_old += 1
+                                guard += 1
+                                continue
+                        break
+                    logging.info("[AUTO_REFUND] pre-anchor sweep count=%s", sweep_old)
+
         except Exception as _e:
             # 자동 환불은 보조 기능이므로 실패해도 결제 성공 흐름은 유지
             logging.warning("[AUTO_REFUND] failed: %s", _e)
@@ -533,7 +534,7 @@ def api_offer_set_total_qs(
 
 
 # ─────────────────────────────────────────────────────
-# 집계 라우터(api): 원하면 main.py에서 이 'api' 하나만 include
+# 집계 라우터(api)
 # ─────────────────────────────────────────────────────
 api = APIRouter()
 api.include_router(router_resv)    # /reservations/*
