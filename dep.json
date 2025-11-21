@@ -1,1 +1,8 @@
-{"detail":[{"type":"json_invalid","loc":["body",1],"msg":"JSON decode error","input":{},"ctx":{"error":"Expecting property name enclosed in double quotes"}}]}
+﻿{
+    "DEPOSIT_REQUIRE_ALWAYS":  false,
+    "DEPOSIT_MIN_AMOUNT":  1,
+    "DEPOSIT_MAX_AGE_MINUTES":  null,
+    "DEPOSIT_AUTO_REFUND_ON_PAY":  true,
+    "DEPOSIT_FRESHNESS_ANCHOR":  "reservation",
+    "verified_admin":  "dev (no-auth)"
+}
