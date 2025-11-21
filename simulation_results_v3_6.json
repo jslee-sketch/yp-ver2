@@ -1,0 +1,119 @@
+{
+  "deal_id": 1,
+  "seed": 123,
+  "rounds": [
+    {
+      "round_no": 12,
+      "participants_before": {
+        "3": 20,
+        "11": 2,
+        "6": 13,
+        "1": 11,
+        "5": 3,
+        "4": 5,
+        "2": 1
+      },
+      "participants_after": {
+        "3": 20,
+        "11": 4,
+        "6": 13,
+        "1": 11,
+        "5": 5,
+        "4": 5,
+        "2": 1
+      },
+      "offers": [
+        27,
+        28,
+        29
+      ],
+      "outcome": {
+        "allocations": [
+          {
+            "offer_id": 28,
+            "seller_id": 2,
+            "price": 32.06,
+            "allocated_qty": 5
+          },
+          {
+            "offer_id": 27,
+            "seller_id": 1,
+            "price": 40.35,
+            "allocated_qty": 10
+          },
+          {
+            "offer_id": 29,
+            "seller_id": 5,
+            "price": 79.62,
+            "allocated_qty": 14
+          }
+        ],
+        "clearing_price": 57.88,
+        "buyer_points": [
+          {
+            "buyer_id": 3,
+            "amount": 20
+          },
+          {
+            "buyer_id": 11,
+            "amount": 4
+          },
+          {
+            "buyer_id": 6,
+            "amount": 13
+          },
+          {
+            "buyer_id": 1,
+            "amount": 11
+          },
+          {
+            "buyer_id": 5,
+            "amount": 5
+          },
+          {
+            "buyer_id": 4,
+            "amount": 5
+          },
+          {
+            "buyer_id": 2,
+            "amount": 1
+          }
+        ],
+        "seller_points": [
+          {
+            "seller_id": 2,
+            "amount": 30,
+            "offer_id": 28
+          },
+          {
+            "seller_id": 1,
+            "amount": 30,
+            "offer_id": 27
+          },
+          {
+            "seller_id": 5,
+            "amount": 30,
+            "offer_id": 29
+          }
+        ]
+      },
+      "timestamps": {
+        "opened_at": "2025-11-09T06:38:28.582989+00:00",
+        "closed_at": "2025-11-09T06:38:28.687321+00:00"
+      }
+    }
+  ],
+  "summary": {
+    "final_participants": {
+      "3": 20,
+      "11": 4,
+      "6": 13,
+      "1": 11,
+      "5": 5,
+      "4": 5,
+      "2": 1
+    },
+    "last_clearing_price": 57.88
+  },
+  "generated_at": "2025-11-09T06:38:28.513574+00:00"
+}

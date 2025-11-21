@@ -1,0 +1,59 @@
+"""v3.6 add reservations table and sold/reserved counters to offers"""
+
+from alembic import op
+import sqlalchemy as sa
+
+# 고유 리비전 ID (파일명과 동일하게 두셔도 OK)
+revision = "20251109_add_reservations_and_offer_counters"
+# ✅ 직전 리비전 ID = 현재 HEAD (파일명 앞부분)
+down_revision = "0ccbaaa1c59d"
+branch_labels = None
+depends_on = None
+
+
+def upgrade():
+    # --- offers 테이블에 sold_qty / reserved_qty 추가 ---
+    # SQLite 호환을 위해 batch_alter_table 사용 + server_default 후 제거 패턴
+    with op.batch_alter_table("offers", schema=None) as batch:
+        batch.add_column(sa.Column("sold_qty", sa.Integer(), nullable=False, server_default="0"))
+        batch.add_column(sa.Column("reserved_qty", sa.Integer(), nullable=False, server_default="0"))
+
+    # server_default 제거(INSERT 시 기본값이 아닌 앱 레벨에서 관리)
+    with op.batch_alter_table("offers", schema=None) as batch:
+        batch.alter_column("sold_qty", server_default=None)
+        batch.alter_column("reserved_qty", server_default=None)
+
+    # --- reservations 테이블 생성 ---
+    op.create_table(
+        "reservations",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("deal_id", sa.Integer(), sa.ForeignKey("deals.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("offer_id", sa.Integer(), sa.ForeignKey("offers.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("buyer_id", sa.Integer(), sa.ForeignKey("buyers.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("qty", sa.Integer(), nullable=False),
+        sa.Column("status", sa.String(length=20), nullable=False),  # PENDING/PAID/CANCELLED/EXPIRED
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("expires_at", sa.DateTime(timezone=True)),
+        sa.Column("paid_at", sa.DateTime(timezone=True)),
+        sa.Column("cancelled_at", sa.DateTime(timezone=True)),
+        sa.Column("expired_at", sa.DateTime(timezone=True)),
+        sa.Column("idempotency_key", sa.String(length=64)),
+    )
+    op.create_index("ix_reservations_deal_id", "reservations", ["deal_id"])
+    op.create_index("ix_reservations_offer_id", "reservations", ["offer_id"])
+    op.create_index("ix_reservations_buyer_id", "reservations", ["buyer_id"])
+    op.create_index("ix_reservations_status", "reservations", ["status"])
+
+
+def downgrade():
+    # reservations 테이블 제거
+    op.drop_index("ix_reservations_status", table_name="reservations")
+    op.drop_index("ix_reservations_buyer_id", table_name="reservations")
+    op.drop_index("ix_reservations_offer_id", table_name="reservations")
+    op.drop_index("ix_reservations_deal_id", table_name="reservations")
+    op.drop_table("reservations")
+
+    # offers 컬럼 제거(역순)
+    with op.batch_alter_table("offers", schema=None) as batch:
+        batch.drop_column("reserved_qty")
+        batch.drop_column("sold_qty")

@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "started_at": "2025-11-08T07:06:57.069260",
+    "reset_db": true,
+    "version": "v3.4-fullflow",
+    "db": "sqlite:///./app/ypver2.db"
+  },
+  "buyers": [
+    "buyer0_qahf@test.com",
+    "buyer1_trxc@test.com",
+    "buyer2_kafn@test.com",
+    "buyer3_afqo@test.com",
+    "buyer4_fpva@test.com"
+  ],
+  "sellers": [
+    "seller0_usie@test.com",
+    "seller1_usnz@test.com",
+    "seller2_sbfh@test.com",
+    "seller3_jfgy@test.com"
+  ],
+  "deals": [
+    {
+      "id": 1,
+      "product_name": "Smartphone Bundle A"
+    },
+    {
+      "id": 2,
+      "product_name": "Headphone B"
+    },
+    {
+      "id": 3,
+      "product_name": "Monitor C"
+    }
+  ],
+  "offers": {
+    "deal_a": [
+      1,
+      2
+    ],
+    "deal_b": [
+      2,
+      3
+    ]
+  },
+  "participants": [
+    {
+      "deal_id": 1,
+      "buyer_id": 1,
+      "qty": 3
+    },
+    {
+      "deal_id": 1,
+      "buyer_id": 2,
+      "qty": 1
+    },
+    {
+      "deal_id": 1,
+      "buyer_id": 3,
+      "qty": 2
+    },
+    {
+      "deal_id": 2,
+      "buyer_id": 4,
+      "qty": 2
+    },
+    {
+      "deal_id": 3,
+      "buyer_id": 5,
+      "qty": 1
+    },
+    {
+      "deal_id": 3,
+      "buyer_id": 2,
+      "qty": 10
+    }
+  ],
+  "point_balances": {
+    "buyers": {
+      "1": 0,
+      "2": 60,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    "sellers": {
+      "1": 30,
+      "2": -30,
+      "3": 0,
+      "4": 0
+    }
+  },
+  "deal_summary": [
+    {
+      "deal_id": 1,
+      "product_name": "Smartphone Bundle A",
+      "participants": 3,
+      "offers": 1
+    },
+    {
+      "deal_id": 2,
+      "product_name": "Headphone B",
+      "participants": 1,
+      "offers": 2
+    },
+    {
+      "deal_id": 3,
+      "product_name": "Monitor C",
+      "participants": 2,
+      "offers": 0
+    }
+  ]
+}

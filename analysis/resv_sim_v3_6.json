@@ -1,0 +1,89 @@
+{
+  "deal_id": 1,
+  "seed": 202,
+  "rounds": [
+    {
+      "round_no": 24,
+      "timestamps": {
+        "opened_at": "2025-11-09T15:35:46.138130",
+        "closed_at": "2025-11-09T15:35:46.563844"
+      },
+      "offers": [
+        {
+          "offer_id": 52,
+          "seller_id": 2,
+          "price": 88.2,
+          "total": 11,
+          "sold": 0,
+          "reserved": 3,
+          "confirmed": false
+        },
+        {
+          "offer_id": 53,
+          "seller_id": 6,
+          "price": 21.56,
+          "total": 15,
+          "sold": 0,
+          "reserved": 5,
+          "confirmed": false
+        },
+        {
+          "offer_id": 54,
+          "seller_id": 4,
+          "price": 57.01,
+          "total": 8,
+          "sold": 0,
+          "reserved": 7,
+          "confirmed": false
+        }
+      ],
+      "counters": {
+        "reservations_created": 11,
+        "reservations_paid": 0,
+        "reservations_cancelled": 1,
+        "reservations_expired": 1,
+        "reservations_pending_end": 9,
+        "offers_confirmed": 0,
+        "qty": {
+          "created": 17,
+          "paid": 0,
+          "cancelled": 1,
+          "expired": 1,
+          "pending_end": 15
+        }
+      },
+      "errors": {
+        "overbook": 0,
+        "wrong_owner_pay": 1,
+        "pay_after_expire": 0,
+        "cancel_after_paid": 0,
+        "confirm_not_soldout": 0
+      }
+    }
+  ],
+  "summary": {
+    "totals": {
+      "offers_confirmed": 0,
+      "resv_created": 11,
+      "paid": 0,
+      "cancelled": 1,
+      "expired": 1,
+      "pending_end": 9,
+      "qty": {
+        "created": 17,
+        "paid": 0,
+        "cancelled": 1,
+        "expired": 1,
+        "pending_end": 15
+      }
+    },
+    "errors": {
+      "overbook": 0,
+      "wrong_owner_pay": 1,
+      "pay_after_expire": 0,
+      "cancel_after_paid": 0,
+      "confirm_not_soldout": 0
+    }
+  },
+  "generated_at": "2025-11-09T15:35:46.031551+00:00"
+}

@@ -1,0 +1,34 @@
+{
+    "meta": {
+        "started_at": "2025-11-07T08:46:50.034120",
+        "reset_db": true,
+        "version": "v3.4-auto-verify",
+        "db": "sqlite:///./app/ypver2.db"
+    },
+    "buyers": [
+        "buyer0_yyuo@test.com",
+        "buyer1_jmda@test.com"
+    ],
+    "sellers": [
+        "seller0_uohj@test.com",
+        "seller1_zknr@test.com"
+    ],
+    "deal": {
+        "id": 1,
+        "product_name": "Smartphone Bundle"
+    },
+    "offers": [
+        1,
+        2
+    ],
+    "point_balances": {
+        "buyers": {
+            "1": 0,
+            "2": 0
+        },
+        "sellers": {
+            "1": 0,
+            "2": 0
+        }
+    }
+}

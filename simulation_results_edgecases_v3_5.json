@@ -1,0 +1,160 @@
+{
+  "meta": {
+    "version": "v3.5-edgecases",
+    "started_at": "2025-11-08T12:54:23.090913",
+    "reset_db": true,
+    "db": "sqlite:///./app/ypver2.db",
+    "flags": {
+      "AUTO_VERIFY_SELLER": true,
+      "AUTO_SET_DEADLINES": true,
+      "ENABLE_DEPOSIT_TRACKING": true
+    }
+  },
+  "counts": {
+    "buyers": 12,
+    "sellers": 7,
+    "deals": 6,
+    "participants_total": 24,
+    "offers_total": 9
+  },
+  "focus_deal": {
+    "id": 6,
+    "product_name": "Product 5",
+    "needed_qty": 20
+  },
+  "cases": [
+    {
+      "name": "many_sellers_compete",
+      "ok": true,
+      "detail": "created offers: [1, 2, 3, 4]",
+      "extra": {
+        "needed_total": 20
+      }
+    },
+    {
+      "name": "partial_vs_full_match",
+      "ok": true,
+      "detail": "partial + full offers placed",
+      "extra": {
+        "needed": 20,
+        "partial": 19,
+        "full": 20
+      }
+    },
+    {
+      "name": "over_supply",
+      "ok": true,
+      "detail": "created oversupply offer",
+      "extra": {
+        "needed": 20,
+        "offered": 60
+      }
+    },
+    {
+      "name": "offer_cancel_path",
+      "ok": true,
+      "detail": "offer deleted ok",
+      "extra": {
+        "offer_id": 8
+      }
+    },
+    {
+      "name": "deadline_autoset",
+      "ok": true,
+      "detail": "deadline fields ok",
+      "extra": {
+        "deal_deadline": "2025-11-12 14:54:21.833686",
+        "offer_deadline": "2025-11-12 14:54:22.854133"
+      }
+    },
+    {
+      "name": "points_flow",
+      "ok": true,
+      "detail": "buyer +/-, seller +30 check executed",
+      "extra": null
+    },
+    {
+      "name": "deposit_tracking",
+      "ok": false,
+      "detail": "refund failed",
+      "extra": {
+        "deposit_id": 1
+      }
+    }
+  ],
+  "point_balances": {
+    "buyers": {
+      "1": 140,
+      "2": 60,
+      "3": 40,
+      "4": 60,
+      "5": 40,
+      "6": 20,
+      "7": 20,
+      "8": 0,
+      "9": 0,
+      "10": 20,
+      "11": 40,
+      "12": 20
+    },
+    "sellers": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 30,
+      "7": 0
+    }
+  },
+  "deal_summaries": [
+    {
+      "deal_id": 1,
+      "product_name": "Product 0",
+      "participants": 4,
+      "offers": 0,
+      "deadline_at": "2025-11-12 14:54:21.666501",
+      "status": "open"
+    },
+    {
+      "deal_id": 2,
+      "product_name": "Product 1",
+      "participants": 4,
+      "offers": 1,
+      "deadline_at": "2025-11-12 14:54:21.704094",
+      "status": "open"
+    },
+    {
+      "deal_id": 3,
+      "product_name": "Product 2",
+      "participants": 3,
+      "offers": 0,
+      "deadline_at": "2025-11-12 14:54:21.736336",
+      "status": "open"
+    },
+    {
+      "deal_id": 4,
+      "product_name": "Product 3",
+      "participants": 3,
+      "offers": 0,
+      "deadline_at": "2025-11-12 14:54:21.770168",
+      "status": "open"
+    },
+    {
+      "deal_id": 5,
+      "product_name": "Product 4",
+      "participants": 4,
+      "offers": 0,
+      "deadline_at": "2025-11-12 14:54:21.801962",
+      "status": "open"
+    },
+    {
+      "deal_id": 6,
+      "product_name": "Product 5",
+      "participants": 6,
+      "offers": 8,
+      "deadline_at": "2025-11-12 14:54:21.833686",
+      "status": "open"
+    }
+  ]
+}

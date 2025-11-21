@@ -1,0 +1,361 @@
+{
+  "meta": {
+    "started_at": "2025-11-08T08:29:20.492477+00:00",
+    "reset_db": true,
+    "version": "v3.5-fullflow-time",
+    "db": "sqlite:///./app/ypver2.db"
+  },
+  "buyers": [
+    "buyer0_pefk@test.com",
+    "buyer1_clxj@test.com",
+    "buyer2_olpj@test.com",
+    "buyer3_fkot@test.com",
+    "buyer4_bhat@test.com"
+  ],
+  "sellers": [
+    "seller0_mysm@test.com",
+    "seller1_zrzl@test.com",
+    "seller2_tdst@test.com",
+    "seller3_wdxb@test.com"
+  ],
+  "deals": [
+    {
+      "id": 1,
+      "product_name": "Smartphone Bundle A"
+    },
+    {
+      "id": 2,
+      "product_name": "Headphone B"
+    },
+    {
+      "id": 3,
+      "product_name": "Monitor C"
+    },
+    {
+      "id": 4,
+      "product_name": "Gaming Laptop X"
+    },
+    {
+      "id": 5,
+      "product_name": "Smartphone Bundle A"
+    },
+    {
+      "id": 6,
+      "product_name": "Smartphone Bundle A"
+    },
+    {
+      "id": 7,
+      "product_name": "Headphone B"
+    },
+    {
+      "id": 8,
+      "product_name": "Monitor C"
+    },
+    {
+      "id": 9,
+      "product_name": "Smartphone Bundle A"
+    },
+    {
+      "id": 10,
+      "product_name": "Headphone B"
+    },
+    {
+      "id": 11,
+      "product_name": "Monitor C"
+    }
+  ],
+  "offers": {
+    "deal_a": [
+      9,
+      10
+    ],
+    "deal_b": [
+      11,
+      12
+    ]
+  },
+  "participants": [
+    {
+      "deal_id": 1,
+      "buyer_id": 1,
+      "qty": 3
+    },
+    {
+      "deal_id": 1,
+      "buyer_id": 2,
+      "qty": 1
+    },
+    {
+      "deal_id": 1,
+      "buyer_id": 3,
+      "qty": 2
+    },
+    {
+      "deal_id": 2,
+      "buyer_id": 4,
+      "qty": 2
+    },
+    {
+      "deal_id": 3,
+      "buyer_id": 5,
+      "qty": 1
+    },
+    {
+      "deal_id": 3,
+      "buyer_id": 2,
+      "qty": 10
+    },
+    {
+      "deal_id": 4,
+      "buyer_id": 2,
+      "qty": 3
+    },
+    {
+      "deal_id": 5,
+      "buyer_id": 16,
+      "qty": 3
+    },
+    {
+      "deal_id": 6,
+      "buyer_id": 21,
+      "qty": 3
+    },
+    {
+      "deal_id": 6,
+      "buyer_id": 22,
+      "qty": 1
+    },
+    {
+      "deal_id": 6,
+      "buyer_id": 23,
+      "qty": 2
+    },
+    {
+      "deal_id": 7,
+      "buyer_id": 24,
+      "qty": 2
+    },
+    {
+      "deal_id": 8,
+      "buyer_id": 25,
+      "qty": 1
+    },
+    {
+      "deal_id": 8,
+      "buyer_id": 23,
+      "qty": 5
+    },
+    {
+      "deal_id": 9,
+      "buyer_id": 26,
+      "qty": 3
+    },
+    {
+      "deal_id": 9,
+      "buyer_id": 27,
+      "qty": 1
+    },
+    {
+      "deal_id": 9,
+      "buyer_id": 28,
+      "qty": 2
+    },
+    {
+      "deal_id": 10,
+      "buyer_id": 29,
+      "qty": 2
+    },
+    {
+      "deal_id": 11,
+      "buyer_id": 30,
+      "qty": 1
+    },
+    {
+      "deal_id": 11,
+      "buyer_id": 28,
+      "qty": 5
+    }
+  ],
+  "point_balances": {
+    "buyers": {
+      "26": 0,
+      "27": 40,
+      "28": 20,
+      "29": 0,
+      "30": 0
+    },
+    "sellers": {
+      "18": 30,
+      "19": -30,
+      "20": 0,
+      "21": 0
+    }
+  },
+  "deal_progress": [
+    {
+      "deal_id": 1,
+      "product_name": "Smartphone Bundle A",
+      "participants": 3,
+      "offers": 1,
+      "status": "open",
+      "created_at": "2025-11-08T07:06:56.290021",
+      "deadline_at": "2025-11-12T14:51:56.290134"
+    },
+    {
+      "deal_id": 2,
+      "product_name": "Headphone B",
+      "participants": 1,
+      "offers": 2,
+      "status": "open",
+      "created_at": "2025-11-08T07:06:56.805876",
+      "deadline_at": "2025-11-12T14:51:56.805956"
+    },
+    {
+      "deal_id": 3,
+      "product_name": "Monitor C",
+      "participants": 2,
+      "offers": 0,
+      "status": "open",
+      "created_at": "2025-11-08T07:06:56.889464",
+      "deadline_at": "2025-11-12T14:51:56.889547"
+    },
+    {
+      "deal_id": 4,
+      "product_name": "Gaming Laptop X",
+      "participants": 1,
+      "offers": 1,
+      "status": "open",
+      "created_at": "2025-11-08T07:30:41.990167",
+      "deadline_at": null
+    },
+    {
+      "deal_id": 5,
+      "product_name": "Smartphone Bundle A",
+      "participants": 1,
+      "offers": 0,
+      "status": "open",
+      "created_at": "2025-11-08T08:08:21.491687",
+      "deadline_at": "2025-11-12T14:53:21.491796"
+    },
+    {
+      "deal_id": 6,
+      "product_name": "Smartphone Bundle A",
+      "participants": 3,
+      "offers": 2,
+      "status": "open",
+      "created_at": "2025-11-08T08:09:52.579380",
+      "deadline_at": "2025-11-12T14:54:52.579489"
+    },
+    {
+      "deal_id": 7,
+      "product_name": "Headphone B",
+      "participants": 1,
+      "offers": 2,
+      "status": "open",
+      "created_at": "2025-11-08T08:09:52.908694",
+      "deadline_at": "2025-11-12T14:54:52.908805"
+    },
+    {
+      "deal_id": 8,
+      "product_name": "Monitor C",
+      "participants": 2,
+      "offers": 0,
+      "status": "open",
+      "created_at": "2025-11-08T08:09:53.013277",
+      "deadline_at": "2025-11-12T14:54:53.013434"
+    },
+    {
+      "deal_id": 9,
+      "product_name": "Smartphone Bundle A",
+      "participants": 3,
+      "offers": 2,
+      "status": "open",
+      "created_at": "2025-11-08T08:29:24.009341",
+      "deadline_at": "2025-11-12T14:59:24.009575"
+    },
+    {
+      "deal_id": 10,
+      "product_name": "Headphone B",
+      "participants": 1,
+      "offers": 2,
+      "status": "open",
+      "created_at": "2025-11-08T08:29:24.270899",
+      "deadline_at": "2025-11-12T14:59:24.271052"
+    },
+    {
+      "deal_id": 11,
+      "product_name": "Monitor C",
+      "participants": 2,
+      "offers": 0,
+      "status": "open",
+      "created_at": "2025-11-08T08:29:24.353484",
+      "deadline_at": "2025-11-12T14:59:24.353638"
+    }
+  ],
+  "timeline": [
+    {
+      "time": "2025-11-08T08:29:20.492503+00:00",
+      "event": "Users created: 5 buyers / 4 sellers"
+    },
+    {
+      "time": "2025-11-08T08:29:21.492503+00:00",
+      "event": "Deal created: Smartphone Bundle A (id=9, desired=3)"
+    },
+    {
+      "time": "2025-11-08T08:29:22.492503+00:00",
+      "event": "Buyer#27 joined deal#9 (qty=1)"
+    },
+    {
+      "time": "2025-11-08T08:29:23.492503+00:00",
+      "event": "Buyer#28 joined deal#9 (qty=2)"
+    },
+    {
+      "time": "2025-11-08T08:29:24.492503+00:00",
+      "event": "Offer posted: offer#9 by seller#18 for deal#9"
+    },
+    {
+      "time": "2025-11-08T08:29:25.492503+00:00",
+      "event": "Offer posted: offer#10 by seller#19 for deal#9"
+    },
+    {
+      "time": "2025-11-08T08:29:26.492503+00:00",
+      "event": "Buyer#27 checkout → +20 points"
+    },
+    {
+      "time": "2025-11-08T08:29:27.492503+00:00",
+      "event": "Buyer#28 cancel → -20 points"
+    },
+    {
+      "time": "2025-11-08T08:29:28.492503+00:00",
+      "event": "Offer confirmed: offer#9 → seller#18 +30 points"
+    },
+    {
+      "time": "2025-11-08T08:29:29.492503+00:00",
+      "event": "Offer cancelled by seller#19 → -30 points"
+    },
+    {
+      "time": "2025-11-08T08:29:30.492503+00:00",
+      "event": "Deal created: Headphone B (id=10, desired=2)"
+    },
+    {
+      "time": "2025-11-08T08:29:31.492503+00:00",
+      "event": "Offers posted for deal#10: #11, #12"
+    },
+    {
+      "time": "2025-11-08T08:29:32.492503+00:00",
+      "event": "Deal created: Monitor C (id=11, desired=1)"
+    },
+    {
+      "time": "2025-11-08T08:29:33.492503+00:00",
+      "event": "Buyer#28 joined deal#11 (qty=5)"
+    },
+    {
+      "time": "2025-11-08T08:29:34.492503+00:00",
+      "event": "Buyer#27 joined deal#11 (qty=10)"
+    },
+    {
+      "time": "2025-11-08T08:29:35.492503+00:00",
+      "event": "Participant removed: id=22, buyer_id=27 (deal#11)"
+    }
+  ]
+}
