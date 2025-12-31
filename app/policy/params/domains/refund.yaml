@@ -1,0 +1,24 @@
+refund:
+  enabled: true
+
+  # cooling 상태별 허용 여부/계산 방식 같은 “정책 스위치”
+  stages:
+    BEFORE_SHIPPING:
+      allow_partial: true
+      allow_full: true
+    SHIPPED_NOT_DELIVERED:
+      allow_partial: true
+      allow_full: true
+    WITHIN_COOLING:
+      allow_partial: true
+      allow_full: true
+    AFTER_COOLING:
+      allow_partial: true
+      allow_full: true
+
+  rounding:
+    mode: HALF_UP     # FLOOR | CEIL | HALF_UP
+    unit: 1           # KRW rounding unit
+
+  # 분할 환불에서 "합계 보정" 전략 (나머지 1원 처리)
+  remainder_strategy: GIVE_TO_FIRST  # GIVE_TO_FIRST | GIVE_TO_LAST

@@ -1,0 +1,8 @@
+overrides:
+  time_rules:
+    payment_timeout_sec: 600
+
+  refund:
+    rounding:
+      mode: HALF_UP
+      unit: 1

@@ -1,0 +1,95 @@
+money:
+  # 기본(폴백) 플랫폼 수수료율 (rate, 0~1)
+  # seller.levels가 있으면 그게 1순위, 이 값은 fallback
+  platform_fee_rate: 0.035
+
+  # (레거시/폴백) actuator_commission_rate (rate, 0~1)
+  actuator_commission_rate: 0.02
+
+  # PG 수수료율 (rate, 0~1)
+  pg_fee_rate: 0.033
+
+  # (선택) 부가세율 (rate, 0~1)
+  vat_rate: 0.10
+
+
+time:
+  payment_timeout_minutes: 5
+  cooling_days: 7
+  seller_decision_timeout_hours: 48
+  deal_deadline_hours: 72
+  offer_deadline_hours: 48
+
+
+points_tier:
+  points_earn_rate: 0.01
+  points_expire_days: 365
+  tier_window_days: 90
+  tier_min_gmv: 300000
+
+
+# ✅ v3.5+ : Seller 정책 SSOT
+seller:
+  default_level: "Lv.6"
+
+  # 판매자 레벨별 플랫폼 수수료율 (rate, 0~1)
+  # 예: 3.5% = 0.035
+  levels:
+    - level: "Lv.6"
+      min_trades: 0
+      max_trades: 20
+      min_rating: null
+      platform_fee_rate: 0.035
+
+    - level: "Lv.5"
+      min_trades: 21
+      max_trades: 40
+      min_rating: 4.0
+      platform_fee_rate: 0.030
+
+    - level: "Lv.4"
+      min_trades: 41
+      max_trades: 60
+      min_rating: 4.0
+      platform_fee_rate: 0.028
+
+    - level: "Lv.3"
+      min_trades: 61
+      max_trades: 100
+      min_rating: 4.0
+      platform_fee_rate: 0.027
+
+    - level: "Lv.2"
+      min_trades: 101
+      max_trades: null
+      min_rating: 4.0
+      platform_fee_rate: 0.025
+
+    - level: "Lv.1"
+      min_trades: 101
+      max_trades: null
+      min_rating: 4.5
+      platform_fee_rate: 0.020
+
+  # ✅ Actuator fee는 "rate(0~1)"로 저장하자 (강추)
+  # 0.5% = 0.005
+  actuator_fee_by_level_rate:
+    "Lv.6": 0.005
+    "Lv.5": 0.002
+    "Lv.4": 0.001
+    "Lv.3": 0.0
+    "Lv.2": 0.0
+    "Lv.1": 0.0
+
+
+# ✅ v3.5+ : 이벤트 기반 포인트 (SSOT)
+points:
+  buyer_paid_reward_pt: 20
+  buyer_refund_penalty_pt: -20
+  recommender_reward_pt: 20
+
+
+# ✅ v3.5+ : 리뷰 (SSOT)
+review:
+  review_window_days: 30
+  verified_purchase_only: true

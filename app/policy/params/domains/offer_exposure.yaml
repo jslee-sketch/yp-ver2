@@ -1,0 +1,16 @@
+offer_exposure:
+  consider_top_n: 20
+
+  groups:
+    PREMIUM:
+      enabled: true
+    MATCHING:
+      enabled: true
+    BELOW:
+      enabled: true
+
+  # 그룹별 고정 개수 X (가변)
+  sorting:
+    PREMIUM: ["score_desc", "price_asc"]
+    MATCHING: ["match_score_desc", "price_asc"]
+    BELOW: ["price_asc"]
