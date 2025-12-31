@@ -93,3 +93,8 @@ points:
 review:
   review_window_days: 30
   verified_purchase_only: true
+
+# ✅ 정산 지급 지연일 SSOT (필요하면 운영에서 조정)
+settlement:
+  payout_delay_days_default: 30
+  payout_delay_days_dispute_path: 30
