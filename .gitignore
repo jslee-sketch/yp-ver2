@@ -1,0 +1,14 @@
+# ===== Python =====
+__pycache__/
+*.pyc
+
+# ===== Local DB / artifacts (do not commit) =====
+app/ypver2.db
+app/*.db
+app/*_backup*.db
+app/*_before_*.db
+
+# ===== Local env / venv =====
+venv/
+.env
+.env.*
