@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Any, Dict, List, Literal
+from typing import Optional, Any, Dict, List, Literal, Union
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Pydantic v2 우선, v1 자동 호환
 try:
@@ -17,6 +18,13 @@ except Exception:  # Pydantic v1
 # 모델 Enum 재사용 (중복 정의/중복 import 방지)
 from app.models import DealRoundStatus, ReservationStatus
 
+from .core.refund_policy import (
+    FaultParty,
+    RefundTrigger,
+    SettlementState,
+    CoolingState,
+)
+
 
 # ─────────────────────────────────────────────────────────
 # 공통 ORM 베이스: v2는 from_attributes, v1은 orm_mode
@@ -27,7 +35,7 @@ if _V2:
 else:
     class ORMModel(BaseModel):  # type: ignore[misc]
         class Config:
-            orm_mode = True
+            from_attributes = True  # orm_mode 대신
 
 
 # ---------------- Buyer ----------------
@@ -43,7 +51,11 @@ class BuyerBase(BaseModel):
 
 class BuyerCreate(BuyerBase):
     password: str
-
+    # (NEW)
+    recommender_buyer_id: Optional[int] = Field(
+        None,
+        description="추천인 Buyer의 ID (선택)"
+    )    
 
 class BuyerOut(ORMModel):
     id: int
@@ -71,21 +83,165 @@ class SellerBase(BaseModel):
     established_date: Optional[datetime] = None
 
 
-class SellerCreate(SellerBase):
+
+class SellerCreate(BaseModel):
+    email: EmailStr
+    business_name: str
+    business_number: str
+    phone: str
+    company_phone: Optional[str] = None
+    address: str
+    zip_code: str
+    established_date: datetime
     password: str
 
+    # (NEW) 나를 데려온 Actuator ID (선택)
+    actuator_id: Optional[int] = Field(
+        None,
+        description="(선택) 이 판매자를 모집한 Actuator ID",
+    )
 
-class SellerOut(ORMModel):
+
+class SellerOut(BaseModel):
     id: int
     created_at: datetime
     email: EmailStr
     business_name: str
     business_number: str
-    phone: Optional[str] = None
+    phone: str
     company_phone: Optional[str] = None
-    address: Optional[str] = None
-    zip_code: Optional[str] = None
-    established_date: Optional[datetime] = None
+    address: str
+    zip_code: str
+    established_date: datetime
+    verified_at: Optional[datetime] = None
+    level: int
+    points: int
+
+    # (NEW)
+    actuator_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True  # orm_mode 대신
+    
+
+#-------------Actuator -----------------------
+class ActuatorBase(BaseModel):
+    name: str = Field(..., description="표시명 / 상호명")
+    email: Optional[str] = Field(None, description="연락 이메일")
+    phone: Optional[str] = Field(None, description="연락처(휴대폰 등)")
+    settlement_info: Optional[str] = Field(None, description="정산 계좌/메모 등")
+
+
+class ActuatorCreate(ActuatorBase):
+    """Actuator 생성용 입력 스키마"""
+    pass
+
+
+class ActuatorOut(ActuatorBase):
+    """응답용 스키마"""
+    id: int
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True  # orm_mode 대신
+
+# ---------- Actuator Commission ----------
+
+class ActuatorCommissionOut(BaseModel):
+    id: int
+    actuator_id: int
+    seller_id: int
+    reservation_id: int
+    gmv: int
+    rate_percent: float
+    amount: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True  # orm_mode 대체
+
+
+class ActuatorSellerWithOfferStatsOut(BaseModel):
+    # /actuators/{actuator_id}/sellers 응답에서 쓰는 구조
+    seller_id: int
+    name: Optional[str] = None
+    total_offers: int
+    confirmed_offers: int
+    active_offers: int
+    total_sold_qty: int
+
+
+class ActuatorRewardOut(BaseModel):
+    id: int
+    actuator_id: int
+    seller_id: int
+    reservation_id: int
+    gmv: int
+    fee_percent: float
+    reward_amount: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ActuatorCommissionSummaryOut(BaseModel):
+    # 커미션 요약
+    pending_count: int
+    pending_amount: int
+    ready_count: int
+    ready_amount: int
+    paid_count: int
+    paid_amount: int
+    upcoming_ready_dates: Optional[List[datetime]] = None  # 선택
+
+
+class ActuatorSellerSummaryOut(BaseModel):
+    seller_id: int
+    name: Optional[str] = None
+    total_offers: int
+    confirmed_offers: int
+    active_offers: int
+    total_sold_qty: int
+    
+
+# ------------------------------------------------
+# Actuator 커미션 관련 스키마
+# ------------------------------------------------
+
+class ActuatorCommissionOut(BaseModel):
+    id: int
+    actuator_id: int
+    seller_id: Optional[int] = None
+    reservation_id: Optional[int] = None
+    amount: int              # 커미션 금액
+    status: str              # "PENDING" / "PAID" 등
+    ready_at: Optional[datetime] = None  # 정산 가능일
+    paid_at: Optional[datetime] = None   # 실제 지급일
+    created_at: datetime
+
+    class Config:
+        orm_mode = True   # 기존 스키마들 스타일 맞추기
+
+
+class ActuatorCommissionSummaryOut(BaseModel):
+    # 개수 집계
+    total_pending: int
+    total_ready: int
+    total_paid: int
+
+    # 금액 집계
+    pending_amount: int
+    ready_amount: int
+    paid_amount: int
+
+    # 개별 커미션 리스트
+    commissions: List[ActuatorCommissionOut] = []
+
+    class Config:
+        orm_mode = True
+
 
 
 # ---------- DealRound ----------
@@ -201,21 +357,32 @@ class DealParticipantOut(ORMModel):
     created_at: datetime
 
 
-# ─────────────────────────────────────────────────────────
-# Deposit (보증금) Schemas
-# ─────────────────────────────────────────────────────────
-class DepositHoldIn(BaseModel):
-    amount: int = Field(..., ge=1, description="디파짓 홀드 금액(원)")
+# Deal 채팅----------------------------------------------------
+class DealChatMessageCreate(BaseModel):
+    buyer_id: int = Field(..., description="메시지 작성 buyer id")
+    text: str = Field(..., max_length=1000, description="채팅 메시지 (최대 1000자)")
 
 
-class DepositOut(ORMModel):
-    deposit_id: int
+class DealChatMessageOut(BaseModel):
+    id: int
     deal_id: int
     buyer_id: int
-    amount: int
-    status: Literal["HELD", "REFUNDED"]
+
+    # 실명 대신 닉네임만 노출
+    sender_nickname: str
+
+    text: str
+    blocked: bool
+    blocked_reason: Optional[str] = None
     created_at: datetime
-    refunded_at: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+
+
+class DealChatMessageListOut(BaseModel):
+    items: List[DealChatMessageOut]
+    total: int
 
 
 # -------- Offer --------
@@ -231,7 +398,59 @@ class OfferCreate(OfferBase):
     deal_id: int
     seller_id: int
     delivery_days: Optional[int] = None
-    # comment/free_text 중 하나만 와도 허용 (crud에서 comment 우선 사용)
+    cooling_days: int | None = None
+
+
+    # ✅ 레거시 호환:
+    # - 입력 "NONE" 허용 (기존 클라/스크립트 안 깨짐)
+    # - 내부적으로 "INCLUDED"로 표준화해서 내려보냄
+    shipping_mode: Optional[str] = Field(
+        "NONE",
+        description="INCLUDED|PER_RESERVATION|PER_QTY (레거시: NONE도 허용, INCLUDED로 처리)",
+    )
+
+    shipping_fee_per_reservation: Optional[int] = Field(
+        0,
+        ge=0,
+        description="PER_RESERVATION일 때 주문당 배송비(0 이상)",
+    )
+    shipping_fee_per_qty: Optional[int] = Field(
+        0,
+        ge=0,
+        description="PER_QTY일 때 수량당 배송비(0 이상)",
+    )
+
+    @field_validator("shipping_mode", mode="before")
+    @classmethod
+    def _normalize_shipping_mode(cls, v):
+        s = (v or "INCLUDED")
+        if not isinstance(s, str):
+            return "INCLUDED"
+        s = s.strip().upper()
+        if s in ("NONE", "UNKNOWN", "NULL", ""):
+            return "INCLUDED"
+        return s
+
+    @model_validator(mode="after")
+    def _normalize_shipping_fees(self):
+        # None 방어
+        self.shipping_fee_per_reservation = int(self.shipping_fee_per_reservation or 0)
+        self.shipping_fee_per_qty = int(self.shipping_fee_per_qty or 0)
+
+        mode = (self.shipping_mode or "INCLUDED").upper()
+
+        # ✅ 모드별 정합성 정리
+        if mode == "INCLUDED":
+            self.shipping_fee_per_reservation = 0
+            self.shipping_fee_per_qty = 0
+        elif mode == "PER_RESERVATION":
+            self.shipping_fee_per_qty = 0
+        elif mode == "PER_QTY":
+            self.shipping_fee_per_reservation = 0
+        else:
+            raise ValueError(f"Invalid shipping_mode: {mode}")
+
+        return self
 
 
 class OfferOut(ORMModel):
@@ -248,11 +467,162 @@ class OfferOut(ORMModel):
     comment: Optional[str] = None
     created_at: datetime
     deadline_at: Optional[datetime] = None
+    shipping_mode: Optional[str] = None
+    shipping_fee_per_reservation: Optional[int] = None
+    shipping_fee_per_qty: Optional[int] = None
 
 
 # 하위호환: 기존 코드가 OfferOutExtended를 참조한다면 그대로 동작
 class OfferOutExtended(OfferOut):
     pass
+
+
+#-------------------------------------------------------------
+#Offer(오퍼) 취소,반품, 환불 정책 관련
+#--------------------------------------------------------------
+class OfferPolicyBase(BaseModel):
+    """
+    오퍼 취소 정책 기본 스키마
+
+    - cancel_rule:
+      * A1: 발송 전까지 취소 가능
+      * A2: 발송 후 취소 불가
+      * A3: 발송 후 X일 이내 취소 가능
+      * A4: Seller 커스텀 규칙 (텍스트 참고)
+    - cancel_within_days:
+      * A3일 때만 1~30 사이 정수
+    - extra_text:
+      * 최대 1000자, 셀러가 텍스트로 정책 설명
+    """
+
+    cancel_rule: Literal["A1", "A2", "A3", "A4"] = Field(
+        ...,
+        description="A1/A2/A3/A4 취소 규칙 코드",
+    )
+    cancel_within_days: Optional[int] = Field(
+        None,
+        ge=1,
+        le=30,
+        description="A3(발송 후 X일 이내 취소 가능)일 때만 1~30 입력",
+    )
+    extra_text: Optional[str] = Field(
+        None,
+        max_length=1000,
+        description="추가 취소/환불 정책 텍스트 (최대 1000자)",
+    )
+
+
+class OfferPolicyCreate(OfferPolicyBase):
+    """오퍼 정책 생성/수정용 입력 스키마"""
+    pass
+
+
+class OfferPolicyOut(OfferPolicyBase):
+    """오퍼 정책 조회 응답 스키마"""
+
+    id: int
+    offer_id: int
+    created_at: datetime
+
+    class Config:
+        orm_mode = True  # v2에서도 from_attributes로 자동 매핑
+
+
+class ReservationRefundIn(BaseModel):
+    reservation_id: int
+    quantity_refund: Optional[int] = None
+    reason: str = Field(..., max_length=200)
+    requested_by: Literal["BUYER", "SELLER", "ADMIN"] = "BUYER"
+
+    # ✅ 추가: 배송비 환불 override (관리자만 허용할 예정)
+    shipping_refund_override: Optional[int] = Field(
+        None,
+        ge=0,
+        description="배송비 환불액 override(원). ADMIN만 사용 권장",
+    )
+    shipping_refund_override_reason: Optional[str] = Field(
+        None,
+        max_length=200,
+        description="override 사유(감사/분쟁 대비)",
+    )
+
+    
+class RefundPreviewContextOut(BaseModel):
+    reservation_id: int
+    deal_id: Optional[int]
+    offer_id: Optional[int]
+    buyer_id: int
+    seller_id: Optional[int]
+
+    amount_total: int
+    amount_goods: int
+    amount_shipping: int
+
+    quantity_total: int
+    quantity_refund: int
+
+    fault_party: FaultParty
+    trigger: RefundTrigger
+    settlement_state: SettlementState
+    cooling_state: CoolingState
+
+    pg_fee_rate: float
+    platform_fee_rate: float
+
+    class Config:
+        orm_mode = True
+
+
+class RefundPreviewDecisionOut(BaseModel):
+    use_pg_refund: bool
+
+    pg_fee_burden: Optional[FaultParty]
+    platform_fee_burden: Optional[FaultParty]
+
+    revoke_buyer_points: bool
+    revoke_seller_points: bool
+
+    need_settlement_recovery: bool
+    settlement_recovery_from_seller: bool
+
+    note: str = ""
+
+    class Config:
+        orm_mode = True
+
+
+class RefundPreviewOut(BaseModel):
+    reservation_id: int
+    context: RefundPreviewContextOut
+    decision: RefundPreviewDecisionOut
+
+    class Config:
+        orm_mode = True
+
+
+class ReservationRefundPreviewIn(BaseModel):
+    reservation_id: int
+    actor: str = "buyer_cancel"
+    # ★ 부분환불 수량 (옵션, 없으면 전체환불로 간주)
+    quantity_refund: Optional[int] = None
+
+
+
+class ReservationPolicySnapshot(BaseModel):
+    """
+    Reservation 에 저장된 policy_snapshot_json 을 파싱해서 내려줄 스키마.
+    구조는 OfferPolicyOut 과 거의 동일하지만, created_at 은 문자열일 수도 있음.
+    """
+
+    cancel_rule: Literal["A1", "A2", "A3", "A4"]
+    cancel_within_days: Optional[int] = None
+    extra_text: Optional[str] = None
+
+    # 정보 보존용 필드들 (optional)
+    id: Optional[int] = None
+    offer_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+
 
 
 # ==== Reservation Schemas ====
@@ -261,7 +631,8 @@ class ReservationCreate(BaseModel):
     offer_id: int
     buyer_id: int
     qty: int = Field(..., gt=0)
-    hold_minutes: int = Field(5, ge=1, le=60)
+    hold_minutes: Optional[int] = None  #이거 꼭 있어야 위 스크립트 payload가 먹힘.
+
 
 
 class ReservationOut(ORMModel):
@@ -270,12 +641,39 @@ class ReservationOut(ORMModel):
     offer_id: int
     buyer_id: int
     qty: int
+
     status: ReservationStatus
     created_at: datetime
     expires_at: Optional[datetime] = None
     paid_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
     expired_at: Optional[datetime] = None
+
+    # 🔹 배송 정보
+    shipping_carrier: Optional[str] = None
+    tracking_number: Optional[str] = None
+    shipped_at: Optional[datetime] = None
+    delivered_at: Optional[datetime] = None
+    arrival_confirmed_at: Optional[datetime] = None
+
+    # --- 정책 동의 정보 ---
+    policy_id: Optional[int] = None
+    policy_agreed_at: Optional[datetime] = None
+    policy: Optional[ReservationPolicySnapshot] = None
+
+    # 🆕 상태 단계 정보 (status + 배송정보를 합친 논리 상태)
+    phase: Optional[str] = None
+
+    # 💰 금액 정보
+    amount_total: int = 0
+
+    # 🧾 부분환불 누적 정보
+    refunded_qty: Optional[int] = None
+    refunded_amount_total: Optional[int] = None
+
+    class Config:
+        orm_mode = True
+
 
 
 class ReservationPayIn(BaseModel):
@@ -285,9 +683,72 @@ class ReservationPayIn(BaseModel):
 
 
 class ReservationCancelIn(BaseModel):
+    """
+    PENDING 예약 취소용 입력 모델
+    - buyer_id: 바이어 본인이 취소할 때는 필수로 전달
+                운영자 취소면 None 허용
+    """
     reservation_id: int
-    # 바이어가 자기 예약만 취소하게 할 경우 전달; 운영자 취소면 None 허용
     buyer_id: Optional[int] = None
+    # reason 같은 건 있어도 되고 없어도 됨. 지금 로직에는 안 쓰니 생략 가능.
+
+
+class ReservationShipIn(BaseModel):
+    """
+    셀러가 '발송 완료' 처리할 때 쓰는 입력 스키마.
+    - seller_id 는 선택 (셀러 소유 여부 검증에만 사용)
+    """
+    seller_id: Optional[int] = None
+
+
+class ReservationArrivalConfirmIn(BaseModel):
+    """
+    바이어가 '도착 확인' 버튼 누를 때 쓰는 입력 스키마.
+    - buyer_id 는 필수: 본인 예약인지 검증용
+    """
+    buyer_id: int
+
+
+
+
+# ---------------------------------------------------------
+# Reservation Settlement Output
+# ---------------------------------------------------------
+class ReservationSettlementOut(BaseModel):
+    id: int
+    reservation_id: int
+    seller_id: int
+
+    paid_amount: int
+    pg_fee_amount: int
+    platform_fee: int
+    platform_fee_vat: int
+    seller_payout: int
+
+    calc_at: datetime
+    status: str
+
+    class Config:
+        orm_mode = True
+
+
+class ReservationRefundSummary(BaseModel):
+    reservation_id: int
+    status: ReservationStatus
+
+    qty: int                    # 전체 예약 수량
+    refunded_qty: int           # 지금까지 환불된 수량
+    refundable_qty: int         # 아직 환불 가능한 수량 (max 0..qty)
+
+    unit_price: int             # 단가 (offer.price)
+    amount_goods_total: int     # 상품 총액 (qty * unit_price)
+    amount_shipping_total: int  # 전체 기준 배송비
+    amount_paid_total: int      # 상품 + 배송 총액
+
+    refunded_amount_total: int  # 지금까지 환불된 금액
+    refundable_amount_max: int  # 남은 수량 전체를 환불한다고 가정했을 때 최대 환불 금액
+
+
 
 
 # ---- Seller Offer Control DTOs ----
@@ -364,3 +825,94 @@ class ReservationOutLite(ORMModel):
     paid_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
     expired_at: Optional[datetime] = None
+# ● 배송 정보
+    shipping_carrier: Optional[str] = None
+    tracking_number: Optional[str] = None
+    shipped_at: Optional[datetime] = None
+    delivered_at: Optional[datetime] = None
+    arrival_confirmed_at: Optional[datetime] = None
+    # ● 신규: 정책 등의 정보 …
+    policy_id: Optional[int] = None
+    policy_agreed_at: Optional[datetime] = None
+    policy: Optional[ReservationPolicySnapshot] = None
+    # 🆕 여기 추가: 상태 + 배송정보를 합친 “단계” 정보
+    phase: Optional[str] = None
+
+
+    class Config:
+        orm_mode = True    
+    
+
+# ---------------------------------------------------------
+# 💰 ReservationSettlement Out 스키마
+# ---------------------------------------------------------
+class ReservationSettlementOut(BaseModel):
+    id: int
+    reservation_id: int
+
+    deal_id: int
+    offer_id: int
+    seller_id: int
+    buyer_id: int
+
+    buyer_paid_amount: int
+    pg_fee_amount: int
+    platform_commission_amount: int
+    seller_payout_amount: int
+
+    status: str
+    currency: str
+
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True  # SQLAlchemy ORM → Pydantic 변환 허용
+
+
+# -------------------------------------------------------
+# 🔔 Notifications (내부 알림센터용 스키마)
+# -------------------------------------------------------
+
+class NotificationOut(BaseModel):
+    id: int
+    user_id: int
+    event_type: str
+    title: str
+    message: str
+
+    deal_id: Optional[int] = None
+    offer_id: Optional[int] = None
+    reservation_id: Optional[int] = None
+    seller_id: Optional[int] = None
+    buyer_id: Optional[int] = None
+    actuator_id: Optional[int] = None
+
+    meta: Optional[dict] = None
+
+    is_read: bool
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class NotificationCreateIn(BaseModel):
+    """
+    서버 내부에서 create_notification(...) 헬퍼로 직접 쓰는 용도라,
+    외부 API로 노출할 계획이 없으면 안 써도 됨.
+    """
+    user_id: int
+    type: str
+    title: str
+    message: str
+    link_url: Optional[str] = None  
+    event_time: Optional[datetime] = None
+    meta: Optional[Dict[str, Any]] = None
+
+
+class NotificationReadIn(BaseModel):
+    user_id: int = Field(..., ge=1, description="알림을 읽는 사용자 ID")
+
+
+class NotificationReadAllIn(BaseModel):
+    user_id: int = Field(..., ge=1, description="알림을 모두 읽음 처리할 사용자 ID")  

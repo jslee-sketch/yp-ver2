@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, time, timezone, timedelta
 from typing import Optional
+import os
 
 # time_policy 유틸을 래핑
 from app.config.time_policy import (
@@ -15,6 +16,17 @@ from app.config.time_policy import (
     is_now_overridden as _is_now_overridden,
 )
 import app.config.time_policy as TP
+
+
+
+# [ADD] 중앙 규칙(표준값) 읽기 전용 참조 — 런타임 변화 없음
+try:
+    from app.config import rules_v3_5 as RV
+except Exception:
+    RV = None  # rules_v3_5 미배포 환경 대비
+
+
+
 
 UTC = timezone.utc
 KST = getattr(TP, "KST", timezone(timedelta(hours=9)))
@@ -122,33 +134,45 @@ def apply_deadtime_pause(*args, **kwargs) -> datetime:
 
     raise TypeError("apply_deadtime_pause() requires 'minutes' or 'hours/duration_hours' or 'seconds'")
 
+
+# --------------------------------------------------
+# Seller Level & Fee Policy  (§7-3)
+# --------------------------------------------------
+# 위에서부터 우선순위 적용 (Lv.1 먼저 검사, 안 맞으면 아래로 내려감)
+SELLER_LEVEL_RULES = [
+    # level, 최소 거래수, 최소 평점, 수수료(%)
+    {"level": "Lv.1", "min_orders": 100, "min_rating": 4.5, "fee_percent": 2.0},
+    {"level": "Lv.2", "min_orders": 100, "min_rating": 4.0, "fee_percent": 2.5},
+    {"level": "Lv.3", "min_orders": 61,  "min_rating": 4.0, "fee_percent": 2.7},
+    {"level": "Lv.4", "min_orders": 41,  "min_rating": 4.0, "fee_percent": 2.8},
+    {"level": "Lv.5", "min_orders": 21,  "min_rating": 4.0, "fee_percent": 3.0},
+    {"level": "Lv.6", "min_orders": 0,   "min_rating": 0.0, "fee_percent": 3.5},
+]
+
+
 # ---------------- 기타 정책 상수(기존 호환) ----------------
 BUYER_POINT_PER_QTY = 20
 BUYER_POINT_ON_PAID = BUYER_POINT_PER_QTY   # 레거시 호환
 SELLER_POINT_ON_CONFIRM = 30
 
-# ── Deposit 정책 ──────────────────────────────────────────────────────────
-# 디파짓을 무조건 요구할지 여부(티어/신뢰도 무시)
+# ---------------------------------------------------------
+# 🔒 Deposit 기능 OFF 설정
+#   - 이제부터 시스템에서 디포짓은 사용하지 않는다.
+#   - 관련 환경변수도 무시하고, 하드코딩된 기본값만 사용.
+# ---------------------------------------------------------
+
+# 항상 디포짓 요구 X
 DEPOSIT_REQUIRE_ALWAYS: bool = False
 
-# 최소 디파짓 금액(원). 1 이상이면 그 미만 금액은 불인정
-DEPOSIT_MIN_AMOUNT: int = 1
+# 최소 디포짓 금액 (원) – 0 이면 사실상 사용 안 함
+DEPOSIT_MIN_AMOUNT: int = 0
 
-# 디파짓 유효기간(분). None이면 비활성화.
-# 숫자면 결제 시 검증 시점 기준으로 '최대 경과 시간(분)' 이내만 인정.
+# 디포짓 최대 유효 기간 (분) – None 이면 기간 제한 없음 (지금은 어차피 안 씀)
 DEPOSIT_MAX_AGE_MINUTES: int | None = None
 
-# 결제 성공 시 자동 환불 여부
-# True  → 결제 직후 해당 예약 이후 생성된 최신 HELD 1건만 환불(메인 흐름에는 영향 없음)
-# False → 결제 이후에도 HELD가 남아 운영자가 수동 정리
-DEPOSIT_AUTO_REFUND_ON_PAY: bool = True
-DEPOSIT_AUTO_REFUND_SWEEP_PRE_ANCHOR = False #기본은 꺼둠(안전)
-
-# 신선도 앵커(디파짓 인정 기준 시점)
-# - "reservation": 예약 created_at 이후 생성된 디파짓만 인정(권장/현재 구현과 일치)
-# - "offer"      : 오퍼 생성 이후
-# - "deal"       : 딜 생성 이후
-DEPOSIT_FRESHNESS_ANCHOR: str = "reservation"   # "reservation" | "offer" | "deal"
+# 결제 시 자동 환불 기능도 전부 OFF
+DEPOSIT_AUTO_REFUND_ON_PAY: bool = False
+DEPOSIT_AUTO_REFUND_SWEEP_PRE_ANCHOR: bool = False
 
 # ── 디버그 ────────────────────────────────────────────────────────────────
 DEV_DEBUG_ERRORS: bool = False
@@ -165,6 +189,34 @@ except NameError:
     def set_test_now_utc(dt):
         _set_now_utc(dt)
 
+# ── Environment overrides (optional, non-invasive) ─────────────────────────
+def _env_bool(key: str, default: bool) -> bool:
+    v = os.getenv(key)
+    if v is None or v.strip() == "":
+        return default
+    s = v.strip().lower()
+    if s in ("1", "true", "on", "yes"):  return True
+    if s in ("0", "false", "off", "no"): return False
+    return default
+
+def _env_int_or_none(key: str, default: int | None) -> int | None:
+    v = os.getenv(key)
+    if v is None or v.strip() == "":
+        return default
+    s = v.strip().lower()
+    if s in ("null", "none"):  return None
+    try:
+        return int(s)
+    except ValueError:
+        return default
+
+def _env_str(key: str, default: str) -> str:
+    v = os.getenv(key)
+    if v is None or v.strip() == "":
+        return default
+    return v.strip()
+
+
 __all__ = [
     "now_utc", "now_kst",
     "is_deadtime",
@@ -172,8 +224,49 @@ __all__ = [
     "set_test_now_utc", "_set_now_utc", "_clear_now_utc", "is_test_time_overridden",
     "BUYER_POINT_PER_QTY", "BUYER_POINT_ON_PAID", "SELLER_POINT_ON_CONFIRM",
     # Deposit 정책 묶음
-    "DEPOSIT_REQUIRE_ALWAYS", "DEPOSIT_MIN_AMOUNT", "DEPOSIT_MAX_AGE_MINUTES",
-    "DEPOSIT_AUTO_REFUND_ON_PAY", "DEPOSIT_AUTO_REFUND_SWEEP_PRE_ANCHOR",
-    "DEPOSIT_FRESHNESS_ANCHOR",
+    #"DEPOSIT_REQUIRE_ALWAYS", "DEPOSIT_MIN_AMOUNT", "DEPOSIT_MAX_AGE_MINUTES",
+    #"DEPOSIT_AUTO_REFUND_ON_PAY", "DEPOSIT_AUTO_REFUND_SWEEP_PRE_ANCHOR",
+    #"DEPOSIT_FRESHNESS_ANCHOR",
     "DEV_DEBUG_ERRORS",
 ]
+
+# =========================================================
+# 💳 PG + 정산/환불 타임라인 규칙 (v0.1)
+# =========================================================
+
+#: Buyer가 "배송 후" 취소/환불을 요청할 수 있는 기간 (일 단위)
+#: 예) 5 → shipped_at 이후 5일 이내에만 환불 요청 허용
+BUYER_REFUND_WINDOW_DAYS: int = 5
+
+#: 배송 완료(shipped_at) 이후, 이 거래를 "정산 대상"으로 올릴 수 있는 기준 시점
+#: 예) 14 → shipped_at + 14일 이후에 seller 정산 ready 상태로 전환
+SETTLEMENT_READY_DAYS_AFTER_SHIPPED: int = 14
+
+#: 정산 ready 된 이후, 역핑이 셀러에게 정산을 실제로 송금해야 하는 기한 (일 단위)
+#: 예) 7 → ready_at + 7일 이내에 seller 정산 지급
+SETTLEMENT_PAY_WINDOW_DAYS: int = 7
+
+#: 셀러 정산이 완료된 이후, 역핑이 Actuator에게 커미션을 송금해야 하는 기한 (일 단위)
+#: 예) 7 → seller 정산 paid_at + 7일 이내에 actuator 커미션 지급
+ACTUATOR_PAYOUT_WINDOW_DAYS: int = 7
+
+
+
+# 역핑수수료 관련
+PLATFORM_FEE_RATE = 0.035   # 3.5%
+VAT_RATE = 0.10             # 10% (부가세)
+
+
+# [ADD] 중앙 규칙 모듈 핸들(선택 공개)
+__all__.extend(["RV"])
+
+
+
+# 플랫폼(역핑) 수수료율 (공급가 기준)
+PLATFORM_FEE_RATE = 0.035  # 3.5%
+
+# PG 수수료율 (부가세 포함 전체 수수료율로 가정)
+PG_FEE_RATE = 0.033  # 3.3%
+
+# 부가가치세율 (플랫폼 수수료에만 적용)
+VAT_RATE = 0.10  # 10%

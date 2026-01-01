@@ -1,10 +1,13 @@
 # app/routers/reservations.py
 from __future__ import annotations
 
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, status, Body, Path, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
+from datetime import datetime, timezone
+from app import models
 
 from ..database import get_db
 from .. import schemas
@@ -20,12 +23,14 @@ from ..crud import (
     refund_paid_reservation,
     get_reservation as crud_get_reservation,   # ✅ 결제 전 deal_id 얻기용
     search_reservations as crud_search_reservations,
+    preview_refund_policy_for_reservation,
+    get_refund_summary_for_reservation,
 )
+from app.schemas import ReservationRefundSummary
 
-# ✅ 결제 직전 디파짓 가드 유틸
-from app.routers.deposits import ensure_deposit_before_pay
 
-router = APIRouter(prefix="/reservations", tags=["reservations v3.5"])
+router = APIRouter(prefix="/v3_6", tags=["reservations"])
+
 
 def _translate_error(exc: Exception) -> None:
     if isinstance(exc, NotFoundError):
@@ -55,8 +60,10 @@ def reservations_create(
             offer_id=body.offer_id,
             buyer_id=body.buyer_id,
             qty=body.qty,
-            hold_minutes=body.hold_minutes,
+            hold_minutes=body.hold_minutes,  # ✅ 추가
         )
+
+
     except Exception as e:
         _translate_error(e)
 
@@ -77,10 +84,7 @@ def reservations_pay_v35(
         # 1) 결제 대상 예약 조회(가드에 필요한 deal_id 확보)
         resv = crud_get_reservation(db, body.reservation_id)
 
-        # 2) ✅ 결제 직전 디파짓 가드 (필요 시 409)
-        ensure_deposit_before_pay(db, deal_id=resv.deal_id, buyer_id=body.buyer_id)
-
-        # 3) 결제 수행 (CRUD는 v3.5 규칙으로 +20 고정 적립)
+        # 2) 결제 수행 (CRUD는 v3.5 규칙으로 +20 고정 적립)
         return pay_reservation_v35(
             db,
             reservation_id=body.reservation_id,
@@ -92,6 +96,8 @@ def reservations_pay_v35(
 # -------------------------------------------------------------------
 # 예약 취소 — 홀드 해제 (PENDING → CANCELLED)
 # -------------------------------------------------------------------
+# app/routers/reservations.py 중 일부
+
 @router.post(
     "/cancel",
     response_model=schemas.ReservationOut,
@@ -103,6 +109,15 @@ def reservations_cancel(
     db: Session = Depends(get_db),
 ):
     try:
+        # 1) 먼저 예약을 조회해서 소유자 확인
+        resv = crud_get_reservation(db, body.reservation_id)
+
+        # 2) buyer_id가 넘어온 경우, 소유자 가드
+        if body.buyer_id is not None and resv.buyer_id != body.buyer_id:
+            # pay 쪽이랑 맞춰서 409 + "not owned by buyer"
+            raise ConflictError("not owned by buyer")
+
+        # 3) 소유자가 맞으면 실제 취소 처리 (PENDING → CANCELLED)
         return cancel_reservation(
             db,
             reservation_id=body.reservation_id,
@@ -136,6 +151,68 @@ def reservations_refund_paid(
         )
     except Exception as e:
         _translate_error(e)
+
+
+
+class RefundPreviewOut(BaseModel):
+    reservation_id: int
+    actor: str
+    context: Dict[str, Any]
+    decision: Dict[str, Any]
+
+
+@router.get(
+    "/refund/preview/{reservation_id}",
+    response_model=RefundPreviewOut,
+    summary="환불 정책 프리뷰 — 상태 변경 없이 정책/돈 흐름만 보기",
+    operation_id="Reservations__RefundPreview",
+)
+def reservations_refund_preview(
+    reservation_id: int = Path(..., ge=1),
+    actor: str = Query("buyer_cancel", description="buyer_cancel / seller_cancel / admin_force ..."),
+    db: Session = Depends(get_db),
+):
+    """
+    - 예약/오퍼 상태는 **절대 변경하지 않고**
+    - RefundContext + RefundDecision 을 계산해서 그대로 반환
+
+    나중에:
+    - Admin 툴에서 '이 건 환불하면 누가 무엇을 부담하는지' 미리보기
+    - 멀티 시뮬레이션 스크립트에서 정책 검증 등에 활용 가능
+    """
+    try:
+        data = preview_refund_policy_for_reservation(
+            db,
+            reservation_id=reservation_id,
+            actor=actor,
+        )
+        return data
+    except Exception as e:
+        _translate_error(e)
+
+
+@router.get(
+    "/refund/summary/{reservation_id}",
+    response_model=ReservationRefundSummary,
+    summary="예약의 환불 가능 수량/금액 요약 조회",
+    operation_id="Reservations_RefundSummary",
+)
+def api_get_refund_summary(
+    reservation_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    예약의 부분환불 가능 상태 요약 조회 API.
+
+    - status != PAID 이거나 환불 가능 수량이 0 이면:
+      refundable_qty = 0, refundable_amount_max = 0 로 응답
+    - PAID 이고 남은 수량이 있으면:
+      남은 수량 전체를 부분환불한다고 가정했을 때의
+      최대 환불 가능 금액을 계산해서 반환
+    """
+    return get_refund_summary_for_reservation(db, reservation_id=reservation_id)
+
+
 
 # -------------------------------------------------------------------
 # 만료 스윕 — EXPIRED로 전환 & reserved 복구
@@ -283,3 +360,62 @@ def reservations_search_page(
         raise
     except Exception as e:
         _translate_error(e)
+
+
+        
+class DisputeOpenIn(BaseModel):
+    admin_id: Optional[int] = None
+    reason: Optional[str] = None
+
+@router.post(
+    "/{reservation_id}/dispute/open",
+    summary="(관리자) 분쟁 오픈",
+)
+def open_dispute(
+    reservation_id: int,
+    body: DisputeOpenIn = Body(...),
+    db: Session = Depends(get_db),
+):
+    resv = db.get(models.Reservation, reservation_id)
+    if not resv:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    if not getattr(resv, "is_disputed", False):
+        now = datetime.now(timezone.utc)
+        resv.is_disputed = True
+        resv.dispute_opened_at = now
+
+        db.add(resv)
+        db.commit()
+        db.refresh(resv)
+
+    return {"reservation_id": reservation_id, "is_disputed": True}
+
+
+class DisputeCloseIn(BaseModel):
+    admin_id: Optional[int] = None
+    note: Optional[str] = None
+
+@router.post(
+    "/{reservation_id}/dispute/close",
+    summary="(관리자) 분쟁 종료",
+)
+def close_dispute(
+    reservation_id: int,
+    body: DisputeCloseIn = Body(...),
+    db: Session = Depends(get_db),
+):
+    resv = db.get(models.Reservation, reservation_id)
+    if not resv:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    if getattr(resv, "is_disputed", False):
+        now = datetime.now(timezone.utc)
+        resv.is_disputed = False
+        resv.dispute_closed_at = now
+
+        db.add(resv)
+        db.commit()
+        db.refresh(resv)
+
+    return {"reservation_id": reservation_id, "is_disputed": False, "dispute_closed_at": getattr(resv, "dispute_closed_at", None)}
