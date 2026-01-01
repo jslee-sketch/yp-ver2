@@ -12,3 +12,14 @@ app/*_before_*.db
 venv/
 .env
 .env.*
+
+# local debug dumps
+_*.txt
+_*.zip
+out/
+*.db-journal
+*.sqlite-journal
+*.log
+pingpong_result.json
+t.req.json
+t.resp.json
