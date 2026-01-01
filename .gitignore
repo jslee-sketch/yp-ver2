@@ -23,3 +23,10 @@ out/
 pingpong_result.json
 t.req.json
 t.resp.json
+
+
+# local scratch / debug artifacts
+_smoke_*.py
+_t_*.py
+reviews.json
+openapi_summaries.txt
