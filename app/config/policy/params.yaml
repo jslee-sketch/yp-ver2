@@ -1,0 +1,45 @@
+key, description, owner, risk_level, guardrails, default, min/max(or enum), rollout
+
+version: 1
+updated_at: "2025-12-22T15:30:00+09:00"
+params:
+  payment.reservation_pay_deadline_minutes:
+    type: int
+    value: 10
+    min: 1
+    max: 60
+    description: "예약 후 결제 완료 제한 시간(분)"
+    owner: "product"
+    risk_level: "high"
+    guardrails:
+      - "must_be_positive"
+      - "max_60"
+    rollout:
+      mode: "immediate"
+
+  offer.exposure.top_n:
+    type: int
+    value: 20
+    min: 1
+    max: 50
+    description: "오퍼 노출 정책 적용 대상 상위 N"
+    owner: "ranking"
+    risk_level: "medium"
+    guardrails:
+      - "max_50"
+    rollout:
+      mode: "immediate"
+
+  settlement.actuator_commission_rate:
+    type: float
+    value: 0.07
+    min: 0.0
+    max: 0.3
+    description: "액추에이터 커미션 비율"
+    owner: "finance"
+    risk_level: "high"
+    guardrails:
+      - "0_to_0_3"
+    rollout:
+      mode: "canary"
+      canary_percent: 10
