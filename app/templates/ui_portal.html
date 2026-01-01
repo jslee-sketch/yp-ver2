@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>YeokPing — Insights Portal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="data:,">
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">📊 YeokPing Insights / Onboarding / Reviews Portal</h1>
+
+    <!-- Controls -->
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+      <!-- Buyer -->
+      <div class="p-4 bg-white rounded-2xl shadow">
+        <h2 class="text-lg font-semibold mb-3">Buyer Overview</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="col-span-1 text-sm">Buyer ID
+            <input id="buyer_id" type="number" value="10" class="mt-1 w-full border rounded px-2 py-1">
+          </label>
+          <label class="col-span-1 text-sm">Points Override (옵션)
+            <input id="points_override" type="number" placeholder="예: 250" class="mt-1 w-full border rounded px-2 py-1">
+          </label>
+          <label class="col-span-2 text-sm">Preview Total Price (Deposit 미리보기)
+            <input id="preview_total_price" type="number" placeholder="예: 30000" class="mt-1 w-full border rounded px-2 py-1">
+          </label>
+          <label class="col-span-2 text-sm">활동 기간
+            <select id="buyer_activity_window" class="mt-1 w-full border rounded px-2 py-1">
+              <option value="7">최근 7일</option>
+              <option value="30">최근 30일</option>
+              <option value="90">최근 90일</option>
+              <option value="all" selected>전체</option>
+            </select>
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm col-span-2 mt-1">
+            <input id="buyer_include_activity" type="checkbox" class="w-4 h-4" checked>
+            <span>최근 활동 포함</span>
+          </label>
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button id="btnLoadBuyer" class="px-3 py-2 rounded-xl bg-slate-900 text-white text-sm">Load Buyer</button>
+          <button id="btnBuyerRaw" class="px-3 py-2 rounded-xl bg-slate-700 text-white text-sm">Raw 보기</button>
+        </div>
+      </div>
+
+      <!-- Seller -->
+      <div class="p-4 bg-white rounded-2xl shadow">
+        <h2 class="text-lg font-semibold mb-3">Seller Overview</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="col-span-1 text-sm">Seller ID
+            <input id="seller_id" type="number" value="1" class="mt-1 w-full border rounded px-2 py-1">
+          </label>
+          <label class="col-span-1 text-sm">Adjusted Rating (옵션)
+            <input id="seller_rating" type="number" step="0.1" placeholder="예: 4.4" class="mt-1 w-full border rounded px-2 py-1">
+          </label>
+          <label class="col-span-2 text-sm">활동 기간
+            <select id="seller_activity_window" class="mt-1 w-full border rounded px-2 py-1">
+              <option value="7">최근 7일</option>
+              <option value="30">최근 30일</option>
+              <option value="90">최근 90일</option>
+              <option value="all" selected>전체</option>
+            </select>
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm col-span-2 mt-1">
+            <input id="seller_include_activity" type="checkbox" class="w-4 h-4" checked>
+            <span>최근 활동 포함</span>
+          </label>
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button id="btnLoadSeller" class="px-3 py-2 rounded-xl bg-slate-900 text-white text-sm">Load Seller</button>
+          <button id="btnSellerRaw" class="px-3 py-2 rounded-xl bg-slate-700 text-white text-sm">Raw 보기</button>
+          <a href="#onb" class="px-3 py-2 rounded-xl bg-emerald-600 text-white text-sm">Onboarding 폼으로 ↓</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="grid md:grid-cols-2 gap-6">
+      <div id="buyerCard" class="p-4 bg-white rounded-2xl shadow">
+        <div class="text-sm text-slate-500">Buyer 카드가 여기 표시됩니다.</div>
+      </div>
+      <div id="sellerCard" class="p-4 bg-white rounded-2xl shadow">
+        <div class="text-sm text-slate-500">Seller 카드가 여기 표시됩니다.</div>
+      </div>
+    </div>
+
+    <div class="my-10 border-t"></div>
+
+    <!-- Onboarding -->
+    <div id="onb" class="p-4 bg-white rounded-2xl shadow">
+      <h2 class="text-lg font-semibold mb-3">🧭 Seller Onboarding</h2>
+      <div class="grid md:grid-cols-2 gap-3">
+        <label class="text-sm">Seller ID
+          <input id="onb_seller_id" type="number" value="1" class="mt-1 w-full border rounded px-2 py-1">
+        </label>
+        <label class="text-sm">회사명
+          <input id="onb_company" type="text" placeholder="예: ACME Co." class="mt-1 w-full border rounded px-2 py-1">
+        </label>
+        <label class="text-sm">외부 출처
+          <input id="onb_source" type="text" placeholder="Naver / Coupang ..." class="mt-1 w-full border rounded px-2 py-1">
+        </label>
+        <label class="text-sm">외부 URL
+          <input id="onb_url" type="url" placeholder="https://example.com" class="mt-1 w-full border rounded px-2 py-1">
+        </label>
+        <label class="text-sm">외부 평점 (0~5)
+          <input id="onb_rating" type="number" min="0" max="5" step="0.1" class="mt-1 w-full border rounded px-2 py-1">
+        </label>
+        <label class="text-sm">외부 리뷰 수
+          <input id="onb_rating_cnt" type="number" min="0" class="mt-1 w-full border rounded px-2 py-1">
+        </label>
+      </div>
+      <div class="mt-3 flex gap-2">
+        <button id="btnOnbSubmit" class="px-3 py-2 rounded-xl bg-emerald-600 text-white text-sm">신청 제출</button>
+        <button id="btnOnbListMine" class="px-3 py-2 rounded-xl bg-slate-700 text-white text-sm">내 신청 목록</button>
+        <button id="btnOnbListPending" class="px-3 py-2 rounded-xl bg-slate-700 text-white text-sm">관리자: PENDING 보기</button>
+      </div>
+      <div id="onbResult" class="mt-4 text-sm whitespace-pre-wrap"></div>
+
+      <div class="mt-6 p-4 rounded-2xl bg-slate-50">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold">관리자: Pending 요청</h3>
+          <div class="flex items-center gap-3">
+            <button id="btnOnbLoadPending" class="px-3 py-2 rounded-xl bg-slate-800 text-white text-sm">불러오기</button>
+            <span class="text-xs text-slate-500">결정자는 <code>portal_admin</code>로 기록</span>
+          </div>
+        </div>
+        <div id="onbPending" class="text-sm">
+          <div class="text-slate-500">아직 불러오지 않았습니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="my-10 border-t"></div>
+
+    <!-- Reviews -->
+    <div id="reviews" class="p-4 bg-white rounded-2xl shadow">
+      <h2 class="text-lg font-semibold mb-3">⭐ Reviews</h2>
+      <div class="grid md:grid-cols-3 gap-3">
+        <label class="text-sm">Reservation ID
+          <input id="rv_res_id" type="number" class="mt-1 w-full border rounded px-2 py-1" placeholder="예: 10001">
+        </label>
+        <label class="text-sm">Seller ID
+          <input id="rv_seller_id" type="number" class="mt-1 w-full border rounded px-2 py-1" value="1">
+        </label>
+        <label class="text-sm">Buyer ID
+          <input id="rv_buyer_id" type="number" class="mt-1 w-full border rounded px-2 py-1" value="10">
+        </label>
+        <label class="text-sm">Price Fairness (1~5)
+          <input id="rv_pf" type="number" min="1" max="5" class="mt-1 w-full border rounded px-2 py-1" value="5">
+        </label>
+        <label class="text-sm">Quality (1~5)
+          <input id="rv_q" type="number" min="1" max="5" class="mt-1 w-full border rounded px-2 py-1" value="5">
+        </label>
+        <label class="text-sm">Shipping (1~5)
+          <input id="rv_s" type="number" min="1" max="5" class="mt-1 w-full border rounded px-2 py-1" value="5">
+        </label>
+        <label class="text-sm">Communication (1~5)
+          <input id="rv_c" type="number" min="1" max="5" class="mt-1 w-full border rounded px-2 py-1" value="5">
+        </label>
+        <label class="text-sm">Accuracy (1~5)
+          <input id="rv_a" type="number" min="1" max="5" class="mt-1 w-full border rounded px-2 py-1" value="5">
+        </label>
+        <label class="text-sm">Media Count
+          <input id="rv_media" type="number" min="0" class="mt-1 w-full border rounded px-2 py-1" value="0">
+        </label>
+        <label class="text-sm col-span-2">Comment
+          <input id="rv_comment" type="text" class="mt-1 w-full border rounded px-2 py-1" placeholder="한글 코멘트 ✓">
+        </label>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="btnRvCreate" class="px-3 py-2 rounded-xl bg-emerald-600 text-white text-sm">리뷰 작성</button>
+        <button id="btnRvPatch" class="px-3 py-2 rounded-xl bg-amber-600 text-white text-sm">리뷰 코멘트 PATCH(예약ID)</button>
+        <button id="btnRvSummary" class="px-3 py-2 rounded-xl bg-slate-800 text-white text-sm">Seller Summary</button>
+        <button id="btnRvList" class="px-3 py-2 rounded-xl bg-slate-700 text-white text-sm">Seller Reviews</button>
+      </div>
+      <div class="mt-4 grid md:grid-cols-2 gap-4">
+        <div>
+          <div class="text-sm font-semibold mb-1">Summary</div>
+          <pre id="rvSummary" class="p-3 bg-slate-50 rounded-xl overflow-auto text-xs"></pre>
+        </div>
+        <div>
+          <div class="text-sm font-semibold mb-1">Reviews</div>
+          <pre id="rvList" class="p-3 bg-slate-50 rounded-xl overflow-auto text-xs"></pre>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SINGLE SCRIPT BLOCK -->
+  <script>
+    console.log("[portal] script loaded");
+
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => typeof n === "number" ? n.toLocaleString("ko-KR") : n;
+    const parseISO = (s) => s ? new Date(s) : null;
+
+    const state = {
+      buyer: { overview: null, basic: null, activity: [] },
+      seller: { overview: null, basic: null, activity: [] },
+      lastBuyerRaw: null,
+      lastSellerRaw: null,
+    };
+
+    async function fetchJson(url, init) {
+      try {
+        const r = await fetch(url, init);
+        const j = await r.json();
+        if (!r.ok) throw new Error(JSON.stringify(j));
+        return j;
+      } catch (e) {
+        console.error("fetchJson failed:", url, e);
+        return null;
+      }
+    }
+
+    function normalizeBasicInfo(obj) {
+      if (!obj || typeof obj !== "object") return null;
+      const pick = (...keys) => {
+        for (const k of keys) {
+          if (obj[k] !== undefined && obj[k] !== null && obj[k] !== "") return obj[k];
+        }
+        return null;
+      };
+      return {
+        id:         pick("buyer_id","seller_id","id"),
+        name:       pick("name","full_name","username","display_name","company_name"),
+        gender:     pick("gender","sex"),
+        phone:      pick("phone","phone_number","mobile","tel"),
+        email:      pick("email","email_address"),
+        address:    pick("address","addr","shipping_address"),
+        created_at: pick("created_at","joined_at","createdAt"),
+        raw: obj
+      };
+    }
+
+    function daysFromSelectValue(val) {
+      if (!val || val === "all") return Infinity;
+      const n = parseInt(val, 10);
+      return Number.isFinite(n) ? n : Infinity;
+    }
+    function filterActivityByDays(list, days) {
+      if (!Array.isArray(list)) return [];
+      if (!Number.isFinite(days)) return list.slice();
+      const now = Date.now();
+      const threshold = now - days * 86400000;
+      return list.filter(x => {
+        const t = parseISO(x?.created_at)?.getTime?.() ?? 0;
+        return t >= threshold;
+      });
+    }
+
+    // Buyer
+    async function loadBuyer() {
+      const id = +$("buyer_id").value;
+      const pts = $("points_override").value ? `&points_override=${encodeURIComponent($("points_override").value)}` : "";
+      const price = $("preview_total_price").value ? `&preview_total_price=${encodeURIComponent($("preview_total_price").value)}` : "";
+      const inc = $("buyer_include_activity").checked ? "&include_activity=true" : "";
+      const url = `/insights/buyer/${id}/overview?${pts}${price}${inc}`.replace("?&","?");
+      const overview = await fetchJson(url);
+
+      const basicRaw = (await fetchJson(`/buyers/${id}`)) ?? overview?.basic ?? null;
+
+      state.buyer.overview = overview || {};
+      state.buyer.basic    = normalizeBasicInfo(basicRaw) || { id, name: `Buyer #${id}` };
+      state.buyer.activity = Array.isArray(overview?.recent_activity) ? overview.recent_activity : [];
+      state.lastBuyerRaw   = overview;
+      console.log("[buyer.basicRaw]", basicRaw);
+
+      renderBuyerCard();
+    }
+
+    function renderBuyerCard() {
+      const d = state.buyer.overview || {};
+      const basic = state.buyer.basic;
+      const days = daysFromSelectValue($("buyer_activity_window").value);
+      const act = filterActivityByDays(state.buyer.activity, days);
+      $("buyerCard").innerHTML = `
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-semibold">Buyer #${fmt(d.buyer_id ?? $("buyer_id").value)}</h3>
+            ${basic ? `
+              <div class="text-xs text-slate-500 mt-0.5">
+                ${basic.name ?? "이름 N/A"} · ${basic.email ?? "email N/A"} · ${basic.phone ?? "phone N/A"}
+              </div>` : `<div class="text-xs text-slate-400">기본정보를 찾을 수 없습니다.</div>`}
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700">${d.grade ?? '—'}</span>
+        </div>
+        <div class="mt-3 grid grid-cols-2 gap-3">
+          <div class="p-3 rounded-xl bg-slate-50">
+            <div class="text-xs text-slate-500">Trust Tier</div>
+            <div class="text-lg font-semibold">${d.trust?.tier ?? '—'} <span class="text-slate-400 text-sm">(${d.trust?.deposit_percent!=null ? (d.trust.deposit_percent*100).toFixed(0) : '—'}% deposit)</span></div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50">
+            <div class="text-xs text-slate-500">참여/이행</div>
+            <div class="text-lg font-semibold">${fmt(d.stats?.paid ?? 0)}/${fmt(d.stats?.total ?? 0)} <span class="text-slate-400 text-sm">(${d.stats?.fulfillment_rate!=null ? (d.stats.fulfillment_rate*100).toFixed(1) : '—'}%)</span></div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50">
+            <div class="text-xs text-slate-500">Deposit 제안 (미리보기)</div>
+            <div class="text-lg font-semibold">${d.deposit_suggested ? fmt(d.deposit_suggested) + ' 원' : '—'}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50">
+            <div class="text-xs text-slate-500">주소</div>
+            <div class="text-sm">${basic?.address ?? '—'}</div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-semibold">최근 활동 (${fmt(d.activity_count ?? act.length)})</div>
+            <div class="text-xs text-slate-500">기간: ${$("buyer_activity_window").selectedOptions[0].textContent}</div>
+          </div>
+          ${act.length ? act.slice(0,10).map(x => `
+            <div class="flex items-start gap-3 py-2 border-b last:border-none">
+              <div class="text-xs px-2 py-0.5 bg-slate-100 rounded">${x.event_type}</div>
+              <div class="text-sm">
+                <div class="text-slate-800">${x.reason ?? ''}</div>
+                <div class="text-xs text-slate-500">${x.created_at}</div>
+              </div>
+            </div>
+          `).join("") : `<div class="text-sm text-slate-500">활동 없음</div>`}
+        </div>
+      `;
+    }
+
+    // Seller
+    async function loadSeller() {
+      const id = +$("seller_id").value;
+      const rating = $("seller_rating").value ? `&rating=${encodeURIComponent($("seller_rating").value)}` : "";
+      const inc = $("seller_include_activity").checked ? "&include_activity=true" : "";
+      const url = `/insights/seller/${id}/overview?${rating}${inc}`.replace("?&","?");
+      const overview = await fetchJson(url);
+
+      const basicRaw = (await fetchJson(`/sellers/${id}`)) ?? overview?.basic ?? null;
+
+      state.seller.overview = overview || {};
+      state.seller.basic    = normalizeBasicInfo(basicRaw) || { id, name: `Seller #${id}` };
+      state.seller.activity = Array.isArray(overview?.recent_activity) ? overview.recent_activity : [];
+      state.lastSellerRaw   = overview;
+      console.log("[seller.basicRaw]", basicRaw);
+
+      renderSellerCard();
+    }
+
+    function renderSellerCard() {
+      const d = state.seller.overview || {};
+      const basic = state.seller.basic;
+      const s = d.review_summary || {};
+      const days = daysFromSelectValue($("seller_activity_window").value);
+      const act = filterActivityByDays(state.seller.activity, days);
+
+      $("sellerCard").innerHTML = `
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-semibold">Seller #${fmt(d.seller_id ?? $("seller_id").value)}</h3>
+            ${basic ? `
+              <div class="text-xs text-slate-500 mt-0.5">
+                ${basic.name ?? "상호 N/A"} · ${basic.email ?? "email N/A"} · ${basic.phone ?? "phone N/A"}
+              </div>` : `<div class="text-xs text-slate-400">기본정보를 찾을 수 없습니다.</div>`}
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-xs bg-emerald-50 text-emerald-700">${d.level ?? '—'} · ${d.fee_percent!=null ? (d.fee_percent*100).toFixed(2) : '—'}%</span>
+        </div>
+        <div class="mt-3 grid grid-cols-2 gap-3">
+          <div class="p-3 rounded-xl bg-slate-50">
+            <div class="text-xs text-slate-500">Sold Count</div>
+            <div class="text-lg font-semibold">${fmt(d.sold_count ?? 0)}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50">
+            <div class="text-xs text-slate-500">Rating</div>
+            <div class="text-lg font-semibold">${d.rating?.toFixed ? d.rating.toFixed(2) : (d.rating ?? '—')}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 col-span-2">
+            <div class="text-xs text-slate-500">Review Summary</div>
+            <div class="text-sm mt-1">
+              count: <b>${fmt(s.count ?? 0)}</b> · raw_avg: <b>${s.raw_avg?.toFixed ? s.raw_avg.toFixed(2) : (s.raw_avg ?? '—')}</b> ·
+              adjusted: <b>${s.adjusted_rating?.toFixed ? s.adjusted_rating.toFixed(2) : (s.adjusted_rating ?? '—')}</b> ·
+              last30d: <b>${fmt(s.last_30d_count ?? 0)}</b>
+            </div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 col-span-2">
+            <div class="text-xs text-slate-500">주소</div>
+            <div class="text-sm">${basic?.address ?? '—'}</div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-semibold">최근 활동 (${fmt(d.activity_count ?? act.length)})</div>
+            <div class="text-xs text-slate-500">기간: ${$("seller_activity_window").selectedOptions[0].textContent}</div>
+          </div>
+          ${act.length ? act.slice(0,10).map(x => `
+            <div class="flex items-start gap-3 py-2 border-b last:border-none">
+              <div class="text-xs px-2 py-0.5 bg-slate-100 rounded">${x.event_type}</div>
+              <div class="text-sm">
+                <div class="text-slate-800">${x.reason ?? ''}</div>
+                <div class="text-xs text-slate-500">${x.created_at}</div>
+              </div>
+            </div>
+          `).join("") : `<div class="text-sm text-slate-500">활동 없음</div>`}
+        </div>
+      `;
+    }
+
+    // Onboarding
+    async function onbSubmit() {
+      const payload = {
+        seller_id: +$("onb_seller_id").value,
+        company_name: $("onb_company").value,
+        external_source: $("onb_source").value || null,
+        external_url: $("onb_url").value || null,
+        external_rating: $("onb_rating").value ? +$("onb_rating").value : null,
+        external_rating_count: $("onb_rating_cnt").value ? +$("onb_rating_cnt").value : 0,
+      };
+      const res = await fetch("/onboarding/sellers", {
+        method: "POST",
+        headers: {"Content-Type":"application/json; charset=utf-8"},
+        body: JSON.stringify(payload),
+      });
+      $("onbResult").textContent = JSON.stringify(await res.json(), null, 2);
+    }
+    async function onbListMine() {
+      const id = +$("onb_seller_id").value;
+      const res = await fetch(`/onboarding/sellers/by-seller/${id}`);
+      $("onbResult").textContent = JSON.stringify(await res.json(), null, 2);
+    }
+    async function onbListPending() {
+      const res = await fetch(`/onboarding/admin/sellers?status=PENDING`);
+      $("onbResult").textContent = JSON.stringify(await res.json(), null, 2);
+    }
+    function renderOnbPending(rows) {
+      if (!Array.isArray(rows) || rows.length === 0) {
+        $("onbPending").innerHTML = `<div class="text-slate-500 text-sm">PENDING 없음</div>`;
+        return;
+      }
+      $("onbPending").innerHTML = `
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-slate-500">
+              <th class="py-1">ID</th>
+              <th class="py-1">Seller</th>
+              <th class="py-1">회사</th>
+              <th class="py-1">출처/평점</th>
+              <th class="py-1">생성</th>
+              <th class="py-1">액션</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr class="border-t">
+                <td class="py-1">${r.id}</td>
+                <td class="py-1">#${r.seller_id}</td>
+                <td class="py-1">${r.company_name}</td>
+                <td class="py-1">${r.external_source ?? ''} ${r.external_rating ?? ''} (${r.external_rating_count ?? 0})</td>
+                <td class="py-1">${r.created_at}</td>
+                <td class="py-1">
+                  <button class="px-2 py-1 rounded bg-emerald-600 text-white text-xs" onclick="onbDecide(${r.id}, 'APPROVED')">승인</button>
+                  <button class="px-2 py-1 rounded bg-rose-600 text-white text-xs ml-1" onclick="onbDecide(${r.id}, 'REJECTED')">거절</button>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>`;
+    }
+    async function onbLoadPending() {
+      const rows = await fetchJson(`/onboarding/admin/sellers?status=PENDING`);
+      renderOnbPending(rows || []);
+    }
+    async function onbDecide(id, decision) {
+      const payload = { decision, decided_by: "portal_admin" };
+      const res = await fetch(`/onboarding/admin/sellers/${id}/decide`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json; charset=utf-8"},
+        body: JSON.stringify(payload),
+      });
+      const j = await res.json();
+      $("onbResult").textContent = JSON.stringify(j, null, 2);
+      onbLoadPending().catch(console.warn);
+      const currentSeller = +$("seller_id").value || j?.seller_id;
+      if (currentSeller) loadSeller().catch(console.warn);
+    }
+
+    // Reviews
+    async function rvCreate() {
+      const payload = {
+        reservation_id: +$("rv_res_id").value,
+        seller_id: +$("rv_seller_id").value,
+        buyer_id: +$("rv_buyer_id").value,
+        price_fairness: +$("rv_pf").value,
+        quality: +$("rv_q").value,
+        shipping: +$("rv_s").value,
+        communication: +$("rv_c").value,
+        accuracy: +$("rv_a").value,
+        media_count: +$("rv_media").value,
+        comment: $("rv_comment").value
+      };
+      const j = await fetchJson("/reviews", {
+        method: "POST",
+        headers: {"Content-Type":"application/json; charset=utf-8"},
+        body: JSON.stringify(payload),
+      });
+      $("rvList").textContent = JSON.stringify(j, null, 2);
+    }
+    async function rvPatch() {
+      const resId = +$("rv_res_id").value;
+      if (!resId) { $("rvList").textContent = "reservation_id를 입력하세요."; return; }
+      const payload = { comment: $("rv_comment").value + " (PATCH)" };
+      const j = await fetchJson(`/reviews/by-reservation/${resId}`, {
+        method: "PATCH",
+        headers: {"Content-Type":"application/json; charset=utf-8"},
+        body: JSON.stringify(payload),
+      });
+      $("rvList").textContent = JSON.stringify(j, null, 2);
+    }
+    async function rvSummary() {
+      const sid = +$("rv_seller_id").value;
+      const j = await fetchJson(`/reviews/seller/${sid}/summary`);
+      $("rvSummary").textContent = JSON.stringify(j, null, 2);
+    }
+    async function rvList() {
+      const sid = +$("rv_seller_id").value;
+      const j = await fetchJson(`/reviews/seller/${sid}?limit=50`);
+      $("rvList").textContent = JSON.stringify(j, null, 2);
+    }
+
+    // Raw JSON quick view
+    function showBuyerRaw() { alert(JSON.stringify(state.lastBuyerRaw ?? {}, null, 2)); }
+    function showSellerRaw() { alert(JSON.stringify(state.lastSellerRaw ?? {}, null, 2)); }
+
+    // Wire
+    $("btnLoadBuyer").addEventListener("click", loadBuyer);
+    $("btnLoadSeller").addEventListener("click", loadSeller);
+    $("btnBuyerRaw").addEventListener("click", showBuyerRaw);
+    $("btnSellerRaw").addEventListener("click", showSellerRaw);
+
+    $("btnOnbSubmit").addEventListener("click", onbSubmit);
+    $("btnOnbListMine").addEventListener("click", onbListMine);
+    $("btnOnbListPending").addEventListener("click", onbListPending);
+    $("btnOnbLoadPending").addEventListener("click", onbLoadPending);
+
+    $("btnRvCreate").addEventListener("click", rvCreate);
+    $("btnRvPatch").addEventListener("click", rvPatch);
+    $("btnRvSummary").addEventListener("click", rvSummary);
+    $("btnRvList").addEventListener("click", rvList);
+
+    $("buyer_activity_window").addEventListener("change", renderBuyerCard);
+    $("seller_activity_window").addEventListener("change", renderSellerCard);
+
+    // First load
+    loadBuyer().catch(console.warn);
+    loadSeller().catch(console.warn);
+  </script>
+</body>
+</html>

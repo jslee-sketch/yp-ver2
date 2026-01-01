@@ -1,0 +1,1 @@
+SSOT는 docs/SSOT가 최우선

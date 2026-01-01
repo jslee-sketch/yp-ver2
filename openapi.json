@@ -1,0 +1,6 @@
+﻿
+openapi info                                                   paths                                                                              
+------- ----                                                   -----                                                                              
+3.1.0   @{title=Yeokping Ver2 API, version=3.5; version=0.1.0} @{/auth/login=; /buyers/me=; /buyers/=; /buyers/{buyer_id}=; /buyers/summary=; /...
+
+
