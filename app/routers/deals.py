@@ -14,12 +14,21 @@ from app.models import Deal
 from app.schemas_ai import DealResolveIn, DealResolveOut, BuyerIntentParsed, DealResolveResult, BuyerIntentParsed
 from app.crud import create_deal_from_intent, find_matching_deals_for_intent
 
+from app.policy.target_vs_anchor_guardrail import run_target_vs_anchor_guardrail 
+
+from app.policy.pricing_guardrail_hook import (
+    run_pricing_guardrail,
+    apply_guardrail_to_deal,
+    log_guardrail_evidence,
+)
+
 
 router = APIRouter(prefix="/deals", tags=["deals"])
 get_db = database.get_db
 
+
 # ---------------------------
-# 🟢 Deal 생성
+# 🟢 Deal 생성 (S1)
 # ---------------------------
 @router.post("/", response_model=schemas.DealOut)
 def create_deal(deal_in: schemas.DealCreate, db: Session = Depends(get_db)):
@@ -29,11 +38,57 @@ def create_deal(deal_in: schemas.DealCreate, db: Session = Depends(get_db)):
     """
     try:
         db_deal = crud.create_deal(db, deal_in)
+
+        # ✅ S1: 딜 생성 직후 guardrail 평가/적용/로그 (SSOT: pricing_guardrail_hook)
+        result = run_pricing_guardrail(
+            deal_id=int(db_deal.id),
+            category=getattr(db_deal, "category", None),
+            target_price=getattr(db_deal, "target_price", None),
+            anchor_price=getattr(db_deal, "anchor_price", None),  # 있을 수도/없을 수도
+            evidence_score=getattr(db_deal, "evidence_score", 0) or 0,
+            anchor_confidence=getattr(db_deal, "anchor_confidence", 1.0) or 1.0,
+        )
+
+        apply_guardrail_to_deal(db, db_deal, result)
+        log_guardrail_evidence(db, deal_id=int(db_deal.id), result=result, anchor_version="S1_CREATE")
+
         return db_deal
+
     except Exception as e:
-        # 일단 어디서 터지는지 보기 쉽게
         raise HTTPException(status_code=500, detail=f"Failed to create deal: {e}")
 
+
+# ---------------------------
+# 🟡 Deal target 변경 (S2)
+# ---------------------------
+@router.patch("/{deal_id}/target")
+def update_deal_target(deal_id: int, body: dict, db: Session = Depends(get_db)):
+    deal = db.get(models.Deal, deal_id)
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+
+    deal.target_price = body.get("target_price")
+    db.commit()
+    db.refresh(deal)
+
+    try:
+        # ✅ S2: 타겟 변경 직후 guardrail 재평가/적용/로그
+        result = run_pricing_guardrail(
+            deal_id=int(deal.id),
+            category=getattr(deal, "category", None),
+            target_price=getattr(deal, "target_price", None),
+            anchor_price=getattr(deal, "anchor_price", None),
+            evidence_score=getattr(deal, "evidence_score", 0) or 0,
+            anchor_confidence=getattr(deal, "anchor_confidence", 1.0) or 1.0,
+        )
+
+        apply_guardrail_to_deal(db, deal, result)
+        log_guardrail_evidence(db, deal_id=int(deal.id), result=result, anchor_version="S2_TARGET_UPDATE")
+
+    except Exception as e:
+        logging.exception("[update_deal_target] post-update guardrail failed: %r", e)
+
+    return deal
 
 # ---------------------------
 # 📋 Deal 목록 조회
@@ -54,9 +109,6 @@ def read_deal(deal_id: int, db: Session = Depends(get_db)):
     return db_deal
 
 
-# ---------------------------
-# ➕ Deal 참여자 추가
-# ---------------------------
 # ---------------------------
 # ➕ Deal 참여자 추가 + 알림 트리거
 # ---------------------------

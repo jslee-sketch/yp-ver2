@@ -5,11 +5,12 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status, Body, Path, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session, relationship
 from sqlalchemy import func
 import logging
 from app.database import get_db
+from app.schemas import OfferOut
 
 import json
 from app.core.time_policy import TIME_POLICY, _as_utc
@@ -40,7 +41,7 @@ except Exception:
 
 from app.policy.api import payment_timeout_minutes
 from app.policy import api as policy_api
-
+from app.routers import deals, admin_anchor
 
 # ─────────────────────────────────────────────────────
 # 에러 유틸
@@ -1568,46 +1569,31 @@ def create_offer(db: Session, offer_in: schemas.OfferCreate):
 
 
 # ─────────────────────────────────────────────────────
-# Offer 노출/그룹핑 헬퍼 (PREMIUM / MATCHING / BELOW)
+# Offer 노출/그룹핑 응답 (PREMIUM / MATCHING / BELOW)
+# UI에서 바로 쓰기 좋은 최소 필드 + offer 원본 포함
 # ─────────────────────────────────────────────────────
 class OfferRankedOut(BaseModel):
-    """
-    Deal 상세 화면에서 사용할 오퍼 노출용 스키마
-    - group: PREMIUM / MATCHING / BELOW
-    - remaining_qty: 남은 판매 가능 수량
-    - seller_level: Seller.level (숫자, 1~6 가정)
-    - yp_rating / yp_rating_count: 역핑 평점 / 리뷰 수
-    - external_rating: 외부 평점
-    - deal_status: "Deal!!" / "Open"
-    - offer: 기존 OfferOut 전체 정보
-    """
-    group: str = Field(..., description="PREMIUM / MATCHING / BELOW")
-    remaining_qty: int = Field(..., description="총 수량 - (sold + reserved)")
-    seller_level: Optional[int] = Field(
-        None,
-        description="Seller.level (1~6)",
-    )
-
-    yp_rating: Optional[float] = Field(
-        None,
-        description="역핑 조정 평점 (없으면 None)",
-    )
-    yp_rating_count: Optional[int] = Field(
-        None,
-        description="역핑 리뷰 개수 (없으면 None)",
-    )
-
-    deal_status: Optional[str] = Field(
-        None,
-        description='"Deal!!" 또는 "Open"',
-    )
-
-    external_rating: Optional[float] = Field(
-        None,
-        description="외부 평점(예: Naver/쿠팡); 아직 연동 전이면 None",
-    )
-
+    group: str
+    remaining_qty: int  # ✅ 이게 핵심 (정렬/표시 기본값)
+    seller_level: Optional[int] = None
+    yp_rating: Optional[float] = None
+    yp_rating_count: Optional[int] = None
+    external_rating: Optional[float] = None
+    deal_status: Optional[str] = None
     offer: schemas.OfferOut
+
+    # UI용 추가 필드들(선택)
+    deal_price: Optional[float] = None
+    offer_price: Optional[float] = None
+    offer_index_pct: Optional[int] = None
+    offer_total_qty: Optional[int] = None
+    shipping_mode: Optional[str] = None
+
+    # ✅ “표 컬럼명 맞춤”용 별칭(remaining_qty 그대로 복제)
+    offer_remaining_qty: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 
 
@@ -2139,11 +2125,16 @@ def api_list_ranked_offers_for_deal(
             if info:
                 rating_map[sid] = info
 
+    # deal 기준가(딜 목표가) — index 계산 기준축
+    deal_price_raw = getattr(deal, "target_price", None)
+    deal_price_f = float(deal_price_raw) if deal_price_raw is not None else None
+
     # 5) Offer → ranked DTO 변환
     result: List[OfferRankedOut] = []
 
     for o in offers:
-        price = float(getattr(o, "price", 0.0) or 0.0)
+        offer_price_f = float(getattr(o, "price", 0.0) or 0.0)
+
         total = int(getattr(o, "total_available_qty", 0) or 0)
         sold = int(getattr(o, "sold_qty", 0) or 0)
         reserved = int(getattr(o, "reserved_qty", 0) or 0)
@@ -2153,24 +2144,38 @@ def api_list_ranked_offers_for_deal(
         seller = seller_map.get(seller_id)
         seller_level = int(getattr(seller, "level", 0) or 0) if seller else None
 
-        rating_info = rating_map.get(seller_id, {})
+        rating_info = rating_map.get(seller_id, {}) or {}
         external_rating = rating_info.get("external_rating")
         yp_rating = rating_info.get("yp_rating")
         yp_rating_count = rating_info.get("yp_rating_count")
 
-        group = _offer_group_for_price(deal_price, price)
+        # 그룹은 deal_price vs offer_price로 결정
+        group = _offer_group_for_price(deal_price_f, offer_price_f)
         deal_status = "Deal!!" if remaining <= 0 else "Open"
+
+        offer_index_pct = None
+        if deal_price_f and deal_price_f > 0:
+            offer_index_pct = int(round((offer_price_f / deal_price_f) * 100))
+
+        # 배송 요약(offer에 이미 있는 필드 그대로 노출)
+        shipping_mode = getattr(o, "shipping_mode", None)
 
         result.append(
             OfferRankedOut(
                 group=group,
-                remaining_qty=remaining,
+                remaining_qty=remaining,          # ✅ 이 줄이 빠져서 터진 거야 (필수)
+                deal_status=deal_status,
+                offer_total_qty=total,
+                offer_remaining_qty=remaining,
+                offer_price=offer_price_f,
+                deal_price=deal_price_f,
+                offer_index_pct=offer_index_pct,
                 seller_level=seller_level,
-                external_rating=external_rating,
                 yp_rating=yp_rating,
                 yp_rating_count=yp_rating_count,
-                deal_status=deal_status,
-                offer=o,
+                external_rating=external_rating,
+                shipping_mode=shipping_mode,
+                offer=o,  # schemas.OfferOut (from_attributes로 변환)
             )
         )
 
@@ -2336,25 +2341,6 @@ def api_get_offer_detail(
                     pass
 
     # 7) Deal 옵션 + free_text 묶기
-    options: Optional[dict] = None
-    try:
-        opt_dict: dict = {}
-        for i in range(1, 6):
-            t = getattr(deal, f"option{i}_title", None)
-            v = getattr(deal, f"option{i}_value", None)
-            if t and v is not None:
-                opt_dict[str(t)] = v
-
-        free_text = getattr(deal, "free_text", None)
-        if free_text:
-            opt_dict["free_text"] = free_text
-
-        if opt_dict:
-            options = opt_dict
-    except Exception:
-        options = None
-
-# 7) Deal 옵션 + free_text 묶기
     options: dict | None = None
     try:
         opt_dict: dict = {}
@@ -2502,9 +2488,10 @@ def api_upsert_offer_policy(
 # 집계 라우터(api)
 # ─────────────────────────────────────────────────────
 api = APIRouter()
-api.include_router(router_resv)    # /reservations/*
+api.include_router(router_resv)   # /reservations/*
 api.include_router(router_offers)  # /offers/*
-
+api.include_router(deals.router)  # /deals/*
+api.include_router(admin_anchor.router)   # /admin/anchor/*
 
 
 # ─────────────────────────────────────────────────────

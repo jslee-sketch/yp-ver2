@@ -31,3 +31,39 @@ _t_*.py
 reviews.json
 openapi_summaries.txt
 app/config/policy
+
+
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# OS / editor junk
+desktop.ini
+.DS_Store
+Thumbs.db
+.vscode/
+
+# logs / outputs / artifacts
+logs/
+artifacts/
+_analysis/
+_archive/
+_reports/
+analysis/
+analysis_output/
+out_*.json
+recent*.json
+refund_*.json
+smoke_*.json
+regress_*.json
+manual_activity.json
+out_activity.json
+out_batch*.json
+out_resp_latest.json
+term_fix*.json
+
+# local db / backups
+*.db
+*.CORRUPT_*

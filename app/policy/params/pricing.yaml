@@ -1,0 +1,216 @@
+# Pricing Params SSOT (v0.1)
+# 목적:
+# - P0(기준조건 기준가) 위에서
+#   G(Q)로 기준선을 이동시키고,
+#   조건 환산(배송/환불/신뢰/리스크)을 "해석"으로 제공한다.
+# - 수치는 초기 보수값이며, 데이터 기반으로 지속 업데이트한다.
+
+version: 0.1
+currency: KRW
+timezone: Asia/Seoul
+
+# ------------------------------------------------------------
+# 1) 기준조건(C_base) 기본값(설명/환산의 기준선)
+# ------------------------------------------------------------
+base_condition:
+  shipping:
+    ship_days_baseline: 3          # 표준 배송 기준(2~3일을 3으로 고정)
+    shipping_fee_baseline_krw: 0   # 기준조건은 무료배송(또는 평균치, 카테고리에서 override 가능)
+    ship_method_baseline: standard # standard | express | pickup
+  refund:
+    refund_grade_baseline: 2       # 0..3 (0 매우 제한 ~ 3 매우 관대)
+    as_grade_baseline: 2           # 0..3
+  seller:
+    seller_tier_baseline: 2        # 0..3 (0 신규/낮음 ~ 3 최상)
+    seller_score_baseline: 70      # 0..100 (참고)
+  risk:
+    risk_level_baseline: 2         # 0..3 (0 낮음 ~ 3 높음) - 카테고리에서 R0로 재정의
+  deal_structure:
+    # 공동구매 구조 리스크/불확실성은 별도 지표로 확장 가능
+    structure_risk_baseline: 0.0   # -1..+1, 초기에는 0으로 둠
+
+# ------------------------------------------------------------
+# 2) 공동구매지수 G(Q) 파라미터
+# ------------------------------------------------------------
+group_index:
+  # Δ_G(Q) 최대 할인폭 (카테고리별로 override)
+  alpha_g_default: 0.06            # 6% (보수적 시작)
+  alpha_g_min: 0.00
+  alpha_g_max: 0.15                # 안전 상한(카테고리별로 더 낮게 권장)
+
+  # 목표 인원 기본값(카테고리별로 override)
+  q_target_default: 10
+  epsilon: 0.000001
+
+  # G(Q) 형태 선택
+  shape: log_saturation            # log_saturation | sigmoid_saturation (추후 확장)
+
+# ------------------------------------------------------------
+# 3) 조건 환산(Translation) 파라미터
+#    - "판매자 가격을 바꾸지 않음"
+#    - 기준조건 대비 '비쌈/저렴' 해석에만 사용
+# ------------------------------------------------------------
+translation:
+  # 환산 기준 가격 축 (P0 기준 vs P_group 기준)
+  # - p0: 기준조건 기준가(P0) 기준으로 Δ_price_equiv 산출
+  # - p_group: 공동구매 기준선(P_group) 기준으로 Δ_price_equiv 산출
+  basis_price: p0
+
+  # 환산 출력 단위: krw | percent (표현은 문장으로, 내부계산만)
+  output_unit: krw
+
+  # 조건 영향 총합 clamp (과도한 영향 방지)
+  # Δ_cond = Σ α_i f_i(...), 여기서 Δ_cond를 clamp
+  delta_cond_min: -0.12            # -12% (조건 매우 불리해도 이 이상은 제한)
+  delta_cond_max: 0.18             # +18% (조건 매우 좋아도 이 이상은 제한)
+
+  # 개별 항목 가중치(초기 보수값)
+  # 부호 규칙:
+  # + : 조건이 기준보다 "좋아지면" 가격 기대치가 올라가는 방향(프리미엄)
+  # - : 조건이 기준보다 "나빠지면" 가격 기대치가 내려가는 방향(디스카운트)
+  weights:
+    shipping_speed: 0.04           # 배송 빨라짐 프리미엄 (최대 ±4% 정도 영향)
+    shipping_fee: 0.02             # 배송비 부담이 있으면 디스카운트
+    refund: 0.06                   # 환불/AS는 WTP에 영향 큼 (±6% 정도)
+    seller_trust: 0.05             # 판매자 신뢰/티어 영향
+    risk: 0.05                     # 리스크는 양/음 가능(기준 대비 편차로 해석)
+
+  # 정규화 함수(초기 단순형)
+  normalization:
+    # 배송 속도 정규화: (baseline - ship_days)/baseline 를 clamp
+    ship_speed_clamp_min: -1.0
+    ship_speed_clamp_max: 1.0
+
+    # 배송비 정규화: shipping_fee_krw 기준 대비 상대값(초기 단순)
+    shipping_fee_scale_krw: 5000   # 5천원 단위로 1.0 변화
+
+    # 환불/AS grade 정규화: 0..3 -> [-1, +1]
+    grade_min: 0
+    grade_max: 3
+
+    # seller tier 정규화: 0..3 -> [-1, +1]
+    tier_min: 0
+    tier_max: 3
+
+    # seller score 정규화: 0..100 -> [-1, +1] (70을 baseline으로)
+    seller_score_scale: 30         # (score - baseline)/30 clamp
+
+    # risk 정규화: ΔR = R - R0 를 [-1,+1]로 clamp (R0는 카테고리 baseline)
+    risk_delta_clamp_min: -1.0
+    risk_delta_clamp_max: 1.0
+
+# ------------------------------------------------------------
+# 4) 카테고리별 오버라이드 (초기 예시)
+#    - 실제 서비스 카테고리명에 맞춰 확장
+# ------------------------------------------------------------
+categories:
+  default:
+    r0_risk_level: 2
+    alpha_g: 0.06
+    q_target: 10
+    clamp:
+      p_group_min_ratio: 0.85      # P_group >= P0 * 0.85
+      p_group_max_ratio: 1.00      # P_group <= P0
+      p_cond_min_ratio: 0.70       # 조건 반영 해석 범위 하한
+      p_cond_max_ratio: 1.25       # 조건 반영 해석 범위 상한
+
+  electronics:
+    r0_risk_level: 2
+    alpha_g: 0.05
+    q_target: 8
+    clamp:
+      p_group_min_ratio: 0.88
+      p_group_max_ratio: 1.00
+      p_cond_min_ratio: 0.75
+      p_cond_max_ratio: 1.30
+
+  food:
+    r0_risk_level: 2
+    alpha_g: 0.07
+    q_target: 15
+    clamp:
+      p_group_min_ratio: 0.82
+      p_group_max_ratio: 1.00
+      p_cond_min_ratio: 0.72
+      p_cond_max_ratio: 1.20
+
+  fashion:
+    r0_risk_level: 2
+    alpha_g: 0.06
+    q_target: 12
+    clamp:
+      p_group_min_ratio: 0.83
+      p_group_max_ratio: 1.00
+      p_cond_min_ratio: 0.70
+      p_cond_max_ratio: 1.25
+
+# ------------------------------------------------------------
+# 5) 표현(문장) 규칙 키 (UI/Agent 공통)
+# ------------------------------------------------------------
+phrasing:
+  # ✅ "유사" 판정창(SSOT)
+  # similar_window = max(min_similar_krw, ref * similar_pct)
+  similarity:
+    similar_pct: 0.03        # ref 대비 3% 이내면 유사 후보
+    min_similar_krw: 50      # 최소 유사창 50원 (기존 300원 -> 너무 넓음)
+
+  # 반드시 이 포맷으로만 표기(부호 표기 금지)
+  templates:
+    compare_base: "기준조건 대비 {amount_krw}원 {label}"
+    compare_group: "공동구매 기준 대비 {amount_krw}원 {label}"
+  labels:
+    cheaper: "저렴"
+    expensive: "비쌈"
+    similar: "유사"
+
+
+# ------------------------------------------------------------
+# Phrasing (UI/Agent 공통)
+# ------------------------------------------------------------
+phrasing:
+  # 반드시 이 포맷으로만 표기(부호 표기 금지)
+  templates:
+    compare_base: "기준조건 대비 {amount_krw}원 {label}"
+    compare_group: "공동구매 기준 대비 {amount_krw}원 {label}"
+  labels:
+    cheaper: "저렴"
+    expensive: "비쌈"
+    similar: "유사"
+
+  # ✅ "유사" 판정 deadzone(절대값 + 퍼센트 윈도우)
+  # - delta가 ref_price의 similar_pct 이내거나
+  # - delta가 min_similar_krw 이내면 "유사"
+  similarity:
+    similar_pct: 0.01        # 1%
+    min_similar_krw: 300     # 최소 300원 이내면 유사
+
+# ------------------------------------------------------------
+# Guardrails: Target vs Anchor Gap (SSOT)
+# ------------------------------------------------------------
+guardrails:
+  target_vs_anchor:
+    # 기본(ALL)
+    thresholds:
+      soft_warn: 0.15
+      hard_warn: 0.25
+      block: 0.40   # ✅ 요청 반영: 40% block
+
+    # Evidence score 보정
+    evidence_adjust:
+      relax_if_e_score_ge: 80     # 1단계 완화 (단, BLOCK->WARN_HARD까지만)
+      tighten_if_e_score_le: 20   # 1단계 강화
+
+    # Anchor confidence 보정(선택)
+    anchor_confidence_adjust:
+      relax_if_conf_lt: 0.50      # 1단계 완화 (단, BLOCK->WARN_HARD까지만)
+
+    # 카테고리별 오버라이드(초기엔 동일값 유지 권장)
+    category_overrides:
+      default:
+        soft_warn: 0.15
+        hard_warn: 0.25
+        block: 0.40
+      # electronics:
+      #   block: 0.35
+      # fashion:
+      #   block: 0.50
