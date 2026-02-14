@@ -1,16 +1,30 @@
 # app/database.py
 import os
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
-# ✅ 이 프로젝트에서 사용할 "단 하나의" DB 파일 절대경로
-DB_FILE = r"C:\Users\user\Desktop\yp-ver2\app\ypver2.db"
+def _default_sqlite_url() -> str:
+    """
+    ✅ 기본 DB는 repo/app/ypver2.db 로 고정 (SSOT)
+    """
+    project_root = Path(__file__).resolve().parents[1]  # repo root (..../yp-ver2)
+    db_path = (project_root / "app" / "ypver2.db").resolve()
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    return f"sqlite:///{db_path.as_posix()}"
 
-# ✅ 환경변수 무시하고 이 경로만 쓴다
-DATABASE_URL = f"sqlite:///{DB_FILE}"
+# ✅ 환경변수 DATABASE_URL이 있으면 그걸 최우선으로 사용
+DATABASE_URL = (os.environ.get("DATABASE_URL") or "").strip() or _default_sqlite_url()
 
-# SQLite 옵션
-connect_args = {"check_same_thread": False}
+print(f"✅ Using DATABASE_URL: {DATABASE_URL}")
+if DATABASE_URL.startswith("sqlite:///"):
+    sqlite_path = DATABASE_URL.replace("sqlite:///", "")
+    try:
+        print(f"➡️  SQLite file absolute path: {Path(sqlite_path).resolve()}")
+    except Exception:
+        pass
+
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 engine = create_engine(
     DATABASE_URL,
@@ -20,15 +34,9 @@ engine = create_engine(
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
 
-
 def get_db():
     db: Session = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-
-# 디버그용 출력
-print("✅ Using DATABASE_URL:", DATABASE_URL)
-print("➡️  SQLite file absolute path:", os.path.abspath(DB_FILE))

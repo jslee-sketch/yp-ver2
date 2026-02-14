@@ -153,6 +153,8 @@ SELLER_LEVEL_RULES = [
 # ---------------- 기타 정책 상수(기존 호환) ----------------
 BUYER_POINT_PER_QTY = 20
 BUYER_POINT_ON_PAID = BUYER_POINT_PER_QTY   # 레거시 호환
+# Backward-compat alias (legacy code expects this name)
+BUYER_POINT_ON_REFUND = -abs(BUYER_POINT_ON_PAID)
 SELLER_POINT_ON_CONFIRM = 30
 
 # ---------------------------------------------------------

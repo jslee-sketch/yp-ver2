@@ -53,6 +53,57 @@ from app.schemas_ai import DealResolveIn
 from app.policy.api import payment_timeout_minutes
 from app.policy import api as policy_api
 
+import os
+import base64
+from passlib.hash import bcrypt as passlib_bcrypt
+
+
+def _bcrypt_safe_secret(pw: str, *, limit_bytes: int = 72) -> str:
+    """
+    bcrypt는 secret을 'bytes 기준 72' 제한한다.
+    한글/이모지 포함 시 pw[:72] (문자 기준)로는 bytes가 72를 넘을 수 있으므로
+    반드시 UTF-8 bytes 기준으로 잘라서 다시 문자열로 만든다.
+    """
+    s = (pw or "")
+    b = s.encode("utf-8")
+    if len(b) <= limit_bytes:
+        return s
+
+    # bytes 기준으로 자른 뒤, 깨진 UTF-8 시퀀스가 생기면 뒤에서부터 줄여 복구
+    b = b[:limit_bytes]
+    while True:
+        try:
+            return b.decode("utf-8")
+        except UnicodeDecodeError:
+            b = b[:-1]
+            if not b:
+                return ""
+
+def _bcrypt_secret_bytes(pw: str, *, limit_bytes: int = 72) -> bytes:
+    """
+    bcrypt는 secret을 bytes 기준 72로 제한한다.
+    str은 UTF-8로 변환 시 bytes가 늘 수 있으므로, bytes로 만든 다음 72 bytes로 자른다.
+    """
+    b = (pw or "").encode("utf-8")
+    return b[:limit_bytes]
+
+def bcrypt_hash_password(pw: str) -> str:
+    """
+    passlib bcrypt가 내부에서 str->bytes 변환하면서 72 bytes 제한에 걸리는 케이스가 있어
+    secret을 'bytes'로 직접 넘겨서 확실히 72 bytes 이하로 보장한다.
+    """
+    secret = _bcrypt_secret_bytes(pw, limit_bytes=72)
+
+    # passlib는 bytes secret도 처리 가능 (버전에 따라 str만 받는 경우가 있어 fallback을 둔다)
+    try:
+        return passlib_bcrypt.hash(secret)
+    except TypeError:
+        # 어떤 passlib/bcrypt 조합에서 bytes가 막히면, 안전하게 base64로 고정 길이 문자열로 만든다.
+        # (해시 입력이 ASCII가 되므로 bytes 길이 폭발이 없다)
+        safe_ascii = base64.urlsafe_b64encode(secret).decode("ascii")
+        return passlib_bcrypt.hash(safe_ascii)
+    
+
 # ---------------------------------
 # 커스텀 예외 클래스 (crud 로컬 정의)
 # ---------------------------------
@@ -161,7 +212,7 @@ def create_buyer(db: Session, buyer: schemas.BuyerCreate):
         if not rec:
             raise HTTPException(status_code=400, detail="Invalid recommender_buyer_id")
 
-    hashed_pw = bcrypt.hash(buyer.password[:72])
+    hashed_pw = bcrypt_hash_password(buyer.password)
     db_buyer = models.Buyer(
         email=buyer.email,
         password_hash=hashed_pw,
@@ -307,8 +358,7 @@ def create_seller(db: Session, seller: schemas.SellerCreate):
     # ---------------------------------------
     # 기존 Seller 생성 로직 그대로
     # ---------------------------------------
-    hashed_pw = bcrypt.hash(seller.password[:72])
-
+    hashed_pw = bcrypt_hash_password(seller.password)
     db_seller = models.Seller(
         email=seller.email,
         password_hash=seller.password and hashed_pw,
@@ -4606,6 +4656,22 @@ def get_offer_snapshot(db: Session, offer_id: int) -> dict:
         "deadline_at": offer.deadline_at,
         "created_at": offer.created_at,
     }
+
+# ------------------------------------------------------------
+# Backward-compat: legacy simulator helper
+# ------------------------------------------------------------
+def confirm_offer_and_reward(db, *, offer_id: int, seller_point_on_confirm: int = 30):
+    """
+    Legacy simulator expects this name.
+    Now delegates to SSOT flow: confirm_offer_if_soldout() (which calls seller_confirm_offer()).
+    """
+    return confirm_offer_if_soldout(
+        db,
+        offer_id=offer_id,
+        seller_point_on_confirm=int(seller_point_on_confirm or 0),
+    )
+
+
 
 def resync_offer_counters(db: Session, offer_id: int) -> dict:
     offer = db.get(Offer, offer_id)

@@ -268,7 +268,7 @@ _include_router_safe("dashboard", ("router",), label="dashboard")
 _include_router_safe("insights_overview", ("router",), label="insights_overview")
 _include_router_safe("insights", ("router",), label="insights")
 _include_router_safe("activity_log", ("router",), label="activity_log")
-
+_include_router_safe("preview_pack", ("router",), label="preview_pack")
 
 # --------------------------------------------------
 # 4️⃣ Admin / 시뮬레이션 / 정책

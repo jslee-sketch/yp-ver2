@@ -7,11 +7,15 @@ from sqlalchemy import (
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON #sqlite 등
+
+    
 from datetime import datetime
 from .database import Base
 import enum
 from datetime import datetime, timezone
-
+import json
 
 # -------------------------------------------------------
 # 🧩 User Model (인증/권한)
@@ -211,9 +215,14 @@ class Deal(Base):
     max_budget = Column(Float, nullable=True)
     current_avg_price = Column(Float, default=0)
 
+    # --- pricing guardrail (Target vs Anchor) ---
+    anchor_price = Column(Float, nullable=True)                 # async anchor, may be None
+    anchor_confidence = Column(Float, nullable=True, default=1.0)
+    evidence_score = Column(Integer, nullable=True, default=0)  # 0~100
+
     # 옵션 1~5
     option1_title = Column(String, nullable=True)
-    option1_value = Column(String, nullable=True)
+    option1_value = Column(String, nullable=True) 
     option2_title = Column(String, nullable=True)
     option2_value = Column(String, nullable=True)
     option3_title = Column(String, nullable=True)
@@ -610,6 +619,32 @@ class Reservation(Base):
     )
 
 
+# ---- helpers: policy_snapshot_json을 dict로 다루기 ----
+    def get_policy_snapshot(self) -> dict:
+        raw = getattr(self, "policy_snapshot_json", None)
+        if not raw:
+            return {}
+        if isinstance(raw, dict):
+            return raw
+        if isinstance(raw, str):
+            s = raw.strip()
+            if not s:
+                return {}
+            try:
+                return json.loads(s)
+            except Exception:
+                return {}
+        return {}
+
+    def set_policy_snapshot(self, data: dict) -> None:
+        try:
+            self.policy_snapshot_json = json.dumps(data, ensure_ascii=False)
+        except Exception:
+            # 최후 방어: 그래도 문자열로
+            self.policy_snapshot_json = str(data)
+
+
+
 # ---------------------------------------------------------
 # 💰 ReservationSettlement: 예약 1건에 대한 정산 결과
 # ---------------------------------------------------------
@@ -754,6 +789,13 @@ class EventType(str, enum.Enum):
     POINT_DEBIT = "POINT_DEBIT"
     REVIEW_CREATED = "REVIEW_CREATED"
     REVIEW_FLAGGED = "REVIEW_FLAGGED"
+    SETTLE_BATCH = "SETTLE_BATCH"
+    SETTLE_BATCH_VIEW = "SETTLE_BATCH_VIEW"
+    SETTLE_PAID = "SETTLE_PAID"
+    SETTLE_REQUESTED = "SETTLE_REQUESTED"
+    SETTLE_APPROVED = "SETTLE_APPROVED"
+    SETTLE_FAILED = "SETTLE_FAILED"
+
 
 class EventLog(Base):
     __tablename__ = "event_logs"
@@ -842,3 +884,42 @@ class PingpongLog(Base):
 
     error_code = Column(String, nullable=True)
     error_message = Column(Text, nullable=True)
+
+
+
+
+def _json_type():
+    """
+    ✅ SQLite 등에서는 JSON, Postgres에서는 JSONB가 되도록 호환 타입 사용
+    - 핵심: JSON().with_variant(JSONB(), "postgresql")
+    """
+    return JSON().with_variant(JSONB(), "postgresql")
+
+
+class PingpongCase(Base):
+    __tablename__ = "pingpong_cases"
+
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    case_type = Column(String(16), nullable=False, default="qa")  # qa / outcome
+    intent = Column(String(64), nullable=True, index=True)
+    screen = Column(String(64), nullable=True, index=True)
+    locale = Column(String(8), nullable=True)
+
+    actor_kind = Column(String(16), nullable=True)
+
+    # signature / outcome / safe_summary는 PII 없는 JSON
+    signature_json = Column(_json_type(), nullable=True)
+    outcome_json = Column(_json_type(), nullable=True)
+    safe_summary_json = Column(_json_type(), nullable=True)
+
+    fingerprint_text = Column(Text, nullable=True)
+
+    # 임베딩(없으면 null). pgvector 없다고 가정 → float list를 JSON으로 저장
+    embedding_json = Column(_json_type(), nullable=True)
+
+    last_score = Column(Float, nullable=True)
+
+    stage = Column(String(32), nullable=True, index=True)
+    cancel_rule = Column(String(16), nullable=True, index=True)
