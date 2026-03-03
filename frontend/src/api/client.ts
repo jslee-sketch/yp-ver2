@@ -1,11 +1,10 @@
 import axios from 'axios';
 
-// 개발: vite proxy 사용 (/api → localhost:8000)
-// 프로덕션: VITE_API_URL 환경변수 직접 사용
-const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
+// 개발: vite proxy 사용 (/api → localhost:9000)
+// 프로덕션: VITE_API_URL 환경변수 사용, 빈 값이면 같은 도메인 (Railway 등)
 const API_BASE_URL = import.meta.env.DEV
   ? '/api'
-  : (apiUrl || 'https://api.yeokping.com');
+  : (import.meta.env.VITE_API_URL || '');
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
