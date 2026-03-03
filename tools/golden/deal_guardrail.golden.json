@@ -1,0 +1,20 @@
+﻿{
+    "entity":  "deal",
+    "id":  1,
+    "deal":  {
+                 "id":  1,
+                 "status":  "open",
+                 "target_price":  777.0,
+                 "qty_target":  null
+             },
+    "guardrail":  {
+                      "level":  "ALLOW",
+                      "reason_codes":  [
+                                           "GAP_SOFT_WARN",
+                                           "E_SCORE_RELAXED"
+                                       ],
+                      "badge":  "NONE",
+                      "short_title":  "",
+                      "short_body":  ""
+                  }
+}

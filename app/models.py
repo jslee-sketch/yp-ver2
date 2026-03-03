@@ -43,12 +43,13 @@ class Buyer(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     name = Column(String, nullable=False)
+    nickname = Column(String(30), nullable=True, unique=True, index=True)
     phone = Column(String, nullable=True)
     address = Column(String, nullable=True)
     zip_code = Column(String, nullable=True)
     gender = Column(String, nullable=True)
     birth_date = Column(DateTime, nullable=True)
-    
+
     created_at = Column(DateTime, default=datetime.utcnow)
     points = Column(Integer, default=0, nullable=False)
     status = Column(String, default="active")
@@ -59,7 +60,16 @@ class Buyer(Base):
     recommender_buyer_id = Column(Integer, ForeignKey("buyers.id"), nullable=True)
     recommender = relationship("Buyer", remote_side=[id])
     # (NEW) 레벨 (티어와는 별개)
-    level = Column(Integer, default=6, nullable=False)    
+    level = Column(Integer, default=6, nullable=False)
+    # 소셜 로그인
+    social_provider = Column(String(20), nullable=True)   # kakao|naver|google
+    social_id       = Column(String(100), nullable=True, index=True)
+    # 계정 상태 (탈퇴/차단)
+    is_active = Column(Boolean, default=True, nullable=False, server_default="1")
+    withdrawn_at = Column(DateTime, nullable=True)
+    is_banned = Column(Boolean, default=False, nullable=False, server_default="0")
+    banned_until = Column(DateTime, nullable=True)
+    ban_reason = Column(Text, nullable=True)
     participants = relationship("DealParticipant", back_populates="buyer")
     deals = relationship("Deal", back_populates="creator")
 
@@ -89,6 +99,7 @@ class Seller(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     business_name = Column(String, nullable=False)
+    nickname = Column(String(30), nullable=True, unique=True, index=True)
     business_number = Column(String, unique=True, index=True, nullable=False)
     phone = Column(String, nullable=True)
     company_phone = Column(String, nullable=True)
@@ -106,8 +117,24 @@ class Seller(Base):
     reviews = relationship("SellerReview", back_populates="seller", cascade="all, delete-orphan")
     rating_aggregate = relationship("SellerRatingAggregate", back_populates="seller", uselist=False, cascade="all, delete-orphan")
 
+    # 계정 상태 (탈퇴/차단)
+    is_active = Column(Boolean, default=True, nullable=False, server_default="1")
+    withdrawn_at = Column(DateTime, nullable=True)
+    is_banned = Column(Boolean, default=False, nullable=False, server_default="0")
+    banned_until = Column(DateTime, nullable=True)
+    ban_reason = Column(Text, nullable=True)
+
     # (NEW) 나를 데려온 Actuator (없을 수도 있음)
     actuator_id = Column(Integer, ForeignKey("actuators.id"), nullable=True)
+
+    # 판매자 서류 (신규 — nullable)
+    ecommerce_permit_number = Column(String(50), nullable=True)
+    bank_name               = Column(String(50), nullable=True)
+    account_number          = Column(String(50), nullable=True)
+    account_holder          = Column(String(50), nullable=True)
+    business_license_image  = Column(String(500), nullable=True)
+    ecommerce_permit_image  = Column(String(500), nullable=True)
+    bankbook_image          = Column(String(500), nullable=True)
 
     actuator = relationship("Actuator", back_populates="sellers")
     
@@ -137,6 +164,7 @@ class Actuator(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    withdrawn_at = Column(DateTime, nullable=True)
 
     # 이 Actuator가 데려온 Sellers
     sellers = relationship("Seller", back_populates="actuator")
@@ -220,6 +248,9 @@ class Deal(Base):
     anchor_confidence = Column(Float, nullable=True, default=1.0)
     evidence_score = Column(Integer, nullable=True, default=0)  # 0~100
 
+    # --- AI Helper 추출 필드 ---
+    brand = Column(String, nullable=True)                       # 브랜드명 (AI Helper 추출)
+
     # 옵션 1~5
     option1_title = Column(String, nullable=True)
     option1_value = Column(String, nullable=True) 
@@ -233,6 +264,14 @@ class Deal(Base):
     option5_value = Column(String, nullable=True)
 
     free_text = Column(Text, nullable=True)
+
+    # --- 딜 조건 (DealConditions, AI Helper에서 추출) ---
+    shipping_fee_krw = Column(Integer, nullable=True)   # 무료배송=0, null=미입력
+    refund_days      = Column(Integer, nullable=True)   # 환불 가능 기간(일)
+    warranty_months  = Column(Integer, nullable=True)   # 보증 기간(월)
+    delivery_days    = Column(Integer, nullable=True)   # 배송 소요일
+    extra_conditions = Column(Text,    nullable=True)   # 기타 조건 자유 텍스트
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -607,9 +646,8 @@ class Reservation(Base):
     # (선택) 연관 관계 – 필요하면 추가
     policy = relationship("OfferPolicy", backref="reservations", lazy="joined")
 
-
-
-
+    delivery_auto_confirmed = Column(Boolean, default=False, nullable=False, server_default="0")
+    delivery_confirmed_source = Column(String(50), nullable=True)  # "batch_auto" | "buyer_manual"
 
     __table_args__ = (
         Index("ix_resv_offer_status", "offer_id", "status"),
@@ -886,6 +924,183 @@ class PingpongLog(Base):
     error_message = Column(Text, nullable=True)
 
 
+
+
+# -------------------------------------------------------
+# 👁 Spectator 관전자 시스템
+# -------------------------------------------------------
+
+class SpectatorPrediction(Base):
+    __tablename__ = "spectator_predictions"
+
+    id              = Column(Integer, primary_key=True, index=True)
+    deal_id         = Column(Integer, ForeignKey("deals.id"), nullable=False)
+    buyer_id        = Column(Integer, ForeignKey("buyers.id"), nullable=False)
+    predicted_price = Column(Integer, nullable=False)
+    comment         = Column(Text, nullable=True)
+    created_at      = Column(DateTime, default=datetime.utcnow)
+
+    # 판정 결과 (settle 후 채워짐)
+    settled_price   = Column(Integer, nullable=True)
+    error_pct       = Column(Float, nullable=True)
+    tier_name       = Column(String(20), nullable=True)
+    points_earned   = Column(Integer, default=0)
+    settled_at      = Column(DateTime, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("deal_id", "buyer_id", name="uq_spectator_once_per_deal"),
+        Index("ix_spectator_deal", "deal_id"),
+        Index("ix_spectator_buyer", "buyer_id"),
+    )
+
+
+class SpectatorMonthlyStats(Base):
+    __tablename__ = "spectator_monthly_stats"
+
+    id                = Column(Integer, primary_key=True, index=True)
+    buyer_id          = Column(Integer, ForeignKey("buyers.id"), nullable=False)
+    year_month        = Column(String(7), nullable=False)   # "2026-02"
+    total_points      = Column(Integer, default=0)
+    predictions_count = Column(Integer, default=0)
+    hits_count        = Column(Integer, default=0)
+    exact_count       = Column(Integer, default=0)
+    avg_error_pct     = Column(Float, nullable=True)
+    rank_tier         = Column(String(20), nullable=True)
+    bonus_points      = Column(Integer, default=0)
+
+    __table_args__ = (
+        UniqueConstraint("buyer_id", "year_month", name="uq_spectator_stats_monthly"),
+        Index("ix_spectator_stats_ym", "year_month"),
+    )
+
+
+class SpectatorBadge(Base):
+    __tablename__ = "spectator_badges"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    buyer_id   = Column(Integer, ForeignKey("buyers.id"), nullable=False)
+    badge_type = Column(String(30), nullable=False)
+    year_month = Column(String(7), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("buyer_id", "badge_type", "year_month", name="uq_badge_monthly"),
+    )
+
+
+class DealViewer(Base):
+    __tablename__ = "deal_viewers"
+
+    id        = Column(Integer, primary_key=True, index=True)
+    deal_id   = Column(Integer, ForeignKey("deals.id"), nullable=False)
+    buyer_id  = Column(Integer, ForeignKey("buyers.id"), nullable=False)
+    viewed_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("deal_id", "buyer_id", name="uq_deal_viewer_once"),
+        Index("ix_deal_viewer_deal", "deal_id"),
+    )
+
+
+# ── 신고/클레임 ──────────────────────────────────────────
+class Report(Base):
+    __tablename__ = "reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reporter_id = Column(Integer, nullable=False)
+    reporter_type = Column(String(20), nullable=False)   # buyer/seller/actuator
+    target_type = Column(String(20), nullable=False)     # deal/offer/seller/buyer/reservation
+    target_id = Column(Integer, nullable=False)
+    category = Column(String(30), nullable=False)        # fraud/abuse/defective/not_delivered/other
+    description = Column(Text, nullable=True)
+    status = Column(String(20), default="OPEN", nullable=False)  # OPEN/IN_REVIEW/RESOLVED/DISMISSED
+    resolution = Column(Text, nullable=True)
+    action_taken = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    resolved_at = Column(DateTime, nullable=True)
+
+    __table_args__ = (
+        Index("ix_report_reporter", "reporter_id", "reporter_type"),
+        Index("ix_report_target", "target_type", "target_id"),
+        Index("ix_report_status", "status"),
+    )
+
+
+# ── 파일 업로드 ───────────────────────────────────────────
+class UploadedFile(Base):
+    __tablename__ = "uploaded_files"
+
+    id = Column(Integer, primary_key=True, index=True)
+    entity_type = Column(String(30), nullable=False)   # deal/offer/buyer/seller
+    entity_id = Column(Integer, nullable=False)
+    filename = Column(String(255), nullable=False)
+    filepath = Column(String(500), nullable=False)
+    file_size = Column(Integer, nullable=True)
+    mime_type = Column(String(100), nullable=True)
+    uploaded_by_id = Column(Integer, nullable=True)
+    uploaded_by_type = Column(String(20), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        Index("ix_uploaded_file_entity", "entity_type", "entity_id"),
+    )
+
+
+# ── 정산 지급 요청 ────────────────────────────────────────
+class PayoutRequest(Base):
+    __tablename__ = "payout_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    batch_id = Column(String(50), nullable=False)
+    settlement_id = Column(Integer, ForeignKey("reservation_settlements.id"), nullable=False)
+    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    amount = Column(Integer, nullable=False)
+    bank_code = Column(String(10), nullable=True)
+    account_number = Column(String(30), nullable=True)
+    account_holder = Column(String(50), nullable=True)
+    status = Column(String(20), default="PENDING", nullable=False)  # PENDING/REQUESTED/SUCCESS/FAILED
+    requested_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    pg_transaction_id = Column(String(100), nullable=True)
+    failure_reason = Column(Text, nullable=True)
+    retry_count = Column(Integer, default=0, nullable=False, server_default="0")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        Index("ix_payout_batch", "batch_id"),
+        Index("ix_payout_status", "status"),
+        Index("ix_payout_seller", "seller_id"),
+    )
+
+
+# ── 정책 제안서 ───────────────────────────────────────────
+class PolicyProposal(Base):
+    __tablename__ = "policy_proposals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False)
+    proposal_type = Column(String(50), nullable=False)   # rate_change/threshold_change/new_rule/remove_rule
+    target_param = Column(String(200), nullable=True)
+    current_value = Column(Text, nullable=True)
+    proposed_value = Column(Text, nullable=True)
+    anomaly_alerts = Column(Text, nullable=True)          # JSON
+    evidence_summary = Column(Text, nullable=True)
+    status = Column(String(30), default="PROPOSED", nullable=False)  # PROPOSED/UNDER_REVIEW/APPROVED/APPLIED/REJECTED/ROLLED_BACK
+    proposed_at = Column(DateTime, default=datetime.utcnow)
+    proposed_by = Column(String(100), default="pingpong_auto")
+    reviewed_at = Column(DateTime, nullable=True)
+    reviewed_by = Column(String(100), nullable=True)
+    review_note = Column(Text, nullable=True)
+    applied_at = Column(DateTime, nullable=True)
+    rolled_back_at = Column(DateTime, nullable=True)
+    rollback_reason = Column(Text, nullable=True)
+    yaml_snapshot_before = Column(Text, nullable=True)
+    yaml_snapshot_after = Column(Text, nullable=True)
+
+    __table_args__ = (
+        Index("ix_policy_proposal_status", "status"),
+    )
 
 
 def _json_type():

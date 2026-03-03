@@ -1,0 +1,19 @@
+﻿{
+    "entity":  "deal",
+    "id":  1,
+    "deal":  {
+                 "id":  1,
+                 "status":  "open",
+                 "target_price":  0.0,
+                 "qty_target":  null
+             },
+    "guardrail":  {
+                      "level":  "WARN_HARD",
+                      "reason_codes":  [
+                                           "TARGET_INVALID"
+                                       ],
+                      "badge":  "HARD",
+                      "short_title":  "ëª©íê° íì¸",
+                      "short_body":  "ëª©íê°ê° 0ì ì´íë¡ ì\u0085ë ¥ëì´ì. ëª©íê°ë¥¼ ìì í´ ì£¼ì¸ì."
+                  }
+}

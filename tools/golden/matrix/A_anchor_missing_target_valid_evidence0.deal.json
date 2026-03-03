@@ -1,0 +1,20 @@
+﻿{
+    "entity":  "deal",
+    "id":  1,
+    "deal":  {
+                 "id":  1,
+                 "status":  "open",
+                 "target_price":  777.0,
+                 "qty_target":  null
+             },
+    "guardrail":  {
+                      "level":  "WARN_HARD",
+                      "reason_codes":  [
+                                           "ANCHOR_MISSING",
+                                           "EVIDENCE_MISSING"
+                                       ],
+                      "badge":  "HARD",
+                      "short_title":  "ê·¼ê±° íì",
+                      "short_body":  "ì¸ë¶ ê¸°ì¤ê°ê° ìì§ ìì´ì. ê·¼ê±°ë¥¼ ì¶ê°íë©´ ì íëê° ì¬ë¼ê°ëë¤."
+                  }
+}

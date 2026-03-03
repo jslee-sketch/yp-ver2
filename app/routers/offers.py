@@ -1,5 +1,6 @@
 # app/routers/offers.py
 from __future__ import annotations
+from app import crud as crud_v36
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone, timedelta
@@ -22,7 +23,8 @@ from app import crud, schemas, models
 
 from app.config import project_rules as R  # 정책/시간 계산 등
 
-from app.crud import seller_approval_status
+from app.crud import seller_approval_status, mark_reservation_shipped
+from app.core.time_policy import _utcnow
 from ..crud import get_reservation as crud_get_reservation, NotFoundError as CrudNotFoundError
 from ..crud import (
     get_reservation as crud_get_reservation,
@@ -74,6 +76,8 @@ def _translate_error(exc: Exception) -> None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc) or "not found")
 
     logging.exception("offers router error", exc_info=exc)
+    import traceback
+    print("TRACEBACK:\n" + "".join(traceback.format_exception(type(exc), exc, exc.__traceback__)))    
     raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail={"error": exc.__class__.__name__, "msg": str(exc)},
@@ -295,7 +299,6 @@ def _ensure_cancel_allowed_by_policy(
 # ─────────────────────────────────────────────────────
 router_resv = APIRouter(prefix="/reservations", tags=["reservations v3.5"])
 
-
 @router_resv.post(
     "",
     response_model=schemas.ReservationOut,
@@ -306,17 +309,23 @@ def api_create_reservation(
     body: schemas.ReservationCreate = Body(...),
     db: Session = Depends(get_db),
 ):
-    """
-    v3.5 예약 생성 (디포짓 완전 제거 버전)
+    logging.warning("[TRACE] HIT v3_5 reservations create: offers.py")
 
-    흐름:
-    - Deal / Offer / Buyer 존재 여부 검증
-    - Reservation(PENDING) 1건 직접 생성
-    - DeadTime 규칙에 맞춰 expires_at 계산 (R.apply_deadtime_pause 재사용)
-    - Seller 알림 생성
-    - policy, phase 헬퍼 붙여서 응답
     """
+    v3.5 예약 생성 (디포짓 제거 버전)
+
+    ✅ 변경 포인트(B안):
+    - v3.5에서 직접 reserved_qty/Reservation row 생성/amount_total 계산을 하지 않는다.
+    - v3.6 SSOT(crud.create_reservation)에 위임하여
+      amount_goods/amount_shipping/amount_total + policy_snapshot_json + reserved_qty까지
+      DB에 일관되게 저장되게 한다.
+    """
+
     try:
+        # (선택) trace용
+        if body.deal_id == 999999:
+            raise HTTPException(status_code=418, detail="TRACE: api_create_reservation reached")
+
         # 0) 기본 검증 ---------------------------------------------------
         deal = db.query(models.Deal).get(body.deal_id)
         if not deal:
@@ -336,56 +345,40 @@ def api_create_reservation(
         if not buyer:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buyer not found")
 
-        # 1) created_at / expires_at 계산 --------------------------------
-        #    - R.now_utc + R.apply_deadtime_pause 그대로 재사용
-        try:
-            base = R.now_utc() if callable(getattr(R, "now_utc", None)) else datetime.now(timezone.utc)
-        except Exception:
-            base = datetime.now(timezone.utc)
-
-        # ✅ D1: hold_minutes 기본값은 policy에서 가져온다 (body.hold_minutes가 있으면 그걸 우선)
+        # 1) hold_minutes 계산 ------------------------------------------
+        #    (v3.6 SSOT로 넘겨서 expires_at 계산에 사용)
         try:
             from app.policy.api import payment_timeout_minutes
             default_hold = int(payment_timeout_minutes())
         except Exception:
             default_hold = 60
 
-        hold_minutes = int(body.hold_minutes) if body.hold_minutes is not None else int(policy_api.payment_timeout_minutes())
-               
+        hold_minutes = int(body.hold_minutes) if body.hold_minutes is not None else int(default_hold)
         if hold_minutes < 1:
             hold_minutes = 1
         if hold_minutes > 24 * 60:
             hold_minutes = 24 * 60
 
-        try:
-            print("[DEBUG] hold_minutes=", hold_minutes, "policy_default=", default_hold)
-            expires = R.apply_deadtime_pause(
-                start_time=base,
-                minutes=hold_minutes,
-            )
-        except Exception:
-            # DeadTime 보정 실패 시에는 그냥 단순 더하기
-            expires = base + timedelta(minutes=hold_minutes)
+        # --------------------------------------------------------------
+        # ✅ 핵심: v3.6 SSOT 예약 생성 로직에 위임
+        #   - capacity check
+        #   - reserved_qty 홀드
+        #   - policy_id + policy_snapshot_json 저장
+        #   - amount_goods/amount_shipping/amount_total 스냅샷 저장
+        # --------------------------------------------------------------
 
-        # 2) Reservation 직접 생성 (❌ create_reservation / 디포짓 호출 없음)
-        res = models.Reservation(
-            deal_id=body.deal_id,
-            offer_id=body.offer_id,
-            buyer_id=body.buyer_id,
-            qty=body.qty,
-            status=models.ReservationStatus.PENDING,
-            created_at=base,
-            expires_at=expires,
+        res = crud_v36.create_reservation(
+            db,
+            deal_id=int(body.deal_id),
+            offer_id=int(body.offer_id),
+            buyer_id=int(body.buyer_id),
+            qty=int(body.qty),
+            hold_minutes=int(hold_minutes),
         )
 
-        db.add(res)
-        db.commit()
-        db.refresh(res)
-
-        # 3) Seller 알림: "내 오퍼에 예약이 들어왔어요" --------------------
+        # 3) Seller 알림 (v3.6이 알림을 안 만든다면 여기서 유지) -----------
         try:
             seller = db.query(models.Seller).get(offer.seller_id) if offer else None
-
             if seller:
                 create_notification(
                     db,
@@ -393,7 +386,7 @@ def api_create_reservation(
                     type="offer_reservation_created",
                     title="내 오퍼에 예약이 들어왔어요",
                     message="등록하신 오퍼에 새로운 예약이 생성되었습니다.",
-                    link_url=None,  # 나중에 프론트 URL 구조 나오면 교체
+                    link_url=None,
                     meta={
                         "role": "seller",
                         "offer_id": offer.id,
@@ -401,18 +394,15 @@ def api_create_reservation(
                     },
                 )
         except Exception as _e:
-            # 알림 실패가 전체 예약 흐름을 막지 않도록 방어
             logging.warning("[NOTIFICATION] offer_reservation_created failed: %s", _e)
 
-        # 4) 예약 응답에 정책(OfferPolicy) 붙이기 --------------------------
+        # 4) policy/phase 붙이기 ----------------------------------------
+        # - policy는 "응답용 attach"로만 처리 (ORM setattr 최소화)
         try:
-            policy = crud.get_offer_policy(db, res.offer_id)
-            if policy:
-                setattr(res, "policy", policy)
+            _attach_policy_to_reservation_obj(res, db)
         except Exception as _e:
-            logging.warning("[RESERVATION] attach policy (create) failed: %s", _e)
+            logging.warning("[RESERVATION] attach_policy (create) failed: %s", _e)
 
-        # 5) 상태 phase 계산 ----------------------------------------------
         try:
             _attach_phase_to_reservation_obj(res)
         except Exception as _e:
@@ -421,11 +411,14 @@ def api_create_reservation(
         return res
 
     except HTTPException:
-        # 위에서 직접 던진 HTTPException 은 그대로 전달
         raise
     except Exception as e:
-        _translate_error(e)
-
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal error: {e.__class__.__name__}: {e}",
+        )
 
 # ---------------------------------------------------------
 # 📋 Seller용 예약 리스트
@@ -557,31 +550,71 @@ def api_pay_reservation(
         resv = crud_get_reservation(db, body.reservation_id)
 
         # 2) 결제 실행
-        paid = pay_reservation(
+        # - CRUD 시그니처: pay_reservation(db, reservation_id: int, paid_amount: int)
+        # - buyer_id는 "검증"에만 쓰고, CRUD로 넘기지 않는다.
+        if getattr(body, "buyer_id", None) is not None:
+            if int(getattr(resv, "buyer_id", 0) or 0) != int(body.buyer_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="reservation does not belong to buyer",
+                )
+
+        # paid_amount는 body가 주면 그걸 쓰고, 없으면 예약 스냅샷(SSOT)에서 가져온다.
+        paid_amount = getattr(body, "paid_amount", None)
+        if paid_amount is None:
+            paid_amount = int(getattr(resv, "amount_total", 0) or 0)
+
+        paid_amount = int(paid_amount or 0)
+        if paid_amount <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="paid_amount must be positive",
+            )
+
+        paid = crud.pay_reservation(
             db,
-            reservation_id=body.reservation_id,
-            buyer_id=body.buyer_id,
-            buyer_point_per_qty=getattr(R, "BUYER_POINT_PER_QTY", 20),
+            reservation_id=int(body.reservation_id),
+            paid_amount=paid_amount,
         )
 
-        # 🆕 2-1) 정산 스냅샷 생성/갱신
+        # 3) 🔹 결제 시 정산 스냅샷 생성 (PG/역핑/셀러 정산 계산) — v3.5 안정화 버전
+        #    ✅ 원칙:
+        #    - settlement 실패가 결제(pay) 자체를 롤백시키면 안 된다.
+        #    - 따라서 pay 결과를 먼저 확정(commit)하고, 그 다음 settlement를 만들고 별도로 commit한다.
         try:
-            crud.create_or_update_settlement_for_reservation(db, paid)
-            db.commit()
-            db.refresh(paid)
-        except Exception as _e:
-            # 정산 스냅샷 실패가 결제 자체를 망치지는 않도록 일단 경고만
-            logging.warning("[SETTLEMENT] create snapshot failed: %s", _e)
+            # (A) pay 결과를 먼저 확정 (pay_reservation가 내부에서 commit을 안 했을 수도 있으므로 여기서 보장)
+            try:
+                db.add(paid)
+                db.commit()
+            except Exception:
+                # 이미 commit 되었거나, add/commit이 필요 없는 상황일 수 있으니 best-effort
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
 
+            try:
+                db.refresh(paid)
+            except Exception:
+                pass
 
-        # 3) 🔹 결제 시 정산 스냅샷 생성 (PG/역핑/셀러 정산 계산)
-        try:
-            crud.create_settlement_for_paid_reservation(
-                db,
-                reservation_id=paid.id,
-            )
+            # (B) settlement 생성 + commit 보장
+            try:
+                crud.create_settlement_for_paid_reservation(
+                    db,
+                    reservation_id=int(paid.id),
+                )
+                db.commit()
+            except Exception as e:
+                logging.exception("[SETTLEMENT] snapshot create failed (best-effort)", exc_info=e)
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
+
         except Exception as e:
-            logging.warning("[SETTLEMENT] snapshot create failed: %s", e)
+            # 절대 결제 흐름을 망치지 않기
+            logging.exception("[SETTLEMENT] unexpected error (best-effort)", exc_info=e)
 
 
         # 4) Actuator 커미션 적립 시도 (기존 로직 그대로 유지)
@@ -590,44 +623,52 @@ def api_pay_reservation(
         except Exception as e:
             logging.warning("[ACTUATOR COMMISSION] failed: %s", e)
 
-        # 5) ✅ 결제 시점의 오퍼 정책 스냅샷 저장 + 응답에 policy 붙이기
+        # ---------------------------------------------------------
+        # 5) ✅ 결제 시점의 오퍼 정책 스냅샷 저장 + 응답에 policy 포함
+        #    - ORM(paid)에 Pydantic(policy)를 setattr 하면 SQLAlchemy가 relationship로 오해 → _sa_instance_state 에러
+        #    - 따라서 DB에는 snapshot_json만 저장하고,
+        #      응답용 ReservationOut(Pydantic)에만 policy를 붙인다.
+        # ---------------------------------------------------------
+        policy_for_response = None
+
         try:
-            # 이미 policy_id가 있으면(재호출 등) 덮어쓰지 않고 스냅샷만 응답에 복원
+            # 이미 policy_id가 있으면(재호출 등) 덮어쓰지 않음
             if getattr(paid, "policy_id", None) is None:
                 policy = crud.get_offer_policy(db, paid.offer_id)
 
                 if policy:
-                    # ORM → Pydantic 변환
-                    policy_schema = schemas.OfferPolicyOut.model_validate(policy)
+                    policy_schema = schemas.OfferPolicyOut.model_validate(policy, from_attributes=True)
 
-                    # 스냅샷 필드 세팅
+                    # 스냅샷 필드 세팅 (DB 저장)
                     paid.policy_id = policy.id
                     paid.policy_snapshot_json = json.dumps(
-                        policy_schema.model_dump(),
+                        policy_schema.model_dump(mode="json"),
                         ensure_ascii=False,
                         default=str,
                     )
-                    paid.policy_agreed_at = datetime.now(timezone.utc)
+                    # 이 컬럼이 실제로 존재하면 유지, 없으면 조용히 패스
+                    try:
+                        paid.policy_agreed_at = datetime.now(timezone.utc)
+                    except Exception:
+                        pass
 
                     db.add(paid)
                     db.commit()
                     db.refresh(paid)
 
-                    # 응답에도 바로 포함되도록 메모리 상에 policy 붙이기
-                    setattr(paid, "policy", policy_schema)
+                    # ✅ 응답용으로만 보관
+                    policy_for_response = policy_schema
+
             else:
                 # 이미 스냅샷이 있을 땐 snapshot_json → policy 로만 복원해서 응답에 붙임
-                try:
-                    snapshot = getattr(paid, "policy_snapshot_json", None)
-                    if snapshot:
-                        data = json.loads(snapshot)
-                        policy_schema = schemas.OfferPolicyOut.model_validate(data)
-                        setattr(paid, "policy", policy_schema)
-                except Exception:
-                    # 파싱 실패해도 결제 성공 자체는 유지
-                    pass
+                snapshot = getattr(paid, "policy_snapshot_json", None)
+                if snapshot:
+                    data = json.loads(snapshot)
+                    policy_schema = schemas.OfferPolicyOut.model_validate(data)
+                    policy_for_response = policy_schema
 
         except Exception as _e:
+            logging.exception("[RESERVATION] policy snapshot on pay failed", exc_info=_e)
             logging.warning("[RESERVATION] policy snapshot on pay failed: %s", _e)
 
         # 6) phase 계산해서 응답에 붙이기 (PENDING/PAID/SHIPPED/DELIVERED/CANCELLED 등)
@@ -636,10 +677,16 @@ def api_pay_reservation(
         except Exception as _e:
             logging.warning("[RESERVATION] attach_phase (pay) failed: %s", _e)
 
-        return paid
+        # ✅ ORM(paid) 그대로 return 하지 말고, 응답 모델로 변환 후 policy 붙여 반환
+        out = schemas.ReservationOut.model_validate(paid, from_attributes=True)
+        if policy_for_response is not None:
+            out.policy = policy_for_response
+
+        return out
 
     except Exception as e:
         _translate_error(e)
+
 
 
 # ---------------------------------------------------------
@@ -661,54 +708,42 @@ class ReservationShipIn(BaseModel):
 )
 def api_mark_reservation_shipped(
     reservation_id: int = Path(..., ge=1),
-    body: ReservationShipIn = Body(...),
+    body: ReservationShipIn = Body(default_factory=ReservationShipIn),
     db: Session = Depends(get_db),
 ):
-    resv = (
-        db.query(models.Reservation)
-        .filter(models.Reservation.id == reservation_id)
-        .first()
-    )
-    if not resv:
-        raise HTTPException(status_code=404, detail="Reservation not found")
+    # ✅ Optional 방어
+    if body.seller_id is None:
+        raise HTTPException(status_code=422, detail="seller_id is required")
 
-    off = (
-        db.query(models.Offer)
-        .filter(models.Offer.id == resv.offer_id)
-        .first()
-    )
-    if not off or int(getattr(off, "seller_id", 0)) != int(body.seller_id):
-        raise HTTPException(status_code=409, detail="not owned by seller")
-
-    status_val = getattr(resv, "status", None)
-    name = getattr(status_val, "name", None) or str(status_val)
-    if name != "PAID":
-        raise HTTPException(
-            status_code=409,
-            detail=f"cannot mark shipped: status={name}",
+    try:
+        resv = mark_reservation_shipped(
+            db,
+            reservation_id=reservation_id,
+            seller_id=body.seller_id,
+            shipping_carrier=getattr(body, "shipping_carrier", None),
+            tracking_number=getattr(body, "tracking_number", None),
         )
+    except HTTPException:
+        raise
+    except Exception as e:
+        # ConflictError/NotFoundError 같은 커스텀 에러를 여기서 HTTP로 변환
+        msg = str(e)
+        if "not found" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        if "cannot" in msg.lower() or "conflict" in msg.lower() or "not owned" in msg.lower():
+            raise HTTPException(status_code=409, detail=msg)
+        raise HTTPException(status_code=500, detail=msg)
 
-    # 🔹 여기서 배송정보 세팅
-    if body.shipping_carrier:
-        resv.shipping_carrier = body.shipping_carrier
-    if body.tracking_number:
-        resv.tracking_number = body.tracking_number
 
-
-    if getattr(resv, "shipped_at", None) is None:
-        resv.shipped_at = datetime.now(timezone.utc)
-
-    db.add(resv)
-    db.commit()
-    db.refresh(resv)
-
-    # 🆕 phase 계산
+    # 🆕 phase 계산 (DB 영향 없음)
     try:
         _attach_phase_to_reservation_obj(resv)
     except Exception as _e:
         logging.warning("[RESERVATION] attach_phase (shipped) failed: %s", _e)
 
     return resv
+
+
 
 
 class ReservationArrivalConfirmIn(BaseModel):
@@ -1423,6 +1458,12 @@ def api_cancel_reservation(
         # 2-B) PAID 취소 (결제 후 환불)
         # ─────────────────────────────
         if name == "PAID":
+            # 도착확인 완료 예약은 취소 불가
+            if getattr(resv, "arrival_confirmed_at", None) is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="cannot cancel reservation after arrival confirmed",
+                )
             # actor 가 buyer_cancel 이면 A1/A2/A3/A4 정책을 적용해 검사
             _ensure_cancel_allowed_by_policy(resv, db, body.actor)
 
@@ -2484,13 +2525,50 @@ def api_upsert_offer_policy(
     return policy
 
 
+# ──────────────────────────────────────────────────────────
+# [DEV] 만료 오퍼 자동 비활성화
+# ──────────────────────────────────────────────────────────
+@router_offers.post(
+    "/dev/expire",
+    summary="[DEV] 만료 오퍼 자동 비활성화",
+    tags=["offers"],
+)
+def dev_expire_offers(db: Session = Depends(get_db)):
+    """
+    is_active=True이고 deadline_at < now 인 오퍼를 is_active=False로 전환.
+    """
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+
+    try:
+        expired_offers = (
+            db.query(models.Offer)
+            .filter(
+                models.Offer.is_active == True,
+                models.Offer.deadline_at.isnot(None),
+                models.Offer.deadline_at < now,
+            )
+            .all()
+        )
+    except Exception:
+        return {"expired_count": 0, "expired_ids": []}
+
+    expired_ids = []
+    for offer in expired_offers:
+        offer.is_active = False
+        db.add(offer)
+        expired_ids.append(offer.id)
+
+    db.commit()
+    return {"expired_count": len(expired_ids), "expired_ids": expired_ids}
+
+
 # ─────────────────────────────────────────────────────
 # 집계 라우터(api)
 # ─────────────────────────────────────────────────────
 api = APIRouter()
 api.include_router(router_resv)   # /reservations/*
 api.include_router(router_offers)  # /offers/*
-api.include_router(deals.router)  # /deals/*
 api.include_router(admin_anchor.router)   # /admin/anchor/*
 
 

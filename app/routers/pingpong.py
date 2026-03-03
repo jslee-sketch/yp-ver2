@@ -336,7 +336,7 @@ def _choose_policy_domains(screen: str) -> List[str]:
         return ["DEAL", "OFFER", "MONEY"]
     if s in ("SETTLEMENT_DASHBOARD", "SETTLEMENT_DETAIL"):
         return ["SETTLEMENT", "MONEY"]
-    return ["MONEY", "GENERAL"]
+    return ["MONEY", "GENERAL", "POINT"]
 
 
 # =========================================================
@@ -497,6 +497,232 @@ def _build_system_prompt(
 
 
 # =========================================================
+# Intent Classification (sidecar 패턴 경량화)
+# =========================================================
+
+_INTENT_SYSTEM_PROMPT = """\
+Your ENTIRE response must be exactly one JSON object. No markdown, no explanation.
+FORMAT: {"intent": "INTENT_NAME", "query": null}
+
+You classify messages for 역핑(Yeokping), a Korean group-buying platform.
+
+INTENT VALUES (pick one):
+  EXTERNAL_PRICE   - Price query with brand/model name (갤럭시, 아이폰, 맥북, 에어팟, 다이슨 등)
+  EXTERNAL_NEWS    - News/headline request (뉴스, 헤드라인, 기사, 속보)
+  YEOKPING_GENERAL - Platform question (refund, fees, shipping, deals, offers, reservations, points, policy)
+  SMALLTALK        - Everything else (greetings, general knowledge, weather, jokes)
+
+RULES:
+- Yeokping-specific terms = YEOKPING_GENERAL: 역핑, 딜, 오퍼, 예약, 환불, 정산, 쿨링, 액츄에이터, 공동구매
+- Price + product name = EXTERNAL_PRICE. "얼마야" alone = SMALLTALK
+- "수수료 얼마?" = YEOKPING_GENERAL (platform fee)
+- Entity with number (딜 10번, 오퍼 5번) = YEOKPING_GENERAL
+- When in doubt = SMALLTALK
+
+EXAMPLES:
+{"intent": "EXTERNAL_PRICE", "query": "갤럭시 S25"}
+{"intent": "YEOKPING_GENERAL", "query": null}
+{"intent": "SMALLTALK", "query": null}
+"""
+
+_YEOKPING_KEYWORDS = re.compile(
+    r"(역핑|공동구매|오퍼|offer|딜|deal|액츄에이터|예약|reservation|환불|수수료|정산|쿨링|배송비|"
+    r"포인트|refund|settlement|shipping|cooling|판매자|구매자|방장|leader|PG|마감|참여|결제)",
+    re.IGNORECASE,
+)
+
+_NEWS_PAT = re.compile(
+    r"(뉴스|헤드라인|해드라인|headline|news|기사|시사|속보)",
+    re.IGNORECASE,
+)
+
+_PRICE_PRODUCT_PAT = re.compile(
+    r"(갤럭시|galaxy|아이폰|iphone|에어팟|airpod|맥북|macbook|LG\s*그램|그램|다이슨|dyson|"
+    r"나이키|nike|아디다스|adidas|RTX|노트북|냉장고|세탁기|TV|모니터|카메라|PS5|플스|닌텐도|스위치|"
+    r"아이패드|ipad|갤럭시탭|버즈|buds|워치|watch|에어맥스|조던|뉴발란스)",
+    re.IGNORECASE,
+)
+_PRICE_TRIGGER_PAT = re.compile(
+    r"(가격|얼마|최저가|시세|싼|비싼|시장가|쇼핑|비교|검색해|찾아|알려)",
+    re.IGNORECASE,
+)
+
+
+def _classify_intent_simple(question: str) -> Dict[str, Any]:
+    """경량 regex 기반 의도 분류 (LLM 호출 전 빠른 라우팅)."""
+    q = (question or "").strip().lower()
+
+    # 1) 역핑 키워드 → YEOKPING_GENERAL
+    if _YEOKPING_KEYWORDS.search(q):
+        return {"intent": "YEOKPING_GENERAL", "query": None}
+
+    # 2) 제품명 + 가격 트리거 → EXTERNAL_PRICE
+    if _PRICE_PRODUCT_PAT.search(q) and _PRICE_TRIGGER_PAT.search(q):
+        # 제품 키워드 추출
+        m = _PRICE_PRODUCT_PAT.search(q)
+        product_query = m.group(0) if m else q
+        return {"intent": "EXTERNAL_PRICE", "query": product_query}
+
+    # 3) 제품명만 있어도 "얼마" 포함 → EXTERNAL_PRICE
+    if _PRICE_PRODUCT_PAT.search(q) and re.search(r"(얼마|가격|최저가)", q):
+        m = _PRICE_PRODUCT_PAT.search(q)
+        return {"intent": "EXTERNAL_PRICE", "query": m.group(0) if m else q}
+
+    # 4) 뉴스 키워드 → EXTERNAL_NEWS
+    if _NEWS_PAT.search(q):
+        return {"intent": "EXTERNAL_NEWS", "query": None}
+
+    return {"intent": "UNKNOWN", "query": None}
+
+
+def _classify_intent_llm(question: str) -> Dict[str, Any]:
+    """LLM 기반 의도 분류 (regex 실패 시 fallback)."""
+    try:
+        client = get_client()
+        resp = client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[
+                {"role": "system", "content": _INTENT_SYSTEM_PROMPT},
+                {"role": "user", "content": question},
+            ],
+            max_tokens=80,
+            temperature=0,
+            timeout=8,
+        )
+        raw = (resp.choices[0].message.content or "").strip()
+        raw = re.sub(r"^```[a-z]*\n?", "", raw).rstrip("`").strip()
+        data = json.loads(raw)
+        intent = str(data.get("intent", "SMALLTALK")).upper()
+        if intent not in ("EXTERNAL_PRICE", "EXTERNAL_NEWS", "YEOKPING_GENERAL", "SMALLTALK"):
+            intent = "SMALLTALK"
+        return {"intent": intent, "query": data.get("query")}
+    except Exception:
+        return {"intent": "SMALLTALK", "query": None}
+
+
+def _classify_intent(question: str) -> Dict[str, Any]:
+    """regex 우선, 불확실하면 LLM fallback."""
+    result = _classify_intent_simple(question)
+    if result["intent"] != "UNKNOWN":
+        return result
+    return _classify_intent_llm(question)
+
+
+# =========================================================
+# External Price Handler (Naver Shopping API)
+# =========================================================
+
+def _handle_external_price(query: str) -> Optional[str]:
+    """네이버 쇼핑 API로 가격 조회. 실패 시 None."""
+    try:
+        from app.utils.naver_shopping import search_naver_shopping
+        result = search_naver_shopping(query)
+        if result and result.lowest_price > 0:
+            price_str = f"{result.lowest_price:,}원"
+            if result.lowest_price >= 10000:
+                price_str += f" (약 {result.lowest_price // 10000}만원대)"
+
+            lines = [f"{result.product_name}"]
+            lines.append(f"최저가: {price_str}")
+            if result.mall_name:
+                lines.append(f"판매처: {result.mall_name}")
+            if result.highest_price and result.highest_price > result.lowest_price:
+                lines.append(f"가격 범위: {result.lowest_price:,}원 ~ {result.highest_price:,}원")
+            lines.append("(네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)")
+
+            from urllib.parse import quote_plus
+            eq = quote_plus(query)
+            lines.append("")
+            lines.append("자세한 비교는 아래에서 확인해 보세요:")
+            lines.append(f"- 네이버쇼핑: https://search.shopping.naver.com/search/all?query={eq}")
+            lines.append(f"- 다나와: https://search.danawa.com/dsearch.php?k1={eq}")
+            lines.append(f"- 쿠팡: https://www.coupang.com/np/search?q={eq}")
+
+            return "\n".join(lines)
+    except Exception as e:
+        print(f"[pingpong] 네이버 가격 조회 실패: {e}")
+
+    # 가격 조회 실패 → 링크만 제공
+    try:
+        from urllib.parse import quote_plus
+        eq = quote_plus(query)
+        return (
+            f"'{query}' 가격 정보를 직접 조회하지 못했어요. 아래에서 확인해 보세요:\n"
+            f"- 네이버쇼핑: https://search.shopping.naver.com/search/all?query={eq}\n"
+            f"- 다나와: https://search.danawa.com/dsearch.php?k1={eq}\n"
+            f"- 쿠팡: https://www.coupang.com/np/search?q={eq}"
+        )
+    except Exception:
+        return None
+
+
+# =========================================================
+# News Handler (Google News RSS)
+# =========================================================
+
+def _handle_external_news() -> Optional[str]:
+    """Google News RSS에서 최신 한국 뉴스 헤드라인을 가져온다."""
+    import xml.etree.ElementTree as ET
+    try:
+        import requests as _req
+        rss_url = "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"
+        resp = _req.get(rss_url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
+        if resp.status_code != 200:
+            return None
+        root = ET.fromstring(resp.content)
+        items = root.findall(".//item")
+        if not items:
+            return None
+        headlines = []
+        for item in items[:5]:
+            title_el = item.find("title")
+            if title_el is not None and title_el.text:
+                headlines.append(title_el.text.strip())
+        if not headlines:
+            return None
+        lines = ["오늘의 주요 뉴스 헤드라인이에요:"]
+        for i, h in enumerate(headlines, 1):
+            lines.append(f"{i}. {h}")
+        lines.append("")
+        lines.append("더 자세한 뉴스는 아래에서 확인하세요:")
+        lines.append("- 구글뉴스: https://news.google.com/?hl=ko&gl=KR&ceid=KR:ko")
+        lines.append("- 네이버뉴스: https://news.naver.com/")
+        return "\n".join(lines)
+    except Exception as e:
+        print(f"[pingpong] 뉴스 RSS 실패: {e}")
+        return None
+
+
+# =========================================================
+# Smalltalk Handler
+# =========================================================
+
+def _handle_smalltalk(question: str) -> str:
+    """일반 대화 처리 (정책 KB 없이 LLM으로 자연스럽게)."""
+    try:
+        client = get_client()
+        resp = client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[
+                {"role": "system", "content": (
+                    "너는 공동구매 플랫폼 '역핑'의 AI 헬퍼 '핑퐁이'야. "
+                    "친절하고 자연스럽게 대화해. "
+                    "역핑/정책/서버/DB 같은 내부 용어는 쓰지 마. "
+                    "1~4문장으로 짧게 답해. "
+                    "확신 없으면 '정확하진 않지만...' 같은 완충 표현을 써."
+                )},
+                {"role": "user", "content": question},
+            ],
+            temperature=0.7,
+            max_tokens=300,
+            timeout=10,
+        )
+        return (resp.choices[0].message.content or "").strip()
+    except Exception:
+        return "지금은 답변 생성에 문제가 있어요. 잠시 후 다시 시도해 주세요!"
+
+
+# =========================================================
 # Endpoint
 # =========================================================
 @router.post("/ask", response_model=PingpongAskOut)
@@ -507,8 +733,110 @@ def pingpong_ask(
     if not body.question or not body.question.strip():
         raise HTTPException(status_code=400, detail="question is required")
 
-    # 1) 컨텍스트
+    # 0) 의도 분류 — EXTERNAL_PRICE / SMALLTALK은 정책 KB 불필요
     body.question = _redact_pii(body.question.strip())
+    intent = _classify_intent(body.question)
+
+    # EXTERNAL_PRICE → 네이버 쇼핑 API 직접 응답
+    if intent["intent"] == "EXTERNAL_PRICE":
+        price_query = intent.get("query") or body.question
+        price_answer = _handle_external_price(price_query)
+        if price_answer:
+            # 로그 저장
+            try:
+                crud.log_pingpong(
+                    db, user_id=body.user_id, role=body.role,
+                    locale=body.locale, screen=body.screen,
+                    deal_id=body.context.deal_id, reservation_id=body.context.reservation_id,
+                    offer_id=body.context.offer_id, mode=body.mode,
+                    question=body.question, answer=price_answer,
+                    used_policy_keys=[], used_policy_ids=[], actions=[],
+                    context={"intent": "EXTERNAL_PRICE", "query": price_query},
+                    request_payload={"intent": intent},
+                    response_payload={"source": "naver_shopping"},
+                    llm_model="naver_api", latency_ms=0,
+                    prompt_tokens=None, completion_tokens=None,
+                    error_code=None, error_message=None,
+                )
+            except Exception:
+                pass
+            return PingpongAskOut(
+                answer=price_answer,
+                used_policies=[],
+                actions=[],
+                debug={"intent": "EXTERNAL_PRICE", "query": price_query},
+            )
+
+    # EXTERNAL_NEWS → Google News RSS
+    if intent["intent"] == "EXTERNAL_NEWS":
+        news_answer = _handle_external_news()
+        if news_answer:
+            try:
+                crud.log_pingpong(
+                    db, user_id=body.user_id, role=body.role,
+                    locale=body.locale, screen=body.screen,
+                    deal_id=body.context.deal_id, reservation_id=body.context.reservation_id,
+                    offer_id=body.context.offer_id, mode=body.mode,
+                    question=body.question, answer=news_answer,
+                    used_policy_keys=[], used_policy_ids=[], actions=[],
+                    context={"intent": "EXTERNAL_NEWS"},
+                    request_payload={"intent": intent},
+                    response_payload={"source": "google_news_rss"},
+                    llm_model="rss", latency_ms=0,
+                    prompt_tokens=None, completion_tokens=None,
+                    error_code=None, error_message=None,
+                )
+            except Exception:
+                pass
+            return PingpongAskOut(
+                answer=news_answer,
+                used_policies=[],
+                actions=[],
+                debug={"intent": "EXTERNAL_NEWS"},
+            )
+        # RSS 실패 시 링크만 제공
+        fallback_news = (
+            "뉴스 헤드라인을 바로 가져오지 못했어요. 아래에서 확인해 보세요:\n"
+            "- 구글뉴스: https://news.google.com/?hl=ko&gl=KR&ceid=KR:ko\n"
+            "- 네이버뉴스: https://news.naver.com/"
+        )
+        return PingpongAskOut(
+            answer=fallback_news,
+            used_policies=[],
+            actions=[],
+            debug={"intent": "EXTERNAL_NEWS", "rss_failed": True},
+        )
+
+    # SMALLTALK → 가벼운 LLM 대화 (정책 KB 스킵)
+    if intent["intent"] == "SMALLTALK":
+        smalltalk_answer = _handle_smalltalk(body.question)
+        try:
+            crud.log_pingpong(
+                db, user_id=body.user_id, role=body.role,
+                locale=body.locale, screen=body.screen,
+                deal_id=body.context.deal_id, reservation_id=body.context.reservation_id,
+                offer_id=body.context.offer_id, mode=body.mode,
+                question=body.question, answer=smalltalk_answer,
+                used_policy_keys=[], used_policy_ids=[], actions=[],
+                context={"intent": "SMALLTALK"},
+                request_payload={"intent": intent},
+                response_payload={"source": "smalltalk_llm"},
+                llm_model="gpt-4.1-mini", latency_ms=0,
+                prompt_tokens=None, completion_tokens=None,
+                error_code=None, error_message=None,
+            )
+        except Exception:
+            pass
+        return PingpongAskOut(
+            answer=smalltalk_answer,
+            used_policies=[],
+            actions=[],
+            debug={"intent": "SMALLTALK"},
+        )
+
+    # YEOKPING_GENERAL → 아래 정책 기반 LLM 로직 진행
+
+    # 1) 컨텍스트
     ctx = _build_context_snapshot(db, body)
 
     max_chat_messages = int(getattr(body, "max_chat_messages", 10) or 10)
@@ -517,6 +845,16 @@ def pingpong_ask(
     # 2) 정책 로드
     domains = _choose_policy_domains(body.screen)
     policies = crud.get_active_policies(db, domains=domains, limit_total=40)
+
+    # ✅ fallback: 도메인 매칭 실패 시 GENERAL(+핵심 공통)로 재시도
+    if not policies:
+        fallback_domains = ["GENERAL", "TIME", "REFUND", "FEES", "GUARDRAILS", "PARTICIPANTS", "PINGPONG", "POINT"]
+        # (질문에 '정산/settlement'가 보이면 SETTLEMENT도 추가하는 식으로 더 똑똑하게 해도 됨)
+        policies = crud.get_active_policies(db, domains=fallback_domains, limit_total=40)
+
+    # ✅ 그래도 비면 최후: domains=None (전체에서 40개)
+    if not policies:
+        policies = crud.get_active_policies(db, domains=None, limit_total=40)
 
     # ✅ allowed_keys 산정 (policy_key 확정)  ---- 가장 중요 ----
     allowed_keys_set = {p.policy_key for p in policies if getattr(p, "policy_key", None)}

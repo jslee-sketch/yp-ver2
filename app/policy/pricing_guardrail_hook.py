@@ -195,32 +195,28 @@ def attach_guardrail_to_pack(
 
     ✅ 기존: pack["pricing"]["guardrail"]에만 주입
     ✅ 개선: pricing이 없으면 pack["guardrail"]에 주입 (deal preview에서도 보이게)
+
+    정책:
+    - ALLOW라도 payload는 항상 넣는다 (스모크/디버깅 안정성)
+    - ui가 없어도 level/reason_codes는 넣는다
     """
     if not pack or not result:
         return pack
 
-    ui = getattr(result, "ui", None)
-    if not ui:
-        return pack
-
-    level = getattr(result, "level", None)
-    if level == "ALLOW":
-        # ✅ ALLOW면 UI 노출 자체를 안 함 (payload 지저분해지는 것 방지)
-        return pack
+    ui = getattr(result, "ui", None) or {}
 
     guardrail_payload = {
         "level": getattr(result, "level", None),
-        "reason_codes": getattr(result, "reason_codes", []),  # ✅ 추가
+        "reason_codes": getattr(result, "reason_codes", []) or [],
         "badge": ui.get("badge"),
         "short_title": ui.get("short_title"),
         "short_body": ui.get("short_body"),
     }
-    
+
     pricing = pack.get("pricing")
     if isinstance(pricing, dict):
         pricing["guardrail"] = guardrail_payload
     else:
-        # ✅ deal preview 같이 pricing 없는 pack에서도 노출 가능
         pack["guardrail"] = guardrail_payload
 
     return pack

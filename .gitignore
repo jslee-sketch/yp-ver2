@@ -39,6 +39,11 @@ app/config/policy
 __pycache__/
 *.pyc
 
+# Node / frontend build
+node_modules/
+frontend/dist/
+frontend/node_modules/
+
 # OS / editor junk
 desktop.ini
 .DS_Store
@@ -67,3 +72,5 @@ term_fix*.json
 # local db / backups
 *.db
 *.CORRUPT_*
+credentials/
+.claude/

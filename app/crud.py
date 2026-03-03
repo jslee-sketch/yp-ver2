@@ -212,12 +212,18 @@ def create_buyer(db: Session, buyer: schemas.BuyerCreate):
         if not rec:
             raise HTTPException(status_code=400, detail="Invalid recommender_buyer_id")
 
+    # 닉네임 중복 체크 (buyers + sellers 통합)
+    nick = getattr(buyer, "nickname", None)
+    if nick and not is_nickname_available(db, nick):
+        raise HTTPException(status_code=400, detail="이미 사용 중인 닉네임입니다.")
+
     hashed_pw = bcrypt_hash_password(buyer.password)
     db_buyer = models.Buyer(
         email=buyer.email,
         password_hash=hashed_pw,
         recommender_buyer_id=buyer.recommender_buyer_id,
         name=buyer.name,
+        nickname=nick,
         phone=buyer.phone,
         address=buyer.address,
         zip_code=buyer.zip_code,
@@ -355,6 +361,11 @@ def create_seller(db: Session, seller: schemas.SellerCreate):
         if not act or act.status != "ACTIVE":
             raise HTTPException(status_code=400, detail="Invalid actuator_id")
 
+    # 닉네임 중복 체크 (buyers + sellers 통합)
+    nick = getattr(seller, "nickname", None)
+    if nick and not is_nickname_available(db, nick):
+        raise HTTPException(status_code=400, detail="이미 사용 중인 닉네임입니다.")
+
     # ---------------------------------------
     # 기존 Seller 생성 로직 그대로
     # ---------------------------------------
@@ -363,6 +374,7 @@ def create_seller(db: Session, seller: schemas.SellerCreate):
         email=seller.email,
         password_hash=seller.password and hashed_pw,
         business_name=seller.business_name,
+        nickname=nick,
         business_number=seller.business_number,
         phone=seller.phone,
         company_phone=seller.company_phone,
@@ -418,6 +430,12 @@ def create_seller(db: Session, seller: schemas.SellerCreate):
 
 def get_sellers(db: Session, skip: int = 0, limit: int = 10):
     return db.query(models.Seller).offset(skip).limit(limit).all()
+
+def get_seller(db: Session, seller_id: int):
+    return db.query(models.Seller).filter(models.Seller.id == seller_id).first()
+
+def get_seller_by_email(db: Session, email: str):
+    return db.query(models.Seller).filter(models.Seller.email == email).first()
 
 # ---------------------------------------
 # Actuator 수수료 적립 함수
@@ -724,6 +742,9 @@ def create_deal(db: Session, deal: schemas.DealCreate):
         target_price=deal.target_price,
         max_budget=deal.max_budget,
 
+        # 🔹 pricing guardrail anchor (AI Helper naver_lowest_price 에서 전달)
+        anchor_price=deal.anchor_price,
+
         # 🔹 옵션 필드 매핑
         option1_title=deal.option1_title,
         option1_value=deal.option1_value,
@@ -737,6 +758,14 @@ def create_deal(db: Session, deal: schemas.DealCreate):
         option5_value=deal.option5_value,
 
         free_text=deal.free_text,
+
+        # 🔹 딜 조건 (AI Helper DealConditions에서 매핑)
+        shipping_fee_krw=deal.shipping_fee_krw,
+        refund_days=deal.refund_days,
+        warranty_months=deal.warranty_months,
+        delivery_days=deal.delivery_days,
+        extra_conditions=deal.extra_conditions,
+
         created_at=_utcnow(),
     )
 
@@ -909,6 +938,14 @@ def add_participant(db: Session, participant: schemas.DealParticipantCreate):
     )
     db.add(db_participant)
     db.commit()
+
+    # [spectator→participant 전환 감지] 예측 유효 유지, 이벤트만 로그
+    _prev_spec = db.query(models.SpectatorPrediction).filter_by(
+        deal_id=participant.deal_id, buyer_id=participant.buyer_id
+    ).first()
+    if _prev_spec:
+        print(f"[spectator→participant] buyer={participant.buyer_id} deal={participant.deal_id} predicted={_prev_spec.predicted_price}")
+
     db.refresh(db_participant)
     return db_participant
 
@@ -1773,6 +1810,16 @@ def get_buyer_nickname(db: Session, buyer_id: int) -> str:
 
 
 #---------------------------------------------------------------
+def is_nickname_available(db: Session, nickname: str) -> bool:
+    """닉네임 가용 여부 — buyers + sellers 전체 통합 체크."""
+    buyer_hit = db.query(models.Buyer).filter(models.Buyer.nickname == nickname).first()
+    if buyer_hit:
+        return False
+    seller_hit = db.query(models.Seller).filter(models.Seller.nickname == nickname).first()
+    return seller_hit is None
+
+
+#---------------------------------------------------------------
 def _make_buyer_display_name(buyer: models.Buyer) -> str:
     """
     채팅에 노출할 buyer 이름 생성.
@@ -2164,12 +2211,15 @@ def create_reservation(
         # ✅ reservation에 FK 연결
         resv_policy_id = int(getattr(policy_row, "id"))
 
-        # ✅ 스냅샷은 policy_row 그대로 복사 (절대 임의값 넣지 않기)
+        # ✅ 스냅샷은 policy_row 그대로 복사 (OfferPolicyOut 필드명 일치)
+        _created = getattr(policy_row, "created_at", None)
         snapshot = {
-            "offer_policy_id": resv_policy_id,
+            "id": resv_policy_id,
+            "offer_id": getattr(policy_row, "offer_id", None),
             "cancel_rule": getattr(policy_row, "cancel_rule", None),
             "cancel_within_days": getattr(policy_row, "cancel_within_days", None),
             "extra_text": getattr(policy_row, "extra_text", None),
+            "created_at": str(_created) if _created else None,
         }
 
     except Exception:
@@ -2310,6 +2360,12 @@ def cancel_reservation(
         raise ConflictError("not owned by buyer")
 
     # 3) 상태별 분기
+    # ------------------------------------------------------------------
+    # (0) 도착확인 완료 예약 취소 거부 → arrival_confirmed_at 있으면 취소 불가
+    # ------------------------------------------------------------------
+    if getattr(resv, "arrival_confirmed_at", None) is not None:
+        raise ConflictError("cannot cancel reservation after arrival confirmed")
+
     # ------------------------------------------------------------------
     # (1) PENDING 예약 취소  → 기존 로직 그대로 유지
     # ------------------------------------------------------------------
@@ -2662,6 +2718,8 @@ def pay_reservation(db: Session, reservation_id: int, paid_amount: int) -> Reser
         raise ConflictError("reservation qty must be positive")
 
     unit_price = int(getattr(offer, "price", 0) or 0)
+    if unit_price <= 0:
+        raise ConflictError("offer price must be positive")
 
     calc_goods = unit_price * qty
     calc_shipping = int(
@@ -2682,18 +2740,17 @@ def pay_reservation(db: Session, reservation_id: int, paid_amount: int) -> Reser
 
     mismatch = (db_goods != calc_goods) or (db_shipping != calc_shipping) or (db_total != calc_total)
 
-    # ✅ 백필 조건(보수적): DB 스냅샷이 비정상(0/음수)이면 복구
-    backfilled = False
-    if db_total <= 0 or db_goods < 0 or db_shipping < 0:
-        resv.amount_goods = calc_goods
-        resv.amount_shipping = calc_shipping
-        resv.amount_total = calc_total
-        backfilled = True
+    # ✅ A안: 결제 시점에 SSOT를 "항상" 계산값으로 확정
+    # (예약 생성 때 스냅샷이 있어도, 결제 시점에는 여기서 확정 박제한다)
+    backfilled = mismatch  # 의미만 유지(로그용)
+    resv.amount_goods = int(calc_goods)
+    resv.amount_shipping = int(calc_shipping)
+    resv.amount_total = int(calc_total)
 
-        # 백필 후 최신값 재조회용 변수도 동기화
-        db_goods = int(resv.amount_goods or 0)
-        db_shipping = int(resv.amount_shipping or 0)
-        db_total = int(resv.amount_total or 0)
+    # 최신값 변수 동기화
+    db_goods = int(resv.amount_goods or 0)
+    db_shipping = int(resv.amount_shipping or 0)
+    db_total = int(resv.amount_total or 0)
 
     # ✅ 결제 기준 금액(SSOT)
     amount_total = int(db_total or 0)
@@ -2701,11 +2758,17 @@ def pay_reservation(db: Session, reservation_id: int, paid_amount: int) -> Reser
         # 백필 후에도 0이면 데이터/정책 문제
         raise ConflictError("payment amount must be positive")
 
-    # paid_amount mismatch(일단은 경고/로그만)
+    # ✅ A안: paid_amount는 검증용. expected(amount_total)과 100% 일치해야 한다.
     paid_amount_i = int(paid_amount or 0)
     diff = abs(paid_amount_i - amount_total)
-    # ✅ 허용오차(원 단위): 추후 정책으로 조정 가능
+
+    # ✅ 허용오차(원 단위): A안은 0 고정
     allowed_diff = 0
+
+    if diff > allowed_diff:
+        raise ConflictError(
+            f"paid_amount mismatch: expected={amount_total}, got={paid_amount_i}"
+        )
 
     # ---------------------------------------------------------
     # 결제 처리
@@ -2715,7 +2778,7 @@ def pay_reservation(db: Session, reservation_id: int, paid_amount: int) -> Reser
 
     pay = models.ReservationPayment(
         reservation_id=resv.id,
-        amount_paid=paid_amount_i,
+        paid_amount=paid_amount_i,
         paid_at=resv.paid_at,
     )
     db.add(pay)
@@ -2856,40 +2919,43 @@ def mark_reservation_shipped(
     *,
     reservation_id: int,
     seller_id: int | None = None,
+    shipping_carrier: str | None = None,
+    tracking_number: str | None = None,
 ) -> models.Reservation:
     """
     셀러가 '발송 완료' 처리.
     - 상태는 PAID 여야 함.
     - (선택) seller_id를 넘겨주면 해당 셀러의 offer인지 검증.
+    - (선택) shipping_carrier / tracking_number 저장
+    - shipped_at은 최초 1회만 세팅 (idempotent)
     """
     resv = db.get(models.Reservation, reservation_id)
     if not resv:
         raise NotFoundError("Reservation not found")
 
-    # 상태 체크
     status_val = getattr(resv, "status", None)
     name = getattr(status_val, "name", None) or str(status_val)
     if name != "PAID":
         raise ConflictError(f"cannot mark shipped: status={name}")
 
-    # seller_id 검증 (필요할 때만)
     if seller_id is not None:
         offer = db.get(models.Offer, resv.offer_id)
         if not offer or int(getattr(offer, "seller_id", 0)) != int(seller_id):
             raise ConflictError("reservation does not belong to this seller")
 
-    # 최초 1회만 shipped_at 세팅
+    # ✅ 배송정보 스냅샷(있을 때만)
+    if shipping_carrier is not None and str(shipping_carrier).strip():
+        resv.shipping_carrier = str(shipping_carrier).strip()
+    if tracking_number is not None and str(tracking_number).strip():
+        resv.tracking_number = str(tracking_number).strip()
+
     if resv.shipped_at is None:
         resv.shipped_at = _utcnow()
-    # delivered_at / arrival_confirmed_at 은 여기서는 건드리지 않음
 
     db.add(resv)
     db.commit()
     db.refresh(resv)
     return resv
-
-
-
 
 def _map_refund_actor(actor: str) -> tuple[FaultParty, RefundTrigger]:
     """
@@ -2935,7 +3001,15 @@ def refund_paid_reservation(
     db: Session,
     *,
     reservation_id: int,
+
+    # ✅ legacy/v3.5 호환 + 내부 엔진 라우팅 키
     actor: str = "buyer_cancel",
+
+    # ✅ v3.6 payload
+    reason: str | None = None,
+    requested_by: str | None = None,  # "BUYER" / "SELLER" / "ADMIN"
+
+    # ✅ 부분환불/배송비 override
     quantity_refund: int | None = None,  # 부분환불 수량(옵션)
     shipping_refund_override: int | None = None,  # ✅ 배송비 환불 override(SELLER/ADMIN만)
     shipping_refund_override_reason: str | None = None,
@@ -2945,18 +3019,28 @@ def refund_paid_reservation(
 
     ✅ 원칙:
     - preview_refund_for_paid_reservation()의 결과(ctx/decision)가 "정책/계산 SSOT"
-    - 실행 단계는 DB 업데이트 + PG환불(필요시) + 로그/알림만 수행
+    - execute 단계는 DB 업데이트 + PG환불(필요시) + 로그/알림만 수행
     - preview와 execute가 1도 어긋나면 안 되므로, 여기서 금액을 재계산하지 않는다.
+
+    ✅ 입력(라우터 호환):
+    - reason / requested_by:
+      - 라우터(payload)가 요구하는 감사/설명용 필드.
+      - 정책/금액 계산에는 관여하지 않는다(SSOT는 preview 결과).
+      - 단, override 권한 체크/로그에 사용 가능.
 
     quantity_refund:
       - None => 남은 수량 전체 환불
       - 1..remaining => 부분 환불 (PAID 유지, sold_qty 일부 롤백 + refunded_* 누적)
 
     shipping_refund_override:
-      - SELLER/ADMIN actor만 허용
-      - preview에서 정책 cap + auto_max 상한 내로 이미 clamp됨
+      - SELLER/ADMIN 요청일 때만 허용 (requested_by 또는 actor 기반)
+      - preview에서 정책 cap + auto_max 상한 내로 clamp됨이 전제
       - execute에서는 preview 결과의 amount_shipping을 그대로 사용
     """
+
+    # ✅ requested_by 정규화 (권한 체크/로그용)
+    _requested_by = (requested_by or "").upper().strip()  # "", "BUYER", "SELLER", "ADMIN"
+
     resv = db.get(Reservation, reservation_id)
     if not resv:
         raise NotFoundError("Reservation not found")
@@ -2969,6 +3053,7 @@ def refund_paid_reservation(
         raise NotFoundError("Offer not found")
 
     now = _utcnow()
+
 
     # -------------------------------------------------
     # 0) SELLER/ADMIN만 override 허용 (buyer는 불가)
@@ -3079,19 +3164,16 @@ def refund_paid_reservation(
     current_sold = int(getattr(offer, "sold_qty", 0) or 0)
     offer.sold_qty = max(0, current_sold - qr)
 
-    # 3-2) Reservation 상태/phase
+    # 3-2) Reservation phase/cancelled_at만 처리 (status는 아래 SSOT 블록에서 최종 확정)
     if is_full_refund:
-        resv.status = ReservationStatus.CANCELLED
+        # 전액 환불이면 cancelled_at/phase는 여기서 확정 기록
+        resv.cancelled_at = now
         if hasattr(resv, "phase"):
             try:
                 from .models import ReservationPhase
                 resv.phase = ReservationPhase.CANCELLED
             except Exception:
                 resv.phase = "CANCELLED"
-        resv.cancelled_at = now
-    else:
-        # 부분환불: PAID 유지
-        resv.status = ReservationStatus.PAID
 
     # 3-3) refunded 누적
     prev_qty = int(getattr(resv, "refunded_qty", 0) or 0)
@@ -3139,6 +3221,88 @@ def refund_paid_reservation(
 
     db.add(resv)
     db.add(offer)
+
+    # ---------------------------------------------------------
+    # 3-9) ✅ (중요) 부분/전체 환불 후 Settlement 정합성 동기화 (정산 전 상태만)
+    #   - 부분환불로 remaining gross가 줄었는데 settlement가 원결제 기준이면 과지급 위험
+    #   - 정산 전(PENDING/NOT_SETTLED)일 때만 "잔여 결제금액" 기준으로 갱신
+    # ---------------------------------------------------------
+    try:
+        from app.policy import api as policy_api
+
+        st = (
+            db.query(models.ReservationSettlement)
+            .filter(models.ReservationSettlement.reservation_id == resv.id)
+            .order_by(models.ReservationSettlement.id.desc())
+            .first()
+        )
+
+        st_status = str(getattr(st, "status", "")).upper() if st is not None else ""
+        if st is not None and st_status in ("PENDING", "NOT_SETTLED"):
+            remaining_gross = int(getattr(resv, "amount_total", 0) or 0) - int(getattr(resv, "refunded_amount_total", 0) or 0)
+            if remaining_gross < 0:
+                remaining_gross = 0
+
+            seller = db.get(models.Seller, offer.seller_id) if getattr(offer, "seller_id", None) else None
+            level_int = int(getattr(seller, "level", 6) or 6) if seller else 6
+            level_str = f"Lv.{level_int}"
+
+            snap = policy_api.calc_settlement_snapshot(paid_amount=remaining_gross, level_str=level_str)
+
+            st.deal_id = int(getattr(resv, "deal_id", 0) or 0)
+            st.offer_id = int(getattr(resv, "offer_id", 0) or 0)
+            st.seller_id = int(getattr(offer, "seller_id", 0) or 0)
+            st.buyer_id = int(getattr(resv, "buyer_id", 0) or 0)
+
+            st.buyer_paid_amount = int(remaining_gross)
+            st.pg_fee_amount = int(snap["pg_fee_amount"])
+            st.platform_commission_amount = int(snap["platform_fee"] + snap["platform_fee_vat"])
+            st.seller_payout_amount = int(snap["seller_payout"])
+
+            if remaining_gross == 0:
+                st.buyer_paid_amount = 0
+                st.pg_fee_amount = 0
+                st.platform_commission_amount = 0
+                st.seller_payout_amount = 0
+                st.status = "CANCELLED"
+
+            db.add(st)
+            db.flush()
+    except Exception:
+        logging.exception("[REFUND] settlement sync failed (best-effort)")
+
+
+    # -------------------------------------------------
+    # ✅ SSOT: Reservation.status는 remaining_gross 기준으로만 최종 결정
+    #    - remaining_gross = amount_total - refunded_amount_total
+    #    - remaining_gross == 0  => CANCELLED 확정
+    #    - remaining_gross > 0   => 절대 CANCELLED이면 안 됨(PAID로 복구)
+    # -------------------------------------------------
+    try:
+        total_gross = int(getattr(resv, "amount_total", 0) or 0)
+        refunded_gross = int(getattr(resv, "refunded_amount_total", 0) or 0)
+        remaining_gross = total_gross - refunded_gross
+        if remaining_gross < 0:
+            remaining_gross = 0
+
+        if remaining_gross == 0:
+            resv.status = ReservationStatus.CANCELLED
+            # cancelled_at은 이미 full refund에서 찍지만, 혹시 누락이면 보정
+            if getattr(resv, "cancelled_at", None) is None:
+                resv.cancelled_at = now
+            if hasattr(resv, "phase"):
+                try:
+                    from .models import ReservationPhase
+                    resv.phase = ReservationPhase.CANCELLED
+                except Exception:
+                    resv.phase = "CANCELLED"
+        else:
+            # 레거시/버그 방지: 돈 남았는데 CANCELLED로 찍히면 안 됨
+            resv.status = ReservationStatus.PAID
+    except Exception:
+        # best-effort: 상태 강제 실패가 환불 자체를 망치면 안 됨
+        pass
+
     db.commit()
     db.refresh(resv)
 
@@ -3280,6 +3444,7 @@ def preview_refund_for_reservation(
     - shipping_refund_override: 배송비 환불 override(ADMIN만 허용, 자동배정 범위 내로 캡)
     - shipping_refund_override_reason: override 사유
     """
+
     ctx, decision, meta = preview_refund_for_paid_reservation(
         db,
         reservation_id=reservation_id,
@@ -3287,6 +3452,7 @@ def preview_refund_for_reservation(
         quantity_refund=quantity_refund,
         shipping_refund_override=shipping_refund_override,
         shipping_refund_override_reason=shipping_refund_override_reason,
+        return_meta=True,
         log_preview=True,
     )
 
@@ -3697,97 +3863,6 @@ def preview_refund_for_paid_reservation(
     return ctx, decision
 
 
-
-
-# ========= 환불 정책 프리뷰(미리보기) =========
-
-def preview_refund_policy_for_reservation(
-    db: Session,
-    *,
-    reservation_id: int,
-    actor: str = "buyer_cancel",
-) -> dict:
-    """
-    실제 환불(상태/포인트 변경) 없이,
-    RefundContext + RefundDecision 만 계산해서 반환하는 진단용 함수.
-    """
-    resv = db.get(Reservation, reservation_id)
-    if not resv:
-        raise NotFoundError("Reservation not found")
-
-    offer = db.get(Offer, resv.offer_id)
-    if not offer:
-        raise NotFoundError("Offer not found")
-
-    # 이미 refund_paid_reservation 에서 쓰는 로직 재사용
-    # (너가 실제 코드에서 _build_refund_context / _map_refund_actor 이름이
-    #  조금 다르다면 그걸 그대로 써도 됨)
-    fault_party, trigger = _map_refund_actor(actor)
-
-    now = _utcnow()
-
-    # 쿨링타임 기준 시각
-    base_ts = None
-    if resv.arrival_confirmed_at:
-        base_ts = _as_utc(resv.arrival_confirmed_at)
-    elif resv.delivered_at:
-        base_ts = _as_utc(resv.delivered_at)
-
-    if base_ts is None:
-        cooling_state = CoolingState.UNKNOWN
-    else:
-        delta = now - base_ts
-        cooling_days = getattr(TIME_POLICY, "cooling_days", 0)
-        if cooling_days and delta.total_seconds() > cooling_days * 86400:
-            cooling_state = CoolingState.AFTER_COOLING
-        else:
-            cooling_state = CoolingState.WITHIN_COOLING
-
-    # 정산 상태: v1 에서는 항상 NOT_SETTLED (추후 settlements 와 연동)
-    settlement_state = SettlementState.NOT_SETTLED
-
-    # 금액/수량 계산 (배송비는 아직 0)
-    unit_price = int(offer.price or 0)
-    quantity_total = int(resv.qty or 0)
-    amount_goods = unit_price * quantity_total
-    amount_shipping = 0
-    amount_total = amount_goods + amount_shipping
-
-    ctx = RefundContext(
-        reservation_id=resv.id,
-        deal_id=resv.deal_id,
-        offer_id=resv.offer_id,
-        buyer_id=resv.buyer_id,
-        seller_id=offer.seller_id,
-
-        amount_total=amount_total,
-        amount_goods=amount_goods,
-        amount_shipping=amount_shipping,
-
-        quantity_total=quantity_total,
-        quantity_refund=quantity_total,
-
-        fault_party=fault_party,
-        trigger=trigger,
-        settlement_state=settlement_state,
-        cooling_state=cooling_state,
-
-        pg_fee_rate=0.0,
-        platform_fee_rate=0.0,
-    )
-
-    decision = REFUND_POLICY_ENGINE.decide_for_paid_reservation(ctx)
-
-    # dataclass → dict 로 변환해서 반환
-    return {
-        "reservation_id": resv.id,
-        "actor": actor,
-        "context": asdict(ctx),
-        "decision": asdict(decision),
-    }
-
-
-
 def get_refund_summary_for_reservation(
     db: Session,
     *,
@@ -3926,7 +4001,9 @@ def confirm_reservation_arrival(
     - 상태는 PAID 여야 함.
     - buyer_id 본인만 가능.
     - shipped_at이 있어야 함.
-    - arrival_confirmed_at은 최초 1회만 세팅.
+    - shipped_at 이후 max_days_after 일 이내에만 가능 (가드)
+    - arrival_confirmed_at / delivered_at 은 최초 1회만 세팅 (idempotent)
+    - actuator 커미션 ready_at 세팅은 best-effort
     """
     resv = db.get(models.Reservation, reservation_id)
     if not resv:
@@ -3948,19 +4025,35 @@ def confirm_reservation_arrival(
 
     now = _utcnow()
 
+    # shipped_at 이후 너무 오래 지나면 도착확인 불가 (보호장치)
+    # - shipped_at이 naive datetime이어도 utcnow와 동일 기준이라고 가정(프로젝트 정책에 맞추기)
+    try:
+        if max_days_after is not None and int(max_days_after) > 0:
+            age = now - resv.shipped_at
+            if age.days > int(max_days_after):
+                raise ConflictError("arrival confirm window expired")
+    except ConflictError:
+        raise
+    except Exception:
+        # shipped_at 타입/타임존 이슈 등으로 계산 실패하면,
+        # 서비스 중단보다 '창 제한 미적용'이 낫다면 pass. (원하면 여기서 409로 바꿔도 됨)
+        pass
+
     # 이미 도착확인 한 예약이면 그대로 반환 (idempotent)
     if resv.arrival_confirmed_at is not None:
+        # 라우터/응답에서 최신 상태가 보이게 refresh는 해주는 게 안전
+        db.refresh(resv)
         return resv
 
-    # 도착확인 + 도착일 동시 세팅
+    # 최초 1회만 세팅
     resv.arrival_confirmed_at = now
-    resv.delivered_at = now
+    if resv.delivered_at is None:
+        resv.delivered_at = now
 
-    # 🔁 액츄에이터 커미션 ready_at 세팅 시도
+    # 🔁 액츄에이터 커미션 ready_at 세팅 시도 (best-effort)
     try:
         mark_actuator_commissions_ready_for_reservation(db, resv)
     except Exception as e:
-        # 커미션 쪽에서 에러나도, 도착확인 자체는 실패하지 않도록 방어
         logging.exception(
             "failed to mark actuator commissions ready_at for reservation %s",
             reservation_id,
@@ -3974,7 +4067,7 @@ def confirm_reservation_arrival(
 
 
 #----------------------------------------
-# Reservation 정산 스냅샷
+# Reservation 정산 스냅샷 (레거시 호환 wrapper)
 #----------------------------------------
 def create_settlement_for_paid_reservation(
     db: Session,
@@ -3982,85 +4075,24 @@ def create_settlement_for_paid_reservation(
     reservation_id: int,
 ) -> models.ReservationSettlement | None:
     """
-    결제(PAID)된 예약 1건에 대한 정산 스냅샷 생성.
-
-    - Reservation.status 가 PAID 가 아니면 아무 것도 하지 않고 None 리턴
-    - 이미 reservation_id 에 대한 settlement 가 있으면 그대로 리턴 (멱등)
-    - 정산식:
-        paid_amount      = offer.price * qty   (부포 기준)
-        pg_fee_amount    = paid_amount * PG_FEE_RATE_BPS / 10000
-        platform_fee     = paid_amount * platform_commission_rate_by_seller_level   (SSOT)
-        platform_fee_vat = platform_fee * VAT_RATE_BPS / 10000
-        seller_payout    = paid_amount - (pg_fee + platform_fee + vat)
+    ✅ 호환용 wrapper.
+    - reservation_id 로 resv 로드
+    - PAID 아니면 None
+    - SSOT: create_or_update_settlement_for_reservation 호출
     """
-    # ✅ SSOT 정책 API (platform fee 계산)
-    from app.policy import api as policy_api
-
-    # 0) 예약 조회
     resv = db.get(Reservation, reservation_id)
     if not resv:
         return None
 
-    # 상태 확인: PAID 가 아니면 스냅샷 안 만든다
     if resv.status != ReservationStatus.PAID:
         return None
 
-    # 이미 settlement 가 있으면 재생성하지 않고 그대로 리턴 (멱등)
-    existing = (
-        db.query(ReservationSettlement)
-        .filter(ReservationSettlement.reservation_id == resv.id)
-        .first()
-    )
-    if existing:
-        return existing
-
-    # 1) 오퍼 조회 (가격, 셀러)
-    offer = db.get(Offer, resv.offer_id)
-    if not offer:
+    try:
+        return create_or_update_settlement_for_reservation(db, resv)
+    except Exception:
+        logging.exception("[SETTLEMENT] create_settlement_for_paid_reservation failed")
         return None
 
-    unit_price = int(getattr(offer, "price", 0) or 0)
-    qty = int(getattr(resv, "qty", 0) or 0)
-    if unit_price <= 0 or qty <= 0:
-        return None
-
-    paid_amount = unit_price * qty  # BUYER 결제금액(부포 기준)
-
-    # 2) 수수료/세금 계산 (✅ 전부 Policy(YAML) 기반, rate 단위)
-    # - pg_fee_rate: 0.033 (3.3%)
-    # - platform fee: seller level 기반 (예: Lv.6 -> 0.035)
-    # - vat_rate: 0.10 (10%)
-
-    # ✅ 정산 계산은 전부 policy/api.py “한 방 함수”로 이동
-    seller = db.get(models.Seller, offer.seller_id) if getattr(offer, "seller_id", None) else None
-    level_int = int(getattr(seller, "level", 6) or 6) if seller else 6
-    level_str = f"Lv.{level_int}"
-
-    snap = policy_api.calc_settlement_snapshot(paid_amount=paid_amount, level_str=level_str)
-
-    pg_fee_amount = int(snap["pg_fee_amount"])
-    platform_fee = int(snap["platform_fee"])
-    platform_fee_vat = int(snap["platform_fee_vat"])
-    seller_payout = int(snap["seller_payout"])
-
-    now = datetime.now(timezone.utc)
-
-    settlement = ReservationSettlement(
-        reservation_id=resv.id,
-        seller_id=offer.seller_id,
-        paid_amount=paid_amount,
-        pg_fee_amount=pg_fee_amount,
-        platform_fee=platform_fee,
-        platform_fee_vat=platform_fee_vat,
-        seller_payout=seller_payout,
-        calc_at=now,
-        status="PENDING",
-    )
-
-    db.add(settlement)
-    db.commit()
-    db.refresh(settlement)
-    return settlement
 
 # -------------------------
 # 정산 스냅샷 핼퍼
@@ -4068,10 +4100,24 @@ def create_settlement_for_paid_reservation(
 
 def create_or_update_settlement_for_reservation(db: Session, resv: Reservation) -> ReservationSettlement:
     """
-    Reservation(보통 PAID 상태)을 기준으로
-    ReservationSettlement 스냅샷을 생성 또는 갱신한다.
+    ✅ SSOT: Reservation 기준 정산 스냅샷 UPSERT
+
+    - paid_amount(=gross)은 '현재 남아있는 결제금액' 기준:
+        gross = max(0, resv.amount_total - resv.refunded_amount_total)
+
+    - gross == 0:
+        settlement 금액 0 + status="CANCELLED" 로 정규화
+
+    - gross > 0:
+        policy_api.calc_settlement_snapshot(paid_amount=gross, level_str=Lv.N)로 재계산 후 저장
+
+    주의:
+    - status 머신(READY/APPROVED/PAID 등)은 운영상 민감하니
+      기본은 기존 status 유지. 단 gross==0이면 CANCELLED로 강제.
     """
-    # 기본 방어
+
+    from app.policy import api as policy_api
+
     if not resv:
         raise ValueError("Reservation is required")
 
@@ -4079,63 +4125,111 @@ def create_or_update_settlement_for_reservation(db: Session, resv: Reservation) 
     if not offer:
         raise ValueError(f"Offer not found for reservation {resv.id}")
 
-    # 1) 결제 금액 계산 (단위: 원)
-    unit_price = int(getattr(offer, "price", 0) or 0)
-    qty = int(getattr(resv, "qty", 0) or 0)
-    paid_amount = unit_price * qty
+    # ✅ remaining gross (SSOT)
+    amount_total = int(getattr(resv, "amount_total", 0) or 0)
+    refunded_total = int(getattr(resv, "refunded_amount_total", 0) or 0)
+    gross = amount_total - refunded_total
+    if gross < 0:
+        gross = 0
 
-    if paid_amount <= 0:
-        raise ValueError(f"Invalid paid_amount for reservation {resv.id}: {paid_amount}")
+    # seller level
+    seller = db.get(models.Seller, getattr(offer, "seller_id", None)) if offer else None
+    level_int = int(getattr(seller, "level", 6) or 6) if seller else 6
+    level_str = f"Lv.{level_int}"
 
-    # 2) 수수료율 세팅
-    pg_rate = float(getattr(R, "PG_FEE_RATE", 0.0) or 0.0)
-    platform_rate = float(getattr(R, "PLATFORM_FEE_RATE", 0.0) or 0.0)
-    vat_rate = float(getattr(R, "VAT_RATE", 0.1) or 0.1)
-
-    # 3) 금액 계산
-    pg_fee_amount = int(round(paid_amount * pg_rate))
-    platform_fee = int(round(paid_amount * platform_rate))
-    platform_fee_vat = int(round(platform_fee * vat_rate))
-
-    seller_payout = paid_amount - pg_fee_amount - platform_fee - platform_fee_vat
-    if seller_payout < 0:
-        seller_payout = 0  # 이론상 나오면 안 되지만 방어적으로 0으로 보정
-
-    # 4) 기존 settlement 있는지 확인
+    # existing settlement
     settlement = (
         db.query(ReservationSettlement)
         .filter(ReservationSettlement.reservation_id == resv.id)
+        .order_by(ReservationSettlement.id.desc())
         .first()
     )
 
     now = datetime.now(timezone.utc)
 
+    if gross == 0:
+        # ✅ full refund / zero remaining => CANCELLED normalize
+        if settlement is None:
+            settlement = ReservationSettlement(
+                reservation_id=resv.id,
+                deal_id=int(getattr(resv, "deal_id", 0) or 0),
+                offer_id=int(getattr(resv, "offer_id", 0) or 0),
+                seller_id=int(getattr(offer, "seller_id", 0) or 0),
+                buyer_id=int(getattr(resv, "buyer_id", 0) or 0),
+
+                buyer_paid_amount=0,
+                pg_fee_amount=0,
+                platform_commission_amount=0,
+                seller_payout_amount=0,
+
+                status="CANCELLED",
+                currency="KRW",
+                created_at=now,
+            )
+            db.add(settlement)
+        else:
+            settlement.deal_id = int(getattr(resv, "deal_id", 0) or 0)
+            settlement.offer_id = int(getattr(resv, "offer_id", 0) or 0)
+            settlement.seller_id = int(getattr(offer, "seller_id", 0) or 0)
+            settlement.buyer_id = int(getattr(resv, "buyer_id", 0) or 0)
+
+            settlement.buyer_paid_amount = 0
+            settlement.pg_fee_amount = 0
+            settlement.platform_commission_amount = 0
+            settlement.seller_payout_amount = 0
+            settlement.status = "CANCELLED"
+
+        db.flush()
+        db.refresh(settlement)
+        return settlement
+
+    # ✅ gross > 0 => recalc snapshot by policy
+    snap = policy_api.calc_settlement_snapshot(paid_amount=int(gross), level_str=level_str)
+
+    buyer_paid_amount = int(gross)
+    pg_fee_amount = int(snap["pg_fee_amount"])
+    platform_commission_amount = int(snap["platform_fee"] + snap["platform_fee_vat"])
+    seller_payout_amount = int(snap["seller_payout"])
+
     if settlement is None:
         settlement = ReservationSettlement(
             reservation_id=resv.id,
-            seller_id=offer.seller_id,
-            paid_amount=paid_amount,
+
+            deal_id=int(getattr(resv, "deal_id", 0) or 0),
+            offer_id=int(getattr(resv, "offer_id", 0) or 0),
+            seller_id=int(getattr(offer, "seller_id", 0) or 0),
+            buyer_id=int(getattr(resv, "buyer_id", 0) or 0),
+
+            buyer_paid_amount=buyer_paid_amount,
             pg_fee_amount=pg_fee_amount,
-            platform_fee=platform_fee,
-            platform_fee_vat=platform_fee_vat,
-            seller_payout=seller_payout,
-            calc_at=now,
+            platform_commission_amount=platform_commission_amount,
+            seller_payout_amount=seller_payout_amount,
+
             status="PENDING",
+            currency="KRW",
+            created_at=now,
         )
         db.add(settlement)
     else:
-        # 재계산(멱등) — 값이 바뀌었을 때 갱신
-        settlement.paid_amount = paid_amount
+        # ✅ 멱등 갱신: status는 유지(운영 상태 머신 보호)
+        settlement.deal_id = int(getattr(resv, "deal_id", 0) or 0)
+        settlement.offer_id = int(getattr(resv, "offer_id", 0) or 0)
+        settlement.seller_id = int(getattr(offer, "seller_id", 0) or 0)
+        settlement.buyer_id = int(getattr(resv, "buyer_id", 0) or 0)
+
+        settlement.buyer_paid_amount = buyer_paid_amount
         settlement.pg_fee_amount = pg_fee_amount
-        settlement.platform_fee = platform_fee
-        settlement.platform_fee_vat = platform_fee_vat
-        settlement.seller_payout = seller_payout
-        settlement.calc_at = now
-        # status 는 여기서는 건드리지 않음 (이미 READY/PAID 일 수 있음)
+        settlement.platform_commission_amount = platform_commission_amount
+        settlement.seller_payout_amount = seller_payout_amount
+
+        # status가 CANCELLED인데 gross>0이면 비정상 → 최소한 PENDING으로 복구(안전)
+        if str(getattr(settlement, "status", "")).upper() == "CANCELLED":
+            settlement.status = "PENDING"
 
     db.flush()
     db.refresh(settlement)
     return settlement
+
 
 
 
@@ -5224,68 +5318,21 @@ def _log_refund_policy_for_paid_reservation(
 # ---------------------------------------------------------
 def create_settlement_for_reservation(db: Session, resv: Reservation) -> ReservationSettlement:
     """
-    - 같은 reservation_id 로 이미 정산 레코드가 있으면 그대로 반환 (멱등성)
-    - 없으면 새로 만들어서 저장 후 반환
-    - 금액 계산:
-        * buyer_paid_amount = offer.price * qty
-        * pg_fee_amount = buyer_paid_amount * PG_FEE_RATE
-        * platform_commission_amount = buyer_paid_amount * PLATFORM_FEE_RATE
-        * seller_payout_amount = buyer_paid_amount - pg_fee_amount - platform_commission_amount
+    ⚠️ DEPRECATED (legacy wrapper)
+    과거 offer.price*qty / R.PG_FEE_RATE / R.PLATFORM_FEE_RATE 기반 계산을 제거하고,
+    v3.6 SSOT(create_or_update_settlement_for_reservation)로 위임한다.
+
+    - commit/refresh는 호출자(라우터/상위 트랜잭션)에서 담당한다.
+    - status 머신(READY/APPROVED/PAID 등)은 create_or_update에서 최소 변경 원칙.
     """
+    if not resv:
+        raise ValueError("Reservation is required")
 
-    # 0) 이미 있으면 그대로 리턴 (멱등성 보장)
-    existing = (
-        db.query(ReservationSettlement)
-        .filter(ReservationSettlement.reservation_id == resv.id)
-        .first()
-    )
-    if existing:
-        return existing
+    # ✅ v3.6 SSOT로 위임
+    st = create_or_update_settlement_for_reservation(db, resv)
 
-    # 1) 연관 Offer 조회
-    offer = db.get(Offer, resv.offer_id)
-    if not offer:
-        raise ValueError(f"Offer not found for reservation_id={resv.id}")
-
-    # 2) 기본 금액 계산
-    qty = int(getattr(resv, "qty", 0) or 0)
-    unit_price = int(getattr(offer, "price", 0) or 0)
-    buyer_paid_amount = qty * unit_price
-
-    # 방어: 금액이 0 이하면 정산 만들 필요 없음
-    if buyer_paid_amount <= 0:
-        raise ValueError(f"Invalid buyer_paid_amount={buyer_paid_amount} for reservation_id={resv.id}")
-
-    # 3) 수수료율 (rules 에 없으면 기본값 사용)
-    pg_fee_rate = float(getattr(R, "PG_FEE_RATE", 0.033))          # 3.3% 가정
-    platform_fee_rate = float(getattr(R, "PLATFORM_FEE_RATE", 0.035))  # 3.5% 가정
-
-    pg_fee_amount = int(round(buyer_paid_amount * pg_fee_rate))
-    platform_commission_amount = int(round(buyer_paid_amount * platform_fee_rate))
-
-    seller_payout_amount = buyer_paid_amount - pg_fee_amount - platform_commission_amount
-    if seller_payout_amount < 0:
-        seller_payout_amount = 0
-
-    # 4) ReservationSettlement 인스턴스 생성
-    settlement = ReservationSettlement(
-        reservation_id=resv.id,
-        deal_id=resv.deal_id,
-        offer_id=resv.offer_id,
-        seller_id=resv.offer.seller_id if getattr(resv, "offer", None) else offer.seller_id,
-        buyer_id=resv.buyer_id,
-        buyer_paid_amount=buyer_paid_amount,
-        pg_fee_amount=pg_fee_amount,
-        platform_commission_amount=platform_commission_amount,
-        seller_payout_amount=seller_payout_amount,
-        status="READY",
-        currency="KRW",
-    )
-
-    db.add(settlement)
-    db.commit()
-    db.refresh(settlement)
-    return settlement
+    # 여기서 commit/refresh 하지 않는다!
+    return st
 
 #------------------------
 # AI Event Log (AI분석/User선택 등 결과값의 로그를 남김)
@@ -5400,21 +5447,21 @@ def log_deal_ai_resolve(
 #________________________________________
 def get_active_policies(
     db: Session,
-    domains: List[str],
+    domains: Optional[List[str]],
     *,
     limit_total: int = 40,
 ) -> List[models.PolicyDeclaration]:
-    if not domains:
+    # domains=[] (빈 리스트) → 의미 없으므로 즉시 반환
+    # domains=None → 도메인 필터 없이 전체 활성 정책 조회
+    if domains is not None and len(domains) == 0:
         return []
 
-    q = (
-        db.query(models.PolicyDeclaration)
-        .filter(
-            models.PolicyDeclaration.domain.in_(domains),
-            models.PolicyDeclaration.is_active == True,  # noqa: E712
-        )
-        .order_by(models.PolicyDeclaration.domain.asc(), models.PolicyDeclaration.id.asc())
+    q = db.query(models.PolicyDeclaration).filter(
+        models.PolicyDeclaration.is_active == True,  # noqa: E712
     )
+    if domains is not None:
+        q = q.filter(models.PolicyDeclaration.domain.in_(domains))
+    q = q.order_by(models.PolicyDeclaration.domain.asc(), models.PolicyDeclaration.id.asc())
 
     if limit_total and limit_total > 0:
         q = q.limit(limit_total)
@@ -5543,6 +5590,7 @@ __all__ = [
     # buyers/sellers/deals/participants
     "create_buyer", "get_buyers",
     "create_seller", "get_sellers",
+    "is_nickname_available",
     "create_deal", "get_deal", "get_deals",
     "add_participant", "get_deal_participants", "remove_participant",
     # offers / points

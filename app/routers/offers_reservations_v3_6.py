@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import traceback
+from fastapi import Body
 from app import models
 from app.routers.notifications import create_notification
 from app.logic.reservation_phase import compute_reservation_phase
@@ -12,7 +13,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from sqlalchemy import func
-from dataclasses import asdict
+
+from dataclasses import asdict, is_dataclass
+from datetime import datetime, date
+from enum import Enum
+from decimal import Decimal
 
 from ..database import get_db
 from ..schemas import (
@@ -37,6 +42,8 @@ from ..crud import (
     preview_refund_for_paid_reservation,
     mark_reservation_shipped,
     confirm_reservation_arrival,
+    create_or_update_settlement_for_reservation,
+    create_settlement_for_paid_reservation,
 )
 from ..models import Offer, Reservation
 
@@ -48,7 +55,7 @@ from ..core.refund_policy import (
     CoolingState,
 )
 from ..core.shipping_policy import calc_shipping_fee
-
+import app.crud as crud
 
 def _xlate(e: Exception):
     """
@@ -69,10 +76,6 @@ def _xlate(e: Exception):
         status_code=500,
         detail=f"Internal error: {e.__class__.__name__}: {str(e)}",
     )
-
-#-------------------------
-
-
 
 
 router = APIRouter(prefix="/v3_6", tags=["v3.6 offers/reservations"])
@@ -100,6 +103,26 @@ def _attach_phase(resv: models.Reservation | None):
     return resv
 
 
+def _json_safe(v):
+    """dataclass/Enum/datetime 등을 JSON 직렬화 가능한 형태로 변환"""
+    if v is None:
+        return None
+    if isinstance(v, (str, int, float, bool)):
+        return v
+    if isinstance(v, (datetime, date)):
+        return v.isoformat()
+    if isinstance(v, Decimal):
+        return float(v)
+    if isinstance(v, Enum):
+        return v.value
+    if is_dataclass(v):
+        return {k: _json_safe(val) for k, val in asdict(v).items()}
+    if isinstance(v, dict):
+        return {k: _json_safe(val) for k, val in v.items()}
+    if isinstance(v, (list, tuple, set)):
+        return [_json_safe(x) for x in v]
+    # 마지막 fallback
+    return str(v)
 
 # -----------------------------
 # Offers
@@ -293,6 +316,7 @@ def api_cancel_offer(
 # -----------------------------
 @router.post("/reservations", response_model=ReservationOut, status_code=201, summary="예약 생성(좌석 홀드)")
 def api_create_reservation(payload: ReservationCreate, db: Session = Depends(get_db)):
+    logging.warning("[TRACE] HIT v3_6 reservations create: offers_reservations_v3_6.py")
     try:
         resv = create_reservation(
             db,
@@ -377,13 +401,53 @@ def api_pay_reservation(payload: ReservationPayIn, db: Session = Depends(get_db)
             if exp < now:
                 raise ConflictError("reservation payment window expired")
 
-        # ✅ 2) 실제 결제 로직은 기존 pay_reservation 에게 위임
+        # ✅ 2) 실제 결제 로직은 기존 CRUD pay_reservation(=v3.5 SSOT)에 위임
+        #    - CRUD 시그니처는 (db, reservation_id, paid_amount) 임
+        #    - buyer_id는 이 라우터에서 "검증용"으로만 사용하고 CRUD로 넘기지 않는다.
+
+        # (선택) 소유권 체크를 여기서 확정
+        if int(getattr(resv, "buyer_id", 0) or 0) != int(getattr(payload, "buyer_id", 0) or 0):
+            raise ConflictError("not owned by buyer")
+
+        paid_amount = int(getattr(payload, "paid_amount", 0) or 0)
+        if paid_amount <= 0:
+            # v3.6 payload에 paid_amount가 없거나 0이면 SSOT인 reservation.amount_total로 대체
+            paid_amount = int(getattr(resv, "amount_total", 0) or 0)
+        
         paid = pay_reservation(
             db,
-            reservation_id=payload.reservation_id,
-            buyer_id=payload.buyer_id,
-            buyer_point_per_qty=payload.buyer_point_per_qty,
+            reservation_id=int(payload.reservation_id),
+            paid_amount=paid_amount,
         )
+
+        # ✅ 1) 결제 결과는 먼저 커밋해서 확정 (결제가 SSOT)
+        db.commit()
+        db.refresh(paid)
+
+        # ✅ 2) 그 다음 settlement는 best-effort로 별도 트랜잭션에서 시도
+        try:
+            crud.create_settlement_for_paid_reservation(db, reservation_id=int(paid.id))
+            db.commit()
+        except Exception as e:
+            logging.exception("[SETTLEMENT] snapshot create failed (best-effort)", exc_info=e)
+            try:
+                db.rollback()
+            except Exception:
+                pass
+
+        return _attach_phase(paid)
+
+
+        # ✅ 2-1) 결제 직후 정산 스냅샷 생성/갱신 (SSOT: Reservation.amount_total)
+        # - v3.6 /reservations/pay 경로에서 settlement가 생성되지 않던 버그를 막는다.
+        try:
+            create_or_update_settlement_for_reservation(db, paid)
+            db.commit()
+            db.refresh(paid)
+        except Exception as _e:
+            # 정산 실패가 결제 자체를 망치면 안 되므로 best-effort
+            logging.exception("[SETTLEMENT] create_or_update_settlement_for_reservation failed (v3_6 pay)")
+
 
         # ✅ 3) 🔔 결제 완료 알림 (buyer / seller / actuator)
         try:
@@ -466,9 +530,10 @@ def api_pay_reservation(payload: ReservationPayIn, db: Session = Depends(get_db)
     response_model=ReservationOut,
     summary="셀러: 예약 발송 완료 처리",
 )
+    
 def api_mark_reservation_shipped(
     reservation_id: int = Path(..., ge=1),
-    body: ReservationShipIn = ReservationShipIn(),
+    body: ReservationShipIn = Body(default_factory=ReservationShipIn),
     db: Session = Depends(get_db),
 ):
     """
@@ -484,7 +549,16 @@ def api_mark_reservation_shipped(
             db,
             reservation_id=reservation_id,
             seller_id=body.seller_id,
+            shipping_carrier=getattr(body, "shipping_carrier", None),
+            tracking_number=getattr(body, "tracking_number", None),
         )
+
+        # ✅ 응답 품질: phase 채우기 (DB 영향 없음)
+        try:
+            resv = _attach_phase(resv)
+        except Exception:
+            pass
+
         return resv
     except Exception as e:
         _xlate(e)
@@ -513,10 +587,16 @@ def api_confirm_reservation_arrival(
     """
     try:
         resv = confirm_reservation_arrival(
-            db,
-            reservation_id=reservation_id,
-            buyer_id=body.buyer_id,
+        db,
+        reservation_id=reservation_id,
+        buyer_id=body.buyer_id,
         )
+
+        try:
+            resv = _attach_phase(resv)
+        except Exception:
+            pass
+
         return resv
     except Exception as e:
         _xlate(e)
@@ -542,66 +622,47 @@ def api_refund_reservation(
     payload: ReservationRefundIn,
     db: Session = Depends(get_db),
 ):
-    """
-    실제 환불 실행 엔드포인트.
-    - PAID 상태가 아니면 409
-    - refund_policy_engine 을 통해 결정 후
-      - offers.sold_qty 롤백
-      - reservation.status/phase 갱신
-      - 포인트 회수 기록 추가
-    - payload.quantity_refund:
-      - None 또는 생략 → 전체환불
-      - 1..qty → 부분환불
-    """
     try:
-        return refund_paid_reservation(
+        # ---------------------------------------------------------
+        # ✅ v3.6 refund payload에는 actor가 없다.
+        #    requested_by(BUYER/SELLER/ADMIN) → actor 문자열로 매핑해서 crud에 전달
+        # ---------------------------------------------------------
+        requested_by = getattr(payload, "requested_by", "BUYER") or "BUYER"
+        requested_by = str(requested_by).upper()
+
+        if requested_by == "SELLER":
+            actor = "seller_fault"
+        elif requested_by == "ADMIN":
+            actor = "admin_cancel"
+        else:
+            actor = "buyer_cancel"
+
+        reason = getattr(payload, "reason", "") or ""
+        quantity_refund = getattr(payload, "quantity_refund", None)
+        shipping_refund_override = getattr(payload, "shipping_refund_override", None)
+        shipping_refund_override_reason = getattr(payload, "shipping_refund_override_reason", None)
+
+        # ✅ 환불 실행
+        result = refund_paid_reservation(
             db,
             reservation_id=payload.reservation_id,
-            actor=payload.actor,
-            quantity_refund=getattr(payload, "quantity_refund", None),  # ★ 부분환불 수량전달
+            actor=actor,
+            quantity_refund=quantity_refund,
+            reason=reason,
+            shipping_refund_override=shipping_refund_override,
+            shipping_refund_override_reason=shipping_refund_override_reason,
         )
+
+        # ✅ 응답용: phase 붙이기 (DB 영향 X)
+        try:
+            result = _attach_phase(result)
+        except Exception:
+            pass
+
+        return result
+
     except Exception as e:
         _xlate(e)
-
-
-# app/routers/offers_reservations_v3_6.py 상단 import들 아래 쯤에 추가
-
-from ..core.refund_policy import RefundContext, RefundDecision  # 이미 import 되어 있으면 생략
-
-def _build_refund_context_out(ctx: RefundContext, ModelCls):
-    """
-    RefundContext(dataclass) -> RefundPreviewContextOut(Pydantic)
-    - dataclass에 필드가 더 많아도, Pydantic 모델이 가지고 있는 필드만 골라서 매핑
-    - Enum 타입은 .value 나 .name 으로 문자열로 바꿔줌
-    """
-    data = {}
-    # Pydantic v2: model_fields 사용
-    for field_name in ModelCls.model_fields.keys():
-        if not hasattr(ctx, field_name):
-            continue
-        val = getattr(ctx, field_name)
-        # enum이면 value/text로 변환
-        if hasattr(val, "value"):
-            val = val.value
-        data[field_name] = val
-    return ModelCls(**data)
-
-
-def _build_refund_decision_out(decision: RefundDecision, ModelCls):
-    """
-    RefundDecision(dataclass) -> RefundPreviewDecisionOut(Pydantic)
-    - 마찬가지로 모델이 가진 필드만 골라서 매핑
-    """
-    data = {}
-    for field_name in ModelCls.model_fields.keys():
-        if not hasattr(decision, field_name):
-            continue
-        val = getattr(decision, field_name)
-        if hasattr(val, "value"):
-            val = val.value
-        data[field_name] = val
-    return ModelCls(**data)
-
 
 
 @router.post(
@@ -630,14 +691,11 @@ def api_refund_preview_reservation(
             quantity_refund=getattr(body, "quantity_refund", None),  # ★ 추가된 부분
         )
 
-        # dataclass → dict
-        ctx_dict = asdict(ctx)
-        decision_dict = asdict(decision)
-
         return {
-            "reservation_id": ctx.reservation_id,
-            "context": ctx_dict,
-            "decision": decision_dict,
+            "reservation_id": int(getattr(ctx, "reservation_id", body.reservation_id) or body.reservation_id),
+            "context": _json_safe(ctx),
+            "decision": _json_safe(decision),
         }
+
     except Exception as e:
         _xlate(e)

@@ -1,0 +1,80 @@
+﻿{
+    "ok":  true,
+    "reason_code":  "OK",
+    "entity":  "offer",
+    "id":  2,
+    "actor":  {
+                  "kind":  "BUYER",
+                  "buyer_id":  1,
+                  "seller_id":  null,
+                  "actuator_id":  null,
+                  "admin_user_id":  null
+              },
+    "times":  null,
+    "pack":  {
+                 "offer":  {
+                               "id":  2,
+                               "status":  "UNKNOWN",
+                               "deal_id":  1,
+                               "seller_id":  3,
+                               "price":  1100.0,
+                               "shipping_fee":  null,
+                               "created_at":  "2026-02-14 12:57",
+                               "deadline_at":  "2026-02-14 12:57",
+                               "decision_deadline_at":  null,
+                               "decision_made_at":  null
+                           },
+                 "deal":  {
+                              "id":  1,
+                              "status":  "open",
+                              "title":  null,
+                              "buyer_id":  null,
+                              "target_price":  777.0,
+                              "qty_target":  null,
+                              "created_at":  "2026-02-14 12:57",
+                              "deadline_at":  null,
+                              "closed_at":  null
+                          },
+                 "pricing":  {
+                                 "as_of":  "2026-02-14 21:57",
+                                 "reference":  {
+                                                   "label":  "??븨 ?쒖?議곌굔(湲곗?議곌굔) 湲곗?",
+                                                   "p_base":  777,
+                                                   "p_target":  777,
+                                                   "p_anchor":  1000
+                                               },
+                                 "groupbuy":  {
+                                                  "p_group":  947,
+                                                  "q_room":  6,
+                                                  "q_offer":  5,
+                                                  "offer_cap_qty":  5,
+                                                  "note":  "怨듬룞援щℓ媛??\u0027???ㅽ띁媛 ?뚰솕 媛?ν븳 ?섎웾(q_offer=min(q_room, cap))\u0027 湲곗??쇰줈 怨꾩궛?⑸땲??"
+                                              },
+                                 "offer_evaluation":  {
+                                                          "seller_offer_price":  1100,
+                                                          "expected_price_under_offer_conditions":  974,
+                                                          "phrases":  {
+                                                                          "vs_expected":  "湲곗?議곌굔 ?鍮??좎궗",
+                                                                          "vs_groupbuy_offer_cap":  "怨듬룞援щℓ 湲곗? ?鍮??좎궗",
+                                                                          "vs_base":  "湲곗?議곌굔 ?鍮??좎궗",
+                                                                          "vs_group":  "怨듬룞援щℓ 湲곗? ?鍮??좎궗"
+                                                                      }
+                                                      },
+                                 "why":  [
+                                             "?먮ℓ??媛寃⑹? 怨좎젙?낅땲?? ??븨? 鍮꾧탳留??쒓났?⑸땲??",
+                                             "議곌굔(諛곗넚/?섎텋/?좊ː/由ъ뒪?????곕씪 寃곌낵媛 ?щ씪吏????덉뒿?덈떎."
+                                         ],
+                                 "guardrail":  {
+                                                   "level":  "ALLOW",
+                                                   "reason_codes":  [
+                                                                        "GAP_SOFT_WARN",
+                                                                        "E_SCORE_RELAXED"
+                                                                    ],
+                                                   "badge":  "NONE",
+                                                   "short_title":  "",
+                                                   "short_body":  ""
+                                               }
+                             }
+             },
+    "latency_ms":  null
+}

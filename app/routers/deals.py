@@ -1,7 +1,7 @@
 # app/routers/deals.py
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import logging
 from app.database import get_db
 
@@ -13,6 +13,7 @@ from app.models import Deal
 
 from app.schemas_ai import DealResolveIn, DealResolveOut, BuyerIntentParsed, DealResolveResult, BuyerIntentParsed
 from app.crud import create_deal_from_intent, find_matching_deals_for_intent
+import re as _re
 
 from app.policy.target_vs_anchor_guardrail import run_target_vs_anchor_guardrail 
 
@@ -35,16 +36,60 @@ def create_deal(deal_in: schemas.DealCreate, db: Session = Depends(get_db)):
     """
     Deal 생성 + 방장 자동 참여까지 한 번에 처리.
     옵션 / target_price / max_budget 모두 crud.create_deal에서 저장.
+    anchor_price가 없으면 AI Helper(LLM+네이버)를 자동 호출해 채움.
     """
     try:
         db_deal = crud.create_deal(db, deal_in)
+
+        # ── AI Helper 자동 호출 (anchor_price 미입력 시) ──────────────
+        if not deal_in.anchor_price:
+            try:
+                from app.routers.deal_ai_helper import _run_ai_deal_helper
+                ai = _run_ai_deal_helper(
+                    raw_title=db_deal.product_name,
+                    raw_free_text=db_deal.free_text or "",
+                )
+                # 브랜드 / canonical_name
+                db_deal.brand = ai.brand
+                db_deal.ai_product_key = ai.canonical_name
+
+                # anchor_price ← 네이버 최저가
+                if ai.price.naver_lowest_price:
+                    db_deal.anchor_price = float(ai.price.naver_lowest_price)
+
+                # 조건 (입력값 우선 — None인 필드만 채움)
+                if ai.conditions:
+                    if ai.conditions.shipping_fee_krw is not None and db_deal.shipping_fee_krw is None:
+                        db_deal.shipping_fee_krw = ai.conditions.shipping_fee_krw
+                    if ai.conditions.refund_days is not None and db_deal.refund_days is None:
+                        db_deal.refund_days = ai.conditions.refund_days
+                    if ai.conditions.warranty_months is not None and db_deal.warranty_months is None:
+                        db_deal.warranty_months = ai.conditions.warranty_months
+                    if ai.conditions.delivery_days is not None and db_deal.delivery_days is None:
+                        db_deal.delivery_days = ai.conditions.delivery_days
+                    if ai.conditions.extra_conditions and not db_deal.extra_conditions:
+                        db_deal.extra_conditions = ai.conditions.extra_conditions
+
+                # 옵션 (비어있는 슬롯에만 채움)
+                for i, opt in enumerate(ai.suggested_options[:5]):
+                    t_col, v_col = f"option{i+1}_title", f"option{i+1}_value"
+                    if getattr(db_deal, t_col) is None:
+                        setattr(db_deal, t_col, opt.title)
+                        val = opt.selected_value or (opt.values[0] if opt.values else None)
+                        setattr(db_deal, v_col, val)
+
+                db.commit()
+                db.refresh(db_deal)
+
+            except Exception as ai_err:
+                logging.warning("[create_deal] AI helper auto-call skipped: %r", ai_err)
 
         # ✅ S1: 딜 생성 직후 guardrail 평가/적용/로그 (SSOT: pricing_guardrail_hook)
         result = run_pricing_guardrail(
             deal_id=int(db_deal.id),
             category=getattr(db_deal, "category", None),
             target_price=getattr(db_deal, "target_price", None),
-            anchor_price=getattr(db_deal, "anchor_price", None),  # 있을 수도/없을 수도
+            anchor_price=getattr(db_deal, "anchor_price", None),  # AI Helper가 채워줄 수 있음
             evidence_score=getattr(db_deal, "evidence_score", 0) or 0,
             anchor_confidence=getattr(db_deal, "anchor_confidence", 1.0) or 1.0,
         )
@@ -91,11 +136,68 @@ def update_deal_target(deal_id: int, body: dict, db: Session = Depends(get_db)):
     return deal
 
 # ---------------------------
-# 📋 Deal 목록 조회
+# 📋 Deal 목록 조회 (검색/필터/페이지네이션)
 # ---------------------------
-@router.get("/", response_model=List[schemas.DealOut])
-def read_deals(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    return crud.get_deals(db, skip=skip, limit=limit)
+from pydantic import BaseModel as _BaseModel
+from typing import Optional as _Opt, Any as _Any
+
+
+class DealListOut(_BaseModel):
+    items: list
+    total: int
+    page: int
+    size: int
+    pages: int
+
+
+@router.get("/", response_model=None)  # 직접 dict 반환 (ORM 직렬화 이슈 방지)
+def read_deals(
+    status: _Opt[str] = Query(None, description="open|closed|completed|expired (복수: comma-separated)"),
+    keyword: _Opt[str] = Query(None, description="제품명 검색"),
+    min_price: _Opt[int] = Query(None, ge=0),
+    max_price: _Opt[int] = Query(None, ge=0),
+    buyer_id: _Opt[int] = Query(None, description="내 딜만 보기"),
+    sort: str = Query("created_at:desc"),
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    q = db.query(models.Deal)
+
+    if status:
+        statuses = [s.strip() for s in status.split(",") if s.strip()]
+        if statuses:
+            q = q.filter(models.Deal.status.in_(statuses))
+
+    if keyword:
+        q = q.filter(models.Deal.product_name.ilike(f"%{keyword}%"))
+
+    if min_price is not None:
+        q = q.filter(models.Deal.target_price >= min_price)
+    if max_price is not None:
+        q = q.filter(models.Deal.target_price <= max_price)
+
+    if buyer_id is not None:
+        q = q.filter(models.Deal.creator_id == buyer_id)
+
+    total = q.count()
+
+    # 정렬
+    sort_field, sort_dir = (sort.split(":") + ["desc"])[:2]
+    col = getattr(models.Deal, sort_field, models.Deal.created_at)
+    if sort_dir == "asc":
+        q = q.order_by(col.asc())
+    else:
+        q = q.order_by(col.desc())
+
+    # 페이지네이션
+    offset = (page - 1) * size
+    items = q.offset(offset).limit(size).all()
+    pages = (total + size - 1) // size if total > 0 else 1
+
+    # ORM 객체를 Pydantic으로 직렬화
+    serialized = [schemas.DealOut.model_validate(item) for item in items]
+    return {"items": [i.model_dump() for i in serialized], "total": total, "page": page, "size": size, "pages": pages}
 
 
 # ---------------------------
@@ -120,7 +222,10 @@ def add_participant(
 ):
     # deal_id 강제 설정 (schemas.DealParticipantCreate에 포함되었더라도 덮어쓰기)
     participant.deal_id = deal_id
-    db_participant = crud.add_participant(db=db, participant=participant)
+    try:
+        db_participant = crud.add_participant(db=db, participant=participant)
+    except crud.ConflictError as e:
+        raise HTTPException(status_code=409, detail=str(e))
 
     # 🔔 알림: 같은 딜에 참여한 다른 바이어들 + 방장에게 알림 보내기
     try:
@@ -304,6 +409,27 @@ def deals_resolve_from_intent(
         - 없으면: 새 deal 을 생성하고 그 id 를 돌려준다 (created = True)
     3) 모든 호출은 deal_ai_logs (또는 log_ai_event) 테이블에 1줄씩 쌓인다.
     """
+
+    # ── text 파싱: 자연어 입력 시 product_name/desired_qty 추출 ──
+    if not body.product_name and body.text:
+        _txt = body.text
+        # 가격: "27만원" → 270000, "135만원" → 1350000
+        _price_m = _re.search(r'(\d+)\s*만\s*원', _txt)
+        if _price_m and not body.target_price:
+            body.target_price = float(int(_price_m.group(1)) * 10000)
+        # 수량: "100개", "50개"
+        _qty_m = _re.search(r'(\d+)\s*개', _txt)
+        if _qty_m and not body.desired_qty:
+            body.desired_qty = int(_qty_m.group(1))
+        # 상품명: 가격/수량/동사 패턴 앞의 텍스트
+        _name = _re.split(r'\d+\s*만\s*원|\d+\s*개|사고\s*싶|원해|희망|묶음', _txt)[0].strip()
+        if _name:
+            body.product_name = _name
+
+    if not body.product_name:
+        body.product_name = body.text or "unknown"
+    if not body.desired_qty:
+        body.desired_qty = 1
 
     # 요청 바디(로그용)
     req_dict = body.model_dump(mode="json")

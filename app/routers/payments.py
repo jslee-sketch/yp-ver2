@@ -40,7 +40,7 @@ def get_seller_settlements(
     rows = (
         db.query(Settlement)
         .filter(Settlement.seller_id == seller_id)
-        .order_by(Settlement.calc_at.desc())
+        .order_by(Settlement.created_at.desc())
         .all()
     )
     return rows
@@ -83,7 +83,7 @@ def list_settlements(
         q = q.filter(Settlement.status == status_filter)
 
     rows = (
-        q.order_by(Settlement.calc_at.desc())
+        q.order_by(Settlement.created_at.desc())
          .all()
     )
     return rows

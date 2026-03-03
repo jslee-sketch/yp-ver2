@@ -1,0 +1,4009 @@
+{
+  "timestamp": "2026-03-02T06:39:36.845Z",
+  "total": 500,
+  "passed": 295,
+  "failed": 205,
+  "rate": "59.0%",
+  "results": [
+    {
+      "id": "A-001",
+      "section": "01. 인증 (50건)",
+      "name": "정상 회원가입",
+      "pass": false,
+      "detail": "status=500",
+      "elapsed": 30
+    },
+    {
+      "id": "A-002",
+      "section": "01. 인증 (50건)",
+      "name": "영문+숫자 비밀번호 가입",
+      "pass": false,
+      "detail": "status=500",
+      "elapsed": 4
+    },
+    {
+      "id": "A-003",
+      "section": "01. 인증 (50건)",
+      "name": "중복 이메일 가입 거부",
+      "pass": true,
+      "detail": "status=500",
+      "elapsed": 3
+    },
+    {
+      "id": "A-004",
+      "section": "01. 인증 (50건)",
+      "name": "이메일 없이 가입 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "A-005",
+      "section": "01. 인증 (50건)",
+      "name": "비밀번호 없이 가입 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "A-006",
+      "section": "01. 인증 (50건)",
+      "name": "잘못된 이메일 형식 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 3
+    },
+    {
+      "id": "A-007",
+      "section": "01. 인증 (50건)",
+      "name": "빈 이메일 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 3
+    },
+    {
+      "id": "A-008",
+      "section": "01. 인증 (50건)",
+      "name": "짧은 비밀번호(정책 의존)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "A-009",
+      "section": "01. 인증 (50건)",
+      "name": "정상 로그인",
+      "pass": false,
+      "detail": "status=401",
+      "elapsed": 4
+    },
+    {
+      "id": "A-010",
+      "section": "01. 인증 (50건)",
+      "name": "잘못된 비밀번호 거부",
+      "pass": true,
+      "detail": "status=401",
+      "elapsed": 4
+    },
+    {
+      "id": "A-011",
+      "section": "01. 인증 (50건)",
+      "name": "없는 이메일 로그인 거부",
+      "pass": true,
+      "detail": "status=401",
+      "elapsed": 4
+    },
+    {
+      "id": "A-012",
+      "section": "01. 인증 (50건)",
+      "name": "빈 body 로그인 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "A-013",
+      "section": "01. 인증 (50건)",
+      "name": "토큰으로 내 정보 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "A-014",
+      "section": "01. 인증 (50건)",
+      "name": "잘못된 토큰 거부",
+      "pass": false,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "A-015",
+      "section": "01. 인증 (50건)",
+      "name": "토큰 없이 보호 API 거부",
+      "pass": false,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "A-016",
+      "section": "01. 인증 (50건)",
+      "name": "비밀번호 변경 시도",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 3
+    },
+    {
+      "id": "A-017",
+      "section": "01. 인증 (50건)",
+      "name": "변경된 비밀번호로 로그인",
+      "pass": true,
+      "detail": "status=401",
+      "elapsed": 3
+    },
+    {
+      "id": "A-018",
+      "section": "01. 인증 (50건)",
+      "name": "대량 가입 10명",
+      "pass": false,
+      "detail": "성공: 0/10",
+      "elapsed": 0
+    },
+    {
+      "id": "A-019",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 가입",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 197
+    },
+    {
+      "id": "A-020",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 승인",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 8
+    },
+    {
+      "id": "A-021",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 로그인",
+      "pass": false,
+      "detail": "status=401",
+      "elapsed": 3
+    },
+    {
+      "id": "A-022",
+      "section": "01. 인증 (50건)",
+      "name": "같은 이메일 구매자+판매자",
+      "pass": true,
+      "detail": "buyer=500, seller=500",
+      "elapsed": 0
+    },
+    {
+      "id": "A-023",
+      "section": "01. 인증 (50건)",
+      "name": "비밀번호 재설정 요청",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 3
+    },
+    {
+      "id": "A-024",
+      "section": "01. 인증 (50건)",
+      "name": "특수문자 이메일(+_) 가입",
+      "pass": false,
+      "detail": "status=500",
+      "elapsed": 3
+    },
+    {
+      "id": "A-025",
+      "section": "01. 인증 (50건)",
+      "name": "매우 긴 이름(500자)",
+      "pass": true,
+      "detail": "status=500",
+      "elapsed": 4
+    },
+    {
+      "id": "A-026",
+      "section": "01. 인증 (50건)",
+      "name": "빈 이름",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "A-027",
+      "section": "01. 인증 (50건)",
+      "name": "SQL Injection 방어",
+      "pass": true,
+      "detail": "status=401",
+      "elapsed": 3
+    },
+    {
+      "id": "A-028",
+      "section": "01. 인증 (50건)",
+      "name": "XSS 이름 가입",
+      "pass": true,
+      "detail": "status=500 (서버 처리에 의존)",
+      "elapsed": 3
+    },
+    {
+      "id": "A-029",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 목록 조회",
+      "pass": true,
+      "detail": "status=200, count=10",
+      "elapsed": 3
+    },
+    {
+      "id": "A-030",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 목록 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "A-031",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 상세 조회",
+      "pass": false,
+      "detail": "buyer 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "A-032",
+      "section": "01. 인증 (50건)",
+      "name": "없는 구매자 ID 조회",
+      "pass": false,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "A-033",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 신뢰 티어 조회",
+      "pass": false,
+      "detail": "buyer 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "A-034",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 포인트 등급",
+      "pass": false,
+      "detail": "buyer 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "A-035",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 요약 조회",
+      "pass": false,
+      "detail": "buyer 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "A-036",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 상세 조회",
+      "pass": false,
+      "detail": "seller 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "A-037",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 요약 조회",
+      "pass": false,
+      "detail": "seller 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "A-038",
+      "section": "01. 인증 (50건)",
+      "name": "동시 가입 5명",
+      "pass": false,
+      "detail": "성공: 0/5",
+      "elapsed": 0
+    },
+    {
+      "id": "A-039",
+      "section": "01. 인증 (50건)",
+      "name": "동시 로그인 3명",
+      "pass": false,
+      "detail": "buyer 부족",
+      "elapsed": 0
+    },
+    {
+      "id": "A-040",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 대시보드",
+      "pass": false,
+      "detail": "buyer 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "A-041",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 인사이트",
+      "pass": false,
+      "detail": "buyer 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "A-042",
+      "section": "01. 인증 (50건)",
+      "name": "최근 활동 로그",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 7
+    },
+    {
+      "id": "A-043",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 프리뷰",
+      "pass": false,
+      "detail": "buyer 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "A-044",
+      "section": "01. 인증 (50건)",
+      "name": "Basic 구매자 조회",
+      "pass": false,
+      "detail": "buyer 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "A-045",
+      "section": "01. 인증 (50건)",
+      "name": "Basic 구매자 목록",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "A-046",
+      "section": "01. 인증 (50건)",
+      "name": "Basic 판매자 목록",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "A-047",
+      "section": "01. 인증 (50건)",
+      "name": "Health 체크",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "A-048",
+      "section": "01. 인증 (50건)",
+      "name": "Deep Health 체크",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "A-049",
+      "section": "01. 인증 (50건)",
+      "name": "버전 조회",
+      "pass": true,
+      "detail": "status=200, ver={\"app\":\"Yeokping Ver2 API\",\"version\":\"3.5-A-route ",
+      "elapsed": 1
+    },
+    {
+      "id": "A-050",
+      "section": "01. 인증 (50건)",
+      "name": "루트 엔드포인트",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "B-001",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 목록 조회",
+      "pass": true,
+      "detail": "count=10",
+      "elapsed": 4
+    },
+    {
+      "id": "B-002",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 목록 limit=5",
+      "pass": true,
+      "detail": "count=5",
+      "elapsed": 3
+    },
+    {
+      "id": "B-003",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 목록 skip=5",
+      "pass": true,
+      "detail": "count=5",
+      "elapsed": 3
+    },
+    {
+      "id": "B-004",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 생성",
+      "pass": true,
+      "detail": "status=200, id=46",
+      "elapsed": 201
+    },
+    {
+      "id": "B-005",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "생성된 구매자 상세 조회",
+      "pass": true,
+      "detail": "name=BuyerCRUD25j4o3",
+      "elapsed": 2
+    },
+    {
+      "id": "B-006",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "없는 ID 조회 404",
+      "pass": false,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "B-007",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "내 정보 조회 (buyers/me)",
+      "pass": true,
+      "detail": "status=200, id=undefined",
+      "elapsed": 1
+    },
+    {
+      "id": "B-008",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "토큰 없이 /buyers/me 거부",
+      "pass": false,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "B-009",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "중복 이메일 가입 거부",
+      "pass": true,
+      "detail": "status=500",
+      "elapsed": 3
+    },
+    {
+      "id": "B-010",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "이메일 없이 가입 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "B-011",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 신뢰 티어 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 6
+    },
+    {
+      "id": "B-012",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 포인트 등급 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 24
+    },
+    {
+      "id": "B-013",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "포인트 잔액 조회 (by ID)",
+      "pass": true,
+      "detail": "status=200, balance={\"user_type\":\"buyer\",\"user_id\":46,\"balance\":0}",
+      "elapsed": 3
+    },
+    {
+      "id": "B-014",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "포인트 거래 내역 (by ID)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "B-015",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "포인트 잔액 조회 (by token)",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "B-016",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "포인트 거래 내역 (by token)",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "B-017",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 요약 조회",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "B-018",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 대시보드",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "B-019",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 인사이트 개요",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 4
+    },
+    {
+      "id": "B-020",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 프리뷰",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "B-021",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "닉네임 중복 확인 API",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "B-022",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "Basic 구매자 목록",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "B-023",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "Basic 구매자 상세",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "B-024",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 활동 로그",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 4
+    },
+    {
+      "id": "B-025",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "없는 구매자 포인트 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "B-026",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자별 예약 목록",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 3
+    },
+    {
+      "id": "B-027",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 대량 생성 5명",
+      "pass": false,
+      "detail": "성공: 0/5",
+      "elapsed": 0
+    },
+    {
+      "id": "B-028",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 목록 빈 페이지",
+      "pass": true,
+      "detail": "count=0",
+      "elapsed": 3
+    },
+    {
+      "id": "B-029",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "구매자 JSON 응답 구조 확인",
+      "pass": true,
+      "detail": "fields=buyer_id,name,email,phone,address,created_at",
+      "elapsed": 2
+    },
+    {
+      "id": "B-030",
+      "section": "02. 구매자 CRUD (30건)",
+      "name": "동시 구매자 5명 조회",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "S-001",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 목록 조회",
+      "pass": true,
+      "detail": "count=10",
+      "elapsed": 6
+    },
+    {
+      "id": "S-002",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 생성",
+      "pass": true,
+      "detail": "status=200, id=17",
+      "elapsed": 205
+    },
+    {
+      "id": "S-003",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 승인",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 9
+    },
+    {
+      "id": "S-004",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "승인 후 판매자 상태 확인",
+      "pass": true,
+      "detail": "status=200, approved=?",
+      "elapsed": 3
+    },
+    {
+      "id": "S-005",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 상세 조회",
+      "pass": true,
+      "detail": "biz=undefined",
+      "elapsed": 3
+    },
+    {
+      "id": "S-006",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "없는 판매자 ID (404)",
+      "pass": false,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "S-007",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 로그인",
+      "pass": false,
+      "detail": "status=401",
+      "elapsed": 4
+    },
+    {
+      "id": "S-008",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 내 정보",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "S-009",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 요약",
+      "pass": true,
+      "detail": "status=401",
+      "elapsed": 2
+    },
+    {
+      "id": "S-010",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 레벨 조회",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "S-011",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 리뷰 요약",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "S-012",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 오퍼 목록",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "S-013",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 커미션 설정 확인",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "S-014",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 대시보드",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 4
+    },
+    {
+      "id": "S-015",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 인사이트",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 4
+    },
+    {
+      "id": "S-016",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 온보딩 API",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 2
+    },
+    {
+      "id": "S-017",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "미승인 판매자 오퍼 생성 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "S-018",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 이메일 중복 가입",
+      "pass": true,
+      "detail": "status=500",
+      "elapsed": 2
+    },
+    {
+      "id": "S-019",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "Basic 판매자 목록",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "S-020",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "Basic 판매자 상세",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 6
+    },
+    {
+      "id": "S-021",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 활동 로그",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "S-022",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 페이지네이션 (limit=5)",
+      "pass": true,
+      "detail": "count=5",
+      "elapsed": 4
+    },
+    {
+      "id": "S-023",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "특수문자 비즈니스명",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "S-024",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "매우 긴 비즈니스명(300자)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "S-025",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "정산 목록 조회 (admin)",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "S-026",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 통계",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 2
+    },
+    {
+      "id": "S-027",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 프리뷰",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "S-028",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 JSON 응답 구조",
+      "pass": true,
+      "detail": "fields=seller_id,name,company_name,email,phone,address,created_at,a",
+      "elapsed": 3
+    },
+    {
+      "id": "S-029",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "동시 판매자 5명 조회",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "S-030",
+      "section": "03. 판매자 CRUD (30건)",
+      "name": "판매자 비밀번호 변경 시도",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "D-001",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 생성 (에어팟)",
+      "pass": true,
+      "detail": "deal_id=24",
+      "elapsed": 4894
+    },
+    {
+      "id": "D-002",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 생성 (갤럭시)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 4640
+    },
+    {
+      "id": "D-003",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 생성 (다이슨)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 7860
+    },
+    {
+      "id": "D-004",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "상품명 없이 딜 생성 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 3
+    },
+    {
+      "id": "D-005",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "수량 없이 딜 생성",
+      "pass": true,
+      "detail": "status=422 (정책에 따라)",
+      "elapsed": 1
+    },
+    {
+      "id": "D-006",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "최소 수량(1) 딜 생성",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3412
+    },
+    {
+      "id": "D-007",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "대량(99999) 딜 생성",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3793
+    },
+    {
+      "id": "D-008",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "목표가 0원 딜 생성",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3191
+    },
+    {
+      "id": "D-009",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "음수 목표가 딜 생성 거부",
+      "pass": false,
+      "detail": "status=200",
+      "elapsed": 3639
+    },
+    {
+      "id": "D-010",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 목록 (limit=5)",
+      "pass": true,
+      "detail": "count=?",
+      "elapsed": 7
+    },
+    {
+      "id": "D-011",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 목록 (limit=100)",
+      "pass": true,
+      "detail": "count=?",
+      "elapsed": 9
+    },
+    {
+      "id": "D-012",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 목록 (skip=999)",
+      "pass": true,
+      "detail": "count=?",
+      "elapsed": 8
+    },
+    {
+      "id": "D-013",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 상세 조회",
+      "pass": true,
+      "detail": "product=에어팟 프로 2세대 USB-C",
+      "elapsed": 3
+    },
+    {
+      "id": "D-014",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 상세 필드: product_name",
+      "pass": true,
+      "detail": "에어팟 프로 2세대 USB-C",
+      "elapsed": 0
+    },
+    {
+      "id": "D-015",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 상세 필드: target_price",
+      "pass": true,
+      "detail": "279000",
+      "elapsed": 0
+    },
+    {
+      "id": "D-016",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 상세 필드: desired_qty",
+      "pass": true,
+      "detail": "100",
+      "elapsed": 0
+    },
+    {
+      "id": "D-017",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 상세 필드: status",
+      "pass": false,
+      "detail": "없음",
+      "elapsed": 0
+    },
+    {
+      "id": "D-018",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 상세 필드: created_at",
+      "pass": true,
+      "detail": "2026-03-02T06:36:01",
+      "elapsed": 0
+    },
+    {
+      "id": "D-019",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "없는 딜 ID 조회 404",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 4
+    },
+    {
+      "id": "D-020",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "목표가 수정",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 10
+    },
+    {
+      "id": "D-021",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "목표가 변경 확인",
+      "pass": true,
+      "detail": "target=265000",
+      "elapsed": 3
+    },
+    {
+      "id": "D-022",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "목표가 재수정",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 9
+    },
+    {
+      "id": "D-023",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "비방장 목표가 수정 거부",
+      "pass": false,
+      "detail": "buyer2 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "D-024",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "옵션 포함 딜 생성",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 6211
+    },
+    {
+      "id": "D-025",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "추가조건 포함 딜 생성",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 5144
+    },
+    {
+      "id": "D-026",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "대량 딜 10개 생성",
+      "pass": true,
+      "detail": "성공: 10/10",
+      "elapsed": 0
+    },
+    {
+      "id": "D-027",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 프리뷰",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "D-028",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 활동 로그",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "D-029",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "AI 딜 의도 분석",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "D-030",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "동시 딜 5개 생성",
+      "pass": false,
+      "detail": "성공: 2/5",
+      "elapsed": 0
+    },
+    {
+      "id": "D-031",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 목록 limit=1",
+      "pass": true,
+      "detail": "count=?",
+      "elapsed": 8
+    },
+    {
+      "id": "D-032",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 목록 limit=0",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 10
+    },
+    {
+      "id": "D-033",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 목록 skip=-1",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 9
+    },
+    {
+      "id": "D-034",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "특수문자 상품명 딜",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 4505
+    },
+    {
+      "id": "D-035",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "이모지 상품명 딜",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 4455
+    },
+    {
+      "id": "D-036",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "매우 긴 상품명(1000자)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2682
+    },
+    {
+      "id": "D-037",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 목록 skip=5 limit=5",
+      "pass": true,
+      "detail": "count=?",
+      "elapsed": 8
+    },
+    {
+      "id": "D-038",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "anchor_price 포함 딜 생성",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 22
+    },
+    {
+      "id": "D-039",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "market_price 포함 딜 생성",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3477
+    },
+    {
+      "id": "D-040",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "anchor+market 동시 설정 딜",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 20
+    },
+    {
+      "id": "D-041",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "delivery_days 설정 딜",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3160
+    },
+    {
+      "id": "D-042",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "warranty_months 설정 딜",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3369
+    },
+    {
+      "id": "D-043",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "shipping_fee_krw 설정 딜",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3101
+    },
+    {
+      "id": "D-044",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "refund_days 설정 딜",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3199
+    },
+    {
+      "id": "D-045",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "풀옵션 딜 생성",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 19
+    },
+    {
+      "id": "D-046",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 목표가 이력 조회",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "D-047",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 채팅 초기 상태",
+      "pass": true,
+      "detail": "0개 메시지",
+      "elapsed": 2
+    },
+    {
+      "id": "D-048",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "신규 딜 오퍼 수 확인",
+      "pass": true,
+      "detail": "0개 오퍼",
+      "elapsed": 4
+    },
+    {
+      "id": "D-049",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "신규 딜 참여자 수 확인",
+      "pass": true,
+      "detail": "1명",
+      "elapsed": 2
+    },
+    {
+      "id": "D-050",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 preview 팩 조회",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "D-051",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 활동 로그 상세",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 4
+    },
+    {
+      "id": "D-052",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 통계 조회",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "D-053",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 인사이트 조회",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "D-054",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 목록 대량 skip(1000)",
+      "pass": true,
+      "detail": "count=?",
+      "elapsed": 7
+    },
+    {
+      "id": "D-055",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜 목록 limit=500",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 7
+    },
+    {
+      "id": "D-056",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "관전자 예측 생성",
+      "pass": true,
+      "detail": "status=400",
+      "elapsed": 7
+    },
+    {
+      "id": "D-057",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "관전자 예측 수 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 5
+    },
+    {
+      "id": "D-058",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜방 뷰어 등록",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 10
+    },
+    {
+      "id": "D-059",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "딜방 뷰어 수 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "D-060",
+      "section": "04. 딜 라이프사이클 (60건)",
+      "name": "관전자 랭킹 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 6
+    },
+    {
+      "id": "P-001",
+      "section": "05. 딜 참여 (35건)",
+      "name": "딜 참여 (기본)",
+      "pass": false,
+      "detail": "status=422, p_id=undefined",
+      "elapsed": 2
+    },
+    {
+      "id": "P-002",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여자 목록 조회",
+      "pass": true,
+      "detail": "count=1",
+      "elapsed": 2
+    },
+    {
+      "id": "P-003",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여자 수 확인",
+      "pass": true,
+      "detail": "count=1",
+      "elapsed": 2
+    },
+    {
+      "id": "P-004",
+      "section": "05. 딜 참여 (35건)",
+      "name": "중복 참여 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-005",
+      "section": "05. 딜 참여 (35건)",
+      "name": "없는 딜 참여 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-006",
+      "section": "05. 딜 참여 (35건)",
+      "name": "수량 0 참여 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-007",
+      "section": "05. 딜 참여 (35건)",
+      "name": "수량 음수 참여 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-008",
+      "section": "05. 딜 참여 (35건)",
+      "name": "수량 1 참여 (최소)",
+      "pass": false,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-009",
+      "section": "05. 딜 참여 (35건)",
+      "name": "수량 99 참여 (대량)",
+      "pass": false,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "P-010",
+      "section": "05. 딜 참여 (35건)",
+      "name": "4번째 구매자 참여",
+      "pass": false,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-011",
+      "section": "05. 딜 참여 (35건)",
+      "name": "5번째 구매자 참여",
+      "pass": false,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-012",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여자 5명 집계 확인",
+      "pass": false,
+      "detail": "count=1",
+      "elapsed": 3
+    },
+    {
+      "id": "P-013",
+      "section": "05. 딜 참여 (35건)",
+      "name": "토큰 없이 참여 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-014",
+      "section": "05. 딜 참여 (35건)",
+      "name": "없는 구매자 ID 참여",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-015",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여 후 딜 상태 확인",
+      "pass": false,
+      "detail": "status=undefined",
+      "elapsed": 3
+    },
+    {
+      "id": "P-016",
+      "section": "05. 딜 참여 (35건)",
+      "name": "구매자별 예약/참여 이력",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-017",
+      "section": "05. 딜 참여 (35건)",
+      "name": "대량 참여 10명",
+      "pass": false,
+      "detail": "성공: 0/10",
+      "elapsed": 0
+    },
+    {
+      "id": "P-018",
+      "section": "05. 딜 참여 (35건)",
+      "name": "동시 참여 5명",
+      "pass": false,
+      "detail": "성공: 0/5",
+      "elapsed": 0
+    },
+    {
+      "id": "P-019",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여 수량 집계 정확성",
+      "pass": false,
+      "detail": "총 수량=0",
+      "elapsed": 1
+    },
+    {
+      "id": "P-020",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여 취소 API",
+      "pass": true,
+      "detail": "status=429",
+      "elapsed": 1
+    },
+    {
+      "id": "P-021",
+      "section": "05. 딜 참여 (35건)",
+      "name": "취소 후 재참여",
+      "pass": true,
+      "detail": "status=429",
+      "elapsed": 1
+    },
+    {
+      "id": "P-022",
+      "section": "05. 딜 참여 (35건)",
+      "name": "방장(creator) 참여 처리",
+      "pass": true,
+      "detail": "status=429 (중복이면 400 정상)",
+      "elapsed": 1
+    },
+    {
+      "id": "P-023",
+      "section": "05. 딜 참여 (35건)",
+      "name": "다른 딜에 교차 참여",
+      "pass": false,
+      "detail": "deal4 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "P-024",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여자 목록 페이지네이션",
+      "pass": true,
+      "detail": "status=429",
+      "elapsed": 1
+    },
+    {
+      "id": "P-025",
+      "section": "05. 딜 참여 (35건)",
+      "name": "특정 구매자 참여 여부 확인",
+      "pass": false,
+      "detail": "buyer1 참여=false",
+      "elapsed": 0
+    },
+    {
+      "id": "P-026",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여 알림 발송 확인",
+      "pass": true,
+      "detail": "status=200, count=0",
+      "elapsed": 2
+    },
+    {
+      "id": "P-027",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여 후 딜 상태 open 유지",
+      "pass": false,
+      "detail": "status=undefined",
+      "elapsed": 0
+    },
+    {
+      "id": "P-028",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여자 상세 조회",
+      "pass": false,
+      "detail": "p1Id 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "P-029",
+      "section": "05. 딜 참여 (35건)",
+      "name": "여러 딜에 동시 참여",
+      "pass": false,
+      "detail": "성공: 0/2",
+      "elapsed": 0
+    },
+    {
+      "id": "P-030",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여 이력 활동 로그",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 6
+    },
+    {
+      "id": "P-031",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여자 포함 딜 프리뷰",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "P-032",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여 후 딜 통계 조회",
+      "pass": true,
+      "detail": "status=429",
+      "elapsed": 1
+    },
+    {
+      "id": "P-033",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여 후 오퍼 조회 가능",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "P-034",
+      "section": "05. 딜 참여 (35건)",
+      "name": "관전자→참여자 전환 처리",
+      "pass": true,
+      "detail": "status=429",
+      "elapsed": 1
+    },
+    {
+      "id": "P-035",
+      "section": "05. 딜 참여 (35건)",
+      "name": "참여자 목록 JSON 응답 구조",
+      "pass": false,
+      "detail": "array=false, fields=N/A",
+      "elapsed": 1
+    },
+    {
+      "id": "O-001",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #1",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-002",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #2",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-003",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #3",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-004",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #4",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-005",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #5",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-006",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #6",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-007",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #7",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-008",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #8",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-009",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #9",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-010",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #10",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-011",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #11",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-012",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #12",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-013",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #13",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-014",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #14",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-015",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #15",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-016",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #16",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-017",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #17",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-018",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #18",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-019",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #19",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-020",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #20",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-021",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #21",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-022",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #22",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-023",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #23",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-024",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #24",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-025",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #25",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-026",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #26",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-027",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #27",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-028",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #28",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-029",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #29",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-030",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #30",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-031",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #31",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-032",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #32",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-033",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #33",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-034",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #34",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-035",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #35",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-036",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #36",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-037",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #37",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-038",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #38",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-039",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #39",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-040",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #40",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-041",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #41",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-042",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #42",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-043",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #43",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-044",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #44",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "O-045",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 테스트 #45",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-001",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #1",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-002",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #2",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-003",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #3",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-004",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #4",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-005",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #5",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-006",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #6",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-007",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #7",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-008",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #8",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-009",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #9",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-010",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #10",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-011",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #11",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-012",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #12",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-013",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #13",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-014",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #14",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-015",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #15",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-016",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #16",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-017",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #17",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-018",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #18",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-019",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #19",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-020",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #20",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-021",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #21",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-022",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #22",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-023",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #23",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-024",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #24",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-025",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #25",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-026",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #26",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-027",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #27",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-028",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #28",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-029",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #29",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-030",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #30",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-031",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #31",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-032",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #32",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-033",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #33",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-034",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #34",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-035",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #35",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-036",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #36",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-037",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #37",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-038",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #38",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-039",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #39",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-040",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #40",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-041",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #41",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-042",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #42",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-043",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #43",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-044",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #44",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-045",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #45",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-046",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #46",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-047",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #47",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-048",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #48",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-049",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #49",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-050",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #50",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-051",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #51",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-052",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #52",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-053",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #53",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-054",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #54",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "R-055",
+      "section": "07. 예약/결제/배송 (55건)",
+      "name": "예약 테스트 #55",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-001",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #1",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-002",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #2",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-003",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #3",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-004",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #4",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-005",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #5",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-006",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #6",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-007",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #7",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-008",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #8",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-009",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #9",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-010",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #10",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-011",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #11",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-012",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #12",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-013",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #13",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-014",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #14",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-015",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #15",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-016",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #16",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-017",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #17",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-018",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #18",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-019",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #19",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-020",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #20",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-021",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #21",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-022",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #22",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-023",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #23",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-024",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #24",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "C-025",
+      "section": "08. 딜 채팅 (25건)",
+      "name": "채팅 테스트 #25",
+      "pass": false,
+      "detail": "사전 데이터 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "N-001",
+      "section": "09. 알림 (20건)",
+      "name": "알림 목록 조회",
+      "pass": false,
+      "detail": "status=422, count=?",
+      "elapsed": 3
+    },
+    {
+      "id": "N-002",
+      "section": "09. 알림 (20건)",
+      "name": "미읽음 수 조회",
+      "pass": true,
+      "detail": "status=404, count={\"detail\":\"Not Found\"}",
+      "elapsed": 0
+    },
+    {
+      "id": "N-003",
+      "section": "09. 알림 (20건)",
+      "name": "알림 읽음 처리",
+      "pass": true,
+      "detail": "status=405 (알림 없으면 404 정상)",
+      "elapsed": 1
+    },
+    {
+      "id": "N-004",
+      "section": "09. 알림 (20건)",
+      "name": "전체 읽음 처리",
+      "pass": true,
+      "detail": "status=405",
+      "elapsed": 1
+    },
+    {
+      "id": "N-005",
+      "section": "09. 알림 (20건)",
+      "name": "읽음 처리 후 미읽음 수 변화",
+      "pass": true,
+      "detail": "unread=0",
+      "elapsed": 1
+    },
+    {
+      "id": "N-006",
+      "section": "09. 알림 (20건)",
+      "name": "없는 알림 ID 읽음 처리",
+      "pass": true,
+      "detail": "status=405",
+      "elapsed": 1
+    },
+    {
+      "id": "N-007",
+      "section": "09. 알림 (20건)",
+      "name": "토큰 없이 알림 조회 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "N-008",
+      "section": "09. 알림 (20건)",
+      "name": "알림 목록 페이지네이션",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "N-009",
+      "section": "09. 알림 (20건)",
+      "name": "알림 JSON 응답 구조",
+      "pass": false,
+      "detail": "isArray=false, fields=",
+      "elapsed": 3
+    },
+    {
+      "id": "N-010",
+      "section": "09. 알림 (20건)",
+      "name": "미읽음 수 0 또는 유효값",
+      "pass": true,
+      "detail": "unread=-1",
+      "elapsed": 1
+    },
+    {
+      "id": "N-011",
+      "section": "09. 알림 (20건)",
+      "name": "신규 구매자 알림 목록 (빈 경우)",
+      "pass": false,
+      "detail": "count=?",
+      "elapsed": 4
+    },
+    {
+      "id": "N-012",
+      "section": "09. 알림 (20건)",
+      "name": "알림 타입 필드",
+      "pass": true,
+      "detail": "알림 없음 (신규 계정)",
+      "elapsed": 0
+    },
+    {
+      "id": "N-013",
+      "section": "09. 알림 (20건)",
+      "name": "알림 생성일 필드",
+      "pass": true,
+      "detail": "알림 없음 (신규 계정)",
+      "elapsed": 0
+    },
+    {
+      "id": "N-014",
+      "section": "09. 알림 (20건)",
+      "name": "알림 메시지 필드",
+      "pass": true,
+      "detail": "알림 없음 (신규 계정)",
+      "elapsed": 0
+    },
+    {
+      "id": "N-015",
+      "section": "09. 알림 (20건)",
+      "name": "알림 읽음 상태 필드",
+      "pass": true,
+      "detail": "알림 없음 (신규 계정)",
+      "elapsed": 0
+    },
+    {
+      "id": "N-016",
+      "section": "09. 알림 (20건)",
+      "name": "다수 알림 읽음 처리 (read_all)",
+      "pass": true,
+      "detail": "status=405",
+      "elapsed": 1
+    },
+    {
+      "id": "N-017",
+      "section": "09. 알림 (20건)",
+      "name": "알림 목록 정렬 (최신순)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "N-018",
+      "section": "09. 알림 (20건)",
+      "name": "알림 필터 (미읽음)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "N-019",
+      "section": "09. 알림 (20건)",
+      "name": "알림 통계 조회",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "N-020",
+      "section": "09. 알림 (20건)",
+      "name": "알림 전체 조회 성공",
+      "pass": false,
+      "detail": "count=?",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-001",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 잔액 조회 (by token)",
+      "pass": true,
+      "detail": "status=404, balance={\"detail\":\"Not Found\"}",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-002",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 거래 내역 (by token)",
+      "pass": true,
+      "detail": "status=404, count=?",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-003",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 잔액 조회 (by buyer_id)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "PT-004",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 거래 내역 (by buyer_id)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-005",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "없는 유저 포인트 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-006",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "잔액 0 이상 확인",
+      "pass": true,
+      "detail": "balance=0",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-007",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 적립 (관리자)",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "PT-008",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 적립 후 잔액 확인",
+      "pass": true,
+      "detail": "balance=0",
+      "elapsed": 4
+    },
+    {
+      "id": "PT-009",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 차감 (관리자)",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "PT-010",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 차감 후 잔액 확인",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-011",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "잔액 초과 차감 거부 (정책 의존)",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "PT-012",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 등급 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 17
+    },
+    {
+      "id": "PT-013",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 내역 필터 (earn)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "PT-014",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 내역 필터 (spend)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-015",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 내역 페이지네이션",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "PT-016",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 거래 JSON 구조",
+      "pass": true,
+      "detail": "fields=",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-017",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 잔액 JSON 구조",
+      "pass": true,
+      "detail": "data=user_type,user_id,balance",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-018",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 내역 날짜순 정렬",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "PT-019",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "음수 포인트 적립 거부",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "PT-020",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 내역 수 확인",
+      "pass": true,
+      "detail": "count=0",
+      "elapsed": 1
+    },
+    {
+      "id": "PT-021",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 만료 예정 조회",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 0
+    },
+    {
+      "id": "PT-022",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "이벤트 포인트 적립",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 0
+    },
+    {
+      "id": "PT-023",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "리뷰 포인트 적립",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "PT-024",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 통계 조회",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "PT-025",
+      "section": "10. 포인트/정산 (25건)",
+      "name": "포인트 전체 잔액 최종 검증",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "RV-001",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 생성 (별점 5)",
+      "pass": true,
+      "detail": "status=422, id=undefined",
+      "elapsed": 4
+    },
+    {
+      "id": "RV-002",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 생성 (별점 1)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "RV-003",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 생성 (별점 3)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 3
+    },
+    {
+      "id": "RV-004",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 생성 (빈 코멘트)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 4
+    },
+    {
+      "id": "RV-005",
+      "section": "11. 리뷰 (20건)",
+      "name": "별점 0 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 3
+    },
+    {
+      "id": "RV-006",
+      "section": "11. 리뷰 (20건)",
+      "name": "별점 6 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 4
+    },
+    {
+      "id": "RV-007",
+      "section": "11. 리뷰 (20건)",
+      "name": "별점 음수 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 3
+    },
+    {
+      "id": "RV-008",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 목록 조회",
+      "pass": true,
+      "detail": "status=405, count=?",
+      "elapsed": 2
+    },
+    {
+      "id": "RV-009",
+      "section": "11. 리뷰 (20건)",
+      "name": "셀러별 리뷰 조회",
+      "pass": true,
+      "detail": "status=405",
+      "elapsed": 2
+    },
+    {
+      "id": "RV-010",
+      "section": "11. 리뷰 (20건)",
+      "name": "셀러 평점 요약",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "RV-011",
+      "section": "11. 리뷰 (20건)",
+      "name": "없는 예약 리뷰 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 3
+    },
+    {
+      "id": "RV-012",
+      "section": "11. 리뷰 (20건)",
+      "name": "없는 셀러 리뷰 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 4
+    },
+    {
+      "id": "RV-013",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 JSON 응답 구조",
+      "pass": true,
+      "detail": "fields=",
+      "elapsed": 3
+    },
+    {
+      "id": "RV-014",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 별점 필드 확인",
+      "pass": true,
+      "detail": "review_id 없음 (정상)",
+      "elapsed": 0
+    },
+    {
+      "id": "RV-015",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 코멘트 필드 확인",
+      "pass": true,
+      "detail": "review_id 없음 (정상)",
+      "elapsed": 0
+    },
+    {
+      "id": "RV-016",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 생성일 필드 확인",
+      "pass": true,
+      "detail": "review_id 없음 (정상)",
+      "elapsed": 0
+    },
+    {
+      "id": "RV-017",
+      "section": "11. 리뷰 (20건)",
+      "name": "중복 리뷰 거부",
+      "pass": true,
+      "detail": "검증 스킵 (예약/리뷰 없음)",
+      "elapsed": 0
+    },
+    {
+      "id": "RV-018",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 페이지네이션",
+      "pass": true,
+      "detail": "status=405",
+      "elapsed": 2
+    },
+    {
+      "id": "RV-019",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 필터 (별점 5)",
+      "pass": true,
+      "detail": "status=405",
+      "elapsed": 2
+    },
+    {
+      "id": "RV-020",
+      "section": "11. 리뷰 (20건)",
+      "name": "리뷰 전체 통계",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "AI-001",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 딜 헬퍼 기본 요청",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 4163
+    },
+    {
+      "id": "AI-002",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 딜 헬퍼 응답 구조 확인",
+      "pass": true,
+      "detail": "keys=canonical_name,model_name,brand,suggested_options,price,cond",
+      "elapsed": 4163
+    },
+    {
+      "id": "AI-003",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 딜 헬퍼 - 에어팟",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 4317
+    },
+    {
+      "id": "AI-004",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 딜 헬퍼 - 갤럭시",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 8361
+    },
+    {
+      "id": "AI-005",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 딜 헬퍼 - 빈 상품명",
+      "pass": true,
+      "detail": "status=400",
+      "elapsed": 2
+    },
+    {
+      "id": "AI-006",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 기본 질문",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2635
+    },
+    {
+      "id": "AI-007",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 응답 구조 확인",
+      "pass": true,
+      "detail": "answer=역핑은 소비자가 원하는 가격과 조건을 먼저 제시하면 판매자들이 경쟁적으로 제안하는 공동구매",
+      "elapsed": 2635
+    },
+    {
+      "id": "AI-008",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 정책 질문",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3010
+    },
+    {
+      "id": "AI-009",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 오퍼 질문",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1447
+    },
+    {
+      "id": "AI-010",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 배송 질문",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1651
+    },
+    {
+      "id": "AI-011",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 환불 질문",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2629
+    },
+    {
+      "id": "AI-012",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 빈 입력(공백)",
+      "pass": true,
+      "detail": "status=400",
+      "elapsed": 2
+    },
+    {
+      "id": "AI-013",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 매우 긴 입력 (600자)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1366
+    },
+    {
+      "id": "AI-014",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 한국어 질문",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1980
+    },
+    {
+      "id": "AI-015",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 영어 질문",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2211
+    },
+    {
+      "id": "AI-016",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 숫자 입력",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1046
+    },
+    {
+      "id": "AI-017",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 딜 의도 분석 - 기본",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "AI-018",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 딜 의도 - 상품명 추출",
+      "pass": true,
+      "detail": "응답 없음 (서비스 미지원)",
+      "elapsed": 0
+    },
+    {
+      "id": "AI-019",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 딜 의도 - 가격 추출",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "AI-020",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 딜 의도 - 수량 추출",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "AI-021",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 deal_id 컨텍스트",
+      "pass": false,
+      "detail": "deal1 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "AI-022",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 연속 질문 5개",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "AI-023",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 딜 헬퍼 응답 시간",
+      "pass": true,
+      "detail": "5715ms",
+      "elapsed": 5715
+    },
+    {
+      "id": "AI-024",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "핑퐁이 특수문자 입력",
+      "pass": true,
+      "detail": "status=429",
+      "elapsed": 2
+    },
+    {
+      "id": "AI-025",
+      "section": "12. AI/핑퐁이 (25건)",
+      "name": "AI 서비스 가용성 확인",
+      "pass": true,
+      "detail": "status=429, alive=false",
+      "elapsed": 2
+    },
+    {
+      "id": "E-001",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "음수 ID 요청 (/deals/-1)",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 2
+    },
+    {
+      "id": "E-002",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "ID 0 요청 (/deals/0)",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 2
+    },
+    {
+      "id": "E-003",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "소수점 ID 요청 (/deals/3.14)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "E-004",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "문자열 ID 요청 (/deals/abc)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "E-005",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "매우 큰 숫자 ID",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 2
+    },
+    {
+      "id": "E-006",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "null body 요청",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 0
+    },
+    {
+      "id": "E-007",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "빈 body {} 요청",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "E-008",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "빈 배열 [] body 요청",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 0
+    },
+    {
+      "id": "E-009",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "잘못된 Content-Type (text/plain)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 0
+    },
+    {
+      "id": "E-010",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "잘못된 HTTP 메서드 (DELETE /deals/)",
+      "pass": true,
+      "detail": "status=405",
+      "elapsed": 1
+    },
+    {
+      "id": "E-011",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "없는 엔드포인트",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "E-012",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "잘못된 enum 값 (status)",
+      "pass": true,
+      "detail": "status=200 (무시하거나 거부)",
+      "elapsed": 2686
+    },
+    {
+      "id": "E-013",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "잘못된 날짜 형식",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2728
+    },
+    {
+      "id": "E-014",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "미래 날짜 설정",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3751
+    },
+    {
+      "id": "E-015",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "유니코드 한국어 이름",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 197
+    },
+    {
+      "id": "E-016",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "한자/일본어 이름",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "E-017",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "아랍어 이름",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "E-018",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "SQL Injection 방어 (DROP TABLE)",
+      "pass": true,
+      "detail": "status=401",
+      "elapsed": 3
+    },
+    {
+      "id": "E-019",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "XSS 상품명 가입",
+      "pass": true,
+      "detail": "status=200 (저장은 되되 이스케이프 필요)",
+      "elapsed": 3441
+    },
+    {
+      "id": "E-020",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "매우 큰 payload (name 10000자)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 195
+    },
+    {
+      "id": "E-021",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "중첩 JSON 포함 요청",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "E-022",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "부동소수점 가격 (29999.99)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2824
+    },
+    {
+      "id": "E-023",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "매우 긴 쿼리스트링",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 7
+    },
+    {
+      "id": "E-024",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "중복 쿼리 파라미터",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 7
+    },
+    {
+      "id": "E-025",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "잘못된 JSON 형식",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 0
+    },
+    {
+      "id": "E-026",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "숫자를 문자로 전달 (name=123)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "E-027",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "배열을 문자로 전달 (qty=\"열\")",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "E-028",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "이모지 포함 비밀번호",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 196
+    },
+    {
+      "id": "E-029",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "탭/개행 포함 이름",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 197
+    },
+    {
+      "id": "E-030",
+      "section": "13. 엣지케이스 (30건)",
+      "name": "혼합 타입 배열 body",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-001",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 딜 10개 생성",
+      "pass": false,
+      "detail": "성공: 2/10",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-002",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 구매자 10명 조회",
+      "pass": true,
+      "detail": "성공: 10/10",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-003",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 오퍼 5개 생성",
+      "pass": false,
+      "detail": "성공: 0/5",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-004",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 예약 5개 생성",
+      "pass": false,
+      "detail": "deal/offer 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-005",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 채팅 메시지 10개",
+      "pass": false,
+      "detail": "성공: 0/10",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-006",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 로그인 5명",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-007",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 회원가입 10명",
+      "pass": true,
+      "detail": "성공: 10/10",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-008",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 딜 목록 조회 20회",
+      "pass": true,
+      "detail": "성공: 20/20",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-009",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 오퍼 목록 조회 20회",
+      "pass": true,
+      "detail": "성공: 20/20",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-010",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 포인트 조회 5명",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-011",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 알림 조회 5명",
+      "pass": false,
+      "detail": "성공: 0/5",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-012",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 핑퐁이 질문 3개",
+      "pass": true,
+      "detail": "성공: 3/3",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-013",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 헬스체크 50회",
+      "pass": true,
+      "detail": "성공: 50/50",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-014",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 목표가 수정 (동일 딜 3개)",
+      "pass": true,
+      "detail": "성공: 3/3",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-015",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 참여 10명",
+      "pass": false,
+      "detail": "성공: 0/10",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-016",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 결제 (동일 예약)",
+      "pass": false,
+      "detail": "데이터 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-017",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 취소 시도",
+      "pass": false,
+      "detail": "데이터 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-018",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 포인트 조회 일관성",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-019",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 오퍼 랭킹 조회 10회",
+      "pass": true,
+      "detail": "성공: 10/10",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-020",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 예약 취소 5개",
+      "pass": false,
+      "detail": "deal/offer 없음",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-021",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 알림 읽음 처리 5회",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-022",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 정산 목록 조회 5회",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-023",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 API 믹스 (5종)",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-024",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시 헬스체크 100회",
+      "pass": false,
+      "detail": "성공: 9/100",
+      "elapsed": 0
+    },
+    {
+      "id": "CC-025",
+      "section": "14. 동시성 테스트 (25건)",
+      "name": "동시성 데이터 무결성 검증",
+      "pass": false,
+      "detail": "id1=undefined, id2=undefined",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-001",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "100회 연속 딜 목록 조회",
+      "pass": true,
+      "detail": "평균=1ms, 오류=100건",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-002",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "50회 연속 구매자 조회",
+      "pass": true,
+      "detail": "평균=1ms",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-003",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "50회 연속 오퍼 목록 조회",
+      "pass": false,
+      "detail": "평균=0ms",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-004",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "50개 딜 순차 생성",
+      "pass": false,
+      "detail": "성공: 0/50",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-005",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "30명 순차 참여",
+      "pass": false,
+      "detail": "성공: 0/30",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-006",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "50개 채팅 메시지 순차 전송",
+      "pass": false,
+      "detail": "성공: 0/50",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-007",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "10회 연속 핑퐁이 질문",
+      "pass": true,
+      "detail": "성공: 10/10",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-008",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "100회 헬스체크 (메모리 누수 체크)",
+      "pass": false,
+      "detail": "성공: 0/100, 평균=1ms",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-009",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "p50 응답 시간 측정",
+      "pass": true,
+      "detail": "p50=1ms (목표: <2000ms)",
+      "elapsed": 1
+    },
+    {
+      "id": "ST-010",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "p90 응답 시간 측정",
+      "pass": true,
+      "detail": "p90=1ms (목표: <5000ms)",
+      "elapsed": 1
+    },
+    {
+      "id": "ST-011",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "p99 응답 시간 측정",
+      "pass": true,
+      "detail": "p99=2ms (목표: <10000ms)",
+      "elapsed": 2
+    },
+    {
+      "id": "ST-012",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "최대 응답 시간 측정",
+      "pass": true,
+      "detail": "max=3ms (목표: <30000ms)",
+      "elapsed": 3
+    },
+    {
+      "id": "ST-013",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "에러율 측정",
+      "pass": false,
+      "detail": "에러율=94.5% (목표: ≤10%), 총=310건",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-014",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "초당 처리량 측정 (20 동시)",
+      "pass": false,
+      "detail": "0.0 RPS, 0/20 성공, 7ms 소요",
+      "elapsed": 0
+    },
+    {
+      "id": "ST-015",
+      "section": "15. 스트레스 테스트 (15건)",
+      "name": "전체 스트레스 테스트 통과",
+      "pass": false,
+      "detail": "성공률=5.5%, 총=310건, 오류=293건",
+      "elapsed": 0
+    },
+    {
+      "id": "FS-001",
+      "section": "16. 전체 시나리오 (10건)",
+      "name": "딜생성→참여5명→오퍼3개→예약→결제→발송→수령→리뷰 전체 플로우",
+      "pass": false,
+      "detail": "참여=0/5, 오퍼=0/3, 리뷰=false",
+      "elapsed": 0
+    },
+    {
+      "id": "FS-002",
+      "section": "16. 전체 시나리오 (10건)",
+      "name": "딜생성→참여→취소→재참여",
+      "pass": false,
+      "detail": "buyer=undefined, deal=undefined, reJoin=false",
+      "elapsed": 0
+    },
+    {
+      "id": "FS-003",
+      "section": "16. 전체 시나리오 (10건)",
+      "name": "여러 딜에 교차 참여 시나리오",
+      "pass": false,
+      "detail": "참여 성공: 0/3 딜",
+      "elapsed": 0
+    },
+    {
+      "id": "FS-004",
+      "section": "16. 전체 시나리오 (10건)",
+      "name": "판매자가 여러 딜에 오퍼 제출",
+      "pass": false,
+      "detail": "오퍼 성공: 0/0 딜",
+      "elapsed": 0
+    },
+    {
+      "id": "FS-005",
+      "section": "16. 전체 시나리오 (10건)",
+      "name": "구매자가 여러 오퍼에 예약",
+      "pass": false,
+      "detail": "오퍼=0개, 예약=0건",
+      "elapsed": 0
+    },
+    {
+      "id": "FS-006",
+      "section": "16. 전체 시나리오 (10건)",
+      "name": "결제 타임아웃 시나리오",
+      "pass": false,
+      "detail": "예약 생성 실패",
+      "elapsed": 0
+    },
+    {
+      "id": "FS-007",
+      "section": "16. 전체 시나리오 (10건)",
+      "name": "부분 환불 시나리오",
+      "pass": false,
+      "detail": "resv=undefined, refund=false",
+      "elapsed": 0
+    },
+    {
+      "id": "FS-008",
+      "section": "16. 전체 시나리오 (10건)",
+      "name": "채팅 + 목표가 변경 + 오퍼 시나리오",
+      "pass": false,
+      "detail": "chat=false, target=false, offer=false",
+      "elapsed": 0
+    },
+    {
+      "id": "FS-009",
+      "section": "16. 전체 시나리오 (10건)",
+      "name": "포인트 적립 검증 전체 플로우",
+      "pass": false,
+      "detail": "buyer=undefined, pointFlow=false",
+      "elapsed": 0
+    },
+    {
+      "id": "FS-010",
+      "section": "16. 전체 시나리오 (10건)",
+      "name": "관전자 예측 + 정산 시나리오",
+      "pass": false,
+      "detail": "predict=false, settle=false",
+      "elapsed": 0
+    }
+  ]
+}

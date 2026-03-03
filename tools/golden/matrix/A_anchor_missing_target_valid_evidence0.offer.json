@@ -1,0 +1,49 @@
+﻿{
+    "entity":  "offer",
+    "id":  2,
+    "offer":  {
+                  "id":  2,
+                  "deal_id":  1,
+                  "seller_id":  3,
+                  "price":  1100.0,
+                  "shipping_fee":  null,
+                  "status":  "UNKNOWN"
+              },
+    "deal":  {
+                 "id":  1,
+                 "status":  "open",
+                 "target_price":  777.0,
+                 "qty_target":  null
+             },
+    "pricing":  {
+                    "reference":  {
+                                      "p_base":  777,
+                                      "p_target":  777,
+                                      "p_anchor":  null
+                                  },
+                    "groupbuy":  {
+                                     "p_group":  736,
+                                     "q_room":  6,
+                                     "q_offer":  5,
+                                     "offer_cap_qty":  5
+                                 },
+                    "offer_evaluation":  {
+                                             "seller_offer_price":  1100,
+                                             "expected_price_under_offer_conditions":  757,
+                                             "phrases":  {
+                                                             "vs_expected":  "ê¸°ì¤ì¡°ê±´ ëë¹ 343ì ë¹ì",
+                                                             "vs_groupbuy_offer_cap":  "ê³µëêµ¬ë§¤ ê¸°ì¤ ëë¹ 364ì ë¹ì"
+                                                         }
+                                         },
+                    "guardrail":  {
+                                      "level":  "WARN_HARD",
+                                      "reason_codes":  [
+                                                           "ANCHOR_MISSING",
+                                                           "EVIDENCE_MISSING"
+                                                       ],
+                                      "badge":  "HARD",
+                                      "short_title":  "ê·¼ê±° íì",
+                                      "short_body":  "ì¸ë¶ ê¸°ì¤ê°ê° ìì§ ìì´ì. ê·¼ê±°ë¥¼ ì¶ê°íë©´ ì íëê° ì¬ë¼ê°ëë¤."
+                                  }
+                }
+}

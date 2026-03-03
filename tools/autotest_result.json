@@ -1,0 +1,1802 @@
+{
+  "summary": {
+    "total": 223,
+    "correct": 219,
+    "accuracy": 98.2,
+    "tested_at": "2026-02-27 10:35:55",
+    "intent_model": "gpt-4o-mini"
+  },
+  "results": [
+    {
+      "question": "수수료가 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "판매자 수수료는 판매자의 레벨, 평점, 거래 이력에 따라 다르게 적용됩니다. 좋은 판매자에게 더 유리한 구조로 설계되어 있으며, 결제 처리 및 플랫폼 운영을 위한 PG/플랫폼 수수료도 별도로 존재할 수 있습니다. 구체적인 수수료율은 판매자 레벨별 수수료 표를 참고하시거나, 특정 거래에 대한 상세 정보를 알려주시면 더 정확히 안내해 드릴 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "역핑 수수료 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑의 수수료 정책은 판매자 레벨, 평점, 거래 이력에 따라 달라질 수 있으며, 좋은 판매자에게 더 유리하게 설계되어 있습니다. 또한 결제 처리 및 플랫폼 운영을 위한 PG/플랫폼 수수료가 존재합니다. 환불 상황에서는 귀책 주체에 따라 수수료 부담 주체가 달라질 수 있습니다. 자세한 수수료 표나 구체적인 상황별 수수료 정보가 필요하면 알려주세요.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "PG 수수료는 누가 부담해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "PG 수수료는 결제 처리 및 플랫폼 운영을 위한 수수료로, 환불 상황에서는 귀책 주체에 따라 부담 주체가 달라질 수 있습니다. 즉, 상황에 따라 구매자(Buyer) 또는 판매자(Seller)가 부담할 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "판매자 수수료가 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "판매자 수수료는 판매자의 레벨, 평점, 거래 이력에 따라 달라질 수 있으며, 좋은 판매자에게 더 유리하게 설계되어 있습니다. 구체적인 수수료율은 판매자별로 다를 수 있으니, 자세한 수수료 표가 필요하면 별도로 문의해 주세요.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "환불하면 수수료 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환불 시 수수료는 판매자 레벨, 거래 이력, 환불 사유 및 환불 정책에 따라 달라질 수 있습니다. 또한 결제 처리(PG) 및 플랫폼 운영 수수료가 발생할 수 있으며, 환불 상황에서 수수료 부담 주체는 귀책 주체에 따라 달라집니다. 구체적인 예약 번호나 환불 상황이 있으면 더 정확한 안내가 가능합니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6)\n[근거: server]"
+    },
+    {
+      "question": "배송비 정책이 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "배송비 정책은 환불 상황에 따라 달라질 수 있습니다. 배송 전이나 후, 그리고 부분 환불 여부에 따라 배송비 환불 방식이 다르게 적용됩니다. 구체적인 예약 번호가 있으면 해당 예약의 배송비 환불 정책을 서버에서 확정하여 안내할 수 있습니다. 자세한 내용은 환불 정책 문서를 참고하시기 바랍니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "역핑 포인트 유효기간이 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "현재 정책선언집 내에 역핑 포인트의 유효기간에 관한 구체적인 내용은 포함되어 있지 않습니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6)\n[근거: server]"
+    },
+    {
+      "question": "포인트 적립 기준이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "포인트 적립 기준에 대한 구체적인 내용은 정책선언집에 명확히 나와 있지 않습니다. 추가 확인이 필요합니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]"
+    },
+    {
+      "question": "환불 후 포인트는 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환불 후 포인트 처리에 대해서는 예약 단위로 환불 정책이 적용되며, 환불 금액과 포인트 환급 여부는 환불 유형과 귀책 사유에 따라 달라집니다. 구체적인 환불 및 포인트 처리 내역은 해당 예약의 환불 정책과 상태를 확인해야 정확히 안내할 수 있습니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6)\n[근거: server]"
+    },
+    {
+      "question": "포인트로 결제할 수 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "현재 정책선언집에는 포인트로 결제할 수 있는지에 대한 구체적인 내용이 포함되어 있지 않습니다. 추가 확인이 필요합니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]"
+    },
+    {
+      "question": "딜 개설 방법이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑에서 딜 개설은 구매자가 원하는 조건을 먼저 제시하는 방식으로 진행됩니다. 즉, 구매자가 원하는 가격, 수량, 배송 조건 등을 설정하여 딜방을 만들고, 판매자들이 그 조건에 맞춰 경쟁적으로 제안(오퍼)을 하게 됩니다. 딜 개설은 구매자 역할로서 딜방 생성 화면에서 원하는 조건을 입력하여 시작할 수 있습니다. 자세한 절차나 화면 안내는 앱 내 딜 개설 가이드를 참고하시기 바랍니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]"
+    },
+    {
+      "question": "오퍼 올리는 방법이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼는 판매자가 딜방(Deal Room)에서 구매자가 제시한 조건을 보고 가격과 배송, 옵션 등 조건을 제안하는 것입니다. 구매자는 딜방에서 여러 판매자의 오퍼를 비교해 선택할 수 있습니다. 오퍼 제출은 판매자 역할에 해당하며, 구매자는 직접 오퍼를 올릴 수 없습니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public) / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]"
+    },
+    {
+      "question": "오퍼 수정 가능해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼 수정 가능 여부는 딜의 상태와 오퍼 마감 시간에 따라 달라집니다. 일반적으로 판매자는 딜 마감 전까지 오퍼를 수정할 수 있으나, 구체적인 딜 상태나 마감 시간 정보가 필요합니다. 추가 확인이 필요합니다.\n\n(근거: time / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]"
+    },
+    {
+      "question": "오퍼 낙찰 기준이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼 낙찰 기준은 판매자가 제시한 가격과 조건을 구매자가 비교하여 선택하는 방식입니다. 역핑은 소비자가 원하는 조건을 먼저 제시하고, 판매자들이 그 조건에 맞춰 가격과 배송, 보상 등 다양한 조건을 경쟁적으로 제안합니다. 따라서 낙찰은 단순히 가격뿐 아니라 전체 조건을 고려해 구매자가 결정합니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]"
+    },
+    {
+      "question": "역입찰이 뭔가요?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역입찰은 소비자가 먼저 원하는 가격과 조건을 제시하면, 판매자들이 그 조건에 맞춰 가격과 조건을 경쟁적으로 제안하는 소비자 주도형 공동구매 방식입니다. 즉, 소비자가 가격 결정권을 가지고 여러 판매자의 제안을 비교해 최적의 조건을 선택할 수 있습니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]"
+    },
+    {
+      "question": "액츄에이터가 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "액츄에이터는 역핑 플랫폼에서 판매자 정산 중 일부를 커미션으로 받는 참여자를 의미합니다. 즉, 거래가 확정되면 판매자에게 정산되는 금액 중 일부가 액츄에이터 커미션으로 지급됩니다. 더 자세한 내용은 수수료 정책에서 확인할 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 핑퐁이/서버 SSOT 구조 (Admin))\n[근거: server]"
+    },
+    {
+      "question": "액츄에이터 수수료가 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "액츄에이터 커미션은 판매자 정산 중 일부가 액츄에이터에게 지급되는 수수료입니다. 수수료율은 판매자의 레벨, 평점, 거래 이력 등에 따라 달라질 수 있습니다. 구체적인 액츄에이터 수수료 금액이나 비율은 해당 거래나 액츄에이터 ID에 따라 다르므로, 정확한 정보를 원하시면 관련 액츄에이터 커미션 정보를 조회해야 합니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]"
+    },
+    {
+      "question": "딜방 개설 조건이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜방 개설 조건은 정책선언집에 구체적으로 명시되어 있지 않습니다. 다만, 역핑은 소비자가 원하는 가격과 조건을 먼저 제시하면 판매자들이 그에 맞춰 제안하는 구조로, 딜방은 구매자 수요가 모이는 공간입니다. 더 자세한 조건은 추가 확인이 필요합니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public) / 역핑 SSOT STATUS (ROADMAP_NOW))\n[근거: server]"
+    },
+    {
+      "question": "딜룸 참여 방법이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜룸 참여 방법은 딜룸에서 구매자가 원하는 조건을 제시하면, 판매자들이 그 조건에 맞춰 가격과 조건을 제안하는 구조입니다. 구매자는 딜룸에 참여해 여러 판매자의 제안을 비교하고 선택할 수 있습니다. 구체적인 참여 절차나 조건은 딜룸 화면에서 안내받으실 수 있습니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]"
+    },
+    {
+      "question": "예약이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약(Reservation)은 구매자가 딜방에서 판매자의 오퍼를 선택하고 거래를 확정하기 위해 만든 거래 단위입니다. 예약은 결제, 배송, 환불 등 거래의 모든 과정에서 기준이 되는 단위로, 각 예약마다 상태와 조건이 관리됩니다.\n\n(근거: 00_overview / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]"
+    },
+    {
+      "question": "예약 취소 가능해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 취소 가능 여부는 예약(Reservation) 단위로 환불 정책에 따라 결정됩니다. 배송 단계, 귀책 사유, 환불 유형 등에 따라 다르므로, 구체적인 예약 번호가 있어야 정확한 안내가 가능합니다. 예약 번호를 알려주시면 자세히 안내해 드릴 수 있습니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "구매확정 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "구매확정은 예약(Reservation) 단위로 이루어지며, 구매자가 예약한 딜방에서 결제 후 거래 확정 절차를 진행해야 합니다. 구체적인 구매확정 방법은 예약 번호가 있어야 정확히 안내할 수 있으니, 예약 번호를 확인한 후 다시 문의해 주세요.\n\n(근거: 참여자(Actors) 정책 — SSOT v3.6 / 딥링크 라우팅 SSOT)\n[근거: server]"
+    },
+    {
+      "question": "부분환불 되나요?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "부분환불 여부는 예약(Reservation) 단위로 처리되며, 배송 단계, 귀책 사유, 환불 유형에 따라 달라집니다. 구체적인 예약 번호가 있어야 정확한 환불 가능 여부와 금액을 안내할 수 있습니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "전액환불 조건이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "전액 환불 조건은 예약 단위로 다르며, 배송 단계, 귀책 사유, 환불 유형에 따라 결정됩니다. 일반적으로 배송 전이고 구매자 귀책이 아닌 경우 전액 환불이 가능하며, 환불 가능 기간(쿨링 기간) 내여야 합니다. 구체적인 예약 번호가 있으면 더 정확한 환불 조건과 금액을 안내할 수 있습니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "배송 후 환불은 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "배송 후 환불은 예약(Reservation) 단위로 처리되며, 환불 가능 여부와 금액은 배송 단계, 귀책 주체, 환불 유형에 따라 달라집니다. 배송이 완료된 후에는 환불 정책이 엄격해질 수 있으므로, 구체적인 예약 번호가 있으면 해당 예약의 환불 정책과 환불 금액을 서버에서 확정하여 안내받는 것이 가장 정확합니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "정산 언제 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산 시기는 거래 확정 후 플랫폼에서 최종 정산이 확정되는 단계에서 이루어집니다. 구체적인 정산 일정은 거래 상태와 판매자 레벨, 거래 이력 등에 따라 달라질 수 있습니다. 현재 화면 정보로는 정확한 정산 일정을 안내하기 어려우니, 예약번호나 거래번호가 있으면 알려주세요.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]"
+    },
+    {
+      "question": "정산 지연되면 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산 지연 시에는 운영/안전 가드레일 정책에 따라 관리자 승인과 점진 배포, 모니터링, 롤백 절차를 거쳐 안전하게 처리됩니다. 구체적인 상황에 따라 정산 지연 원인과 대응 방안이 다를 수 있으므로, 추가 확인이 필요합니다.\n\n(근거: 운영/안전 가드레일 (Guardrails))\n[근거: server]"
+    },
+    {
+      "question": "판매자 레벨 올리는 조건이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "판매자 레벨은 판매자의 평점, 거래 이력 등 다양한 요소에 따라 결정되며, 좋은 판매자가 플랫폼에 오래 머무르고 성장할 수 있도록 설계되어 있습니다. 구체적인 레벨 올리기 조건은 판매자의 거래 실적과 평판 관리가 중요합니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]"
+    },
+    {
+      "question": "역핑 회원 등급 혜택이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑의 회원 등급은 주로 판매자에게 적용되며, 판매자의 레벨, 평점, 거래 이력에 따라 수수료 혜택이 달라집니다. 좋은 판매자는 더 낮은 수수료를 적용받아 플랫폼에서 더 유리한 조건으로 거래할 수 있습니다. 구매자 등급 혜택에 대한 구체적인 내용은 추가 확인이 필요합니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "정산 전 환불이랑 정산 후 환불 차이가 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산 전 환불과 정산 후 환불의 차이는 환불 처리 시점과 정산 상태에 따라 달라집니다. 정산 전 환불은 거래가 아직 플랫폼에서 최종 정산되기 전에 이루어지는 환불로, 환불 금액 산정과 수수료 부담 주체 등이 다를 수 있습니다. 반면, 정산 후 환불은 이미 판매자에게 정산이 완료된 후에 발생하는 환불로, 환불 처리 방식과 수수료 정산이 별도로 진행됩니다. 구체적인 환불 조건과 금액은 예약 단위로 배송 단계, 귀책 사유, 환불 유형에 따라 결정되므로, 예약 번호가 있으면 더 정확한 안내가 가능합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / Fees (수수료) 정책 — SSOT)\n[근거: server]"
+    },
+    {
+      "question": "마감이 언제야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 마감일은 보통 상황에 따라 달라지는데, 어떤 마감에 대해 말씀하시는 건가요? 조금 더 구체적으로 알려주시면 도움을 드리기 더 좋을 것 같아요.\n[근거: 없음]"
+    },
+    {
+      "question": "입학 마감일이 언제야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "대학의 입학 마감일은 보통 매년 다르지만, 일반적으로 가을 학기 기준으로 1월부터 5월 사이에 있는 경우가 많아요. 특정 학교에 대한 정보를 원하시면 해당 학교의 공식 웹사이트를 확인해보시는 게 좋습니다! 고객님은 어떤 학교를 고려하고 계신가요?\n[근거: 없음]"
+    },
+    {
+      "question": "취업 지원 마감이 언제야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 취업 지원 마감은 회사나 기관에 따라 다르게 설정되곤 해요. 지원하고자 하는 곳의 공식 웹사이트나 채용 공고를 확인해 보시면 정확한 날짜를 알 수 있을 거예요. 혹시 어느 회사에 지원하시려는지 말씀해 주시면, 좀 더 도움을 드릴 수 있을 것 같아요!\n[근거: 없음]"
+    },
+    {
+      "question": "공모전 마감이 언제야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "공모전 마감일은 주최 측에 따라 다르니까, 구체적인 공모전 이름을 알려주시면 조사를 좀 더 도와드릴 수 있을 것 같아요. 아니면 공식 홈페이지나 관련 정보 페이지를 확인해 보시는 것도 좋을 것 같습니다!\n[근거: 없음]"
+    },
+    {
+      "question": "시험 접수 마감이 언제야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "시험 접수 마감은 시험 종류나 지역에 따라 다를 수 있어요. 보통 공식 웹사이트나 관련 기관의 공지를 확인하면 정확한 날짜를 알 수 있을 텐데요, 어떤 시험을 말씀하시는지 알려주시면 더 구체적으로 안내해드릴 수 있을 것 같아요!\n[근거: 없음]"
+    },
+    {
+      "question": "이벤트 마감일이 언제야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 이벤트 마감일에 대한 구체적인 정보는 제가 확인해드릴 수 없네요. 하지만 보통 이벤트 관련 공지사항이나 홈페이지에 정확한 날짜가 나와 있을 거예요. 혹시 더 궁금한 점이 있으시면 말씀해 주세요!\n[근거: 없음]"
+    },
+    {
+      "question": "딜 마감 기간이 얼마야?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "TIME_POLICY",
+      "passed": true,
+      "answer": "딜방 모집/마감 기본은 72시간입니다. (defaults.yaml SSOT 기준)\n[근거: docs]"
+    },
+    {
+      "question": "오퍼 마감은 며칠이야?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "TIME_POLICY",
+      "passed": true,
+      "answer": "오퍼 마감 기본은 48시간입니다. (defaults.yaml SSOT 기준)\n[근거: docs]"
+    },
+    {
+      "question": "쿨링기간이 얼마야?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "TIME_POLICY",
+      "passed": true,
+      "answer": "쿨링(환불 가능 기간) 기본은 7일입니다. (defaults.yaml SSOT 기준)\n[근거: docs]",
+      "alt_kind": "YEOKPING_GENERAL"
+    },
+    {
+      "question": "결제 제한시간이 얼마야?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "TIME_POLICY",
+      "passed": true,
+      "answer": "예약 후 결제 제한시간은 5분입니다. (defaults.yaml SSOT 기준)\n[근거: docs]"
+    },
+    {
+      "question": "박찬호 얼마 벌었어?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "박찬호 선수는 메이저리그에서 뛰었던 한국의 투수로, 그의 연봉은 시즌마다 달라요. 전성기 때는 연간 수억 원에서 수십억 원 규모의 계약을 했던 것으로 알려져 있습니다. 정확한 금액은 시즌이나 계약에 따라 다르니까, 그건 참고로 알아두시면 좋겠어요!\n[근거: 없음]"
+    },
+    {
+      "question": "손흥민 연봉이 얼마야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "손흥민 선수의 연봉은 대체로 약 1000만 유로(한화 약 130억 원) 정도로 알려져 있어요. 물론 이건 매년 조금씩 변할 수 있으니 참고만 해주세요! 팬들과의 소통도 활발하게 하는 선수라서 정말 멋지죠.\n[근거: 없음]"
+    },
+    {
+      "question": "BTS 수입이 얼마야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "BTS의 수입은 여러 가지 요소에 따라 달라지지만, 일반적으로 앨범 판매, 콘서트 투어, 광고, 상품 판매 등이 주요 수입원이죠. 2021년에는 몇 백억 원 이상을 벌었다는 보도가 있었어요. 정확한 수치는 아니지만, 그 정도 규모로 운영되고 있다고 보면 될 것 같아요.\n[근거: 없음]"
+    },
+    {
+      "question": "김연아 재산이 얼마야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "김연아 선수의 재산에 대한 정확한 정보는 공개되어 있지 않지만, 그녀는 올림픽 금메달리스트이자 여러 광고 모델로 활동해 상당한 수익을 올린 것으로 알려져 있어요. 대체로 여러 추정이 있지만, 자세한 액수는 확인하기 어려운 부분도 있습니다. 관심 있는 분들이 많죠!\n[근거: 없음]"
+    },
+    {
+      "question": "종가집 김치 가격 얼마야?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 대상 종가 아삭한 포기김치 1개\n  최저가: 27,650원 (약 2만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EC%A2%85%EA%B0%80%EC%A7%91+%EA%B9%80%EC%B9%98\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EC%A2%85%EA%B0%80%EC%A7%91+%EA%B9%80%EC%B9%98\n- 쿠팡: https://www.coupang.com/np/search?q=%EC%A2%85%EA%B0%80%EC%A7%91+%EA%B9%80%EC%B9%98\n[근거: external]"
+    },
+    {
+      "question": "종가집 깍두기 최저가 알려줘",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 대상 종가 무섞박지 5kg, 1개\n  최저가: 16,850원 (약 1만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EC%A2%85%EA%B0%80%EC%A7%91+%EA%B9%8D%EB%91%90%EA%B8%B0\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EC%A2%85%EA%B0%80%EC%A7%91+%EA%B9%8D%EB%91%90%EA%B8%B0\n- 쿠팡: https://www.coupang.com/np/search?q=%EC%A2%85%EA%B0%80%EC%A7%91+%EA%B9%8D%EB%91%90%EA%B8%B0\n[근거: external]"
+    },
+    {
+      "question": "얼마야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 어떤 것에 대해 얼마인지 궁금하신 건가요? 조금 더 구체적으로 알려주시면 도움을 드리기 쉬울 것 같아요!\n[근거: 없음]"
+    },
+    {
+      "question": "얼마면 되겠어?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 어떤 것의 가격을 묻고 계신 건가요? 좀 더 구체적으로 말씀해 주시면 더 좋은 답변 드릴 수 있을 것 같아요!\n[근거: 없음]"
+    },
+    {
+      "question": "오퍼가 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼(Offer)는 판매자가 딜방에서 소비자가 제시한 조건에 맞춰 내는 가격과 조건의 제안입니다. 즉, 소비자가 원하는 가격과 조건을 먼저 제시하면, 판매자들이 그에 맞춰 경쟁적으로 제안하는 구조입니다. 이를 통해 소비자는 여러 판매자의 제안을 비교하여 가장 좋은 조건을 선택할 수 있습니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]"
+    },
+    {
+      "question": "딜방이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜방(Deal Room)은 구매자 수요가 모이는 공간으로, 소비자가 원하는 조건을 먼저 제시하면 판매자들이 그 조건에 맞춰 가격과 조건을 제안하는 공동구매 방입니다. 여기서 여러 판매자의 제안을 비교해 조건 전체를 선택할 수 있습니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public) / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]"
+    },
+    {
+      "question": "역입찰이 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑은 소비자가 원하는 가격과 조건을 먼저 제시하면, 판매자들이 그 조건에 맞춰 가격과 조건을 제안하는 소비자 주도형 역입찰 공동구매 플랫폼입니다. 즉, 소비자가 원하는 가격을 먼저 내고, 여러 판매자가 경쟁적으로 제안하여 최적의 조건을 선택할 수 있습니다. 이 과정에서 가격뿐 아니라 배송, 보상, 옵션, 구성 등 다양한 조건도 함께 경쟁합니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]"
+    },
+    {
+      "question": "쿨링이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "쿨링은 환불 가능 기간을 의미합니다. 즉, 구매자가 환불을 요청할 수 있는 일정 기간을 말하며, 이 기간 내에 환불 요청이 가능하도록 설정되어 있습니다. 쿨링 기간은 환불 정책에 따라 다를 수 있습니다.\n\n(근거: 환불 정책(개요) (Public))\n[근거: server]",
+      "alt_kind": "TIME_POLICY"
+    },
+    {
+      "question": "정산이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산은 거래가 확정된 후, 플랫폼이 판매자에게 대금을 지급하는 과정을 말합니다. 즉, 구매자가 결제하고 거래가 완료되면, 플랫폼이 판매자에게 판매 대금을 정리해서 보내주는 단계입니다. 이 과정에서 일부 금액은 플랫폼 운영 수수료나 판매자 레벨에 따른 수수료로 차감될 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]"
+    },
+    {
+      "question": "액츄에이터는 누가 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "액츄에이터는 대개 판매자 모집과 관리, 그리고 정산 발생 시 커미션 수취를 담당하는 참여자입니다. 이들은 주로 오퍼 제출과 수락, 출고, 이행 같은 판매자의 작업을 용이하게 지원하며, 해당 과정에서 발생하는 수익을 관리합니다. 고객님이 예약 및 결제 흐름에 관여할 때는 주로 구매자 역할이 중요하지만, 액츄에이터는 판매자의 입장에서 상호작용하기 위해 필수적인 역할입니다. 특히, 액츄에이터는 전체 시스템의 운영 효율성을 높이는 데 기여하는 중요한 기능을 맡고 있습니다.\n[근거: docs]"
+    },
+    {
+      "question": "안녕",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "안녕하세요, 고객님! 오늘 기분이 어떠신가요? 궁금한 점 있으면 언제든지 말씀해 주세요!\n[근거: 없음]"
+    },
+    {
+      "question": "너 잘 지내?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 잘 지내고 있습니다! 고객님은 어떻게 지내고 계신가요?最近는 어떤 일들이 있으셨는지 궁금해요!\n[근거: 없음]"
+    },
+    {
+      "question": "밥 먹었어?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 아직 밥은 안 먹었어요! 고객님은 오늘 뭐 드셨나요?\n[근거: 없음]"
+    },
+    {
+      "question": "오늘 기분이 어때?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 오늘 기분은 어떤가요? 좋은 일 있으셨나요? 도움이 필요하시면 언제든지 말씀해 주세요!\n[근거: 없음]"
+    },
+    {
+      "question": "고마워",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "천만에요, 고객님! 궁금한 점이나 이야기하고 싶은 게 있다면 언제든지 말씀해 주세요. 도움이 될 수 있어서 기쁩니다!\n[근거: 없음]"
+    },
+    {
+      "question": "그렇구나",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 어떤 내용에 대해 이야기하셨는지 궁금하네요. 궁금한 점이 있다면 언제든지 말씀해 주세요!\n[근거: 없음]"
+    },
+    {
+      "question": "오늘 서울 날씨 어때?",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "날씨 정보를 바로 가져오지 못했어요. 아래 기상청에서 직접 확인해 주세요:\n- 기상청 날씨 예보: https://www.weather.go.kr/w/index.do\n[근거: external]"
+    },
+    {
+      "question": "내일 부산 날씨 알려줘",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "날씨 정보를 바로 가져오지 못했어요. 아래 기상청에서 직접 확인해 주세요:\n- 기상청 날씨 예보: https://www.weather.go.kr/w/index.do\n[근거: external]"
+    },
+    {
+      "question": "주말 날씨가 어때?",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "서울 기준 2026-02-27 예상 최고 12.5° / 최저 3.1°, 강수확률 0% 입니다.\n[근거: external]"
+    },
+    {
+      "question": "강수확률이 얼마야?",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "서울 기준 2026-02-27 예상 최고 12.5° / 최저 3.1°, 강수확률 0% 입니다.\n[근거: external]"
+    },
+    {
+      "question": "미세먼지 오늘 어때?",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "서울 기준 2026-02-27 예상 최고 12.5° / 최저 3.1°, 강수확률 0% 입니다.\n[근거: external]"
+    },
+    {
+      "question": "달러 환율이 얼마야?",
+      "expected_kind": "EXTERNAL_FINANCE",
+      "actual_kind": "EXTERNAL_FINANCE",
+      "passed": true,
+      "answer": "실시간 환율·주가 숫자를 제가 직접 확정해 드리기 어려워요. 뇌피셜 수치를 드리는 것보다 아래 공신력 있는 곳에서 바로 확인하시는 게 정확합니다:\n- 네이버 금융: https://finance.naver.com/\n- 다음 금융: https://finance.daum.net/\n- 한국거래소(KRX): https://global.krx.co.kr/\n- 한국은행 환율/통계(ECOS): https://ecos.bok.or.kr/\n[근거: external]"
+    },
+    {
+      "question": "원/달러 환율 알려줘",
+      "expected_kind": "EXTERNAL_FINANCE",
+      "actual_kind": "EXTERNAL_FINANCE",
+      "passed": true,
+      "answer": "실시간 환율·주가 숫자를 제가 직접 확정해 드리기 어려워요. 뇌피셜 수치를 드리는 것보다 아래 공신력 있는 곳에서 바로 확인하시는 게 정확합니다:\n- 네이버 금융: https://finance.naver.com/\n- 다음 금융: https://finance.daum.net/\n- 한국거래소(KRX): https://global.krx.co.kr/\n- 한국은행 환율/통계(ECOS): https://ecos.bok.or.kr/\n[근거: external]"
+    },
+    {
+      "question": "코스피 지금 얼마야?",
+      "expected_kind": "EXTERNAL_FINANCE",
+      "actual_kind": "EXTERNAL_FINANCE",
+      "passed": true,
+      "answer": "실시간 환율·주가 숫자를 제가 직접 확정해 드리기 어려워요. 뇌피셜 수치를 드리는 것보다 아래 공신력 있는 곳에서 바로 확인하시는 게 정확합니다:\n- 네이버 금융: https://finance.naver.com/\n- 다음 금융: https://finance.daum.net/\n- 한국거래소(KRX): https://global.krx.co.kr/\n- 한국은행 환율/통계(ECOS): https://ecos.bok.or.kr/\n[근거: external]"
+    },
+    {
+      "question": "코스닥 오늘 종가가 얼마야?",
+      "expected_kind": "EXTERNAL_FINANCE",
+      "actual_kind": "EXTERNAL_FINANCE",
+      "passed": true,
+      "answer": "실시간 환율·주가 숫자를 제가 직접 확정해 드리기 어려워요. 뇌피셜 수치를 드리는 것보다 아래 공신력 있는 곳에서 바로 확인하시는 게 정확합니다:\n- 네이버 금융: https://finance.naver.com/\n- 다음 금융: https://finance.daum.net/\n- 한국거래소(KRX): https://global.krx.co.kr/\n- 한국은행 환율/통계(ECOS): https://ecos.bok.or.kr/\n[근거: external]"
+    },
+    {
+      "question": "엔화 환율 알려줘",
+      "expected_kind": "EXTERNAL_FINANCE",
+      "actual_kind": "EXTERNAL_FINANCE",
+      "passed": true,
+      "answer": "실시간 환율·주가 숫자를 제가 직접 확정해 드리기 어려워요. 뇌피셜 수치를 드리는 것보다 아래 공신력 있는 곳에서 바로 확인하시는 게 정확합니다:\n- 네이버 금융: https://finance.naver.com/\n- 다음 금융: https://finance.daum.net/\n- 한국거래소(KRX): https://global.krx.co.kr/\n- 한국은행 환율/통계(ECOS): https://ecos.bok.or.kr/\n[근거: external]"
+    },
+    {
+      "question": "오늘 뉴스 알려줘",
+      "expected_kind": "EXTERNAL_NEWS",
+      "actual_kind": "EXTERNAL_NEWS",
+      "passed": true,
+      "answer": "오늘 뉴스로는 이런 제목들이 보여요: [AI기자의 News Briefing] 2월26일 오늘의 주요 뉴스를 전해 드립니다. - 중앙일보 / \"매일 주요 뉴스 알려줘\"⋯카카오 AI '카나나'가 더 똑똑해졌다 - v.daum.net / [AI기자의 News Briefing] 2월13일 오늘의 주요 뉴스를 전해 드립니다. - 중앙일보\n[근거: external]"
+    },
+    {
+      "question": "최신 IT 뉴스 있어?",
+      "expected_kind": "EXTERNAL_NEWS",
+      "actual_kind": "EXTERNAL_NEWS",
+      "passed": true,
+      "answer": "오늘 뉴스로는 이런 제목들이 보여요: ACC 2025 찾은 관람객 \"AI 풀스택 인상적\"…실무형 혁신 전략 쏟아져 - 지디넷코리아 / AI의 반란인가…지시 거부·협박 사례 속출에 “통제 불가” 우려 - 조선비즈 - Chosunbiz / 오픈AI \"차세대 모델, '높은' 사이버보안 위험 초래할 수 있어\" - 네이트\n[근거: external]"
+    },
+    {
+      "question": "반도체 관련 뉴스 있어?",
+      "expected_kind": "EXTERNAL_NEWS",
+      "actual_kind": "EXTERNAL_NEWS",
+      "passed": true,
+      "answer": "뉴스 헤드라인을 바로 가져오지 못했어요. 아래에서 확인해 보세요:\n- 구글뉴스: https://news.google.com/search?q=%EB%B0%98%EB%8F%84%EC%B2%B4&hl=ko&gl=KR&ceid=KR:ko\n- 네이버뉴스: https://search.naver.com/search.naver?where=news&query=%EB%B0%98%EB%8F%84%EC%B2%B4\n[근거: external]"
+    },
+    {
+      "question": "갤럭시 S25 가격이 얼마야?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 삼성전자 갤럭시 S25 5G 256GB [자급제]\n  최저가: 1,044,000원 (약 104만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n- 쿠팡: https://www.coupang.com/np/search?q=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n[근거: external]"
+    },
+    {
+      "question": "아이폰 16 최저가가 얼마야?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 Apple 애플 아이폰 16 프로 256GB 미개봉 새제품\n  최저가: 852,000원 (약 85만원대) (Phone Toss)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EC%95%84%EC%9D%B4%ED%8F%B0+16\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EC%95%84%EC%9D%B4%ED%8F%B0+16\n- 쿠팡: https://www.coupang.com/np/search?q=%EC%95%84%EC%9D%B4%ED%8F%B0+16\n[근거: external]"
+    },
+    {
+      "question": "LG 그램 노트북 가격 알려줘",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 LG그램 노트북 14그램 Ultra5 16GB 256GB 인텔Arc GPU 인강용\n  최저가: 1,599,000원 (약 159만원대) (온라인총판대리점)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=LG+%EA%B7%B8%EB%9E%A8+%EB%85%B8%ED%8A%B8%EB%B6%81\n- 에누리: https://www.enuri.com/search.jsp?keyword=LG+%EA%B7%B8%EB%9E%A8+%EB%85%B8%ED%8A%B8%EB%B6%81\n- 쿠팡: https://www.coupang.com/np/search?q=LG+%EA%B7%B8%EB%9E%A8+%EB%85%B8%ED%8A%B8%EB%B6%81\n[근거: external]"
+    },
+    {
+      "question": "RTX 4090 가격이 얼마야?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 GIGABYTE RTX 4090 WINDFORCE D6X 24GB 그래픽카드 쿨러 방열판 국내배송 기가바이트 RTX4080\n  최저가: 60,000원 (약 6만원대) (쿠팡)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=RTX+4090\n- 에누리: https://www.enuri.com/search.jsp?keyword=RTX+4090\n- 쿠팡: https://www.coupang.com/np/search?q=RTX+4090\n[근거: external]"
+    },
+    {
+      "question": "맥북 M4 Pro 최저가가 얼마야?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 Apple 맥북프로 14 2024년 M4 Pro 12 코어 24GB, 512GB\n  최저가: 2,810,600원 (약 281만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EB%A7%A5%EB%B6%81+M4+Pro\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EB%A7%A5%EB%B6%81+M4+Pro\n- 쿠팡: https://www.coupang.com/np/search?q=%EB%A7%A5%EB%B6%81+M4+Pro\n[근거: external]"
+    },
+    {
+      "question": "다이슨 청소기 가격 알려줘",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 다이슨 v8 실버레드, 단품\n  최저가: 282,660원 (약 28만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EB%8B%A4%EC%9D%B4%EC%8A%A8+%EC%B2%AD%EC%86%8C%EA%B8%B0\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EB%8B%A4%EC%9D%B4%EC%8A%A8+%EC%B2%AD%EC%86%8C%EA%B8%B0\n- 쿠팡: https://www.coupang.com/np/search?q=%EB%8B%A4%EC%9D%B4%EC%8A%A8+%EC%B2%AD%EC%86%8C%EA%B8%B0\n[근거: external]"
+    },
+    {
+      "question": "삼성 비스포크 냉장고 최저가는?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 삼성전자 비스포크 냉장고 900리터 이하 삼성냉장고 양문형 852L 코타화이트 AI인버터\n  최저가: 1,269,000원 (약 126만원대) (삼성공식파트너 현성전자)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EC%82%BC%EC%84%B1+%EB%B9%84%EC%8A%A4%ED%8F%AC%ED%81%AC+%EB%83%89%EC%9E%A5%EA%B3%A0\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EC%82%BC%EC%84%B1+%EB%B9%84%EC%8A%A4%ED%8F%AC%ED%81%AC+%EB%83%89%EC%9E%A5%EA%B3%A0\n- 쿠팡: https://www.coupang.com/np/search?q=%EC%82%BC%EC%84%B1+%EB%B9%84%EC%8A%A4%ED%8F%AC%ED%81%AC+%EB%83%89%EC%9E%A5%EA%B3%A0\n[근거: external]"
+    },
+    {
+      "question": "예약 1번 환불 방법이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 #1 · 생성 2026-02-15 02:21 (KST)\n\n지금 대화에서는 환불 정보를 조회하지 못했어요.\n정확한 내용은 아래 화면에서 확인해 주세요.\n\n[환불 프리뷰 열기](yeokping://preview/reservation/1/refund)\n[근거: server]"
+    },
+    {
+      "question": "reservation_id 5 취소 방법이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 취소는 예약(Reservation) 단위로 처리되며, 일반적으로 예약 상세 화면이나 환불/취소 관련 메뉴에서 진행할 수 있습니다. 예약#5의 취소 방법은 예약 상세 페이지에서 환불 요청을 하거나, 환불 정책에 따라 진행됩니다. 정확한 절차나 환불 가능 여부는 예약 상태와 환불 정책에 따라 달라질 수 있으니, 예약 상세 화면에서 '환불' 또는 '취소' 관련 메뉴를 확인해 주세요.\n\n(근거: 딥링크 라우팅 SSOT / 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6)\n[근거: server]"
+    },
+    {
+      "question": "오퍼 3번 수정할 수 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼 #3 · 생성 2026-02-14 13:55 (KST)\n\n• 제안가: 200원\n• 마감: 2026-02-14 13:55\n\n[오퍼 프리뷰 열기](yeokping://preview/offer/3)\n[근거: server]"
+    },
+    {
+      "question": "딜 10번 상태가 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜방 #10 · 생성시각 확인 필요\n\n• 딜방 요약 정보를 만들지 못했어요.\n\n[딜방 프리뷰 열기](yeokping://preview/dealroom/10)\n[근거: server]"
+    },
+    {
+      "question": "예약번호 7 환불 정책이 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 #7 · 생성 2026-02-15 04:18 (KST)\n\n지금 대화에서는 환불 정보를 조회하지 못했어요.\n정확한 내용은 아래 화면에서 확인해 주세요.\n\n[환불 프리뷰 열기](yeokping://preview/reservation/7/refund)\n[근거: server]"
+    },
+    {
+      "question": "offer_id=2 가격이 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "현재 제공된 정보로는 offer_id=2의 가격을 확인할 수 없습니다. 추가 확인이 필요합니다.\n\n(근거: 핑퐁이/서버 SSOT 구조 (Admin))\n[근거: server]"
+    },
+    {
+      "question": "deal_id 15 마감이 언제야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜방(deal_id 15)의 마감 시간은 현재 제공된 정보로는 확인할 수 없습니다. 딜 마감 시간은 플랫폼의 시간 정책에 따라 정해지며, 구체적인 마감 시간은 딜방 상세 정보에서 확인 가능합니다. 추가 확인이 필요합니다.\n\n(근거: time / 딥링크 라우팅 SSOT)\n[근거: server]"
+    },
+    {
+      "question": "예약 취소 시 수수료가 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 취소 시 수수료 여부는 예약(Reservation) 단위로 환불 정책에 따라 다릅니다. 환불 가능 여부와 수수료는 배송 단계, 귀책 사유, 환불 유형에 따라 결정되므로, 구체적인 예약 정보가 있어야 정확한 안내가 가능합니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "오퍼 5번 낙찰 기준이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼 #5 · 생성 2026-02-14 13:55 (KST)\n\n• 제안가: 200원\n\n[오퍼 프리뷰 열기](yeokping://preview/offer/5)\n[근거: server]"
+    },
+    {
+      "question": "딜방 3 참여자가 몇 명이야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜방 #3 · 생성 2026-02-14 13:55 (KST)\n\n• 딜방 요약 정보를 만들지 못했어요.\n\n[딜방 프리뷰 열기](yeokping://preview/dealroom/3)\n[근거: server]"
+    },
+    {
+      "question": "예약 ID 12번 환불 신청 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 #12 · 생성 2026-02-16 10:32 (KST)\n\n지금 대화에서는 환불 정보를 조회하지 못했어요.\n정확한 내용은 아래 화면에서 확인해 주세요.\n\n[환불 프리뷰 열기](yeokping://preview/reservation/12/refund)\n[근거: server]"
+    },
+    {
+      "question": "내 reservation 취소 가능 기간이 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 취소 가능 기간은 예약(Reservation) 단위로 다르며, 배송 단계, 귀책 사유, 환불 유형에 따라 달라집니다. 정확한 취소 가능 기간과 조건을 확인하려면 해당 예약 번호가 필요합니다. 예약 번호를 알려주시면 상세한 정보를 안내해 드릴 수 있습니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "오퍼 ID 9 배송비가 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼 #9 · 생성시각 확인 필요\n\n• 오퍼 요약 정보를 만들지 못했어요.\n\n[오퍼 프리뷰 열기](yeokping://preview/offer/9)\n[근거: server]"
+    },
+    {
+      "question": "딜 20번 쿨링기간이 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜방 #20 · 생성시각 확인 필요\n\n• 딜방 요약 정보를 만들지 못했어요.\n\n[딜방 프리뷰 열기](yeokping://preview/dealroom/20)\n[근거: server]",
+      "alt_kind": "TIME_POLICY"
+    },
+    {
+      "question": "예약 2번 부분환불 되나요?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 #2 · 생성 2026-02-15 02:30 (KST)\n\n지금 대화에서는 환불 정보를 조회하지 못했어요.\n정확한 내용은 아래 화면에서 확인해 주세요.\n\n[환불 프리뷰 열기](yeokping://preview/reservation/2/refund)\n[근거: server]"
+    },
+    {
+      "question": "오퍼 7번 판매자 수수료가 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼 #7 · 생성시각 확인 필요\n\n• 오퍼 요약 정보를 만들지 못했어요.\n\n[오퍼 프리뷰 열기](yeokping://preview/offer/7)\n[근거: server]"
+    },
+    {
+      "question": "reservation 4번 포인트 환불 되나요?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 #4 · 생성 2026-02-15 03:53 (KST)\n\n지금 대화에서는 환불 정보를 조회하지 못했어요.\n정확한 내용은 아래 화면에서 확인해 주세요.\n\n[환불 프리뷰 열기](yeokping://preview/reservation/4/refund)\n[근거: server]"
+    },
+    {
+      "question": "딜 33번 정산 언제 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜방 #33 · 생성시각 확인 필요\n\n• 딜방 요약 정보를 만들지 못했어요.\n\n[딜방 프리뷰 열기](yeokping://preview/dealroom/33)\n[근거: server]"
+    },
+    {
+      "question": "내 예약 취소하면 위약금 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 취소 시 위약금 여부는 예약(Reservation) 단위로 다르며, 배송 단계, 귀책 사유, 환불 유형에 따라 결정됩니다. 구체적인 예약 번호가 있으면 정확한 위약금 정보를 안내할 수 있으니, 예약 번호를 알려주세요.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "오퍼 11번 이미 낙찰됐어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼 #11 · 생성시각 확인 필요\n\n• 오퍼 요약 정보를 만들지 못했어요.\n\n[오퍼 프리뷰 열기](yeokping://preview/offer/11)\n[근거: server]"
+    },
+    {
+      "question": "에어팟 프로 2세대 가격 알려줘",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 에어팟 프로 2세대 본체 충전 케이스 IBT-APT03 잇버스 에어팟프로본체 에어팟프로 에어팟프로케이스\n  최저가: 49,900원 (약 4만원대) (쿠팡)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EC%97%90%EC%96%B4%ED%8C%9F+%ED%94%84%EB%A1%9C+2%EC%84%B8%EB%8C%80\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EC%97%90%EC%96%B4%ED%8C%9F+%ED%94%84%EB%A1%9C+2%EC%84%B8%EB%8C%80\n- 쿠팡: https://www.coupang.com/np/search?q=%EC%97%90%EC%96%B4%ED%8C%9F+%ED%94%84%EB%A1%9C+2%EC%84%B8%EB%8C%80\n[근거: external]"
+    },
+    {
+      "question": "쌀 20kg 가격 얼마야?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 새청무쌀 20kg 당일도정 백미 쌀 10kg 25년 햅쌀\n  최저가: 34,900원 (약 3만원대) (정이가농산)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EC%8C%80+20kg\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EC%8C%80+20kg\n- 쿠팡: https://www.coupang.com/np/search?q=%EC%8C%80+20kg\n[근거: external]"
+    },
+    {
+      "question": "아이패드 미니 7세대 최저가 알려줘",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 애플 iPad Mini 7 아이패드 미니 7세대 2024 128GB WiFi 태블릿 PC 퍼플\n  최저가: 640,300원 (약 64만원대) (얼리텍)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EC%95%84%EC%9D%B4%ED%8C%A8%EB%93%9C+%EB%AF%B8%EB%8B%88+7%EC%84%B8%EB%8C%80\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EC%95%84%EC%9D%B4%ED%8C%A8%EB%93%9C+%EB%AF%B8%EB%8B%88+7%EC%84%B8%EB%8C%80\n- 쿠팡: https://www.coupang.com/np/search?q=%EC%95%84%EC%9D%B4%ED%8C%A8%EB%93%9C+%EB%AF%B8%EB%8B%88+7%EC%84%B8%EB%8C%80\n[근거: external]"
+    },
+    {
+      "question": "닌텐도 스위치 2 가격이 얼마야?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 [대여] 닌텐도스위치2 + 게임 9종\n  최저가: 5,500원 (인조이렌탈)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EB%8B%8C%ED%85%90%EB%8F%84+%EC%8A%A4%EC%9C%84%EC%B9%98+2\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EB%8B%8C%ED%85%90%EB%8F%84+%EC%8A%A4%EC%9C%84%EC%B9%98+2\n- 쿠팡: https://www.coupang.com/np/search?q=%EB%8B%8C%ED%85%90%EB%8F%84+%EC%8A%A4%EC%9C%84%EC%B9%98+2\n[근거: external]"
+    },
+    {
+      "question": "RTX 5090 가격 알려줘",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 ASUS ROG Astral 지포스 RTX 5090 OC D7 32GB 인텍앤컴퍼니\n  최저가: 5,399,000원 (약 539만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=RTX+5090\n- 에누리: https://www.enuri.com/search.jsp?keyword=RTX+5090\n- 쿠팡: https://www.coupang.com/np/search?q=RTX+5090\n[근거: external]"
+    },
+    {
+      "question": "역핑에서 갤럭시 S25 딜 만들면 가격이 얼마쯤 될까?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": false,
+      "answer": "🛒 삼성전자 갤럭시 S25 5G 256GB [자급제]\n  최저가: 1,044,000원 (약 104만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n- 쿠팡: https://www.coupang.com/np/search?q=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n[근거: external]"
+    },
+    {
+      "question": "수수료가 너무 비싸면 환불받을 수 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "수수료 자체는 환불 대상이 아니며, 환불은 예약 단위로 배송 단계, 귀책 사유, 환불 유형에 따라 결정됩니다. 수수료가 비싸다고 해서 자동으로 환불이 되지는 않으니, 환불 가능 여부는 예약 번호가 있을 때 구체적으로 확인해야 합니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6)\n[근거: server]"
+    },
+    {
+      "question": "포인트로 맥북 살 수 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑 플랫폼에서는 포인트로 직접 맥북 같은 고가 상품을 구매할 수 있는지에 대한 정책이 명확히 정의되어 있지 않습니다. 포인트 사용 가능 여부는 개별 딜이나 판매자의 조건에 따라 다를 수 있으니, 구체적인 딜방이나 오퍼에서 확인하는 것이 필요합니다.\n\n(근거: 00_overview)\n[근거: server]"
+    },
+    {
+      "question": "오늘 비 오는데 배송 괜찮을까?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": false,
+      "answer": "날씨 정보를 바로 가져오지 못했어요. 아래 기상청에서 직접 확인해 주세요:\n- 기상청 날씨 예보: https://www.weather.go.kr/w/index.do\n[근거: external]",
+      "alt_kind": "YEOKPING_GENERAL"
+    },
+    {
+      "question": "뉴스에서 본 건데 역핑 같은 서비스가 뜬대",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "EXTERNAL_NEWS",
+      "passed": false,
+      "answer": "지금은 실시간 조회가 불안정합니다.\n- 구글뉴스 '뉴스에서 본 건데 역핑 같은 서비스가 뜬대': https://news.google.com/search?q=%EB%89%B4%EC%8A%A4%EC%97%90%EC%84%9C+%EB%B3%B8+%EA%B1%B4%EB%8D%B0+%EC%97%AD%ED%95%91+%EA%B0%99%EC%9D%80+%EC%84%9C%EB%B9%84%EC%8A%A4%EA%B0%80+%EB%9C%AC%EB%8C%80&hl=ko&gl=KR&ceid=KR:ko\n- 네이버뉴스 '뉴스에서 본 건데 역핑 같은 서비스가 뜬대': https://search.naver.com/search.naver?where=news&query=%EB%89%B4%EC%8A%A4%EC%97%90%EC%84%9C+%EB%B3%B8+%EA%B1%B4%EB%8D%B0+%EC%97%AD%ED%95%91+%EA%B0%99%EC%9D%80+%EC%84%9C%EB%B9%84%EC%8A%A4%EA%B0%80+%EB%9C%AC%EB%8C%80\n[근거: external]"
+    },
+    {
+      "question": "환율이 오르면 수수료도 올라?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환율 변동에 따른 수수료 변동 여부는 정책선언집에 명확히 규정되어 있지 않습니다. 일반적으로 결제 처리(PG) 및 플랫폼 운영 수수료는 환율과 별개로 정해지며, 환율이 올라간다고 해서 자동으로 수수료가 올라가는 것은 아닙니다. 추가 확인이 필요합니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]"
+    },
+    {
+      "question": "심심한데 뭐 하면 좋을까?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 심심할 땐 취미를 새롭게 시작해보는 것도 좋은 방법이에요! 예를 들어, 그림 그리기나 간단한 요리, 또는 음악 감상 같은 건 어떨까요? 아니면 재밌는 영화를 보면서 힐링하는 것도 좋답니다. 어떤 걸 해보고 싶으세요?\n[근거: 없음]"
+    },
+    {
+      "question": "오늘 점심 뭐 먹지?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 점심 뭐 드실지 고민 중이시군요! 한식으로 비빔밥이나 김치찌개는 어떠세요? 아니면 간단하게 샌드위치나 샐러드도 좋겠고요. 땡기는 게 있나요?\n[근거: 없음]"
+    },
+    {
+      "question": "역핑 직원이야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": false,
+      "answer": "저는 역핑 플랫폼의 공식 AI 헬퍼 '핑퐁이'입니다. 역핑 직원은 아니지만, 정책과 시스템에 기반해 도움을 드리고 있습니다.\n\n(근거: 00_overview / 핑퐁이/서버 SSOT 구조 (Admin))\n[근거: server]"
+    },
+    {
+      "question": "너 이름이 뭐야?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "저는 특별한 이름은 없지만, 고객님과의 대화를 위해 여기 있어요! 괜찮으시다면 저를 핑퐁이라고 불러주셔도 좋습니다. 어떤 이야기를 나눌까요?\n[근거: 없음]"
+    },
+    {
+      "question": "역핑 수수료가 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑의 수수료 정책은 판매자 레벨, 평점, 거래 이력에 따라 달라질 수 있으며, 좋은 판매자에게 더 유리하게 설계되어 있습니다. 또한 결제 처리(PG) 및 플랫폼 운영을 위한 수수료가 존재하며, 환불 상황에서는 귀책 주체에 따라 부담 주체가 달라질 수 있습니다. 구체적인 수수료율이나 상세 내용은 판매자 레벨별 수수료 표를 참고하시거나, 관련 예약이나 오퍼 번호가 있을 경우 더 정확한 정보를 안내받을 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S01_수수료→레벨→혜택",
+      "turn": 1
+    },
+    {
+      "question": "그러면 레벨업하면 수수료 달라져?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "네, 판매자 레벨이 올라가면 수수료가 달라질 수 있습니다. 역핑은 좋은 판매자가 성장할수록 더 유리한 수수료 구조를 지향합니다. 자세한 수수료 표는 별도로 확인하실 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S01_수수료→레벨→혜택",
+      "turn": 2
+    },
+    {
+      "question": "레벨 올리는 조건이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "판매자 레벨은 판매자의 평점, 거래 이력, 그리고 활동 내역에 따라 결정됩니다. 좋은 판매자는 더 낮은 수수료 혜택을 받으며, 이는 판매자가 플랫폼에서 성장하고 오래 머무를 수 있도록 설계된 구조입니다. 구체적인 레벨 올리는 조건은 판매자의 거래 실적과 평판 관리가 핵심입니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S01_수수료→레벨→혜택",
+      "turn": 3
+    },
+    {
+      "question": "레벨 2 혜택은 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "판매자 레벨 2 혜택은 주로 수수료 면에서 더 유리한 조건을 받는 것입니다. 역핑은 좋은 판매자가 성장할수록 더 낮은 수수료를 적용받아 플랫폼에서 오래 활동할 동기를 부여합니다. 구체적인 레벨별 수수료 표는 관리자용 정책 문서에서 확인할 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S01_수수료→레벨→혜택",
+      "turn": 4
+    },
+    {
+      "question": "포인트도 레벨이랑 연관 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정책선언집에 따르면 판매자 레벨은 수수료에 영향을 미치며, 좋은 판매자가 더 유리한 구조로 설계되어 있습니다. 하지만 포인트와 레벨의 직접적인 연관성에 대한 내용은 명확히 언급되어 있지 않습니다. 따라서 포인트가 레벨과 연관되어 있는지에 대해서는 추가 확인이 필요합니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S01_수수료→레벨→혜택",
+      "turn": 5
+    },
+    {
+      "question": "포인트 적립 기준이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "포인트 적립 기준에 대한 구체적인 내용은 정책선언집에 명확히 나와 있지 않습니다. 추가 확인이 필요합니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S01_수수료→레벨→혜택",
+      "turn": 6
+    },
+    {
+      "question": "포인트 유효기간은?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "현재 정책선언집에 포인트 유효기간에 관한 구체적인 내용은 포함되어 있지 않습니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6)\n[근거: server]",
+      "scenario": "S01_수수료→레벨→혜택",
+      "turn": 7
+    },
+    {
+      "question": "포인트로 수수료 낼 수 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑의 수수료 정책에 따르면, 수수료는 주로 금전으로 처리되며 포인트로 수수료를 낼 수 있는지에 대한 명확한 내용은 정책선언집에 없습니다. 따라서 포인트로 수수료 납부가 가능한지 여부는 추가 확인이 필요합니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S01_수수료→레벨→혜택",
+      "turn": 8
+    },
+    {
+      "question": "환불받으면 포인트는 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환불 시 포인트 처리에 관한 구체적인 정책은 현재 제공된 정보로는 확인이 어렵습니다. 환불은 예약 단위로 처리되며, 환불 가능 여부와 금액은 배송 단계, 귀책 사유, 환불 유형에 따라 달라집니다. 포인트 환급 관련 상세 내용은 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S01_수수료→레벨→혜택",
+      "turn": 9
+    },
+    {
+      "question": "부분환불도 포인트 돌려줘?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "부분환불 시 포인트 환급 여부는 환불 정책과 예약 상황에 따라 달라집니다. 일반적으로 환불은 예약 단위로 처리되며, 배송 단계, 귀책 사유, 환불 유형에 따라 포인트 환급이 결정됩니다. 구체적인 예약 번호가 있으면 더 정확한 안내가 가능합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S01_수수료→레벨→혜택",
+      "turn": 10
+    },
+    {
+      "question": "딜방 어떻게 개설해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜방 개설은 구매자(Buyer) 역할로, 원하는 조건과 수량을 제시하여 시작할 수 있습니다. 딜방은 소비자가 원하는 가격과 조건을 먼저 제시하면 판매자들이 경쟁적으로 제안하는 구조입니다. 구체적인 개설 절차나 버튼은 앱 내 딜방 생성 화면에서 확인할 수 있으며, 아직 딜방이 없으면 새 딜방을 만드는 옵션이 있을 것입니다. 추가 확인이 필요하면 앱 내 도움말이나 고객센터를 이용해 주세요.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S02_딜방개설→오퍼→예약→환불",
+      "turn": 1
+    },
+    {
+      "question": "오퍼 올리는 방법이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼는 판매자가 딜방(Deal Room)에서 구매자가 제시한 조건을 보고 가격과 배송, 옵션 등의 조건을 제안하는 것입니다. 구매자 역할에서는 직접 오퍼를 올릴 수 없고, 판매자만 오퍼를 제출할 수 있습니다. 만약 판매자라면, 딜방에서 원하는 딜 조건을 확인한 후 오퍼를 제출할 수 있습니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public) / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]",
+      "scenario": "S02_딜방개설→오퍼→예약→환불",
+      "turn": 2
+    },
+    {
+      "question": "오퍼 수정 기간이 얼마야?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "TIME_POLICY",
+      "passed": true,
+      "answer": "오퍼 마감 기본은 48시간입니다. (defaults.yaml SSOT 기준)\n[근거: docs]",
+      "alt_kind": "YEOKPING_GENERAL",
+      "scenario": "S02_딜방개설→오퍼→예약→환불",
+      "turn": 3
+    },
+    {
+      "question": "예약이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약(Reservation)은 구매자가 딜방에서 판매자의 오퍼를 선택하고 구매 의사를 확정한 거래 단위입니다. 예약은 결제, 배송, 환불 등 거래의 핵심 단계로 작동하며, 각 예약마다 고유한 번호가 부여되어 거래 진행 상황을 추적할 수 있습니다.\n\n(근거: 00_overview / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]",
+      "scenario": "S02_딜방개설→오퍼→예약→환불",
+      "turn": 4
+    },
+    {
+      "question": "예약 취소 가능해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약 취소 가능 여부는 예약 상태, 배송 단계, 환불 정책 등에 따라 달라집니다. 현재 예약 번호나 구체적인 예약 정보가 없어서 정확한 안내가 어렵습니다. 예약 번호가 있으면 환불 및 취소 가능 여부를 정확히 확인할 수 있으니, 예약 번호를 알려주시거나 예약 상세 화면에서 확인해 주세요.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S02_딜방개설→오퍼→예약→환불",
+      "turn": 5
+    },
+    {
+      "question": "취소 수수료가 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "취소 수수료에 대해서는 현재 제공된 정보로는 확인이 어렵습니다. 일반적으로 수수료는 판매자 레벨, 거래 이력 등에 따라 다를 수 있으며, 환불 및 취소 시 수수료 부담 주체도 상황에 따라 달라집니다. 구체적인 예약이나 거래 정보가 있으면 더 정확한 안내가 가능합니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public) / 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6)\n[근거: server]",
+      "scenario": "S02_딜방개설→오퍼→예약→환불",
+      "turn": 6
+    },
+    {
+      "question": "배송 후 환불은?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "배송 후 환불은 예약 단위로 처리되며, 환불 가능 여부와 금액은 배송 단계, 귀책 사유, 환불 유형에 따라 달라집니다. 배송이 완료된 후에는 환불 정책이 엄격해질 수 있으니, 구체적인 예약 번호가 있으면 해당 예약의 환불 정책을 확인하는 것이 정확합니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S02_딜방개설→오퍼→예약→환불",
+      "turn": 7
+    },
+    {
+      "question": "환불 처리 기간이 얼마야?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환불 처리 기간은 예약(Reservation) 단위로 다르며, 배송 단계, 귀책 사유, 환불 유형에 따라 달라집니다. 구체적인 환불 가능 기간과 처리 시간은 해당 예약의 환불 정책에 따라 결정되므로, 예약 번호가 있으면 더 정확한 안내가 가능합니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "alt_kind": "YEOKPING_GENERAL",
+      "scenario": "S02_딜방개설→오퍼→예약→환불",
+      "turn": 8
+    },
+    {
+      "question": "정산은 언제 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산은 거래가 확정된 후 플랫폼에서 최종 정산 절차가 진행됩니다. 구체적인 정산 시점과 금액은 거래 확정 상태와 판매자 레벨, 거래 이력 등에 따라 달라질 수 있습니다. 더 자세한 정산 내역은 해당 거래의 예약 또는 오퍼 상세 화면에서 확인할 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]",
+      "scenario": "S02_딜방개설→오퍼→예약→환불",
+      "turn": 9
+    },
+    {
+      "question": "정산 지연되면 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산 지연 상황에 대해서는 정책선언집에 명확한 절차가 정의되어 있지 않아 추가 확인이 필요합니다. 일반적으로 정산 지연은 운영팀이 모니터링하며, 필요시 관리자 조치가 이루어집니다. 구체적인 상황에 따라 다를 수 있으니, 고객센터나 운영팀에 문의하시는 것을 권장합니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 운영/안전 가드레일 (Guardrails))\n[근거: server]",
+      "scenario": "S02_딜방개설→오퍼→예약→환불",
+      "turn": 10
+    },
+    {
+      "question": "오늘 서울 날씨 어때?",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "날씨 정보를 바로 가져오지 못했어요. 아래 기상청에서 직접 확인해 주세요:\n- 기상청 날씨 예보: https://www.weather.go.kr/w/index.do\n[근거: external]",
+      "scenario": "S03_날씨→스몰톡→역핑전환",
+      "turn": 1
+    },
+    {
+      "question": "내일은?",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "내일 서울 날씨는 기상청 등 날씨 관련 사이트에서 확인할 수 있어요. 보통 기온이나 강수 확률 같은 정보가 나와 있으니 참고해보세요!\n[근거: 없음]",
+      "alt_kind": "SMALLTALK",
+      "scenario": "S03_날씨→스몰톡→역핑전환",
+      "turn": 2
+    },
+    {
+      "question": "비 맞으면 기분 별로지",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "맞아요, 비 맞으면 기분이 좀 꿀꿀해지죠. 특히 우산이 없을 때 더 그렇고요. 그래도 비 오는 날의 분위기를 좋아하는 분들도 많아요. 고객님은 비 오는 날 어떤 기분이 드시나요?\n[근거: 없음]",
+      "scenario": "S03_날씨→스몰톡→역핑전환",
+      "turn": 3
+    },
+    {
+      "question": "근데 역핑이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑은 소비자가 원하는 조건을 먼저 제시하면, 판매자들이 그 조건에 맞춰 가격과 조건을 제안하는 소비자 주도형 역입찰 공동구매 플랫폼입니다. 즉, 소비자가 얼마까지 살 의향이 있는지 먼저 선언하고, 여러 판매자가 경쟁적으로 제안하여 조건 전체를 비교할 수 있어 더 좋은 거래를 할 수 있습니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S03_날씨→스몰톡→역핑전환",
+      "turn": 4
+    },
+    {
+      "question": "공동구매 플랫폼이야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "네, 역핑은 소비자가 원하는 조건을 먼저 제시하면 판매자들이 그 조건에 맞춰 가격과 조건을 제안하는 소비자 주도형 역입찰 공동구매 플랫폼입니다. 이를 통해 소비자는 가격뿐 아니라 배송, 환불, 옵션 등 다양한 조건을 한 화면에서 비교할 수 있습니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S03_날씨→스몰톡→역핑전환",
+      "turn": 5
+    },
+    {
+      "question": "딜이 뭔가요?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜(Deal)은 구매자 수요가 모이는 방(딜방)으로, 소비자가 원하는 조건을 제시하면 판매자들이 그 조건에 맞춰 가격과 조건을 제안하는 공동구매 공간입니다. 즉, 소비자가 원하는 가격과 조건을 먼저 제시하고, 여러 판매자가 경쟁적으로 제안하는 소비자 주도형 역입찰 공동구매 플랫폼의 핵심 단위입니다.\n\n(근거: 00_overview / 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S03_날씨→스몰톡→역핑전환",
+      "turn": 6
+    },
+    {
+      "question": "수수료가 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "판매자 수수료는 판매자의 레벨, 평점, 거래 이력에 따라 달라질 수 있으며, 좋은 판매자에게 더 유리하게 설계되어 있습니다. 또한 결제 처리 및 플랫폼 운영을 위한 PG/플랫폼 수수료도 존재할 수 있습니다. 구체적인 수수료율이나 금액은 판매자별로 다르므로, 자세한 수수료 정보를 원하시면 판매자 레벨별 수수료 표를 확인하거나 관련 딜/예약 정보를 알려주시면 더 정확한 안내가 가능합니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S03_날씨→스몰톡→역핑전환",
+      "turn": 7
+    },
+    {
+      "question": "환불 정책은?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환불 정책은 예약 단위로 처리되며, 환불 가능 여부와 금액은 배송 단계, 귀책 주체, 환불 유형에 따라 달라집니다. 쿨링 기간이 있을 수 있고, 배송비 환불 방식도 상황에 따라 다릅니다. 구체적인 환불 내용은 예약 번호가 있을 때 서버에서 확정된 정보를 안내할 수 있습니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S03_날씨→스몰톡→역핑전환",
+      "turn": 8
+    },
+    {
+      "question": "내일 날씨 다시 알려줘",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "서울 기준 2026-02-27 예상 최고 12.5° / 최저 3.1°, 강수확률 0% 입니다.\n[근거: external]",
+      "scenario": "S03_날씨→스몰톡→역핑전환",
+      "turn": 9
+    },
+    {
+      "question": "고마워",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 별말씀을요! 궁금한 점이 있으면 언제든지 물어보세요. 제가 도와드릴 수 있는 부분이 있다면 기쁘게 답변해드릴게요!\n[근거: 없음]",
+      "scenario": "S03_날씨→스몰톡→역핑전환",
+      "turn": 10
+    },
+    {
+      "question": "달러 환율이 얼마야?",
+      "expected_kind": "EXTERNAL_FINANCE",
+      "actual_kind": "EXTERNAL_FINANCE",
+      "passed": true,
+      "answer": "실시간 환율·주가 숫자를 제가 직접 확정해 드리기 어려워요. 뇌피셜 수치를 드리는 것보다 아래 공신력 있는 곳에서 바로 확인하시는 게 정확합니다:\n- 네이버 금융: https://finance.naver.com/\n- 다음 금융: https://finance.daum.net/\n- 한국거래소(KRX): https://global.krx.co.kr/\n- 한국은행 환율/통계(ECOS): https://ecos.bok.or.kr/\n[근거: external]",
+      "scenario": "S04_환율→뉴스→제품가격→역핑",
+      "turn": 1
+    },
+    {
+      "question": "엔화는?",
+      "expected_kind": "EXTERNAL_FINANCE",
+      "actual_kind": "EXTERNAL_FINANCE",
+      "passed": true,
+      "answer": "실시간 환율·주가 숫자를 제가 직접 확정해 드리기 어려워요. 뇌피셜 수치를 드리는 것보다 아래 공신력 있는 곳에서 바로 확인하시는 게 정확합니다:\n- 네이버 금융: https://finance.naver.com/\n- 다음 금융: https://finance.daum.net/\n- 한국거래소(KRX): https://global.krx.co.kr/\n- 한국은행 환율/통계(ECOS): https://ecos.bok.or.kr/\n[근거: external]",
+      "scenario": "S04_환율→뉴스→제품가격→역핑",
+      "turn": 2
+    },
+    {
+      "question": "오늘 경제 뉴스 뭐 있어?",
+      "expected_kind": "EXTERNAL_NEWS",
+      "actual_kind": "EXTERNAL_NEWS",
+      "passed": true,
+      "answer": "오늘 뉴스로는 이런 제목들이 보여요: SKY 나오면 뭐하나…\"뉴스 볼 때마다 걱정\" 한탄 - 한국경제 / \"지은씨, 뭐 흔들고 있어?\" 파우치형 단백질 판매량 113% ↑ - v.daum.net / \"거기 군부대 말고 뭐 있어?\"…작년만 관광객 50만명 '대반전' - 한국경제\n[근거: external]",
+      "scenario": "S04_환율→뉴스→제품가격→역핑",
+      "turn": 3
+    },
+    {
+      "question": "갤럭시 S25 가격은?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 삼성전자 갤럭시 S25 5G 256GB [자급제]\n  최저가: 1,044,000원 (약 104만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n- 쿠팡: https://www.coupang.com/np/search?q=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n[근거: external]",
+      "scenario": "S04_환율→뉴스→제품가격→역핑",
+      "turn": 4
+    },
+    {
+      "question": "다나와 최저가가 얼마야?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 삼성전자 갤럭시 S25 5G 256GB [자급제]\n  최저가: 1,044,000원 (약 104만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n- 쿠팡: https://www.coupang.com/np/search?q=%EA%B0%A4%EB%9F%AD%EC%8B%9C+S25\n[근거: external]",
+      "scenario": "S04_환율→뉴스→제품가격→역핑",
+      "turn": 5
+    },
+    {
+      "question": "역핑에서 이 제품 공구 할 수 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "고객님, 역핑에서 갤럭시 S25를 구매하시려면 다음과 같은 흐름으로 진행하실 수 있습니다:\n\n1. **딜 생성**: 고객님이 원하는 제품(갤럭시 S25)과 조건(가격, 수량, 옵션 등)을 게시합니다.\n2. **딜방 모집**: 다른 사용자들도 참여하여 같은 조건에 대해 관심을 나타냅니다.\n3. **오퍼 제출**: 참여한 판매자들이 고객님의 조건에 맞는 가격과 조건을 제안합니다.\n4. **예약 및 결제**: 고객님은 제안된 오퍼 중 하나를 선택한 후 결제를 진행합니다.\n\n이와 같은 방식으로 역핑을 통해 고객님이 원하시는 갤럭시 S25를 구매하실 수 있습니다. 추가로 궁금하신 점이 있으시면 말씀해 주세요!\n[근거: docs]",
+      "scenario": "S04_환율→뉴스→제품가격→역핑",
+      "turn": 6
+    },
+    {
+      "question": "딜 개설하려면 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜 개설은 구매자(Buyer) 역할로, 원하는 조건과 수량을 제시하여 공동구매 딜방을 만드는 과정입니다. 역핑 플랫폼에서는 소비자가 먼저 원하는 가격과 조건을 제시하면 판매자들이 경쟁적으로 제안하는 구조입니다. 딜 개설은 딜방 화면에서 진행할 수 있으며, 구체적인 절차나 버튼은 앱 내 딜 개설 화면을 참고하세요.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S04_환율→뉴스→제품가격→역핑",
+      "turn": 7
+    },
+    {
+      "question": "수수료가 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "수수료는 판매자의 레벨, 평점, 거래 이력에 따라 달라질 수 있으며, 좋은 판매자에게 더 유리하게 설계되어 있습니다. 또한 결제 처리 및 플랫폼 운영을 위한 PG/플랫폼 수수료도 존재할 수 있습니다. 구체적인 수수료율은 판매자 레벨별 수수료 표를 참고하시거나, 특정 예약이나 오퍼에 대해 알고 싶으시면 해당 번호를 알려주세요.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S04_환율→뉴스→제품가격→역핑",
+      "turn": 8
+    },
+    {
+      "question": "정산은 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산은 거래가 확정된 후 플랫폼에서 진행되며, 구매자가 결제한 금액을 기준으로 판매자에게 정산이 이루어집니다. 이때 판매자 정산 중 일부는 Actuator 커미션으로 지급됩니다. 판매자의 수수료는 레벨, 평점, 거래 이력에 따라 달라질 수 있으며, 좋은 판매자에게 더 유리한 구조로 설계되어 있습니다. 자세한 내용은 판매자 수수료 정책과 Actuator 커미션 정책을 참고하시기 바랍니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S04_환율→뉴스→제품가격→역핑",
+      "turn": 9
+    },
+    {
+      "question": "감사해요",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "천만에요! 도움이 필요하시면 언제든지 말씀해 주세요. 다른 질문이나 궁금한 점 있으신가요? 😊\n[근거: 없음]",
+      "scenario": "S04_환율→뉴스→제품가격→역핑",
+      "turn": 10
+    },
+    {
+      "question": "환불 신청하고 싶어",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환불 신청은 예약(Reservation) 단위로 처리됩니다. 환불 가능 여부와 금액은 배송 단계, 귀책 사유, 환불 유형에 따라 달라지므로, 먼저 환불을 원하는 예약 번호를 확인해 주세요. 예약 번호가 있으면 정확한 환불 안내가 가능합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 딥링크 라우팅 SSOT)\n[근거: server]",
+      "scenario": "S05_환불분쟁",
+      "turn": 1
+    },
+    {
+      "question": "판매자가 거부하면 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "판매자가 제안을 거부하는 경우, 구매자는 다른 판매자의 오퍼를 선택하거나 새로운 오퍼를 기다릴 수 있습니다. 만약 거래가 성사되지 않으면 예약이나 결제도 진행되지 않습니다. 구체적인 상황에 따라 환불이나 분쟁 절차가 필요할 수 있으니, 예약이나 오퍼 번호가 있다면 상세 정보를 확인해 주세요.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public) / 참여자(Actors) 정책 — SSOT v3.6 / 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6)\n[근거: server]",
+      "scenario": "S05_환불분쟁",
+      "turn": 2
+    },
+    {
+      "question": "관리자한테 신고할 수 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜방 화면에서 직접 관리자에게 신고하는 기능에 대한 구체적인 정책 정보가 현재 제공된 문서에는 없습니다. 추가 확인이 필요합니다.\n\n(근거: 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]",
+      "scenario": "S05_환불분쟁",
+      "turn": 3
+    },
+    {
+      "question": "분쟁 해결 기간이 얼마야?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "분쟁 해결 기간에 대한 구체적인 시간은 정책선언집에 명확히 명시되어 있지 않습니다. 분쟁은 증거와 정책, 시간 규칙에 따라 처리되며, 상세한 기간은 개별 상황에 따라 다를 수 있습니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / time)\n[근거: server]",
+      "alt_kind": "YEOKPING_GENERAL",
+      "scenario": "S05_환불분쟁",
+      "turn": 4
+    },
+    {
+      "question": "환불 금액 계산 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환불 금액 계산은 예약(Reservation) 단위로 처리되며, 배송 단계, 귀책 주체, 환불 유형에 따라 달라집니다. 구체적인 환불 가능 여부와 금액은 해당 예약의 환불 정책과 상태에 따라 결정됩니다. 예약 번호가 있으면 더 정확한 환불 금액 안내가 가능하니, 예약 정보를 확인해 주세요.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S05_환불분쟁",
+      "turn": 5
+    },
+    {
+      "question": "수수료는 누가 부담해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "수수료는 거래에서 돈이 움직이는 모든 규칙에 따라 부담 주체가 달라집니다. 일반적으로 결제 처리(PG) 및 플랫폼 운영을 위한 수수료가 존재하며, 환불 상황에서는 귀책 주체에 따라 부담 주체가 달라질 수 있습니다. 또한 판매자의 레벨, 평점, 거래 이력에 따라 판매자 수수료가 달라질 수 있습니다. 자세한 수수료 구조는 판매자 레벨별로 다르게 적용되며, 좋은 판매자가 더 유리한 구조로 설계되어 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S05_환불분쟁",
+      "turn": 6
+    },
+    {
+      "question": "배송비는?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "배송비는 예약 상태와 배송 단계에 따라 환불 여부와 부담 주체가 달라질 수 있습니다. 구체적인 예약 번호가 있으면 정확한 배송비 정책과 환불 가능 여부를 안내할 수 있으니, 예약 번호를 알려주세요.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S05_환불분쟁",
+      "turn": 7
+    },
+    {
+      "question": "포인트 환불되나?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "포인트 환불 여부는 예약(Reservation) 단위로 환불 정책에 따라 결정됩니다. 구체적인 환불 가능 여부와 금액은 배송 단계, 귀책 사유, 환불 유형 등에 따라 달라지므로, 해당 예약 번호가 있어야 정확한 안내가 가능합니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S05_환불분쟁",
+      "turn": 8
+    },
+    {
+      "question": "정산 전 환불이랑 정산 후 환불이 달라?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산 전 환불과 정산 후 환불은 처리 방식과 수수료 부담 주체 등이 달라질 수 있습니다. 정산 전 환불은 거래가 확정되기 전 단계에서 이루어져 환불 금액 산정과 수수료 부담이 다르게 적용될 수 있고, 정산 후 환불은 이미 판매자에게 정산이 완료된 후이므로 환불 처리와 정산 조정이 별도로 필요합니다. 구체적인 환불 조건과 금액은 예약 단위로 정책과 귀책 사유에 따라 결정되므로, 예약 번호가 있으면 더 정확한 안내가 가능합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S05_환불분쟁",
+      "turn": 9
+    },
+    {
+      "question": "언제 환불금이 들어와?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환불금이 언제 입금되는지는 예약(Reservation) 단위로 배송 단계, 귀책 사유, 환불 유형에 따라 다릅니다. 구체적인 환불 가능 여부와 금액은 해당 예약의 환불 정책과 상태에 따라 결정되므로, 예약 번호가 있으면 정확한 환불 정보를 안내해 드릴 수 있습니다. 현재 예약 정보가 없으니, 예약 번호를 알려주시면 자세히 안내해 드리겠습니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S05_환불분쟁",
+      "turn": 10
+    },
+    {
+      "question": "판매자 등록 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "판매자 등록 관련 정책은 현재 제공된 정책선언집에 명확한 안내가 없습니다. 추가 확인이 필요합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6)\n[근거: server]",
+      "scenario": "S06_판매자온보딩",
+      "turn": 1
+    },
+    {
+      "question": "액츄에이터가 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "액츄에이터(Actuator)는 역핑 플랫폼에서 판매자 정산 중 일부를 커미션으로 받는 참여자를 의미합니다. 즉, 판매자 정산 과정에서 일정 부분을 수수료로 지급받는 역할을 합니다. 더 자세한 내용은 수수료 정책 문서(public/fees)를 참고하세요.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S06_판매자온보딩",
+      "turn": 2
+    },
+    {
+      "question": "액츄에이터 수수료가 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "액츄에이터 커미션은 판매자 정산 중 일부로 지급되는 수수료입니다. 구체적인 금액은 각 액츄에이터별 커미션 테이블에 기록되어 있으며, 판매자 레벨, 평점, 거래 이력 등에 따라 달라질 수 있습니다. 자세한 수수료 내역은 관리자용 API를 통해 확인할 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S06_판매자온보딩",
+      "turn": 3
+    },
+    {
+      "question": "딜이랑 오퍼 차이가 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜(Deal)은 구매자들이 원하는 조건과 수요가 모이는 방(딜방)입니다. 여기서 구매자들은 원하는 가격, 수량, 조건을 제시합니다. 오퍼(Offer)는 판매자가 그 딜 조건에 맞춰 가격과 배송, 옵션 등 구체적인 제안을 내는 것입니다. 즉, 딜은 구매자 중심의 수요 모임이고, 오퍼는 판매자가 제시하는 경쟁적인 제안입니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S06_판매자온보딩",
+      "turn": 4
+    },
+    {
+      "question": "오퍼 낙찰 기준이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼 낙찰 기준은 판매자가 제시한 가격과 조건을 구매자가 비교하여 선택하는 방식입니다. 역핑은 소비자가 원하는 가격과 조건을 먼저 제시하면, 판매자들이 그에 맞춰 경쟁적으로 제안하는 구조입니다. 따라서 낙찰은 가격뿐 아니라 배송, 보상, 옵션, 구성 등 조건 전체를 고려해 결정됩니다. 구체적인 낙찰 기준은 딜방 내 여러 오퍼를 비교하는 과정에서 결정되며, 이는 소비자 주도형 역입찰 공동구매 플랫폼의 핵심 원칙입니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S06_판매자온보딩",
+      "turn": 5
+    },
+    {
+      "question": "역입찰이 뭔가요?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑은 소비자가 원하는 가격과 조건을 먼저 제시하면, 판매자들이 그 조건에 맞춰 가격과 조건을 제안하는 소비자 주도형 역입찰 공동구매 플랫폼입니다. 즉, 소비자가 가격 결정권을 가지고, 여러 판매자가 경쟁적으로 제안을 하여 최적의 조건을 선택할 수 있는 구조입니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S06_판매자온보딩",
+      "turn": 6
+    },
+    {
+      "question": "쿨링기간이 얼마야?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "TIME_POLICY",
+      "passed": true,
+      "answer": "쿨링(환불 가능 기간) 기본은 7일입니다. (defaults.yaml SSOT 기준)\n[근거: docs]",
+      "alt_kind": "YEOKPING_GENERAL",
+      "scenario": "S06_판매자온보딩",
+      "turn": 7
+    },
+    {
+      "question": "정산 조건이 어떻게 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산 조건은 거래가 확정되고 환불 여부가 결정된 후에 플랫폼이 정산을 확정하며, 이후 판매자에게 정산이 이루어집니다. 이 과정에서 판매자의 레벨, 평점, 거래 이력에 따라 수수료가 달라질 수 있고, 일부 금액은 Actuator 커미션으로 지급됩니다. 자세한 내용은 판매자 수수료 정책과 Actuator 커미션 정책을 참고하시면 됩니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S06_판매자온보딩",
+      "turn": 8
+    },
+    {
+      "question": "판매자 등급 올리면 혜택이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "판매자 등급이 올라가면 수수료 혜택이 있습니다. 좋은 판매자는 더 낮은 수수료율을 적용받아 플랫폼에서 더 유리한 조건으로 거래할 수 있습니다. 이는 좋은 판매자가 플랫폼에 오래 머무르고 성장할 수 있도록 설계된 구조입니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S06_판매자온보딩",
+      "turn": 9
+    },
+    {
+      "question": "오퍼 수정 언제까지 가능해?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼 수정 가능 기간은 딜방의 오퍼 마감 시간까지입니다. 딜방이 마감되면 오퍼 수정이 불가능해집니다. 구체적인 마감 시간은 해당 딜방에서 확인하실 수 있습니다.\n\n(근거: time / Yeokping Policy SSOT Index (Admin))\n[근거: server]",
+      "alt_kind": "YEOKPING_GENERAL",
+      "scenario": "S06_판매자온보딩",
+      "turn": 10
+    },
+    {
+      "question": "안녕",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "안녕하세요, 고객님! 오늘 기분이 어떤가요? 궁금한 거 있으시면 언제든지 말씀해 주세요.\n[근거: 없음]",
+      "scenario": "S07_스몰톡→역핑유입",
+      "turn": 1
+    },
+    {
+      "question": "오늘 날씨 좀 추운 것 같아",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "서울 기준 2026-02-27 예상 최고 12.5° / 최저 3.1°, 강수확률 0% 입니다.\n[근거: external]",
+      "alt_kind": "EXTERNAL_WEATHER",
+      "scenario": "S07_스몰톡→역핑유입",
+      "turn": 2
+    },
+    {
+      "question": "밥 먹었어?",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 저도 밥 먹는 기분이네요! 혹시 맛있는 점심 드셨나요? 어떤 음식을 좋아하시는지 궁금해요.\n[근거: 없음]",
+      "scenario": "S07_스몰톡→역핑유입",
+      "turn": 3
+    },
+    {
+      "question": "역핑이라는 앱 알아?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "네, 역핑은 소비자가 원하는 조건을 먼저 제시하면 판매자들이 그 조건에 맞춰 가격과 조건을 제안하는 소비자 주도형 역입찰 공동구매 플랫폼입니다. 소비자가 가격 결정권을 갖고, 판매자 간의 조건 경쟁과 신뢰 체계가 잘 설계되어 있어 투명하고 안정적인 거래가 가능합니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S07_스몰톡→역핑유입",
+      "turn": 4
+    },
+    {
+      "question": "공동구매 앱이야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "네, 역핑은 소비자가 원하는 조건을 먼저 제시하면 판매자들이 그 조건에 맞춰 가격과 조건을 제안하는 소비자 주도형 역입찰 공동구매 플랫폼입니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S07_스몰톡→역핑유입",
+      "turn": 5
+    },
+    {
+      "question": "수수료 없어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑 플랫폼에서는 판매자에게는 판매자 레벨, 평점, 거래 이력에 따라 수수료가 부과됩니다. 또한 결제 처리 및 플랫폼 운영을 위한 PG/플랫폼 수수료도 존재할 수 있습니다. 수수료는 판매자에게 유리하게 설계되어 좋은 판매자가 더 낮은 수수료를 적용받을 수 있습니다. 구매자 입장에서는 별도의 수수료가 명확히 부과되지 않는 경우가 많으니, 구체적인 거래 상황에 따라 다를 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S07_스몰톡→역핑유입",
+      "turn": 6
+    },
+    {
+      "question": "배송은 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "배송은 판매자가 제안한 조건에 따라 진행됩니다. 딜방에서 여러 판매자의 오퍼를 비교할 때, 배송 조건도 함께 확인할 수 있습니다. 구체적인 배송 방식이나 비용은 각 오퍼의 상세 정보에서 확인하세요.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S07_스몰톡→역핑유입",
+      "turn": 7
+    },
+    {
+      "question": "환불 가능해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환불 가능 여부는 예약(Reservation) 단위로 결정되며, 배송 단계, 귀책 사유, 환불 유형 등에 따라 달라집니다. 현재 예약 번호나 구체적인 거래 정보가 없으므로 정확한 환불 가능 여부를 안내하기 어렵습니다. 예약 번호가 있으면 환불 상태를 정확히 확인할 수 있으니, 예약 정보를 알려주시거나 예약 화면에서 확인해 주세요.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / 환불 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S07_스몰톡→역핑유입",
+      "turn": 8
+    },
+    {
+      "question": "포인트도 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑 플랫폼에서는 수수료, 포인트, 커미션 등 돈이 움직이는 모든 규칙이 정책으로 관리됩니다. 포인트 정책도 수수료 정책과 함께 포함되어 있으며, 좋은 판매자가 더 유리하도록 설계되어 있습니다. 다만, 구체적인 포인트 적립이나 사용 조건은 현재 화면 정보만으로는 확인이 어려우니, 추가 확인이 필요합니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S07_스몰톡→역핑유입",
+      "turn": 9
+    },
+    {
+      "question": "써봐야겠다",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 역핑을 써보시려는군요! 공동구매로 좋은 상품을 저렴하게 구입할 수 있으니 기대되네요. 사용하면서 궁금한 점이나 도움이 필요하면 언제든지 말씀해 주세요!\n[근거: 없음]",
+      "scenario": "S07_스몰톡→역핑유입",
+      "turn": 10
+    },
+    {
+      "question": "맥북 M4 Pro 가격 알려줘",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 Apple 맥북프로 14 2024년 M4 Pro 12 코어 24GB, 512GB\n  최저가: 2,810,600원 (약 281만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EB%A7%A5%EB%B6%81+M4+Pro\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EB%A7%A5%EB%B6%81+M4+Pro\n- 쿠팡: https://www.coupang.com/np/search?q=%EB%A7%A5%EB%B6%81+M4+Pro\n[근거: external]",
+      "scenario": "S08_제품가격리서치→딜개설",
+      "turn": 1
+    },
+    {
+      "question": "다나와 최저가가 얼마야?",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 Apple 맥북프로 14 2024년 M4 Pro 12 코어 24GB, 512GB\n  최저가: 2,810,600원 (약 281만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EB%A7%A5%EB%B6%81+M4+Pro\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EB%A7%A5%EB%B6%81+M4+Pro\n- 쿠팡: https://www.coupang.com/np/search?q=%EB%A7%A5%EB%B6%81+M4+Pro\n[근거: external]",
+      "scenario": "S08_제품가격리서치→딜개설",
+      "turn": 2
+    },
+    {
+      "question": "에누리에서도 찾아줘",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 Apple 맥북프로 14 2024년 M4 Pro 12 코어 24GB, 512GB\n  최저가: 2,810,600원 (약 281만원대) (네이버)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EB%A7%A5%EB%B6%81+M4+Pro\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EB%A7%A5%EB%B6%81+M4+Pro\n- 쿠팡: https://www.coupang.com/np/search?q=%EB%A7%A5%EB%B6%81+M4+Pro\n[근거: external]",
+      "scenario": "S08_제품가격리서치→딜개설",
+      "turn": 3
+    },
+    {
+      "question": "역핑에서 공동구매하면 더 저렴해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "네, 역핑은 공동구매지수(GQ)를 기반으로 수량이 많아질수록 가격이 더 저렴해지는 구조입니다. 즉, 더 많은 구매자가 모일수록 판매자는 더 공격적인 조건을 제시할 수 있어 가격 혜택을 누릴 수 있습니다.\n\n(근거: GROUPBUY_INDEX_GQ_SSOT_v1 / 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S08_제품가격리서치→딜개설",
+      "turn": 4
+    },
+    {
+      "question": "딜 개설하면 내가 판매자가 되는 거야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜을 개설하면 구매자(Buyer)로서 수요를 모으는 역할을 하게 됩니다. 판매자(Seller)는 딜에 참여해 오퍼를 제출하는 역할이며, 딜 개설자가 자동으로 판매자가 되지는 않습니다.\n\n(근거: 00_overview / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]",
+      "scenario": "S08_제품가격리서치→딜개설",
+      "turn": 5
+    },
+    {
+      "question": "오퍼 올리는 방법이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼는 판매자가 딜방(Deal Room)에서 구매자가 제시한 조건을 보고 가격과 배송, 옵션 등 조건을 제안하는 것입니다. 구매자 역할에서는 직접 오퍼를 올릴 수 없고, 판매자만 오퍼를 제출할 수 있습니다. 만약 판매자라면 딜방 내에서 오퍼 제출 버튼을 찾아 조건을 입력해 제출하면 됩니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public) / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]",
+      "scenario": "S08_제품가격리서치→딜개설",
+      "turn": 6
+    },
+    {
+      "question": "수수료가 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "수수료는 판매자의 레벨, 평점, 거래 이력에 따라 달라질 수 있으며, 좋은 판매자에게 더 유리한 구조로 설계되어 있습니다. 또한 결제 처리 및 플랫폼 운영을 위한 PG/플랫폼 수수료도 존재할 수 있습니다. 구체적인 수수료율은 판매자 레벨별로 다르므로, 자세한 수수료 표를 확인하시려면 판매자 레벨 정보를 알려주세요.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S08_제품가격리서치→딜개설",
+      "turn": 7
+    },
+    {
+      "question": "정산 기간이 얼마야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산 기간에 대한 구체적인 정보는 현재 화면과 제공된 컨텍스트로는 확인할 수 없습니다. 추가 확인이 필요합니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S08_제품가격리서치→딜개설",
+      "turn": 8
+    },
+    {
+      "question": "쿨링기간이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "쿨링기간은 환불 가능 기간을 의미합니다. 즉, 구매자가 예약 후 일정 기간 내에 환불을 요청할 수 있는 기간을 말하며, 이 기간 동안에는 환불이 가능하도록 정책이 설정되어 있습니다. 쿨링기간은 환불 정책에 따라 다를 수 있으며, 배송 단계나 귀책 사유에 따라 환불 가능 여부와 금액이 달라질 수 있습니다.\n\n(근거: 환불 정책(개요) (Public))\n[근거: server]",
+      "alt_kind": "TIME_POLICY",
+      "scenario": "S08_제품가격리서치→딜개설",
+      "turn": 9
+    },
+    {
+      "question": "맥북 공구 해봐야겠다",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "공동구매는 좋은 선택이네요! 맥북을 구매하려면 참여 인원을 모으고, 혜택을 최대한 누릴 수 있도록 오퍼를 비교해 보는 게 좋습니다. 혹시 궁금한 점이나 도움이 필요한 부분이 있다면 언제든지 말씀해 주세요! 😊\n[근거: 없음]",
+      "scenario": "S08_제품가격리서치→딜개설",
+      "turn": 10
+    },
+    {
+      "question": "오늘 경제 뉴스 알려줘",
+      "expected_kind": "EXTERNAL_NEWS",
+      "actual_kind": "EXTERNAL_NEWS",
+      "passed": true,
+      "answer": "오늘 뉴스로는 이런 제목들이 보여요: [경제포커스] 창업 숨통을 끊겠다고 덤비는 금융위 - 조선일보 / “AI가 너무 똑똑해서 경제 망한다?”…7000자 보고서에 월가 출렁 - 동아일보 / 월가 뒤흔든 'AI 공포' 보고서 \"AI로 사상 초유의 경제 위기\" - YTN\n[근거: external]",
+      "scenario": "S09_뉴스→시사→역핑전환",
+      "turn": 1
+    },
+    {
+      "question": "반도체 관련 뉴스 있어?",
+      "expected_kind": "EXTERNAL_NEWS",
+      "actual_kind": "EXTERNAL_NEWS",
+      "passed": true,
+      "answer": "뉴스 헤드라인을 바로 가져오지 못했어요. 아래에서 확인해 보세요:\n- 구글뉴스: https://news.google.com/search?q=%EB%B0%98%EB%8F%84%EC%B2%B4&hl=ko&gl=KR&ceid=KR:ko\n- 네이버뉴스: https://search.naver.com/search.naver?where=news&query=%EB%B0%98%EB%8F%84%EC%B2%B4\n[근거: external]",
+      "scenario": "S09_뉴스→시사→역핑전환",
+      "turn": 2
+    },
+    {
+      "question": "삼성전자 주가가 얼마야?",
+      "expected_kind": "EXTERNAL_FINANCE",
+      "actual_kind": "EXTERNAL_FINANCE",
+      "passed": true,
+      "answer": "실시간 환율·주가 숫자를 제가 직접 확정해 드리기 어려워요. 뇌피셜 수치를 드리는 것보다 아래 공신력 있는 곳에서 바로 확인하시는 게 정확합니다:\n- 네이버 금융: https://finance.naver.com/\n- 다음 금융: https://finance.daum.net/\n- 한국거래소(KRX): https://global.krx.co.kr/\n- 한국은행 환율/통계(ECOS): https://ecos.bok.or.kr/\n[근거: external]",
+      "scenario": "S09_뉴스→시사→역핑전환",
+      "turn": 3
+    },
+    {
+      "question": "역핑에서 삼성 제품 공구 할 수 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑은 소비자가 원하는 조건을 먼저 제시하면 판매자들이 그 조건에 맞춰 가격과 조건을 제안하는 공동구매 플랫폼입니다. 삼성 제품도 판매자가 오퍼를 제출하면 공구가 가능합니다. 다만, 특정 제품의 공구 가능 여부는 해당 딜방에 판매자가 오퍼를 내는지에 따라 달라집니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S09_뉴스→시사→역핑전환",
+      "turn": 4
+    },
+    {
+      "question": "딜 개설 조건이 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜 개설 조건은 정책선언집에 구체적으로 명시되어 있지 않으나, 역핑은 소비자가 원하는 가격과 조건을 먼저 제시하면 판매자들이 그 조건에 맞춰 제안하는 구조입니다. 딜은 생성 후 일정 기간 동안 참여자를 모으며, 충분히 모으되 결정을 미루지 않도록 설계되어 있습니다. 더 구체적인 조건은 추가 확인이 필요합니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public) / 역핑 타임라인(시간 규칙) 설명 (Public))\n[근거: server]",
+      "scenario": "S09_뉴스→시사→역핑전환",
+      "turn": 5
+    },
+    {
+      "question": "오퍼가 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "오퍼(Offer)는 판매자가 딜방에서 소비자가 제시한 조건에 맞춰 내는 가격과 조건의 제안입니다. 즉, 소비자가 원하는 가격과 조건을 먼저 제시하면, 판매자들이 그에 맞춰 경쟁적으로 제안하는 구조입니다. 이를 통해 가격뿐 아니라 배송, 보상, 옵션 등 다양한 조건을 비교할 수 있습니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S09_뉴스→시사→역핑전환",
+      "turn": 6
+    },
+    {
+      "question": "예약이랑 오퍼 차이가 뭐야?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "예약(Reservation)은 구매자가 딜방에서 특정 판매자의 오퍼를 선택해 구매 의사를 확정하고 결제한 상태를 말합니다. 반면, 오퍼(Offer)는 판매자가 딜방에 제시하는 가격과 조건의 제안으로, 구매자가 선택할 수 있는 여러 제안 중 하나입니다. 쉽게 말해, 오퍼는 판매자의 제안이고, 예약은 그 제안을 구매자가 확정한 거래입니다.\n\n(근거: 00_overview / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]",
+      "scenario": "S09_뉴스→시사→역핑전환",
+      "turn": 7
+    },
+    {
+      "question": "환불하면 수수료 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "환불 시 수수료 부담 여부는 환불 상황과 귀책 주체에 따라 달라집니다. 일반적으로 결제 처리(PG) 및 플랫폼 운영을 위한 수수료가 있을 수 있으며, 환불 시에는 누가 책임이 있는지에 따라 수수료 부담 주체가 결정됩니다. 정확한 환불 수수료 내역은 예약 단위로 확인할 수 있으니, 예약 번호가 있으면 상세 정보를 확인해 보시기 바랍니다.\n\n(근거: Fees (수수료) 정책 — SSOT / 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6)\n[근거: server]",
+      "scenario": "S09_뉴스→시사→역핑전환",
+      "turn": 8
+    },
+    {
+      "question": "정산은 언제 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "정산은 거래가 확정된 후 플랫폼에서 최종 정산 절차를 거쳐 판매자에게 지급됩니다. 구체적인 정산 시점은 거래 확정과 환불 여부 결정 이후에 이루어지며, 일부는 판매자 정산 중 Actuator 커미션으로 지급될 수 있습니다. 자세한 내용은 거래가 확정된 예약이나 딜 정보를 확인해야 알 수 있습니다.\n\n(근거: Fees (수수료) 정책 — SSOT)\n[근거: server]",
+      "scenario": "S09_뉴스→시사→역핑전환",
+      "turn": 9
+    },
+    {
+      "question": "알겠어 감사해",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 언제든지 궁금한 점 있으시면 말씀해 주세요! 도움이 필요하실 때 언제든지 여기 있을게요. 😊\n[근거: 없음]",
+      "scenario": "S09_뉴스→시사→역핑전환",
+      "turn": 10
+    },
+    {
+      "question": "오늘 제주도 날씨 어때?",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "날씨 정보를 바로 가져오지 못했어요. 아래 기상청에서 직접 확인해 주세요:\n- 기상청 날씨 예보: https://www.weather.go.kr/w/index.do\n[근거: external]",
+      "scenario": "S10_여행날씨→역핑전환",
+      "turn": 1
+    },
+    {
+      "question": "비 올 것 같아?",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "날씨 정보를 바로 가져오지 못했어요. 아래 기상청에서 직접 확인해 주세요:\n- 기상청 날씨 예보: https://www.weather.go.kr/w/index.do\n[근거: external]",
+      "scenario": "S10_여행날씨→역핑전환",
+      "turn": 2
+    },
+    {
+      "question": "여행 가기 좋은 날씨야?",
+      "expected_kind": "EXTERNAL_WEATHER",
+      "actual_kind": "EXTERNAL_WEATHER",
+      "passed": true,
+      "answer": "서울 기준 2026-02-27 예상 최고 12.5° / 최저 3.1°, 강수확률 0% 입니다.\n[근거: external]",
+      "alt_kind": "SMALLTALK",
+      "scenario": "S10_여행날씨→역핑전환",
+      "turn": 3
+    },
+    {
+      "question": "역핑에서 여행용품 살 수 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑은 소비자가 원하는 조건을 먼저 제시하고 판매자들이 경쟁적으로 제안하는 공동구매 플랫폼입니다. 여행용품도 딜방이 생성되어 판매자들이 오퍼를 내면 구매할 수 있으니, 여행용품 관련 딜방이 있는지 확인해 보세요.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S10_여행날씨→역핑전환",
+      "turn": 4
+    },
+    {
+      "question": "딜 개설 어떻게 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜 개설은 구매자(Buyer) 역할로 진행할 수 있으며, 원하는 조건과 수량을 제시하여 공동구매 딜방을 만듭니다. 구체적인 딜 개설 절차나 화면 내 버튼 위치는 앱 내 DEAL_ROOM 화면에서 확인할 수 있습니다. 추가로 궁금한 점이 있으면 알려주세요.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public))\n[근거: server]",
+      "scenario": "S10_여행날씨→역핑전환",
+      "turn": 5
+    },
+    {
+      "question": "공동구매 참여자 제한 있어?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "공동구매 참여자 제한에 관한 구체적인 정책은 현재 제공된 정보에 없습니다. 추가 확인이 필요합니다.\n\n(근거: 역핑 SSOT STATUS (ROADMAP_NOW))\n[근거: server]",
+      "scenario": "S10_여행날씨→역핑전환",
+      "turn": 6
+    },
+    {
+      "question": "오퍼 마감 기간이 얼마야?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "TIME_POLICY",
+      "passed": true,
+      "answer": "오퍼 마감 기본은 48시간입니다. (defaults.yaml SSOT 기준)\n[근거: docs]",
+      "scenario": "S10_여행날씨→역핑전환",
+      "turn": 7
+    },
+    {
+      "question": "결제 제한시간이 얼마야?",
+      "expected_kind": "TIME_POLICY",
+      "actual_kind": "TIME_POLICY",
+      "passed": true,
+      "answer": "예약 후 결제 제한시간은 5분입니다. (defaults.yaml SSOT 기준)\n[근거: docs]",
+      "scenario": "S10_여행날씨→역핑전환",
+      "turn": 8
+    },
+    {
+      "question": "쿨링기간 지나면 정산 돼?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "쿨링기간이 지나면 일반적으로 정산 절차가 진행될 수 있습니다. 다만, 구체적인 정산 시점과 조건은 딜방(Deal Room)과 예약(Reservation) 상태, 그리고 환불/분쟁 상황에 따라 달라질 수 있습니다. 정확한 정산 여부와 시점을 확인하려면 해당 딜방이나 예약의 상세 정보를 확인해야 합니다.\n\n(근거: 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6 / time)\n[근거: server]",
+      "scenario": "S10_여행날씨→역핑전환",
+      "turn": 9
+    },
+    {
+      "question": "고마워",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "천만에요, 고객님! 궁금한 점이나 도움이 필요하시면 언제든지 말씀해 주세요. 즐거운 하루 되세요!\n[근거: 없음]",
+      "alt_kind": "YEOKPING_GENERAL",
+      "scenario": "S10_여행날씨→역핑전환",
+      "turn": 10
+    },
+    {
+      "question": "에어팟 프로 2세대 가격 좀 봐줘",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 에어팟 프로 2세대 본체 충전 케이스 IBT-APT03 잇버스 에어팟프로본체 에어팟프로 에어팟프로케이스\n  최저가: 49,900원 (약 4만원대) (쿠팡)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EC%97%90%EC%96%B4%ED%8C%9F+%ED%94%84%EB%A1%9C+2%EC%84%B8%EB%8C%80\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EC%97%90%EC%96%B4%ED%8C%9F+%ED%94%84%EB%A1%9C+2%EC%84%B8%EB%8C%80\n- 쿠팡: https://www.coupang.com/np/search?q=%EC%97%90%EC%96%B4%ED%8C%9F+%ED%94%84%EB%A1%9C+2%EC%84%B8%EB%8C%80\n[근거: external]",
+      "scenario": "S11_가격->딜의향->수수료->결제",
+      "turn": 1
+    },
+    {
+      "question": "이 가격이면 역핑에서 딜 만들어볼까?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑은 소비자가 원하는 조건을 먼저 제시하고 판매자들이 경쟁적으로 제안하는 구조입니다. 딜을 만들려면 원하는 가격과 조건을 구체적으로 정하고 딜방을 생성해야 합니다. 딜 생성 후 판매자들의 오퍼를 받아 비교할 수 있습니다. 구체적인 가격과 조건을 정한 후 딜 생성 화면으로 이동해 보세요.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public) / 딥링크 라우팅 SSOT)\n[근거: server]",
+      "scenario": "S11_가격->딜의향->수수료->결제",
+      "turn": 2
+    },
+    {
+      "question": "딜 개설하면 수수료가 얼마나 나와?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "딜 개설 시 수수료는 판매자 레벨, 평점, 거래 이력 등에 따라 달라질 수 있습니다. 역핑은 좋은 판매자가 더 유리한 수수료 구조를 가지고 있으며, 결제 처리 및 플랫폼 운영을 위한 PG/플랫폼 수수료도 별도로 존재할 수 있습니다. 구체적인 수수료율은 판매자 조건에 따라 다르므로, 자세한 수수료 표를 확인하시려면 판매자 레벨별 수수료 표를 요청해 주세요.\n\n(근거: Fees (수수료) 정책 — SSOT / 수수료 정책(개요) (Public))\n[근거: server]",
+      "scenario": "S11_가격->딜의향->수수료->결제",
+      "turn": 3
+    },
+    {
+      "question": "결제는 어떤 방식으로 해?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑에서 결제는 예약(Reservation) 단계에서 이루어지며, 구매자가 원하는 조건에 맞춰 판매자의 오퍼를 선택한 후 즉시 결제하는 방식입니다. 결제는 일반적으로 PG사(결제 대행사)를 통해 처리되며, 결제 후 거래가 확정되면 플랫폼과 판매자 간 정산이 진행됩니다. 자세한 결제 방식이나 수단은 딜방 내 결제 화면에서 확인할 수 있습니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public) / Fees (수수료) 정책 — SSOT / 참여자(Actors) 정책 — SSOT v3.6)\n[근거: server]",
+      "scenario": "S11_가격->딜의향->수수료->결제",
+      "turn": 4
+    },
+    {
+      "question": "오늘 기분이 좋아!",
+      "expected_kind": "SMALLTALK",
+      "actual_kind": "SMALLTALK",
+      "passed": true,
+      "answer": "고객님, 기분이 좋다니 정말 기쁜 소식이에요! 혹시 특별한 이유가 있나요? 아니면 그냥 그런 날인가요?\n[근거: 없음]",
+      "scenario": "S12_스몰톡->뉴스->가격->역핑전환",
+      "turn": 1
+    },
+    {
+      "question": "오늘 IT 뉴스 뭐 있어?",
+      "expected_kind": "EXTERNAL_NEWS",
+      "actual_kind": "EXTERNAL_NEWS",
+      "passed": true,
+      "answer": "오늘 뉴스로는 이런 제목들이 보여요: HP, '하이퍼엑스'로의 게이밍 브랜드 통합 발표 현장 - 인벤 / “병원 가서 뭐 물어볼까?”…오픈AI, ‘챗GPT 헬스’ 출시 - 한겨레 / 전교회장선거 - 브런치\n[근거: external]",
+      "scenario": "S12_스몰톡->뉴스->가격->역핑전환",
+      "turn": 2
+    },
+    {
+      "question": "아이패드 미니 최저가 알려줘",
+      "expected_kind": "EXTERNAL_PRICE",
+      "actual_kind": "EXTERNAL_PRICE",
+      "passed": true,
+      "answer": "🛒 애플 아이패드 미니5세대 공기계\n  최저가: 290,000원 (약 29만원대) (신세계몰)\n  (네이버쇼핑 기준, 실제 가격과 다를 수 있습니다)\n\n자세한 비교는 아래에서 확인해 보세요:\n- 다나와: https://search.danawa.com/dsearch.php?k1=%EC%95%84%EC%9D%B4%ED%8C%A8%EB%93%9C+%EB%AF%B8%EB%8B%88\n- 에누리: https://www.enuri.com/search.jsp?keyword=%EC%95%84%EC%9D%B4%ED%8C%A8%EB%93%9C+%EB%AF%B8%EB%8B%88\n- 쿠팡: https://www.coupang.com/np/search?q=%EC%95%84%EC%9D%B4%ED%8C%A8%EB%93%9C+%EB%AF%B8%EB%8B%88\n[근거: external]",
+      "scenario": "S12_스몰톡->뉴스->가격->역핑전환",
+      "turn": 3
+    },
+    {
+      "question": "역핑에서 공동구매하면 더 싸질까?",
+      "expected_kind": "YEOKPING_GENERAL",
+      "actual_kind": "YEOKPING_GENERAL",
+      "passed": true,
+      "answer": "역핑은 소비자가 원하는 조건을 먼저 제시하고, 판매자들이 경쟁적으로 가격과 조건을 제안하는 소비자 주도형 역입찰 공동구매 플랫폼입니다. 공동구매를 통해 수량이 많아질수록 판매자는 더 공격적인 조건을 제시할 수 있어, 일반적으로 더 저렴한 가격에 구매할 가능성이 높습니다. 즉, 공동구매하면 더 싸질 수 있는 구조입니다.\n\n(근거: 역핑(Yeokping) 플랫폼 한눈에 보기 (Public) / GROUPBUY_INDEX_GQ_SSOT_v1)\n[근거: server]",
+      "scenario": "S12_스몰톡->뉴스->가격->역핑전환",
+      "turn": 4
+    }
+  ]
+}

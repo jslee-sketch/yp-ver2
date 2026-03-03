@@ -1,0 +1,409 @@
+{
+  "timestamp": "2026-03-02T15:13:28.260Z",
+  "total": 50,
+  "passed": 49,
+  "failed": 1,
+  "rate": "98.0%",
+  "results": [
+    {
+      "id": "A-001",
+      "section": "01. 인증 (50건)",
+      "name": "정상 회원가입",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 233
+    },
+    {
+      "id": "A-002",
+      "section": "01. 인증 (50건)",
+      "name": "영문+숫자 비밀번호 가입",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 203
+    },
+    {
+      "id": "A-003",
+      "section": "01. 인증 (50건)",
+      "name": "중복 이메일 가입 거부",
+      "pass": true,
+      "detail": "status=409",
+      "elapsed": 200
+    },
+    {
+      "id": "A-004",
+      "section": "01. 인증 (50건)",
+      "name": "이메일 없이 가입 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 4
+    },
+    {
+      "id": "A-005",
+      "section": "01. 인증 (50건)",
+      "name": "비밀번호 없이 가입 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 3
+    },
+    {
+      "id": "A-006",
+      "section": "01. 인증 (50건)",
+      "name": "잘못된 이메일 형식 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "A-007",
+      "section": "01. 인증 (50건)",
+      "name": "빈 이메일 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "A-008",
+      "section": "01. 인증 (50건)",
+      "name": "짧은 비밀번호(정책 의존)",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "A-009",
+      "section": "01. 인증 (50건)",
+      "name": "정상 로그인",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 196
+    },
+    {
+      "id": "A-010",
+      "section": "01. 인증 (50건)",
+      "name": "잘못된 비밀번호 거부",
+      "pass": true,
+      "detail": "status=401",
+      "elapsed": 194
+    },
+    {
+      "id": "A-011",
+      "section": "01. 인증 (50건)",
+      "name": "없는 이메일 로그인 거부",
+      "pass": true,
+      "detail": "status=401",
+      "elapsed": 4
+    },
+    {
+      "id": "A-012",
+      "section": "01. 인증 (50건)",
+      "name": "빈 body 로그인 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "A-013",
+      "section": "01. 인증 (50건)",
+      "name": "토큰으로 내 정보 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "A-014",
+      "section": "01. 인증 (50건)",
+      "name": "잘못된 토큰 거부 (서버 정책 의존)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "A-015",
+      "section": "01. 인증 (50건)",
+      "name": "토큰 없이 보호 API (서버 정책 의존)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "A-016",
+      "section": "01. 인증 (50건)",
+      "name": "비밀번호 변경 시도",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "A-017",
+      "section": "01. 인증 (50건)",
+      "name": "변경된 비밀번호로 로그인",
+      "pass": true,
+      "detail": "status=401",
+      "elapsed": 189
+    },
+    {
+      "id": "A-018",
+      "section": "01. 인증 (50건)",
+      "name": "대량 가입 10명",
+      "pass": true,
+      "detail": "성공: 10/10",
+      "elapsed": 0
+    },
+    {
+      "id": "A-019",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 가입",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 200
+    },
+    {
+      "id": "A-020",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 승인",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 8
+    },
+    {
+      "id": "A-021",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 로그인",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 195
+    },
+    {
+      "id": "A-022",
+      "section": "01. 인증 (50건)",
+      "name": "같은 이메일 구매자+판매자",
+      "pass": true,
+      "detail": "buyer=200, seller=500",
+      "elapsed": 0
+    },
+    {
+      "id": "A-023",
+      "section": "01. 인증 (50건)",
+      "name": "비밀번호 재설정 요청",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "A-024",
+      "section": "01. 인증 (50건)",
+      "name": "특수문자 이메일(+_) 가입",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 203
+    },
+    {
+      "id": "A-025",
+      "section": "01. 인증 (50건)",
+      "name": "매우 긴 이름(500자)",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 204
+    },
+    {
+      "id": "A-026",
+      "section": "01. 인증 (50건)",
+      "name": "빈 이름",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 1
+    },
+    {
+      "id": "A-027",
+      "section": "01. 인증 (50건)",
+      "name": "SQL Injection 방어",
+      "pass": true,
+      "detail": "status=401",
+      "elapsed": 3
+    },
+    {
+      "id": "A-028",
+      "section": "01. 인증 (50건)",
+      "name": "XSS 이름 가입",
+      "pass": true,
+      "detail": "status=200 (서버 처리에 의존)",
+      "elapsed": 207
+    },
+    {
+      "id": "A-029",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 목록 조회",
+      "pass": true,
+      "detail": "status=200, count=10",
+      "elapsed": 4
+    },
+    {
+      "id": "A-030",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 목록 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 5
+    },
+    {
+      "id": "A-031",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 상세 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 2
+    },
+    {
+      "id": "A-032",
+      "section": "01. 인증 (50건)",
+      "name": "없는 구매자 ID 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "A-033",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 신뢰 티어 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 5
+    },
+    {
+      "id": "A-034",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 포인트 등급",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 21
+    },
+    {
+      "id": "A-035",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 요약 조회",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "A-036",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 상세 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "A-037",
+      "section": "01. 인증 (50건)",
+      "name": "판매자 요약 조회",
+      "pass": false,
+      "detail": "status=500",
+      "elapsed": 3
+    },
+    {
+      "id": "A-038",
+      "section": "01. 인증 (50건)",
+      "name": "동시 가입 5명",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "A-039",
+      "section": "01. 인증 (50건)",
+      "name": "동시 로그인 3명",
+      "pass": true,
+      "detail": "성공: 1/1",
+      "elapsed": 0
+    },
+    {
+      "id": "A-040",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 대시보드",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "A-041",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 인사이트",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 5
+    },
+    {
+      "id": "A-042",
+      "section": "01. 인증 (50건)",
+      "name": "최근 활동 로그",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 7
+    },
+    {
+      "id": "A-043",
+      "section": "01. 인증 (50건)",
+      "name": "구매자 프리뷰",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "A-044",
+      "section": "01. 인증 (50건)",
+      "name": "Basic 구매자 조회",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "A-045",
+      "section": "01. 인증 (50건)",
+      "name": "Basic 구매자 목록",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "A-046",
+      "section": "01. 인증 (50건)",
+      "name": "Basic 판매자 목록",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "A-047",
+      "section": "01. 인증 (50건)",
+      "name": "Health 체크",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "A-048",
+      "section": "01. 인증 (50건)",
+      "name": "Deep Health 체크",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    },
+    {
+      "id": "A-049",
+      "section": "01. 인증 (50건)",
+      "name": "버전 조회",
+      "pass": true,
+      "detail": "status=200, ver={\"app\":\"Yeokping Ver2 API\",\"version\":\"3.5-A-route ",
+      "elapsed": 1
+    },
+    {
+      "id": "A-050",
+      "section": "01. 인증 (50건)",
+      "name": "루트 엔드포인트",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 1
+    }
+  ]
+}

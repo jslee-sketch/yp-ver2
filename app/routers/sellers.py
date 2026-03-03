@@ -6,7 +6,9 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Path, Body, status
+import os
+import uuid
+from fastapi import APIRouter, HTTPException, Depends, Path, Body, status, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -227,3 +229,49 @@ def approve_seller_api(
         raise HTTPException(status_code=500, detail=f"Failed to approve seller: {e}")
 
     return seller
+
+
+# -----------------------------------------------------
+# 6️⃣ 서류 업로드
+# -----------------------------------------------------
+UPLOAD_DIR = "uploads/sellers"
+
+@router.post("/{seller_id}/documents")
+async def upload_seller_documents(
+    seller_id: int,
+    business_license: Optional[UploadFile] = File(None),
+    ecommerce_permit: Optional[UploadFile] = File(None),
+    bankbook: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+):
+    """판매자 서류(사업자등록증, 통신판매신고증, 통장사본) 업로드"""
+    seller = db.query(models.Seller).filter(models.Seller.id == seller_id).first()
+    if not seller:
+        raise HTTPException(404, "판매자를 찾을 수 없습니다.")
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+    async def _save(file, prefix):
+        if not file or not file.filename:
+            return None
+        ext = os.path.splitext(file.filename)[1] or ".jpg"
+        fname = f"{prefix}_{seller_id}_{uuid.uuid4().hex[:8]}{ext}"
+        fpath = os.path.join(UPLOAD_DIR, fname)
+        with open(fpath, "wb") as f:
+            f.write(await file.read())
+        return fpath
+
+    if business_license:
+        seller.business_license_image = await _save(business_license, "biz")
+    if ecommerce_permit:
+        seller.ecommerce_permit_image = await _save(ecommerce_permit, "permit")
+    if bankbook:
+        seller.bankbook_image = await _save(bankbook, "bank")
+
+    db.commit()
+    db.refresh(seller)
+    return {
+        "seller_id": seller_id,
+        "business_license_image": seller.business_license_image,
+        "ecommerce_permit_image": seller.ecommerce_permit_image,
+        "bankbook_image": seller.bankbook_image,
+    }

@@ -1,4 +1,4 @@
-﻿# app/main.py
+# app/main.py
 from __future__ import annotations
 
 import builtins
@@ -10,6 +10,14 @@ import importlib.util
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
+# .env 파일 로드 (OPENAI_API_KEY, NAVER_CLIENT_ID 등)
+try:
+    from pathlib import Path as _P
+    from dotenv import load_dotenv as _ld
+    _ld(_P(__file__).parent.parent / ".env", override=True)
+except Exception:
+    pass
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -20,6 +28,14 @@ from app.config import project_rules as R
 
 from app import crud, models, database
 from app.database import Base, engine
+
+
+
+class Utf8JSONResponse(JSONResponse):
+    media_type = "application/json; charset=utf-8"
+
+app = FastAPI(default_response_class=Utf8JSONResponse)
+
 
 
 # 0) ORMModel shim
@@ -129,6 +145,48 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"[warn] Base.metadata.create_all failed: {e.__class__.__name__}: {e}")
 
+    # ✅ nickname 컬럼 마이그레이션 (기존 DB 호환)
+    from sqlalchemy import text as _text
+    for _tbl, _col in [("buyers", "nickname"), ("sellers", "nickname")]:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE {_tbl} ADD COLUMN {_col} VARCHAR(30)"))
+                _conn.commit()
+                print(f"[migration] ALTER TABLE {_tbl} ADD COLUMN {_col} OK")
+        except Exception:
+            pass  # 이미 존재하면 무시
+
+    # ✅ seller 서류 컬럼 마이그레이션 (기존 DB 호환)
+    _SELLER_NEW_COLS = [
+        ("ecommerce_permit_number", "VARCHAR(50)"),
+        ("bank_name", "VARCHAR(50)"),
+        ("account_number", "VARCHAR(50)"),
+        ("account_holder", "VARCHAR(50)"),
+        ("business_license_image", "VARCHAR(500)"),
+        ("ecommerce_permit_image", "VARCHAR(500)"),
+        ("bankbook_image", "VARCHAR(500)"),
+    ]
+    try:
+        with engine.connect() as _conn:
+            _existing = [row[1] for row in _conn.execute(_text("PRAGMA table_info(sellers)"))]
+            for _col, _type in _SELLER_NEW_COLS:
+                if _col not in _existing:
+                    _conn.execute(_text(f"ALTER TABLE sellers ADD COLUMN {_col} {_type}"))
+                    print(f"[migration] ALTER TABLE sellers ADD COLUMN {_col} OK")
+            _conn.commit()
+    except Exception as _e:
+        print(f"[warn] seller 컬럼 마이그레이션 실패: {_e}")
+
+    # ✅ social login 컬럼 마이그레이션
+    for _col, _type in [("social_provider", "VARCHAR(20)"), ("social_id", "VARCHAR(100)")]:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE buyers ADD COLUMN {_col} {_type}"))
+                _conn.commit()
+                print(f"[migration] ALTER TABLE buyers ADD COLUMN {_col} OK")
+        except Exception:
+            pass
+
     # ✅ 워커 시작
     try:
         await start_auto_expire_worker()
@@ -171,10 +229,11 @@ async def unhandled_exc_handler(request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Internal error"})
 
 
-# CORS
+# CORS — 환경변수 ALLOWED_ORIGINS 로 제어 (쉼표 구분, 기본값: 개발용 *)
+_allowed_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -213,6 +272,8 @@ def _include_router_safe(module_path: str, attr_candidates: tuple[str, ...], *, 
 # 1️⃣ Buyer 관련 → Seller 관련 → 기본 프로필
 # --------------------------------------------------
 _include_router_safe("auth", ("router",), label="auth")
+_include_router_safe("auth_social", ("router",), label="auth_social")
+_include_router_safe("users", ("router",), label="users")
 
 # Buyer 기본 / 확장
 _include_router_safe("buyers", ("router",), label="buyers")
@@ -230,6 +291,7 @@ _include_router_safe("basic_info", ("router",), label="basic_info")
 # --------------------------------------------------
 # 2️⃣ Deal → Offer → Payment → Point
 # --------------------------------------------------
+_include_router_safe("deals", ("router",), label="deals")
 _include_router_safe("reservations", ("router",), label="reservations")
 
 # ✅ offers 모듈은 aggregator router 하나만 포함하면 됨
@@ -290,9 +352,41 @@ _include_router_safe("notifications", ("router",), label="notifications")
 _include_router_safe("admin_refund_preview", ("router",), label="admin_refund_preview")
 
 # --------------------------------------------------
+# Spectator 관전자 시스템
+# --------------------------------------------------
+_include_router_safe("spectator", ("router",), label="spectator")
+
+# --------------------------------------------------
 # PINGPONG AI Agent
 # --------------------------------------------------
 _include_router_safe("pingpong", ("router",), label="pingpong")
+
+# --------------------------------------------------
+# 5️⃣ 플랫폼 필수 기능 (v2)
+# --------------------------------------------------
+_include_router_safe("account", ("router",), label="account")
+_include_router_safe("admin_users", ("router",), label="admin_users")
+_include_router_safe("reports", ("router",), label="reports")
+_include_router_safe("uploads", ("router",), label="uploads")
+_include_router_safe("delivery", ("router",), label="delivery")
+_include_router_safe("admin_anomaly", ("router",), label="admin_anomaly")
+_include_router_safe("admin_policy_proposals", ("router",), label="admin_policy_proposals")
+
+# 정적 파일 (이미지 업로드)
+try:
+    from fastapi.staticfiles import StaticFiles as _StaticFiles
+    import os as _os
+    _os.makedirs("uploads", exist_ok=True)
+    app.mount("/uploads", _StaticFiles(directory="uploads"), name="uploads")
+except Exception as _e:
+    print(f"[warn] static files mount failed: {_e}")
+
+# Rate Limiting 미들웨어
+try:
+    from app.middleware.rate_limit import RateLimitMiddleware
+    app.add_middleware(RateLimitMiddleware, default_rpm=int(__import__('os').environ.get('RATE_LIMIT_RPM', '600')))
+except Exception as _e:
+    print(f"[warn] RateLimitMiddleware not loaded: {_e}")
 
 
 # Health/Version
@@ -306,6 +400,78 @@ def health():
     return {"ok": True}
 
 
+@app.get("/health/deep")
+def health_deep():
+    import time
+    checks: dict = {}
+
+    # DB 체크
+    t0 = time.time()
+    try:
+        db = database.SessionLocal()
+        from sqlalchemy import text as _text
+        db.execute(_text("SELECT 1"))
+        db.close()
+        checks["db"] = {"status": "ok", "response_ms": round((time.time() - t0) * 1000, 1)}
+    except Exception as e:
+        checks["db"] = {"status": "down", "error": str(e)}
+
+    # 디스크 사용량
+    try:
+        import shutil
+        total, used, free = shutil.disk_usage(".")
+        checks["disk_usage_pct"] = round(used / total * 100, 1)
+    except Exception:
+        checks["disk_usage_pct"] = None
+
+    overall = "ok" if all(
+        (v.get("status") == "ok" if isinstance(v, dict) else True)
+        for v in checks.values()
+    ) else "degraded"
+
+    from datetime import datetime, timezone
+    return {
+        "status": overall,
+        "checks": checks,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 @app.get("/version")
 def version():
     return {"app": "Yeokping Ver2 API", "version": "3.5-A-route R1"}  # reload-ping
+
+
+# --------------------------------------------------
+# SPA 정적 파일 서빙 (프론트엔드 빌드 결과물)
+# ⚠️ 반드시 모든 API 라우터 뒤에 위치해야 함
+# --------------------------------------------------
+try:
+    from pathlib import Path as _SpaPath
+    from fastapi.staticfiles import StaticFiles as _SpaStatic
+    from fastapi.responses import FileResponse as _FileResponse
+
+    _FRONTEND_DIST = _SpaPath(__file__).parent.parent / "frontend" / "dist"
+    _INDEX_HTML = _FRONTEND_DIST / "index.html"
+
+    if _FRONTEND_DIST.is_dir() and _INDEX_HTML.is_file():
+        # Vite 빌드 에셋 (JS/CSS/이미지)
+        _assets_dir = _FRONTEND_DIST / "assets"
+        if _assets_dir.is_dir():
+            app.mount("/assets", _SpaStatic(directory=str(_assets_dir)), name="spa_assets")
+
+        # SPA catch-all: API/uploads/assets에 매칭되지 않는 모든 GET → index.html
+        @app.get("/{full_path:path}")
+        async def spa_fallback(full_path: str):
+            # API 경로나 이미 마운트된 경로는 여기 도달하지 않음
+            # 파일이 dist에 직접 존재하면 그 파일 서빙 (favicon.ico 등)
+            _candidate = _FRONTEND_DIST / full_path
+            if full_path and _candidate.is_file() and ".." not in full_path:
+                return _FileResponse(str(_candidate))
+            return _FileResponse(str(_INDEX_HTML))
+
+        print(f"✅ SPA fallback enabled: {_FRONTEND_DIST}")
+    else:
+        print(f"[info] SPA fallback skipped: {_FRONTEND_DIST} not found (npm run build 필요)")
+except Exception as _spa_err:
+    print(f"[warn] SPA fallback setup failed: {_spa_err}")

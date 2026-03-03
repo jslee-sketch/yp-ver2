@@ -1,0 +1,360 @@
+{
+  "generated_at": "2026-02-28 08:45:54 UTC",
+  "db_path": "C:\\dev\\yp-ver2\\app\\ypver2.db",
+  "tables": {
+    "tables": [
+      "activity_log",
+      "actuator_commissions",
+      "actuator_reward_logs",
+      "actuators",
+      "buyers",
+      "deal_ai_logs",
+      "deal_chat_messages",
+      "deal_participants",
+      "deal_rounds",
+      "deal_viewers",
+      "deals",
+      "event_logs",
+      "offer_policies",
+      "offers",
+      "payout_requests",
+      "pingpong_cases",
+      "pingpong_logs",
+      "point_transactions",
+      "policy_declarations",
+      "policy_proposals",
+      "reports",
+      "reservation_payments",
+      "reservation_settlements",
+      "reservations",
+      "reviews",
+      "seller_rating_aggregates",
+      "seller_reviews",
+      "sellers",
+      "sellers_onboarding",
+      "spectator_badges",
+      "spectator_monthly_stats",
+      "spectator_predictions",
+      "uploaded_files",
+      "user_notifications",
+      "users"
+    ],
+    "counts": {
+      "activity_log": 369,
+      "actuator_commissions": 0,
+      "actuator_reward_logs": 0,
+      "actuators": 2,
+      "buyers": 17,
+      "deal_ai_logs": 0,
+      "deal_chat_messages": 0,
+      "deal_participants": 28,
+      "deal_rounds": 7,
+      "deal_viewers": 13,
+      "deals": 15,
+      "event_logs": 10,
+      "offer_policies": 16,
+      "offers": 16,
+      "payout_requests": 0,
+      "pingpong_cases": 0,
+      "pingpong_logs": 1632,
+      "point_transactions": 108,
+      "policy_declarations": 38,
+      "policy_proposals": 10,
+      "reports": 12,
+      "reservation_payments": 80,
+      "reservation_settlements": 79,
+      "reservations": 125,
+      "reviews": 10,
+      "seller_rating_aggregates": 0,
+      "seller_reviews": 0,
+      "sellers": 15,
+      "sellers_onboarding": 0,
+      "spectator_badges": 0,
+      "spectator_monthly_stats": 4,
+      "spectator_predictions": 16,
+      "uploaded_files": 0,
+      "user_notifications": 380,
+      "users": 0
+    },
+    "total_records": 3002
+  },
+  "e2e_flow": {
+    "reservation_id": 125,
+    "deal_id": 15,
+    "offer_id": 16,
+    "product_name": "TestProduct_1772267159047",
+    "offer_price": 48000,
+    "target_price": 50000,
+    "offer_created": true,
+    "payment_completed": true,
+    "shipped": true,
+    "arrival_confirmed": true,
+    "settlement_status": "없음"
+  },
+  "price_analysis": {
+    "deal_id": 15,
+    "product_name": "TestProduct_1772267159047",
+    "desired_price": 50000,
+    "anchor_price": 62000,
+    "lowest_offer": 48000,
+    "highest_offer": 48000,
+    "offer_count": 1,
+    "desired_vs_lowest": 2000,
+    "desired_vs_lowest_label": "+2,000원 (희망가 > 최저오퍼)"
+  },
+  "pingpong": {
+    "total_logs": 1632,
+    "total_cases": 0,
+    "error_count": 61,
+    "intent_distribution": {},
+    "screen_distribution": {
+      "DEAL_ROOM": 1579,
+      "admin": 46,
+      "home": 7
+    },
+    "recent_logs": [
+      {
+        "q": "What is the refund policy?",
+        "a": "환불 정책에 대한 구체적인 내용을 확인하려면, 관련 예약(reservation) 또는 오퍼(offer) ID가 필요합니다. 현재 홈 화면에서는 ",
+        "at": "2026-02-28 08:26"
+      },
+      {
+        "q": "What is the refund policy?",
+        "a": "역핑의 환불 정책에 대해 자세히 알고 싶으시면, 관련 예약의 환불 프리뷰 화면으로 이동해야 합니다. 예약 ID가 필요하며, 예약 환불 프리뷰 딥",
+        "at": "2026-02-28 08:08"
+      },
+      {
+        "q": "What is the refund policy?",
+        "a": "환불 정책에 대한 구체적인 내용을 확인하려면, 관련 예약(reservation) 또는 오퍼(offer) ID가 필요합니다. 예를 들어, 예약 환",
+        "at": "2026-02-28 08:06"
+      }
+    ]
+  },
+  "policy_proposals": {
+    "items": [
+      {
+        "id": 10,
+        "title": "Fee Adjustment Proposal 1772267159047",
+        "status": "APPROVED",
+        "type": "parameter_change",
+        "proposed_at": "2026-02-28 08:26",
+        "reviewed_by": "admin",
+        "review_note": "Approved in test"
+      },
+      {
+        "id": 9,
+        "title": "Fee Adjustment Proposal 1772267059779",
+        "status": "PROPOSED",
+        "type": "parameter_change",
+        "proposed_at": "2026-02-28 08:24",
+        "reviewed_by": null,
+        "review_note": null
+      },
+      {
+        "id": 8,
+        "title": "Fee Adjustment Proposal 1772266119733",
+        "status": "APPROVED",
+        "type": "parameter_change",
+        "proposed_at": "2026-02-28 08:08",
+        "reviewed_by": "admin",
+        "review_note": "Approved in test"
+      },
+      {
+        "id": 7,
+        "title": "Fee Adjustment Proposal 1772266021003",
+        "status": "APPROVED",
+        "type": "parameter_change",
+        "proposed_at": "2026-02-28 08:07",
+        "reviewed_by": "admin",
+        "review_note": "Approved in test"
+      },
+      {
+        "id": 6,
+        "title": "Fee Adjustment Proposal 1772266010022",
+        "status": "APPROVED",
+        "type": "parameter_change",
+        "proposed_at": "2026-02-28 08:06",
+        "reviewed_by": "admin",
+        "review_note": "Approved in test"
+      },
+      {
+        "id": 5,
+        "title": "Fee Adjustment Proposal 1772265926450",
+        "status": "APPROVED",
+        "type": "parameter_change",
+        "proposed_at": "2026-02-28 08:05",
+        "reviewed_by": "admin",
+        "review_note": "Approved in test"
+      },
+      {
+        "id": 4,
+        "title": "Fee Adjustment Proposal 1772265914296",
+        "status": "APPROVED",
+        "type": "parameter_change",
+        "proposed_at": "2026-02-28 08:05",
+        "reviewed_by": "admin",
+        "review_note": "Approved in test"
+      },
+      {
+        "id": 3,
+        "title": "Fee Adjustment Proposal 1772265176297",
+        "status": "APPROVED",
+        "type": "parameter_change",
+        "proposed_at": "2026-02-28 07:52",
+        "reviewed_by": "admin",
+        "review_note": "Approved in test"
+      },
+      {
+        "id": 2,
+        "title": "Fee Adjustment Proposal 1772264908734",
+        "status": "PROPOSED",
+        "type": "parameter_change",
+        "proposed_at": "2026-02-28 07:48",
+        "reviewed_by": null,
+        "review_note": null
+      },
+      {
+        "id": 1,
+        "title": "Test Proposal 1772264776678",
+        "status": "PROPOSED",
+        "type": "parameter_change",
+        "proposed_at": "2026-02-28 07:46",
+        "reviewed_by": null,
+        "review_note": null
+      }
+    ],
+    "status_distribution": {
+      "APPROVED": 7,
+      "PROPOSED": 3
+    },
+    "total": 10
+  },
+  "settlements": {
+    "by_status": {
+      "HOLD": {
+        "count": 18,
+        "seller_payout_total": 13081,
+        "buyer_paid_total": 14100
+      },
+      "READY": {
+        "count": 4,
+        "seller_payout_total": 3201,
+        "buyer_paid_total": 3450
+      },
+      "PAID": {
+        "count": 18,
+        "seller_payout_total": 12360,
+        "buyer_paid_total": 13320
+      },
+      "CANCELLED": {
+        "count": 39,
+        "seller_payout_total": 0,
+        "buyer_paid_total": 0
+      }
+    },
+    "grand_total_count": 79,
+    "grand_total_payout": 28642,
+    "recent_paid": [
+      {
+        "id": 76,
+        "seller_id": 2,
+        "amount": 650,
+        "paid_at": "2026-02-22 07:08"
+      },
+      {
+        "id": 73,
+        "seller_id": 2,
+        "amount": 835,
+        "paid_at": "2026-02-28 07:53"
+      },
+      {
+        "id": 66,
+        "seller_id": 3,
+        "amount": 195,
+        "paid_at": "2026-02-28 07:54"
+      }
+    ]
+  },
+  "spectator": {
+    "total_predictions": 16,
+    "settled_predictions": 13,
+    "pending_predictions": 3,
+    "total_viewers": 13,
+    "recent_settled": [
+      {
+        "id": 16,
+        "deal_id": 15,
+        "product_name": "TestProduct_1772267159047",
+        "buyer_id": 3,
+        "predicted_price": 47500,
+        "settled_price": 48000,
+        "error_pct": 1.04,
+        "tier_name": "good",
+        "tier_label": "우수",
+        "points_earned": 2,
+        "settled_at": "2026-02-28 08:26"
+      },
+      {
+        "id": 14,
+        "deal_id": 13,
+        "product_name": "TestProduct_1772266119733",
+        "buyer_id": 3,
+        "predicted_price": 47500,
+        "settled_price": 48000,
+        "error_pct": 1.04,
+        "tier_name": "good",
+        "tier_label": "우수",
+        "points_earned": 2,
+        "settled_at": "2026-02-28 08:08"
+      },
+      {
+        "id": 13,
+        "deal_id": 12,
+        "product_name": "TestProduct_1772266021003",
+        "buyer_id": 3,
+        "predicted_price": 47500,
+        "settled_price": 48000,
+        "error_pct": 1.04,
+        "tier_name": "good",
+        "tier_label": "우수",
+        "points_earned": 2,
+        "settled_at": "2026-02-28 08:07"
+      },
+      {
+        "id": 12,
+        "deal_id": 11,
+        "product_name": "TestProduct_1772266010022",
+        "buyer_id": 3,
+        "predicted_price": 47500,
+        "settled_price": 48000,
+        "error_pct": 1.04,
+        "tier_name": "good",
+        "tier_label": "우수",
+        "points_earned": 2,
+        "settled_at": "2026-02-28 08:06"
+      },
+      {
+        "id": 11,
+        "deal_id": 10,
+        "product_name": "TestProduct_1772265934500",
+        "buyer_id": 3,
+        "predicted_price": 47500,
+        "settled_price": 48000,
+        "error_pct": 1.04,
+        "tier_name": "good",
+        "tier_label": "우수",
+        "points_earned": 2,
+        "settled_at": "2026-02-28 08:05"
+      }
+    ],
+    "monthly_stats": [
+      {
+        "year_month": "2026-02",
+        "active_buyers": 4,
+        "total_points": 16,
+        "top_points": 16
+      }
+    ],
+    "badges": {}
+  }
+}

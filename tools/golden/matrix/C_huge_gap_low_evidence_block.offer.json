@@ -1,0 +1,48 @@
+﻿{
+    "entity":  "offer",
+    "id":  2,
+    "offer":  {
+                  "id":  2,
+                  "deal_id":  1,
+                  "seller_id":  3,
+                  "price":  1100.0,
+                  "shipping_fee":  null,
+                  "status":  "UNKNOWN"
+              },
+    "deal":  {
+                 "id":  1,
+                 "status":  "open",
+                 "target_price":  1.0,
+                 "qty_target":  null
+             },
+    "pricing":  {
+                    "reference":  {
+                                      "p_base":  1,
+                                      "p_target":  1,
+                                      "p_anchor":  1000
+                                  },
+                    "groupbuy":  {
+                                     "p_group":  947,
+                                     "q_room":  6,
+                                     "q_offer":  5,
+                                     "offer_cap_qty":  5
+                                 },
+                    "offer_evaluation":  {
+                                             "seller_offer_price":  1100,
+                                             "expected_price_under_offer_conditions":  974,
+                                             "phrases":  {
+                                                             "vs_expected":  "ê¸°ì¤ì¡°ê±´ ëë¹ ì ì¬",
+                                                             "vs_groupbuy_offer_cap":  "ê³µëêµ¬ë§¤ ê¸°ì¤ ëë¹ ì ì¬"
+                                                         }
+                                         },
+                    "guardrail":  {
+                                      "level":  "BLOCK",
+                                      "reason_codes":  [
+                                                           "GAP_BLOCK"
+                                                       ],
+                                      "badge":  "BLOCK",
+                                      "short_title":  "ëª©íê° ì¡°ì  íì",
+                                      "short_body":  "ì¸ë¶ ê¸°ì¤ê° ëë¹ ê´´ë¦¬ê° ëë¬´ í½ëë¤. ëª©íê° ì¡°ì  ëë ê·¼ê±° ë³´ê°ì´ íìí´ì."
+                                  }
+                }
+}

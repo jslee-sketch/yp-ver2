@@ -1,0 +1,6 @@
+/* Vite 기본 스타일 완전 오버라이드 — theme.css가 모든 스타일을 담당 */
+body {
+  margin: 0;
+  display: block;
+  min-width: 320px;
+}

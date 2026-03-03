@@ -76,37 +76,39 @@ def _resolve_payout_delay_days_default() -> int:
 
 
 # =========================================================
-# Refresh Ready (HOLD -> READY)
+# Refresh Ready (HOLD/PENDING -> READY)  ✅ FIXED
 # =========================================================
 
 @router.post(
     "/refresh-ready",
-    summary="[SYSTEM] HOLD → READY 정산 갱신 (정상화/백필 포함)",
+    summary="[SYSTEM] HOLD/PENDING → READY 정산 갱신 (정상화/백필 포함)",
 )
 def refresh_settlement_ready(
     limit: int = 200,
     db: Session = Depends(get_db),
 ):
     """
-    ✅ 개선된 동작:
-    1) 대상: status=HOLD 인 settlement
+    동작(정상화 SSOT):
+    1) 대상: status in (PENDING, HOLD)
        - DISPUTE는 건드리지 않음
     2) ready_at이 NULL이면:
-       - reservation을 읽어 base_time + cooling_days로 ready_at 계산해서 채움
-       - scheduled_payout_at이 NULL이면 ready_at + 30일로 채움
-    3) now >= ready_at 이면:
-       - block_reason == WITHIN_COOLING 인 경우 READY 전환
-       - ready_at은 절대 now로 덮어쓰지 않음(중요!)
+       - reservation 기반 base_time + cooling_days로 ready_at 계산
+       - scheduled_payout_at이 NULL이면 ready_at + payout_delay_days로 계산
+       - 이 시점에 status가 PENDING이면 HOLD + block_reason=WITHIN_COOLING 으로 내려둠(파이프라인 SSOT)
+    3) now >= ready_at이면:
+       - block_reason in (WITHIN_COOLING, "", None) 이면 READY 전환
+       - ready_at은 절대 now로 덮어쓰지 않음
     """
     now = datetime.now(timezone.utc)
 
-    q = (
+    # ✅ PENDING도 대상으로 (파이프라인 시작점)
+    rows = (
         db.query(models.ReservationSettlement)
-        .filter(models.ReservationSettlement.status == "HOLD")
+        .filter(models.ReservationSettlement.status.in_(["HOLD", "PENDING"]))
         .order_by(models.ReservationSettlement.id.asc())
         .limit(limit)
+        .all()
     )
-    rows = q.all()
 
     checked = 0
     updated = 0
@@ -116,11 +118,10 @@ def refresh_settlement_ready(
     for s in rows:
         checked += 1
 
-        # 분쟁 HOLD는 패스
+        # 분쟁은 건드리지 않음
         if (getattr(s, "block_reason", None) or "").upper() == "DISPUTE":
             continue
 
-        # reservation 로드
         resv = (
             db.query(models.Reservation)
             .filter(models.Reservation.id == s.reservation_id)
@@ -129,34 +130,50 @@ def refresh_settlement_ready(
         if not resv:
             continue
 
-        # 1) ready_at 없으면 정책 기반으로 계산해서 채움
+        changed = False
+
+        # 1) ready_at 없으면 계산해서 채움
         if getattr(s, "ready_at", None) is None:
             base = _resolve_base_time_for_reservation(resv)
             if base is None:
-                # base_time이 없으면 계산 불가 → 스킵
+                # base_time이 없으면 계산 불가
                 continue
 
             cooling_days = _resolve_cooling_days_from_reservation_snapshot(resv)
             s.ready_at = base + timedelta(days=int(cooling_days))
 
-            # scheduled도 없으면 같이 채움
             if getattr(s, "scheduled_payout_at", None) is None:
                 delay_days = _resolve_payout_delay_days_default()
                 s.scheduled_payout_at = s.ready_at + timedelta(days=int(delay_days))
 
+            # ✅ 여기서 PENDING이면 HOLD로 내려둔다(Freeze 의미 부여)
+            if (getattr(s, "status", "") or "").upper() == "PENDING":
+                s.status = "HOLD"
+                if not (getattr(s, "block_reason", None) or "").strip():
+                    s.block_reason = "WITHIN_COOLING"
+
             backfilled += 1
+            changed = True
 
         ra = _as_utc(getattr(s, "ready_at", None))
         if ra is None:
             continue
 
-        # 2) ready_at 지났으면 READY 전환 (WITHIN_COOLING만)
+        # 2) now >= ready_at 이면 READY 전환
         if now >= ra:
-            if (getattr(s, "block_reason", None) or "").upper() in {"WITHIN_COOLING", ""}:
+            br = (getattr(s, "block_reason", None) or "").upper().strip()
+            if br in {"WITHIN_COOLING", ""}:
                 s.status = "READY"
                 s.block_reason = None
                 updated += 1
                 updated_ids.append(int(s.id))
+                changed = True
+
+        if changed:
+            try:
+                s.updated_at = now
+            except Exception:
+                pass
 
     if backfilled or updated:
         db.commit()
@@ -1120,3 +1137,159 @@ def api_get_settlement(
             detail="Settlement not found",
         )
     return row
+
+
+# =========================================================
+# Batch Auto-Approve (READY → APPROVED)
+# =========================================================
+
+class AutoApproveResult(BaseModel):
+    total_ready: int
+    auto_approved: int
+    skipped: int
+    skipped_ids: List[int]
+
+
+@router.post(
+    "/batch-auto-approve",
+    response_model=AutoApproveResult,
+    summary="[SYSTEM] READY → APPROVED 자동 승인 (이상 없는 건)",
+)
+def batch_auto_approve(db: Session = Depends(get_db)):
+    """
+    status=READY 인 정산 중:
+    - 분쟁 없고 (reservation.is_disputed=False)
+    - 환불 없고 (refunded_amount_total=0)
+    인 건만 APPROVED로 자동 전환.
+    """
+    ready_rows = (
+        db.query(models.ReservationSettlement)
+        .filter(models.ReservationSettlement.status == "READY")
+        .all()
+    )
+
+    now = datetime.now(timezone.utc)
+    approved = 0
+    skipped = 0
+    skipped_ids: List[int] = []
+
+    for s in ready_rows:
+        resv = db.query(models.Reservation).filter(models.Reservation.id == s.reservation_id).first()
+        if not resv:
+            skipped += 1
+            skipped_ids.append(s.id)
+            continue
+
+        # 이상 조건 체크
+        is_disputed = getattr(resv, "is_disputed", False)
+        refunded = getattr(resv, "refunded_amount_total", 0) or 0
+
+        if is_disputed or refunded > 0:
+            skipped += 1
+            skipped_ids.append(s.id)
+            continue
+
+        s.status = "APPROVED"
+        setattr(s, "approved_at", now)
+        setattr(s, "approved_by", "system_auto")
+        db.add(s)
+        approved += 1
+
+    db.commit()
+    return AutoApproveResult(
+        total_ready=len(ready_rows),
+        auto_approved=approved,
+        skipped=skipped,
+        skipped_ids=skipped_ids,
+    )
+
+
+# =========================================================
+# Payout Execute (APPROVED → PAID via Gateway)
+# =========================================================
+
+class PayoutExecuteRequest(BaseModel):
+    settlement_ids: Optional[List[int]] = None
+    seller_id: Optional[int] = None
+    all_approved: bool = False
+
+
+class PayoutExecuteResult(BaseModel):
+    batch_id: str
+    total: int
+    success: int
+    failed: int
+    failed_ids: List[int]
+
+
+@router.post(
+    "/payout/execute",
+    response_model=PayoutExecuteResult,
+    summary="[SYSTEM] APPROVED 정산 지급 실행 (Mock Gateway)",
+)
+def payout_execute(
+    body: PayoutExecuteRequest,
+    db: Session = Depends(get_db),
+):
+    from app.services.payout_gateway import get_payout_gateway, PayoutItem
+    import asyncio
+    import uuid as _uuid
+
+    # 대상 조회
+    q = db.query(models.ReservationSettlement).filter(
+        models.ReservationSettlement.status == "APPROVED"
+    )
+    if body.settlement_ids:
+        q = q.filter(models.ReservationSettlement.id.in_(body.settlement_ids))
+    if body.seller_id:
+        q = q.filter(models.ReservationSettlement.seller_id == body.seller_id)
+    rows = q.all()
+
+    if not rows:
+        return PayoutExecuteResult(batch_id="", total=0, success=0, failed=0, failed_ids=[])
+
+    batch_id = f"{datetime.now().strftime('%Y-%m-%d')}-{str(_uuid.uuid4())[:8]}"
+    gateway = get_payout_gateway()
+
+    items = [
+        PayoutItem(
+            settlement_id=s.id,
+            seller_id=s.seller_id or 0,
+            amount=int(getattr(s, "seller_net_amount", 0) or 0),
+            bank_code="",
+            account_number="",
+            account_holder="",
+        )
+        for s in rows
+    ]
+
+    try:
+        # 새 이벤트 루프 생성 (기존 루프와 충돌 방지)
+        _loop = asyncio.new_event_loop()
+        try:
+            results = _loop.run_until_complete(gateway.request_payout(items))
+        finally:
+            _loop.close()
+    except Exception as e:
+        raise HTTPException(500, f"Payout gateway error: {e}")
+
+    now = datetime.now(timezone.utc)
+    success = 0
+    failed = 0
+    failed_ids: List[int] = []
+
+    for res in results:
+        s = next((x for x in rows if x.id == res.settlement_id), None)
+        if s is None:
+            continue
+        if res.status.value == "SUCCESS":
+            s.status = "PAID"
+            setattr(s, "paid_at", now)
+            db.add(s)
+            success += 1
+        else:
+            failed += 1
+            failed_ids.append(res.settlement_id)
+
+    db.commit()
+    return PayoutExecuteResult(batch_id=batch_id, total=len(rows), success=success, failed=failed, failed_ids=failed_ids)

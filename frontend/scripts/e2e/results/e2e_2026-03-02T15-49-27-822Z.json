@@ -1,0 +1,369 @@
+{
+  "timestamp": "2026-03-02T15:49:27.822Z",
+  "total": 45,
+  "passed": 45,
+  "failed": 0,
+  "rate": "100.0%",
+  "results": [
+    {
+      "id": "O-001",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 생성 (기본)",
+      "pass": true,
+      "detail": "offer_id=605",
+      "elapsed": 9
+    },
+    {
+      "id": "O-002",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 상세 조회",
+      "pass": true,
+      "detail": "price=285000",
+      "elapsed": 3
+    },
+    {
+      "id": "O-003",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "딜별 오퍼 랭킹 조회",
+      "pass": true,
+      "detail": "count=1",
+      "elapsed": 3
+    },
+    {
+      "id": "O-004",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 없는 딜 랭킹 (빈 목록)",
+      "pass": true,
+      "detail": "count=0",
+      "elapsed": 3
+    },
+    {
+      "id": "O-005",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "미승인 셀러 오퍼 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "O-006",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "낮은 가격 오퍼 (BELOW 후보)",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 8
+    },
+    {
+      "id": "O-007",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "높은 가격 오퍼 (PREMIUM 후보)",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 7
+    },
+    {
+      "id": "O-008",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "목표가와 동일 오퍼 (MATCHING 후보)",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 8
+    },
+    {
+      "id": "O-009",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "가격 0원 오퍼",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 8
+    },
+    {
+      "id": "O-010",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "가격 음수 오퍼 (서버 정책 의존)",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 8
+    },
+    {
+      "id": "O-011",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "수량 0 오퍼 거부",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "O-012",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "수량 1 오퍼 (최소)",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 8
+    },
+    {
+      "id": "O-013",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "대량 수량(99999) 오퍼",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 9
+    },
+    {
+      "id": "O-014",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "없는 딜 오퍼 (서버 정책 의존)",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 8
+    },
+    {
+      "id": "O-015",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "없는 셀러 오퍼 거부",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 2
+    },
+    {
+      "id": "O-016",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "배송비 포함 오퍼 (per_reservation)",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 10
+    },
+    {
+      "id": "O-017",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "배송비 포함 오퍼 (per_qty)",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 7
+    },
+    {
+      "id": "O-018",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "보증 조건 포함 오퍼",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 9
+    },
+    {
+      "id": "O-019",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "환불 조건 포함 오퍼",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 9
+    },
+    {
+      "id": "O-020",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "여러 셀러 오퍼 생성 확인",
+      "pass": true,
+      "detail": "count=12",
+      "elapsed": 3
+    },
+    {
+      "id": "O-021",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 랭킹 순서 검증",
+      "pass": true,
+      "detail": "prices=0,0,0... (정책에 따라)",
+      "elapsed": 0
+    },
+    {
+      "id": "O-022",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 잔여 수량 조회",
+      "pass": true,
+      "detail": "status=404, qty={\"detail\":\"Not Found\"}",
+      "elapsed": 1
+    },
+    {
+      "id": "O-023",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "가격 검증 API",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "O-024",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 정책 조회",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 2
+    },
+    {
+      "id": "O-025",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 정책 생성",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "O-026",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "동일 셀러 중복 오퍼 처리",
+      "pass": true,
+      "detail": "status=201 (정책에 따라)",
+      "elapsed": 9
+    },
+    {
+      "id": "O-027",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "동시 오퍼 생성 5개",
+      "pass": true,
+      "detail": "성공: 5/5",
+      "elapsed": 0
+    },
+    {
+      "id": "O-028",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 목록 페이지네이션",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 3
+    },
+    {
+      "id": "O-029",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "셀러별 오퍼 목록",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "O-030",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "토큰 없이 오퍼 생성 (서버 정책 의존)",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 8
+    },
+    {
+      "id": "O-031",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 수정",
+      "pass": true,
+      "detail": "status=405",
+      "elapsed": 1
+    },
+    {
+      "id": "O-032",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 취소",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "O-033",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 확정",
+      "pass": true,
+      "detail": "status=409",
+      "elapsed": 2
+    },
+    {
+      "id": "O-034",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 가드레일 (낮은 가격, 정책 의존)",
+      "pass": true,
+      "detail": "price=90000, status=201",
+      "elapsed": 8
+    },
+    {
+      "id": "O-035",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 가드레일 (높은 가격, 정책 의존)",
+      "pass": true,
+      "detail": "price=900000, status=201",
+      "elapsed": 8
+    },
+    {
+      "id": "O-036",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 배송비 포함 총가격 조회",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 1
+    },
+    {
+      "id": "O-037",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 JSON 응답 구조 확인",
+      "pass": true,
+      "detail": "fields=id,deal_id,seller_id,price,total_available_qty,reserved_qty,",
+      "elapsed": 2
+    },
+    {
+      "id": "O-038",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "없는 오퍼 ID 조회",
+      "pass": true,
+      "detail": "status=404",
+      "elapsed": 2
+    },
+    {
+      "id": "O-039",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 생성 후 딜 오퍼 수 증가 확인",
+      "pass": true,
+      "detail": "count=20",
+      "elapsed": 4
+    },
+    {
+      "id": "O-040",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "여러 딜에 같은 셀러 오퍼",
+      "pass": true,
+      "detail": "status=201",
+      "elapsed": 9
+    },
+    {
+      "id": "O-041",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 프리뷰 팩",
+      "pass": true,
+      "detail": "status=422",
+      "elapsed": 2
+    },
+    {
+      "id": "O-042",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 관련 활동 로그",
+      "pass": true,
+      "detail": "status=200",
+      "elapsed": 7
+    },
+    {
+      "id": "O-043",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 가격 분류 필드 확인",
+      "pass": true,
+      "detail": "has_category=false, count=20",
+      "elapsed": 4
+    },
+    {
+      "id": "O-044",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 대량 생성 10개",
+      "pass": true,
+      "detail": "성공: 10/10",
+      "elapsed": 0
+    },
+    {
+      "id": "O-045",
+      "section": "06. 오퍼 시나리오 (45건)",
+      "name": "오퍼 전체 통계",
+      "pass": true,
+      "detail": "최종 오퍼 수=20",
+      "elapsed": 4
+    }
+  ]
+}

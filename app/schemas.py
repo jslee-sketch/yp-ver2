@@ -39,9 +39,18 @@ else:
 
 
 # ---------------- Buyer ----------------
+_NICKNAME_PATTERN = r'^[가-힣a-zA-Z0-9_]+$'
+
 class BuyerBase(BaseModel):
     email: EmailStr
     name: str
+    nickname: str = Field(
+        ...,
+        min_length=2,
+        max_length=15,
+        pattern=_NICKNAME_PATTERN,
+        description="2~15자, 한글/영문/숫자/_ 가능, 공백·특수문자 불가",
+    )
     phone: Optional[str] = None
     address: Optional[str] = None
     zip_code: Optional[str] = None
@@ -55,7 +64,7 @@ class BuyerCreate(BuyerBase):
     recommender_buyer_id: Optional[int] = Field(
         None,
         description="추천인 Buyer의 ID (선택)"
-    )    
+    )
 
 class BuyerOut(ORMModel):
     id: int
@@ -64,6 +73,7 @@ class BuyerOut(ORMModel):
     # BuyerBase 필드도 응답에 포함
     email: EmailStr
     name: str
+    nickname: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
     zip_code: Optional[str] = None
@@ -87,6 +97,13 @@ class SellerBase(BaseModel):
 class SellerCreate(BaseModel):
     email: EmailStr
     business_name: str
+    nickname: str = Field(
+        ...,
+        min_length=2,
+        max_length=15,
+        pattern=_NICKNAME_PATTERN,
+        description="2~15자, 한글/영문/숫자/_ 가능, 공백·특수문자 불가",
+    )
     business_number: str
     phone: str
     company_phone: Optional[str] = None
@@ -101,12 +118,19 @@ class SellerCreate(BaseModel):
         description="(선택) 이 판매자를 모집한 Actuator ID",
     )
 
+    # 신규 서류 정보 (선택)
+    ecommerce_permit_number: Optional[str] = None
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    account_holder: Optional[str] = None
+
 
 class SellerOut(BaseModel):
     id: int
     created_at: datetime
     email: EmailStr
     business_name: str
+    nickname: Optional[str] = None
     business_number: str
     phone: str
     company_phone: Optional[str] = None
@@ -299,6 +323,9 @@ class DealCreate(BaseModel):
     target_price: Optional[float] = None
     max_budget: Optional[float] = None
 
+    # pricing guardrail anchor (AI Helper의 naver_lowest_price 를 여기에 전달)
+    anchor_price: Optional[float] = None
+
     option1_title: Optional[str] = None
     option1_value: Optional[str] = None
     option2_title: Optional[str] = None
@@ -312,6 +339,13 @@ class DealCreate(BaseModel):
 
     free_text: Optional[str] = None
 
+    # 딜 조건 (AI Helper DealConditions에서 매핑)
+    shipping_fee_krw: Optional[int] = None
+    refund_days:      Optional[int] = None
+    warranty_months:  Optional[int] = None
+    delivery_days:    Optional[int] = None
+    extra_conditions: Optional[str] = None
+
 
 class DealOut(ORMModel):
     id: int
@@ -320,6 +354,8 @@ class DealOut(ORMModel):
     desired_qty: int = 1
     target_price: Optional[float] = None
     max_budget: Optional[float] = None
+    anchor_price: Optional[float] = None
+    brand: Optional[str] = None
     rounds: List["DealRoundOut"] = Field(default_factory=list)  # forward ref 안전
     created_at: datetime
 
@@ -335,6 +371,13 @@ class DealOut(ORMModel):
     option5_title: Optional[str] = None
     option5_value: Optional[str] = None
     free_text: Optional[str] = None
+
+    # 딜 조건
+    shipping_fee_krw: Optional[int] = None
+    refund_days:      Optional[int] = None
+    warranty_months:  Optional[int] = None
+    delivery_days:    Optional[int] = None
+    extra_conditions: Optional[str] = None
 
 
 class DealDetail(DealOut):
@@ -462,7 +505,7 @@ class OfferOut(ORMModel):
     reserved_qty: int = 0
     sold_qty: int = 0
     is_active: bool = True
-    is_confirmed: bool = False
+    is_confirmed: Optional[bool] = False
     delivery_days: Optional[int] = None
     comment: Optional[str] = None
     created_at: datetime
@@ -495,9 +538,9 @@ class OfferPolicyBase(BaseModel):
       * 최대 1000자, 셀러가 텍스트로 정책 설명
     """
 
-    cancel_rule: Literal["A1", "A2", "A3", "A4"] = Field(
+    cancel_rule: Literal["A1", "A2", "A3", "A4", "COOLING"] = Field(
         ...,
-        description="A1/A2/A3/A4 취소 규칙 코드",
+        description="A1/A2/A3/A4/COOLING 취소 규칙 코드",
     )
     cancel_within_days: Optional[int] = Field(
         None,
@@ -520,9 +563,9 @@ class OfferPolicyCreate(OfferPolicyBase):
 class OfferPolicyOut(OfferPolicyBase):
     """오퍼 정책 조회 응답 스키마"""
 
-    id: int
-    offer_id: int
-    created_at: datetime
+    id: Optional[int] = None
+    offer_id: Optional[int] = None
+    created_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True  # v2에서도 from_attributes로 자동 매핑
@@ -614,7 +657,7 @@ class ReservationPolicySnapshot(BaseModel):
     구조는 OfferPolicyOut 과 거의 동일하지만, created_at 은 문자열일 수도 있음.
     """
 
-    cancel_rule: Literal["A1", "A2", "A3", "A4"]
+    cancel_rule: str
     cancel_within_days: Optional[int] = None
     extra_text: Optional[str] = None
 
@@ -675,10 +718,10 @@ class ReservationOut(ORMModel):
         orm_mode = True
 
 
-
 class ReservationPayIn(BaseModel):
     reservation_id: int
     buyer_id: int
+    paid_amount: int  # ✅ 추가: CRUD(pay_reservation) 시그니처에 필요
     buyer_point_per_qty: int = 1  # 결제 시 바이어 포인트 기본 +1/수량
 
 
@@ -699,7 +742,8 @@ class ReservationShipIn(BaseModel):
     - seller_id 는 선택 (셀러 소유 여부 검증에만 사용)
     """
     seller_id: Optional[int] = None
-
+    shipping_carrier: Optional[str]
+    tracking_number: Optional[str]
 
 class ReservationArrivalConfirmIn(BaseModel):
     """

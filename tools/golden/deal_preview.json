@@ -1,0 +1,40 @@
+﻿{
+    "ok":  true,
+    "reason_code":  "OK",
+    "entity":  "deal",
+    "id":  1,
+    "actor":  {
+                  "kind":  "BUYER",
+                  "buyer_id":  1,
+                  "seller_id":  null,
+                  "actuator_id":  null,
+                  "admin_user_id":  null
+              },
+    "times":  null,
+    "pack":  {
+                 "deal":  {
+                              "id":  1,
+                              "status":  "open",
+                              "title":  null,
+                              "buyer_id":  null,
+                              "target_price":  777.0,
+                              "qty_target":  null,
+                              "created_at":  "2026-02-14 12:57",
+                              "deadline_at":  null,
+                              "closed_at":  null
+                          },
+                 "pricing":  {
+                                 "guardrail":  {
+                                                   "level":  "ALLOW",
+                                                   "reason_codes":  [
+                                                                        "GAP_SOFT_WARN",
+                                                                        "E_SCORE_RELAXED"
+                                                                    ],
+                                                   "badge":  "NONE",
+                                                   "short_title":  "",
+                                                   "short_body":  ""
+                                               }
+                             }
+             },
+    "latency_ms":  null
+}

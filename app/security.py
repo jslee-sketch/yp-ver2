@@ -1,11 +1,11 @@
 # app/security.py
 # Author: Jeong Sang Lee
 # Date: 2025-11-03
-# ✅ 완전 DEV_BYPASS 버전 (Swagger에서 인증 무시하고 관리자 권한으로 작동)
 
 print("✅ SECURITY MODULE LOADED:", __file__)
 
-from datetime import datetime, timedelta
+import os
+from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -17,14 +17,19 @@ from app.database import get_db
 from app import models
 
 # -----------------------------------------------------
-# 🔧 기본 설정
+# 🔧 기본 설정 (환경변수 기반)
 # -----------------------------------------------------
-SECRET_KEY = "your_secret_key_here"
+SECRET_KEY = os.environ.get("SECRET_KEY") or os.environ.get("JWT_SECRET_KEY") or "dev-only-change-in-production"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
-# ✅ 개발용 우회 모드 활성화
-DEV_BYPASS = True
+# 개발용 우회 모드 — 프로덕션에서는 반드시 false
+DEV_BYPASS = os.environ.get("DEV_BYPASS", "true").lower() == "true"
+
+if DEV_BYPASS:
+    print("⚠️  [SECURITY] DEV_BYPASS=True — 인증 우회 활성화. 프로덕션에서는 DEV_BYPASS=false로 설정하세요.")
+if SECRET_KEY == "dev-only-change-in-production":
+    print("⚠️  [SECURITY] SECRET_KEY 기본값 사용 중 — 프로덕션에서는 반드시 변경하세요.")
 
 # -----------------------------------------------------
 # 🔑 비밀번호 해싱 관련
@@ -90,7 +95,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     DEV_BYPASS=True 일 때도 import 호환을 위해 유지됨.
     """
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

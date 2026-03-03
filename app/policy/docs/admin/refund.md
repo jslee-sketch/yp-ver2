@@ -1,222 +1,332 @@
 ﻿ ADMIN ONLY: BUYER/SELLER 응답 근거로 사용 금지
 
-# ?섎텋/遺꾩웳 ?뺤콉 (Refund & Dispute) ??SSOT v3.6
+# 환불/분쟁 정책 (Refund & Dispute) — SSOT v3.6
 
-?섎텋? ?쒓컧?뺚앹씠 ?꾨땲???쒖쬆嫄??뺤콉/?쒓컙?앹쑝濡?泥섎━?댁빞 CS 鍮꾩슜??以꾧퀬,
-?묓릟?대룄 媛숈? 寃곕줎???????덈떎.
+환불은 “감정”이 아니라 “증거/정책/시간”으로 처리해야 CS 비용이 줄고,
+핑퐁이도 같은 결론을 낼 수 있다.
 
-??臾몄꽌??**?섎텋/遺꾩웳??SSOT(寃곗젙 吏??** 怨?**Evidence(?ㅻ깄??濡쒓렇)** 瑜?遺꾨━??
-?댁쁺/?붾쾭源?CS ?ㅻ챸???붾뱾由ъ? ?딅룄濡?怨좎젙?쒕떎.
-
----
-
-## 0) ??以??붿빟
-
-- **SSOT(寃곗젙)**: ?섎텋 怨꾩궛/?덉슜/諛곗넚鍮??ы븿 ?щ???`refund_policy + crud preview/refund 濡쒖쭅`??寃곗젙?쒕떎.
-- **Evidence(利앸튃)**: `Reservation.policy_snapshot_json.refund_snapshot`? ?쒓렇 ?쒖젏 ?뺤콉 ?뚮씪誘명꽣?앸? 諛뺤젣?쒕떎.
-- **異붿쟻(濡쒓렇)**: ActivityLog???쒕Т???쇱씠 ?쇱뼱?щ뒗吏?앸? ?④릿??由ы뵆?덉씠/?듦퀎/?뺤콉 ?쒕떇).
+이 문서는 **환불/분쟁의 SSOT(결정 지점)** 과 **Evidence(스냅샷/로그)** 를 분리해,
+운영/디버깅/CS 설명이 흔들리지 않도록 고정한다.
 
 ---
 
-## 1) 肄붾뱶 SSOT ?ъ씤???꾩옱 ?몃━)
+## 0) 한 줄 요약
 
-### 1-1) ?섎텋 ?뺤콉 ?붿쭊/洹쒖튃(SSOT)
+- **SSOT(결정)**: 환불 계산/허용/배송비 포함 여부는 `refund_policy + crud preview/refund 로직`이 결정한다.
+- **Evidence(증빙)**: `Reservation.policy_snapshot_json.refund_snapshot`은 “그 시점 정책 파라미터”를 박제한다.
+- **추적(로그)**: ActivityLog는 “무슨 일이 일어났는지”를 남긴다(리플레이/통계/정책 튜닝).
+
+---
+
+## 1) 코드 SSOT 포인터(현재 트리)
+
+### 1-1) 환불 정책 엔진/규칙(SSOT)
 - `app/core/refund_policy.py`
   - `compute_cooling_state(...)`
-  - `is_shipping_refundable_by_policy(...)` (諛곗넚鍮??섎텋 gate / ?듭뀡B)
-  - `RefundPolicyEngine` (洹梨??뺤궛 ?곹깭???곕Ⅸ 寃곗젙)
+  - `is_shipping_refundable_by_policy(...)` (배송비 환불 gate / 옵션B)
+  - `RefundPolicyEngine` (귀책/정산 상태에 따른 결정)
 
-### 1-2) ?섎텋 Preview / 怨꾩궛(SSOT)
+### 1-2) 환불 Preview / 계산(SSOT)
 - `app/crud.py`
   - `preview_refund_for_paid_reservation(...)`
-    - 遺遺꾪솚遺??섎웾(qty) 泥섎━
-    - 諛곗넚鍮??먮룞諛곗젙(Reservation.amount_shipping SSOT)
+    - 부분환불 수량(qty) 처리
+    - 배송비 자동배정(Reservation.amount_shipping SSOT)
     - override + cap
-    - shipping gate ?곸슜
-    - preview 濡쒓렇(Event/Evidence Pack)
-    - refund_snapshot 諛뺤젣(best-effort, 硫깅벑)
-  - `preview_refund_for_reservation(...)` (admin ?쇱슦???명솚 ?섑띁)
+    - shipping gate 적용
+    - preview 로그(Event/Evidence Pack)
+    - refund_snapshot 박제(best-effort, 멱등)
+  - `preview_refund_for_reservation(...)` (admin 라우터 호환 래퍼)
 
-### 1-3) 愿由ъ옄 ?꾨━酉?API
+### 1-3) 관리자 프리뷰 API
 - `app/routers/admin_refund_preview.py`
   - `GET /admin/refund/preview?reservation_id=...&fault_party=...&trigger=...`
 
-### 1-4) ?ㅼ젣 ?섎텋/痍⑥냼(吏묓뻾 SSOT)
-- (議댁옱 湲곗?)
-  - `/reservations/force_refund` (?댁쁺 媛뺤젣)
-  - `refund_paid_reservation(...)` ???ㅼ젣 ???곹깭 蹂寃?CRUD
+### 1-4) 실제 환불/취소(집행 SSOT)
+- (존재 기준)
+  - `/reservations/force_refund` (운영 강제)
+  - `refund_paid_reservation(...)` 등 실제 돈/상태 변경 CRUD
 
 ---
 
-## 2) 遺꾩웳(Dispute) ?쇱슦??議댁옱 ?뺤씤)
+## 2) 분쟁(Dispute) 라우트(존재 확인)
 
 - `/v3_6/{reservation_id}/dispute/open`
 - `/v3_6/{reservation_id}/dispute/close`
 
-遺꾩웳???대━硫?
-- settlement/commission HOLD 媛??
-- shipping/arrival_confirm ?꾩씠??蹂대쪟 媛??Freeze)
+분쟁이 열리면:
+- settlement/commission HOLD 가능
+- shipping/arrival_confirm 전이도 보류 가능(Freeze)
 
-> ?쒕텇?곣앹? 洹梨낆씠 ?뺤젙?섏? ?딆? ?곹깭(DISPUTE)濡?痍④툒?????덉쑝硫?
-> ?섎텋? DISPUTE_RESOLVE 媛숈? ?몃━嫄곗뿉???뺤젙 泥섎━?섎뒗 寃껋씠 ?덉쟾?섎떎.
-
----
-
-## 3) Freeze(蹂대쪟) ?먯튃
-
-- 遺꾩웳/李⑥?諛??섏떖 嫄곕옒???쒖옄???뺤젙/?뺤궛?앹쓣 硫덉텣??
-- HOLD ?곹깭???쒓컙??吏?섎㈃ ?먮룞 ?댁젣?섎뒗 寃껋씠 ?꾨땲??
-  1) 利앸튃 ?뺣낫
-  2) 愿由ъ옄 ?먮떒
-  3) ?뺤콉 湲곗? 異⑹”
-  ??3媛吏濡??댁젣?쒕떎.
+> “분쟁”은 귀책이 확정되지 않은 상태(DISPUTE)로 취급할 수 있으며,
+> 환불은 DISPUTE_RESOLVE 같은 트리거에서 확정 처리하는 것이 안전하다.
 
 ---
 
-## 4) Cooling(荑⑤쭅) ?곹깭 SSOT
+## 3) Freeze(보류) 원칙
 
-荑⑤쭅 ?곹깭??`compute_cooling_state(...)` 寃곌낵瑜?SSOT濡??쒕떎.
+- 분쟁/차지백/의심 거래는 “자동 확정/정산”을 멈춘다.
+- HOLD 상태는 시간이 지나면 자동 해제되는 것이 아니라,
+  1) 증빙 확보
+  2) 관리자 판단
+  3) 정책 기준 충족
+  이 3가지로 해제된다.
 
-- BEFORE_SHIPPING: 寃곗젣???섏뿀吏留?諛쒖넚 ??
-- SHIPPED_NOT_DELIVERED: 諛쒖넚? ?덉?留??꾩갑/援щℓ???뺤씤 ??
-- WITHIN_COOLING: ?꾩갑(?먮뒗 ?섎졊?뺤젙) ??荑⑤쭅 湲곌컙 ?대궡
-- AFTER_COOLING: ?꾩갑(?먮뒗 ?섎졊?뺤젙) ??荑⑤쭅 湲곌컙 寃쎄낵
-- UNKNOWN: ?먮떒 遺덇?
+---
 
-### 4-1) 荑⑤쭅 湲곗???
-- ?먯튃: `arrival_confirmed_at` 湲곗?
-- fallback: `delivered_at` (arrival_confirmed_at???놁쓣 ??
+## 4) Cooling(쿨링) 상태 SSOT
 
-### 4-2) cooling_days 寃곗젙 ?곗꽑?쒖쐞(SSOT)
-1) `Reservation.policy_id` 濡??곌껐??`OfferPolicy.cancel_within_days`
-2) `OfferPolicy.offer_id` 濡?議고쉶??`cancel_within_days`
+쿨링 상태는 `compute_cooling_state(...)` 결과를 SSOT로 한다.
+
+- BEFORE_SHIPPING: 결제는 되었지만 발송 전
+- SHIPPED_NOT_DELIVERED: 발송은 했지만 도착/구매자 확인 전
+- WITHIN_COOLING: 도착(또는 수령확정) 후 쿨링 기간 이내
+- AFTER_COOLING: 도착(또는 수령확정) 후 쿨링 기간 경과
+- UNKNOWN: 판단 불가
+
+### 4-1) 쿨링 기준일
+- 원칙: `arrival_confirmed_at` 기준
+- fallback: `delivered_at` (arrival_confirmed_at이 없을 때)
+
+### 4-2) cooling_days 결정 우선순위(SSOT)
+1) `Reservation.policy_id` 로 연결된 `OfferPolicy.cancel_within_days`
+2) `OfferPolicy.offer_id` 로 조회한 `cancel_within_days`
 3) `policy_api.cooling_days()`
-4) `DEFAULT_COOLING_DAYS` ?덉쟾 fallback
+4) `DEFAULT_COOLING_DAYS` 안전 fallback
 
-(?뚯닔/怨쇰? 媛믪? 媛?쒕줈 蹂댁젙)
+(음수/과대 값은 가드로 보정)
 
 ---
 
-## 5) 諛곗넚鍮??섎텋 Gate(?듭뀡B) ??SSOT
+## 5) 배송비 환불 Gate(옵션B) — SSOT
 
-諛곗넚鍮꾨? ?쒗솚遺덉뿉 ?ы븿?좎? ?щ??앸뒗 `is_shipping_refundable_by_policy(...)`瑜?SSOT濡??쒕떎.
+배송비를 “환불에 포함할지 여부”는 `is_shipping_refundable_by_policy(...)`를 SSOT로 한다.
 
-**?듭뀡B 洹쒖튃(?붿빟)**
+**옵션B 규칙(요약)**
 
 1) BEFORE_SHIPPING:
-- 紐⑤뱺 trigger?????諛곗넚鍮??섎텋 ?덉슜
+- 모든 trigger에 대해 배송비 환불 허용
 
 2) SHIPPED_NOT_DELIVERED / WITHIN_COOLING:
-- BUYER_CANCEL留?遺덊뿀
-- SELLER_CANCEL / SYSTEM_ERROR / ADMIN_FORCE / DISPUTE_RESOLVE ???덉슜
+- BUYER_CANCEL만 불허
+- SELLER_CANCEL / SYSTEM_ERROR / ADMIN_FORCE / DISPUTE_RESOLVE 는 허용
 
 3) AFTER_COOLING:
-- DISPUTE_RESOLVE留??덉슜
-- 洹??몃뒗 遺덊뿀
+- DISPUTE_RESOLVE만 허용
+- 그 외는 불허
 
 4) UNKNOWN:
-- 蹂댁닔?곸쑝濡?遺덊뿀
+- 보수적으로 불허
 
-> 李멸퀬: ?쒗뿀???щ?(gate)?앹? ?쒓툑??怨꾩궛?앹? 遺꾨━?쒕떎.  
-> 湲덉븸? preview?먯꽌 ?먮룞諛곗젙/override/cap濡?怨꾩궛?섎ŉ, gate媛 False硫?理쒖쥌 諛곗넚鍮??섎텋?≪? 0?대떎.
+> 참고: “허용 여부(gate)”와 “금액 계산”은 분리한다.  
+> 금액은 preview에서 자동배정/override/cap로 계산되며, gate가 False면 최종 배송비 환불액은 0이다.
 
 ---
 
-## 6) 遺遺꾪솚遺?Quantity) SSOT
+## 6) 부분환불(Quantity) SSOT
 
-- ?섎텋 ?섎웾? `Reservation.qty`, `Reservation.refunded_qty` 湲곕컲?쇰줈 ?곗젙?쒕떎.
+- 환불 수량은 `Reservation.qty`, `Reservation.refunded_qty` 기반으로 산정한다.
 - remaining = qty_total - already_refunded
-- `quantity_refund` 誘몄엯????remaining ?꾩껜
-- ?낅젰??remaining??珥덇낵?섎㈃ remaining?쇰줈 罹?
+- `quantity_refund` 미입력 시 remaining 전체
+- 입력이 remaining을 초과하면 remaining으로 캡
 
 ---
 
-## 7) Refund Snapshot (Evidence) ???쒕컯?쒋??섎?
+## 7) Refund Snapshot (Evidence) — “박제” 의미
 
-### 7-1) 諛뺤젣媛 ?섎??섎뒗 寃?
-`Reservation.policy_snapshot_json.refund_snapshot`?
-?쒓렇 ?쒖젏???섎텋 愿???뺤콉 ?뚮씪誘명꽣?앸? Reservation??湲곕줉?대몢??寃껋씠??
+### 7-1) 박제가 의미하는 것
+`Reservation.policy_snapshot_json.refund_snapshot`은
+“그 시점의 환불 관련 정책 파라미터”를 Reservation에 기록해두는 것이다.
 
-- **SSOT(寃곗젙)**: refund_policy / preview 濡쒖쭅
-- **Evidence(?ы쁽 洹쇨굅)**: refund_snapshot + shipping_snapshot + time_snapshot + activity_log
+- **SSOT(결정)**: refund_policy / preview 로직
+- **Evidence(재현 근거)**: refund_snapshot + shipping_snapshot + time_snapshot + activity_log
 
-利?
-- ?섏쨷???뺤콉媛믪씠 諛붾뚮뜑?쇰룄,
-- 怨쇨굅 ?덉빟 耳?댁뒪瑜??쒕떦???뺤콉 湲곗??앹쑝濡??ㅻ챸/?ы쁽?????덈떎.
+즉,
+- 나중에 정책값이 바뀌더라도,
+- 과거 예약 케이스를 “당시 정책 기준”으로 설명/재현할 수 있다.
 
-### 7-2) 硫깅벑 洹쒖튃(以묒슂)
-- `refund_snapshot`???대? ?덉쑝硫?**?ш린濡앺븯吏 ?딅뒗??*
-  - captured_at??怨좎젙?섏뼱???쒕컯?쒋앷? ?쒕떎.
+### 7-2) 멱등 규칙(중요)
+- `refund_snapshot`이 이미 있으면 **재기록하지 않는다**
+  - captured_at이 고정되어야 “박제”가 된다.
 
-### 7-3) ????꾩튂
+### 7-3) 저장 위치
 - `Reservation.policy_snapshot_json["refund_snapshot"]`
 
 ---
 
-## 8) Refund Snapshot ?쒖? ??
+## 8) Refund Snapshot 표준 키
 
 `policy_snapshot_json.refund_snapshot.keys`:
 
 - `refund.dispute_hold_days`
 
-異붽? ?ㅺ? ?꾩슂?댁?硫?`CANON_KEYS`???뺤옣?쒕떎.
+추가 키가 필요해지면 `CANON_KEYS`에 확장한다.
 
 ---
 
-## 9) ActivityLog(洹쇨굅) ?쒖?
+## 9) ActivityLog(근거) 표준
 
-?묓릟??CS ?ㅻ챸???꾪빐 ?섎텋 preview/?ㅽ뻾? 濡쒓렇瑜??④린??寃껋쓣 沅뚯옣?쒕떎.
+핑퐁이/CS 설명을 위해 환불 preview/실행은 로그를 남기는 것을 권장한다.
 
-沅뚯옣 ?꾨뱶:
+권장 필드:
 - actor_type: buyer|seller|admin|system|agent
 - actor_id
 - event_type:
   - `refund.preview.v36`
   - `evidence_pack.refund_dispute_v1`
-  - `refund.executed.*` (?ㅼ쭛????
+  - `refund.executed.*` (실집행 시)
 - buyer_id / seller_id / deal_id / offer_id / reservation_id
-- meta(JSON): preview 怨꾩궛媛? shipping gate 寃곌낵, override ?뺣낫 ??
-- policy_snapshot_ref(?좏깮): meta??policy_version/hash瑜??댁븘????
+- meta(JSON): preview 계산값, shipping gate 결과, override 정보 등
+- policy_snapshot_ref(선택): meta에 policy_version/hash를 담아도 됨
 
 ---
 
-## 10) ?댁쁺/CS/?묓릟???ㅻ챸 ?쒗뵆由?
+## 10) 운영/CS/핑퐁이 설명 템플릿
 
-?꾨옒 ?쒖꽌?濡쒕쭔 留먰븯硫?寃곕줎???붾뱾由ъ? ?딅뒗??
+아래 순서대로만 말하면 결론이 흔들리지 않는다.
 
-1) **?꾩옱 ?곹깭**
-- ?덉빟 ?곹깭(PAID/??
-- 諛곗넚 ?곹깭(shipped/delivered/arrival_confirmed)
-- 遺꾩웳 ?щ?(dispute open?)
+1) **현재 상태**
+- 예약 상태(PAID/…)
+- 배송 상태(shipped/delivered/arrival_confirmed)
+- 분쟁 여부(dispute open?)
 
-2) **?섎텋 媛???щ?**
+2) **환불 가능 여부**
 - cooling_state(SSOT)
-- trigger/fault_party(?낅젰 or actor 留ㅽ븨)
-- shipping gate 寃곌낵(諛곗넚鍮??ы븿 ?щ?)
+- trigger/fault_party(입력 or actor 매핑)
+- shipping gate 결과(배송비 포함 여부)
 
-3) **湲덉븸**
-- ?곹뭹 ?섎텋???섎웾횞?④?)
-- 諛곗넚鍮??섎텋???먮룞諛곗젙/override/cap + gate)
-- 珥??섎텋??
+3) **금액**
+- 상품 환불액(수량×단가)
+- 배송비 환불액(자동배정/override/cap + gate)
+- 총 환불액
 
-4) **洹쇨굅**
-- ActivityLog ?대깽??
+4) **근거**
+- ActivityLog 이벤트
 - Reservation policy_snapshot(refund/shipping/time)
-- (?꾩슂 ?? offer_policy.cancel_within_days
+- (필요 시) offer_policy.cancel_within_days
 
-5) **?ㅼ쓬 ?④퀎**
-- ?먮룞 泥섎━(?덈떎硫??몃━嫄??쒓컙)
-- 愿由ъ옄 寃???꾩슂 ?щ?
-- ?꾩슂??利앸튃(?ъ쭊/?댁넚?????濡쒓렇)
+5) **다음 단계**
+- 자동 처리(있다면 트리거/시간)
+- 관리자 검토 필요 여부
+- 필요한 증빙(사진/운송장/대화 로그)
 
 ---
 
-## 11) ?뺣━
+## 11) 정리
 
-- refund_policy/preview 濡쒖쭅??**寃곗젙(SSOT)** ?대떎.
-- refund_snapshot? **利앸튃(Evidence)** ?대떎.
-- ActivityLog??**異붿쟻/?듦퀎/?뺤콉 ?쒕떇**???꾪븳 ?대깽??湲곕컲 洹쇨굅??
+- refund_policy/preview 로직이 **결정(SSOT)** 이다.
+- refund_snapshot은 **증빙(Evidence)** 이다.
+- ActivityLog는 **추적/통계/정책 튜닝**을 위한 이벤트 기반 근거다.
 
-?곕씪???쒖뒪?낆꺑??諛뺤젣?쒕떎?앸뒗 寃껋?
-?섎텋 怨꾩궛??諛붽씀??寃껋씠 ?꾨땲??
-**?섏쨷???ㅻ챸/?ы쁽 媛?ν븳 洹쇨굅瑜?Reservation???④릿??*???살씠??
+따라서 “스냅샷을 박제한다”는 것은
+환불 계산을 바꾸는 것이 아니라,
+**나중에 설명/재현 가능한 근거를 Reservation에 남긴다**는 뜻이다.
+
+---
+
+## 12) 신고/클레임 시스템 (Reports)
+
+### 12-1. reports 테이블
+
+```
+reports
+├── id                  PK, auto
+├── reporter_id         Integer              (신고자 buyer/seller/actuator id)
+├── reporter_type       String               (buyer / seller / actuator)
+├── target_type         String               (deal / offer / reservation / user)
+├── target_id           Integer
+├── reason_code         String               (fraud / fake_offer / abuse / spam / other)
+├── description         Text, nullable       (상세 내용)
+├── status              String               (PENDING / REVIEWED / RESOLVED / DISMISSED)
+├── resolution          Text, nullable       (처리 결과)
+├── created_at          DateTime
+├── reviewed_by         String, nullable
+└── reviewed_at         DateTime, nullable
+```
+
+### 12-2. 신고 접수 API
+
+```
+POST /reports
+Body: {
+  “target_type”: “reservation”,
+  “target_id”: 403,
+  “reason_code”: “fraud”,
+  “description”: “배송 안 됐는데 배송완료로 처리됨”
+}
+Response: { “id”: 12, “status”: “PENDING” }
+```
+
+### 12-3. 관리자 신고 처리 API
+
+```
+GET /admin/reports
+  → 신고 목록 (status/reason 필터)
+
+POST /admin/reports/{id}/resolve
+Body: {
+  “resolution”: “셀러 경고 처리. 반복 시 계정 정지.”,
+  “action”: “seller_warning”   // warn / ban / dismiss
+}
+```
+
+### 12-4. 신고 reason_code 표준
+
+| 코드 | 설명 |
+|------|------|
+| `fraud` | 사기 / 허위 거래 |
+| `fake_offer` | 허위 오퍼 (재고 없음, 가격 조작) |
+| `abuse` | 욕설 / 협박 |
+| `spam` | 광고성 메시지 |
+| `duplicate` | 중복 딜/오퍼 |
+| `other` | 기타 |
+
+---
+
+## 13) 이미지 업로드 (증거 첨부)
+
+### 13-1. uploaded_files 테이블
+
+```
+uploaded_files
+├── id                  PK, auto
+├── uploader_id         Integer
+├── uploader_type       String               (buyer / seller / admin)
+├── file_key            String               (S3/로컬 경로)
+├── original_name       String
+├── mime_type           String               (image/jpeg, image/png, ...)
+├── size_bytes          Integer
+├── purpose             String               (report_evidence / dispute / profile)
+├── ref_type            String, nullable     (reservation / report / deal)
+├── ref_id              Integer, nullable
+└── created_at          DateTime
+```
+
+### 13-2. 업로드 API
+
+```
+POST /uploads/image
+Content-Type: multipart/form-data
+Fields:
+  file         (필수, 이미지 파일)
+  purpose      (필수: report_evidence / dispute / profile)
+  ref_type     (선택: reservation / report / deal)
+  ref_id       (선택: 연결할 대상 ID)
+
+Response:
+{
+  “id”: 7,
+  “file_key”: “uploads/2026/02/28/abc123.jpg”,
+  “url”: “https://cdn.yeokping.com/uploads/2026/02/28/abc123.jpg”
+}
+```
+
+### 13-3. 운영 규칙
+
+- 최대 파일 크기: 10MB
+- 허용 형식: JPEG, PNG, WEBP
+- 저장 방식: 개발 = 로컬 `uploads/` 디렉토리, 프로덕션 = S3
+- 신고 제출 시 `uploaded_files.id`를 `reports.meta`에 포함
+- 30일 후 미연결 파일 자동 삭제 (배치)
+
+
+

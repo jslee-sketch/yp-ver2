@@ -85,9 +85,10 @@ class DealIntentOption(BaseModel):
 class DealResolveIn(BaseModel):
     """
     LLM이 분석한 '공동구매 방 개설 Intent'를 구조화한 입력.
+    구조화된 필드(product_name 등) 또는 자연어 text 중 하나로 호출 가능.
     """
-    product_name: str = Field(..., description="정규화된 상품명")
-    desired_qty: int = Field(..., ge=1, description="희망 수량")
+    product_name: Optional[str] = Field(default=None, description="정규화된 상품명")
+    desired_qty: Optional[int] = Field(default=None, ge=1, description="희망 수량")
 
     target_price: Optional[float] = Field(
         default=None,
@@ -108,7 +109,12 @@ class DealResolveIn(BaseModel):
         description="자유 텍스트 설명 (LLM이 요약한 원문 등)",
     )
 
-    buyer_id: int = Field(..., description="방 개설자 buyer_id")
+    text: Optional[str] = Field(
+        default=None,
+        description="자연어 텍스트 입력 (product_name 미제공 시 파싱)",
+    )
+
+    buyer_id: Optional[int] = Field(default=None, description="방 개설자 buyer_id")
 
 
 
