@@ -2,11 +2,16 @@ import apiClient from './client';
 import { API } from './endpoints';
 import { FEATURES } from '../config';
 
-export async function fetchChatMessages(dealId: number) {
+export async function fetchChatMessages(dealId: number, buyerId?: number) {
   if (!FEATURES.USE_API_DEALS) return null;
+  if (!buyerId) return null; // buyer_id is required by backend
   try {
-    const res = await apiClient.get(API.DEAL_CHAT.MESSAGES(dealId));
-    return res.data;
+    const res = await apiClient.get(API.DEAL_CHAT.MESSAGES(dealId), {
+      params: { buyer_id: buyerId },
+    });
+    // Backend returns { items: [...], total: N }
+    const data = res.data;
+    return Array.isArray(data) ? data : (data?.items ?? []);
   } catch (err) {
     console.error('채팅 API 실패:', err);
     return null;

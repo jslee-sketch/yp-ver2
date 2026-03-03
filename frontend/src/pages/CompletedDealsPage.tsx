@@ -48,7 +48,7 @@ export default function CompletedDealsPage() {
   const navigate = useNavigate();
 
   const { data: allDeals, loading, error, refetch } = useApiData<CompletedDeal[]>(async () => {
-    const raw = await fetchDeals(0, 500);
+    const raw = await fetchDeals(1, 500);
     if (!raw) return [];
     return (raw as DealResponse[])
       .filter(d => d.status === 'closed' || d.status === 'archived')

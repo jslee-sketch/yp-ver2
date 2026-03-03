@@ -352,10 +352,13 @@ class DealOut(ORMModel):
     product_name: str
     creator_id: int
     desired_qty: int = 1
+    current_qty: int = 0
     target_price: Optional[float] = None
     max_budget: Optional[float] = None
     anchor_price: Optional[float] = None
     brand: Optional[str] = None
+    status: str = "open"
+    deadline_at: Optional[datetime] = None
     rounds: List["DealRoundOut"] = Field(default_factory=list)  # forward ref 안전
     created_at: datetime
 

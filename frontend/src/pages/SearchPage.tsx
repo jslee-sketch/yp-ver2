@@ -170,7 +170,7 @@ export default function SearchPage() {
   // 초기 로드: API에서 전체 딜 목록 가져오기
   useEffect(() => {
     void (async () => {
-      const apiData = await fetchDeals(0, 200);
+      const apiData = await fetchDeals(1, 200);
       if (apiData) {
         setAllDeals((apiData as DealResponse[]).map(mapToSearchDeal));
       }

@@ -26,11 +26,13 @@ export function mapDealResponseToDisplay(d: DealResponse): Deal {
   };
 }
 
-export async function fetchDeals(skip = 0, limit = 20) {
+export async function fetchDeals(page = 1, size = 100) {
   if (!FEATURES.USE_API_DEALS) return null;
   try {
-    const res = await apiClient.get(API.DEALS.LIST, { params: { skip, limit } });
-    return res.data;
+    const res = await apiClient.get(API.DEALS.LIST, { params: { page, size } });
+    // Backend returns { items: [...], total, page, size, pages }
+    const data = res.data;
+    return Array.isArray(data) ? data : (data?.items ?? []);
   } catch (err) {
     console.error('딜 목록 API 실패, Mock 폴백:', err);
     return null;

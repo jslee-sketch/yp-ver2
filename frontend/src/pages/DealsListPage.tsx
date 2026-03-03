@@ -23,7 +23,7 @@ export default function DealsListPage() {
   const [activeSort, setActiveSort] = useState('latest');
 
   const { data: deals, loading, error, refetch } = useApiData<Deal[]>(async () => {
-    const raw = await fetchDeals(0, 200);
+    const raw = await fetchDeals(1, 200);
     if (!raw) return [];
     return (raw as DealResponse[]).map(mapDealResponseToDisplay);
   }, []);

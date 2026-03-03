@@ -159,7 +159,7 @@ def read_deals(
     buyer_id: _Opt[int] = Query(None, description="내 딜만 보기"),
     sort: str = Query("created_at:desc"),
     page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=100),
+    size: int = Query(20, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
     q = db.query(models.Deal)

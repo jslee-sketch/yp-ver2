@@ -51,7 +51,7 @@ export default function MyDealsPage() {
   const { user } = useAuth();
 
   const { data: allDeals, loading, error, refetch } = useApiData<MyCreatedDeal[]>(async () => {
-    const raw = await fetchDeals(0, 500);
+    const raw = await fetchDeals(1, 500);
     if (!raw) return [];
     const mapped = (raw as DealResponse[])
       .filter(d => d.creator_id === user?.id)

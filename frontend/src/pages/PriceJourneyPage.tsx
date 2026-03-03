@@ -414,16 +414,19 @@ export default function PriceJourneyPage() {
     if (!FEATURES.USE_API_DEALS) return;
     const numId = Number(dealId);
     if (!numId) return;
-    fetchChatMessages(numId).then(msgs => {
+    const buyerId = user?.id ?? CURRENT_USER_ID;
+    fetchChatMessages(numId, buyerId).then(msgs => {
       if (!msgs || !Array.isArray(msgs) || msgs.length === 0) return;
       setChatMessages(msgs.map((m: Record<string, unknown>, i: number) => ({
         id:   typeof m.id === 'number' ? m.id : i + 1,
-        user: typeof m.sender_name === 'string' ? m.sender_name : '익명',
-        msg:  typeof m.content === 'string' ? m.content : '',
+        user: typeof m.sender_nickname === 'string' ? m.sender_nickname
+            : typeof m.sender_name === 'string' ? m.sender_name : '익명',
+        msg:  typeof m.text === 'string' ? m.text
+            : typeof m.content === 'string' ? m.content : '',
         time: typeof m.created_at === 'string'
           ? new Date(m.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
           : '',
-        isMe: typeof m.sender_id === 'number' && m.sender_id === (user?.id ?? CURRENT_USER_ID),
+        isMe: typeof m.buyer_id === 'number' && m.buyer_id === buyerId,
       })));
     }).catch(() => {});
   }, [dealId, user]);
