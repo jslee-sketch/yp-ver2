@@ -400,6 +400,24 @@ def health():
     return {"ok": True}
 
 
+@app.get("/api/env-check")
+def env_check():
+    """Deployment diagnostic — shows which env vars are set (values hidden)."""
+    keys = ["OPENAI_API_KEY", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET",
+            "SECRET_KEY", "JWT_SECRET_KEY", "ALLOWED_ORIGINS", "DATABASE_URL",
+            "DEV_BYPASS", "RATE_LIMIT_RPM"]
+    result = {}
+    for k in keys:
+        v = os.environ.get(k)
+        if v is None:
+            result[k] = "NOT SET"
+        elif k in ("OPENAI_API_KEY", "SECRET_KEY", "JWT_SECRET_KEY", "DATABASE_URL"):
+            result[k] = f"SET ({len(v)} chars, starts with {v[:4]}...)"
+        else:
+            result[k] = f"SET ({v})"
+    return result
+
+
 @app.get("/health/deep")
 def health_deep():
     import time

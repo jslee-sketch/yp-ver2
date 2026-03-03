@@ -403,6 +403,11 @@ def ai_deal_helper(
 
     except HTTPException:
         raise
+    except RuntimeError as e:
+        # OPENAI_API_KEY missing or openai not installed
+        print("[ai_deal_helper] CONFIG ERROR:", repr(e))
+        raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         print("[ai_deal_helper] ERROR:", repr(e))
-        raise HTTPException(status_code=500, detail="Internal error")
+        import traceback; traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"AI helper error: {e.__class__.__name__}")
