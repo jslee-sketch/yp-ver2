@@ -390,9 +390,9 @@ except Exception as _e:
 
 
 # Health/Version
-@app.get("/")
+@app.get("/api/health")
 def root():
-    return {"message": "Yeokping Ver2 API(NO-AUTH) is running 🚀"}
+    return {"message": "Yeokping Ver2 API(NO-AUTH) is running", "ok": True}
 
 
 @app.get("/health")

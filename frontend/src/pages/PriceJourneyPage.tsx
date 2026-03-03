@@ -1072,7 +1072,7 @@ export default function PriceJourneyPage() {
             background: T.bgCard, borderRadius: '20px 20px 0 0', padding: '24px 20px 32px',
             boxShadow: '0 -8px 40px rgba(0,0,0,0.5)',
           }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: T.textPri, marginBottom: 4 }}>🎯 가격 예측하기</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: T.text, marginBottom: 4 }}>🎯 가격 예측하기</div>
             <div style={{ fontSize: 12, color: T.textSec, marginBottom: 16 }}>이 딜의 최종 거래 가격을 예측해보세요!</div>
             <input
               type="number"
@@ -1083,7 +1083,7 @@ export default function PriceJourneyPage() {
                 width: '100%', boxSizing: 'border-box', padding: '13px 14px',
                 borderRadius: 12, fontSize: 16, fontWeight: 600,
                 background: T.bgSurface, border: `1px solid ${T.border}`,
-                color: T.textPri, marginBottom: 12,
+                color: T.text, marginBottom: 12,
               }}
             />
             {predPrice && Number(predPrice) > 0 && (

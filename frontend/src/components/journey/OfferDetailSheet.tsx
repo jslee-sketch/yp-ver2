@@ -66,7 +66,7 @@ export function OfferDetailSheet({ offer, target, onClose, onBuy }: Props) {
               }}
             >✕</button>
 
-            <DetailContent offer={offer} target={target} onClose={onClose} />
+            <DetailContent offer={offer} target={target} onClose={onClose} onBuy={onBuy} />
           </motion.div>
         </>
       )}
@@ -74,7 +74,7 @@ export function OfferDetailSheet({ offer, target, onClose, onBuy }: Props) {
   );
 }
 
-function DetailContent({ offer, target }: { offer: JourneyOffer; target: number; onClose: () => void }) {
+function DetailContent({ offer, target, onBuy }: { offer: JourneyOffer; target: number; onClose: () => void; onBuy?: (offer: JourneyOffer) => void }) {
   const gap = offer.adjPrice - target;
   const gc  = groupColor[offer.group];
   const gb  = groupBg[offer.group];

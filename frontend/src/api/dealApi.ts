@@ -9,15 +9,15 @@ export function mapDealResponseToDisplay(d: DealResponse): Deal {
   return {
     id:                 d.id,
     product_name:       d.product_name,
-    brand:              d.brand,
-    category:           d.extra_conditions ?? undefined,
+    brand:              d.brand ?? null,
+    category:           d.extra_conditions ?? '',
     desired_price:      d.target_price ?? d.max_budget ?? 0,
     anchor_price:       d.anchor_price ?? 0,
     status:             d.status === 'open' ? 'OPEN'
                       : d.status === 'closed' ? 'CLOSED'
                       : d.status === 'archived' ? 'COMPLETED'
                       : 'OPEN',
-    deadline_at:        d.deadline_at,
+    deadline_at:        d.deadline_at ?? null,
     participants_count: d.current_qty ?? 0,
     spectator_count:    0,
     offer_count:        0,

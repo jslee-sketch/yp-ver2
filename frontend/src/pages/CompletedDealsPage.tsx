@@ -5,7 +5,7 @@ import { useApiData } from '../api/hooks';
 import type { DealResponse } from '../api/types';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import ErrorMessage from '../components/common/ErrorMessage';
-import EmptyState from '../components/common/EmptyState';
+
 
 // ── 타입 ────────────────────────────────────────────
 
