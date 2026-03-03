@@ -156,7 +156,7 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass  # 이미 존재하면 무시
 
-    # ✅ seller 서류 컬럼 마이그레이션 (기존 DB 호환)
+    # ✅ seller 서류 컬럼 마이그레이션 (기존 DB 호환, SQLite + PostgreSQL)
     _SELLER_NEW_COLS = [
         ("ecommerce_permit_number", "VARCHAR(50)"),
         ("bank_name", "VARCHAR(50)"),
@@ -166,16 +166,14 @@ async def lifespan(app: FastAPI):
         ("ecommerce_permit_image", "VARCHAR(500)"),
         ("bankbook_image", "VARCHAR(500)"),
     ]
-    try:
-        with engine.connect() as _conn:
-            _existing = [row[1] for row in _conn.execute(_text("PRAGMA table_info(sellers)"))]
-            for _col, _type in _SELLER_NEW_COLS:
-                if _col not in _existing:
-                    _conn.execute(_text(f"ALTER TABLE sellers ADD COLUMN {_col} {_type}"))
-                    print(f"[migration] ALTER TABLE sellers ADD COLUMN {_col} OK")
-            _conn.commit()
-    except Exception as _e:
-        print(f"[warn] seller 컬럼 마이그레이션 실패: {_e}")
+    for _col, _type in _SELLER_NEW_COLS:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE sellers ADD COLUMN {_col} {_type}"))
+                _conn.commit()
+                print(f"[migration] ALTER TABLE sellers ADD COLUMN {_col} OK")
+        except Exception:
+            pass  # already exists
 
     # ✅ social login 컬럼 마이그레이션
     for _col, _type in [("social_provider", "VARCHAR(20)"), ("social_id", "VARCHAR(100)")]:
@@ -186,6 +184,48 @@ async def lifespan(app: FastAPI):
                 print(f"[migration] ALTER TABLE buyers ADD COLUMN {_col} OK")
         except Exception:
             pass
+
+    # ✅ seed: DB가 완전히 비었으면 데모 데이터 삽입 (Railway 초기 배포 대응)
+    try:
+        _seed_db = database.SessionLocal()
+        try:
+            if _seed_db.query(models.Buyer).count() == 0:
+                print("[seed] Empty DB detected — inserting demo data...")
+                from passlib.context import CryptContext as _Ctx
+                _pwd = _Ctx(schemes=["bcrypt"], deprecated="auto")
+                _now = datetime.now(timezone.utc)
+                _demo_buyer = models.Buyer(
+                    name="Demo Buyer", email="demo@yeokping.com",
+                    password_hash=_pwd.hash("demo1234"),
+                    nickname="데모바이어", phone="010-0000-0000",
+                    created_at=_now,
+                )
+                _seed_db.add(_demo_buyer)
+                _seed_db.flush()
+                _demo_seller = models.Seller(
+                    email="seller@yeokping.com",
+                    password_hash=_pwd.hash("seller1234"),
+                    business_name="Demo Seller",
+                    nickname="데모셀러",
+                    created_at=_now,
+                )
+                _seed_db.add(_demo_seller)
+                _seed_db.flush()
+                _demo_deal = models.Deal(
+                    product_name="에어팟 프로 2세대 (데모)",
+                    creator_id=_demo_buyer.id,
+                    desired_qty=10, current_qty=1,
+                    target_price=280000, max_budget=350000,
+                    anchor_price=359000, brand="Apple",
+                    status="open", created_at=_now,
+                )
+                _seed_db.add(_demo_deal)
+                _seed_db.commit()
+                print(f"[seed] Created buyer #{_demo_buyer.id}, seller #{_demo_seller.id}, deal #{_demo_deal.id}")
+        finally:
+            _seed_db.close()
+    except Exception as _se:
+        print(f"[warn] seed data failed: {_se}")
 
     # ✅ 워커 시작
     try:
