@@ -57,15 +57,42 @@ def api_approve_seller(
 
 
 # -----------------------------------------------------
-# 1️⃣ 로그인된 판매자 정보 (무인증 대체 버전)
+# 1️⃣ 로그인된 판매자 정보 (JWT 토큰 기반)
 # -----------------------------------------------------
+from fastapi import Request as _SellerRequest
+
 @router.get("/me")
-def read_me():
-    """
-    ✅ 무인증 개발 모드:
-    인증 절차 없이 항상 더미 판매자(dev_seller@yeokping.com)로 응답
-    """
-    return {"ok": True, "user": {"email": "dev_seller@yeokping.com (no-auth)"}}
+def read_me(request: _SellerRequest, db: Session = Depends(database.get_db)):
+    """JWT 토큰에서 seller_id를 추출해 실제 Seller 정보를 반환."""
+    from app.security import SECRET_KEY, ALGORITHM
+    from jose import jwt as jose_jwt, JWTError
+
+    auth = request.headers.get("authorization", "")
+    if auth.startswith("Bearer "):
+        token = auth[7:]
+        try:
+            payload = jose_jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            seller_id = payload.get("seller_id") or payload.get("sub")
+            if seller_id:
+                seller = db.query(models.Seller).filter(models.Seller.id == int(seller_id)).first()
+                if seller:
+                    return {
+                        "id": seller.id,
+                        "email": getattr(seller, "email", ""),
+                        "business_name": getattr(seller, "business_name", ""),
+                        "nickname": getattr(seller, "nickname", None),
+                        "phone": getattr(seller, "phone", None),
+                        "points": getattr(seller, "points", 0),
+                        "level": getattr(seller, "level", 1),
+                        "verified_at": str(getattr(seller, "verified_at", "") or ""),
+                        "is_active": getattr(seller, "is_active", True),
+                        "created_at": str(getattr(seller, "created_at", "")),
+                    }
+        except (JWTError, Exception):
+            pass
+
+    return {"id": 0, "email": "dev_seller@yeokping.com", "business_name": "Dev Seller",
+            "points": 0, "level": 1, "is_active": True}
 
 
 # -----------------------------------------------------

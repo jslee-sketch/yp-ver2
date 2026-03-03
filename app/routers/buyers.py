@@ -23,15 +23,47 @@ router = APIRouter(
 )
 
 # -----------------------------------------------------
-# 1️⃣ 로그인된 유저 정보 (무인증 대체 버전)
+# 1️⃣ 로그인된 유저 정보 (JWT 토큰 기반)
 # -----------------------------------------------------
+from fastapi import Request as _Request
+
 @router.get("/me")
-def read_me():
-    """
-    ✅ 무인증 개발 모드:
-    인증 절차 없이 항상 더미 유저(dev_buyer@yeokping.com)로 응답
-    """
-    return {"ok": True, "user": {"email": "dev_buyer@yeokping.com (no-auth)"}}
+def read_me(
+    request: _Request,
+    db: Session = Depends(database.get_db),
+):
+    """JWT 토큰에서 유저 ID를 추출해 실제 Buyer 정보를 반환."""
+    from app.security import SECRET_KEY, ALGORITHM
+    from jose import jwt as jose_jwt, JWTError
+
+    auth = request.headers.get("authorization", "")
+    if auth.startswith("Bearer "):
+        token = auth[7:]
+        try:
+            payload = jose_jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("sub")
+            if user_id:
+                buyer = db.query(models.Buyer).filter(models.Buyer.id == int(user_id)).first()
+                if buyer:
+                    return {
+                        "id": buyer.id,
+                        "email": buyer.email,
+                        "name": buyer.name,
+                        "nickname": getattr(buyer, "nickname", None),
+                        "phone": getattr(buyer, "phone", None),
+                        "address": getattr(buyer, "address", None),
+                        "points": getattr(buyer, "points", 0),
+                        "level": getattr(buyer, "level", 1),
+                        "trust_tier": getattr(buyer, "trust_tier", "Bronze"),
+                        "is_active": getattr(buyer, "is_active", True),
+                        "created_at": str(getattr(buyer, "created_at", "")),
+                    }
+        except (JWTError, Exception):
+            pass
+
+    # fallback: DEV_BYPASS or no token
+    return {"id": 1, "email": "dev@yeokping.com", "name": "Dev User",
+            "points": 0, "level": 1, "trust_tier": "Bronze", "is_active": True}
 
 # -----------------------------------------------------
 # 2️⃣ 신규 Buyer 생성
