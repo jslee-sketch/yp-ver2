@@ -2,16 +2,18 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 import traceback
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+import httpx
 
 from app.database import get_db
 from app import models, crud
@@ -24,6 +26,11 @@ router = APIRouter(
     prefix="/v3_6/pingpong",
     tags=["pingpong"],
 )
+
+# =========================================================
+# Sidecar proxy config
+# =========================================================
+SIDECAR_URL = os.getenv("SIDECAR_URL", "http://localhost:9100")
 
 # =========================================================
 # Pydantic Schemas
@@ -723,13 +730,62 @@ def _handle_smalltalk(question: str) -> str:
 
 
 # =========================================================
-# Endpoint
+# Sidecar proxy endpoint (replaces direct brain call)
 # =========================================================
-@router.post("/ask", response_model=PingpongAskOut)
-def pingpong_ask(
+@router.post("/ask", response_model=None)
+async def pingpong_ask_proxy(request: Request):
+    """
+    Proxy to sidecar server for full AI agent capabilities.
+    Falls back to brain endpoint if sidecar is unreachable.
+    """
+    try:
+        body_json = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON body")
+
+    if not (body_json.get("question") or "").strip():
+        raise HTTPException(status_code=400, detail="question is required")
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(f"{SIDECAR_URL}/ask", json=body_json)
+            return resp.json()
+    except Exception:
+        # Sidecar unreachable → fall back to brain
+        pass
+
+    # Fallback: call brain directly
+    from app.database import get_db as _get_db
+    db_gen = _get_db()
+    db = next(db_gen)
+    try:
+        body = PingpongAskIn(**body_json)
+        result = _pingpong_brain_logic(body, db)
+        return jsonable_encoder(result)
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
+
+
+# =========================================================
+# Brain endpoint (policy-based LLM, called by sidecar internally)
+# =========================================================
+@router.post("/brain/ask", response_model=PingpongAskOut)
+def pingpong_brain_ask(
     body: PingpongAskIn = Body(...),
     db: Session = Depends(get_db),
 ):
+    if not body.question or not body.question.strip():
+        raise HTTPException(status_code=400, detail="question is required")
+    return _pingpong_brain_logic(body, db)
+
+
+def _pingpong_brain_logic(
+    body: PingpongAskIn,
+    db: Session,
+) -> PingpongAskOut:
     if not body.question or not body.question.strip():
         raise HTTPException(status_code=400, detail="question is required")
 
