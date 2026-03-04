@@ -29,12 +29,26 @@ from app.config import project_rules as R
 from app import crud, models, database
 from app.database import Base, engine
 
-# ✅ 모듈 레벨에서 테이블 생성 (lifespan이 안 불릴 경우 대비)
+# ✅ 모듈 레벨에서 테이블 생성 — 반드시 성공해야 함
 try:
+    from sqlalchemy import text as _text, inspect as _inspect
     Base.metadata.create_all(bind=engine)
-    print("✅ [module-level] Base.metadata.create_all OK")
+
+    # 검증: buyers 테이블이 실제로 존재하는지 확인
+    _inspector = _inspect(engine)
+    _tables = _inspector.get_table_names()
+    print(f"✅ [module-level] create_all OK — {len(_tables)} tables: {_tables[:10]}")
+    if "buyers" not in _tables:
+        print(f"⚠️  WARNING: 'buyers' table NOT found after create_all! tables={_tables}")
+        # 재시도: engine.begin() 컨텍스트 안에서 명시적 실행
+        with engine.begin() as _conn:
+            Base.metadata.create_all(bind=_conn)
+        _tables2 = _inspect(engine).get_table_names()
+        print(f"   Retry result: {len(_tables2)} tables: {_tables2[:10]}")
 except Exception as _cae:
-    print(f"[warn] module-level create_all failed: {_cae.__class__.__name__}: {_cae}")
+    import traceback as _tb
+    print(f"❌ [module-level] create_all FAILED: {_cae.__class__.__name__}: {_cae}")
+    _tb.print_exc()
 
 
 class Utf8JSONResponse(JSONResponse):
@@ -145,11 +159,14 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
 
-    # ✅ DB 테이블 생성은 import 시점이 아니라 startup 시점에서
+    # ✅ DB 테이블 생성 (module-level이 실패했을 경우 재시도)
     try:
         Base.metadata.create_all(bind=engine)
+        _tbl_names = _inspect(engine).get_table_names()
+        print(f"✅ [lifespan] create_all OK — {len(_tbl_names)} tables")
     except Exception as e:
-        print(f"[warn] Base.metadata.create_all failed: {e.__class__.__name__}: {e}")
+        print(f"❌ [lifespan] create_all FAILED: {e.__class__.__name__}: {e}")
+        traceback.print_exc()
 
     # ✅ nickname 컬럼 마이그레이션 (기존 DB 호환)
     from sqlalchemy import text as _text
