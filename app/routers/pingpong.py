@@ -394,6 +394,7 @@ def _load_policies_from_md_files(question: str, limit: int = 15) -> List[Any]:
                 class _FakePolicy:
                     pass
                 obj = _FakePolicy()
+                obj.id = len(_MD_POLICY_CACHE) + 90000  # 가상 ID (DB와 충돌 안 되게)
                 obj.domain = domain
                 obj.policy_key = rel
                 obj.title = title
@@ -525,23 +526,27 @@ def _build_system_prompt(
         intro = (
             "너는 공동구매 플랫폼 '역핑'의 공식 AI 헬퍼 '핑퐁이'다.\n"
             "항상 정책선언집을 최우선 근거로 삼고, 사용자의 현재 화면과 컨텍스트를 바탕으로 답한다.\n"
-            "확실하지 않으면 추측하지 말고 '추가 확인이 필요'하다고 말한다.\n"
+            "정책선언집에 관련 내용이 있으면 그 내용을 기반으로 구체적으로 답변하라.\n"
+            "정책선언집에 없는 내용이라면 일반적인 지식으로 최선을 다해 답변하라.\n"
+            "'확인 중' 이나 '잠시 후 다시' 같은 대기 메시지를 절대 쓰지 마라. 항상 즉시 답변하라.\n"
         )
     else:
         intro = (
             "You are 'Pingpong', the official AI helper of Yeokping.\n"
             "Always follow the policy declarations first and answer based on the screen/context.\n"
-            "If uncertain, do not guess; say that additional confirmation is needed.\n"
+            "If policy docs contain relevant info, answer specifically based on them.\n"
+            "Never respond with placeholder messages like 'checking' or 'please wait'. Always answer immediately.\n"
         )
 
-    # 정책 텍스트(너무 길면 안 됨)
+    # 정책 텍스트 (상위 5개는 길게, 나머지는 짧게)
     lines: List[str] = []
-    for p in policies:
+    for i, p in enumerate(policies):
         desc = (getattr(p, "description_md", "") or "").strip()
-        if len(desc) > 400:
-            desc = desc[:400] + "…"
+        max_len = 2000 if i < 5 else 600  # 상위 5개는 충분한 컨텍스트 제공
+        if len(desc) > max_len:
+            desc = desc[:max_len] + "…"
         lines.append(f"- [{p.domain}] {p.policy_key} (v{p.version}) :: {p.title} :: {desc}")
-    policies_text = "\n".join(lines) if lines else "(등록된 정책이 부족합니다.)"
+    policies_text = "\n".join(lines) if lines else "(등록된 정책이 부족합니다. 일반적인 지식으로 답변하라.)"
 
     # 허용 policy_key 목록(너무 길면 줄이기)
     allowed_keys = allowed_keys or []
@@ -569,7 +574,8 @@ def _build_system_prompt(
 답변 규칙:
 - 정책선언집과 모순되는 말을 하면 안 된다.
 - 사용자가 바로 행동할 수 있을 정도로만 구체적으로 말해라.
-- 모르는 부분은 추측하지 말고 '추가 확인이 필요합니다'라고 말해라.
+- 정책에 없는 내용이면 일반 지식으로 최대한 도움이 되는 답변을 해라.
+- '확인 중', '잠시 후 다시', '추가 확인이 필요합니다' 같은 대기 메시지를 절대 쓰지 마라.
 - used_policy_keys는 아래 '허용 policy_key 목록'에 있는 값만 넣어라.
 - 관련 정책이 하나라도 있으면 used_policy_keys는 반드시 1개 이상 포함해라.
 - read_only 모드에서는 actions를 반드시 빈 배열([])로 내려라.
@@ -1086,7 +1092,7 @@ def _pingpong_brain_logic(
             response_format={"type": "json_object"},
             temperature=0.2,
             timeout=30,
-            max_tokens=600,
+            max_tokens=1200,
         )
 
         raw_content = resp.choices[0].message.content or ""
@@ -1123,8 +1129,8 @@ def _pingpong_brain_logic(
         traceback.print_exc()
 
         answer = (
-            "죄송해요. 지금은 답변 생성 중 오류가 발생했어요. "
-            "잠시 후 다시 시도해 주세요. (정책/로그 기준으로는 추가 확인이 필요합니다.)"
+            "죄송해요, 답변 생성 중 오류가 발생했어요. "
+            "다시 질문해 주시면 도움을 드릴게요!"
         )
         used_keys = []
         actions = []
