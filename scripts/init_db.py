@@ -16,6 +16,8 @@ import os
 import sys
 from pathlib import Path
 
+print("[init_db] Starting...", flush=True)
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
@@ -48,20 +50,20 @@ from app.models import (  # noqa: F401
 from sqlalchemy import inspect, text
 from sqlalchemy.schema import CreateTable
 
-print(f"[init_db] engine.url = {engine.url}")
-print(f"[init_db] dialect    = {engine.dialect.name}")
+print(f"[init_db] engine.url = {engine.url}", flush=True)
+print(f"[init_db] dialect    = {engine.dialect.name}", flush=True)
 
 # ── Connection test ──
 try:
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
-    print("[init_db] Connection OK")
+    print("[init_db] Connection OK", flush=True)
 except Exception as e:
-    print(f"[init_db] Connection FAILED: {e}")
+    print(f"[init_db] Connection FAILED: {e}", flush=True)
     sys.exit(1)
 
 registered = sorted(Base.metadata.tables.keys())
-print(f"[init_db] Registered models: {len(registered)}")
+print(f"[init_db] Registered models: {len(registered)}", flush=True)
 
 inspector = inspect(engine)
 existing = set(inspector.get_table_names())
