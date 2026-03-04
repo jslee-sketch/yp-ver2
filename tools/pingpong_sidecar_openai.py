@@ -2287,6 +2287,19 @@ def step_once(raw: str, client: OpenAI) -> str:
             S.history[:] = S.history[-KEEP_TURNS:]
             return finalize(msg, "docs" if docs else "없음")
 
+        # ✅ brain 200 OK지만 답변이 빈약한 경우 KB fallback
+        _weak_phrases = ["답변이 비어", "확인 중", "잠시 후", "답변을 만들지 못", "구체적으로 말해"]
+        _answer_raw = (ask_obj.get("answer") or "") if isinstance(ask_obj, dict) else ""
+        _is_weak = (not _answer_raw.strip()) or any(p in msg for p in _weak_phrases)
+        if _is_weak:
+            docs = retrieve_kb_snippets(q)
+            if docs:
+                msg = openai_generate(client, "explain", q, docs, S.history, S.user_name)
+                S.last_mode = "yeokping"
+                S.history.append({"user": q, "bot": msg})
+                S.history[:] = S.history[-KEEP_TURNS:]
+                return finalize(msg, "docs_fallback")
+
         S.last_mode = "yeokping"
         S.history.append({"user": q, "bot": msg})
         S.history[:] = S.history[-KEEP_TURNS:]

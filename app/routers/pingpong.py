@@ -333,6 +333,101 @@ def _build_context_snapshot(db: Session, body: PingpongAskIn) -> Dict[str, Any]:
     return ctx
 
 
+# =========================================================
+# MD 파일 직접 로드 (DB가 완전히 비었을 때 fallback)
+# =========================================================
+_MD_POLICY_CACHE: List[Any] = []
+_MD_POLICY_LOADED = False
+
+def _load_policies_from_md_files(question: str, limit: int = 15) -> List[Any]:
+    """policy_declarations DB가 비었을 때 .md 파일에서 직접 검색하여 가상 PolicyDeclaration 반환"""
+    global _MD_POLICY_CACHE, _MD_POLICY_LOADED
+    from pathlib import Path as _MdPath
+
+    if not _MD_POLICY_LOADED:
+        _app_dir = _MdPath(__file__).resolve().parent.parent  # app/routers -> app
+        doc_roots = [
+            _app_dir / "policy" / "docs" / "public",
+            _app_dir / "policy" / "docs" / "admin",
+            _app_dir / "policy" / "docs" / "admin" / "ssot",
+        ]
+        for dr in doc_roots:
+            if not dr.exists():
+                continue
+            for fp in sorted(dr.rglob("*.md")):
+                if not fp.is_file():
+                    continue
+                try:
+                    text = fp.read_text(encoding="utf-8", errors="replace").strip()
+                except Exception:
+                    continue
+                if not text:
+                    continue
+                try:
+                    rel = fp.relative_to(_app_dir / "policy" / "docs").as_posix().removesuffix(".md")
+                except Exception:
+                    rel = fp.stem
+                kl = rel.lower()
+                domain = (
+                    "REFUND" if "refund" in kl else
+                    "SHIPPING" if "shipping" in kl else
+                    "SETTLEMENT" if "settlement" in kl else
+                    "FEES" if "fee" in kl else
+                    "TIERS" if "tier" in kl else
+                    "PRICING" if "pricing" in kl or "price" in kl else
+                    "GUARDRAILS" if "guardrail" in kl else
+                    "TIME" if "time" in kl else
+                    "PARTICIPANTS" if "participant" in kl else
+                    "PINGPONG" if "pingpong" in kl else
+                    "BUYER" if "buyer" in kl else
+                    "SELLER" if "seller" in kl else
+                    "GENERAL"
+                )
+                title = fp.stem
+                for line in text.splitlines()[:10]:
+                    ls = line.strip()
+                    if ls.startswith("# ") and ls[2:].strip():
+                        title = ls[2:].strip()
+                        break
+
+                # 가상 객체 (PolicyDeclaration ORM 없이 duck-typing)
+                class _FakePolicy:
+                    pass
+                obj = _FakePolicy()
+                obj.domain = domain
+                obj.policy_key = rel
+                obj.title = title
+                obj.description_md = text
+                obj.version = 1
+                obj.is_active = 1
+                _MD_POLICY_CACHE.append(obj)
+        _MD_POLICY_LOADED = True
+        print(f"[pingpong] MD fallback loaded: {len(_MD_POLICY_CACHE)} docs", flush=True)
+
+    if not _MD_POLICY_CACHE:
+        return []
+
+    # 질문 기반 스코어링 (sidecar retrieve_kb_snippets 간소화)
+    ql = (question or "").lower()
+    tokens = re.findall(r"[가-힣]{2,}|[a-z]{2,}", ql)
+    if not tokens:
+        return _MD_POLICY_CACHE[:limit]
+
+    scored = []
+    for p in _MD_POLICY_CACHE:
+        s = 0.0
+        text_l = (p.description_md or "").lower()
+        path_l = (p.policy_key or "").lower()
+        for t in tokens[:15]:
+            if t in path_l:
+                s += 8
+            if t in text_l:
+                s += min(20, text_l.count(t) * 2)
+        scored.append((s, p))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [p for _, p in scored[:limit]]
+
+
 def _choose_policy_domains(screen: str) -> List[str]:
     s = (screen or "").upper()
     if s in ("REFUND_FLOW", "RESERVATION_DETAIL"):
@@ -911,6 +1006,10 @@ def _pingpong_brain_logic(
     # ✅ 그래도 비면 최후: domains=None (전체에서 40개)
     if not policies:
         policies = crud.get_active_policies(db, domains=None, limit_total=40)
+
+    # ✅ DB 완전히 비면 → .md 파일에서 직접 로드하여 가상 PolicyDeclaration 생성
+    if not policies:
+        policies = _load_policies_from_md_files(body.question)
 
     # ✅ allowed_keys 산정 (policy_key 확정)  ---- 가장 중요 ----
     allowed_keys_set = {p.policy_key for p in policies if getattr(p, "policy_key", None)}
