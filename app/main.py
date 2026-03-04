@@ -26,29 +26,53 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 # 초기화(DB/모델 로드)
 from app.config import project_rules as R
 
-from app import crud, models, database
+from app import crud, database
 from app.database import Base, engine
 
-# ✅ 모듈 레벨에서 테이블 생성 — 반드시 성공해야 함
-try:
-    from sqlalchemy import text as _text, inspect as _inspect
-    Base.metadata.create_all(bind=engine)
+# ✅ 모든 모델 명시적 import — 하나라도 빠지면 테이블 안 만들어짐
+from app.models import (  # noqa: F401
+    User, Buyer, Seller, Actuator,
+    PointTransaction, ActuatorCommission, ActuatorRewardLog,
+    Deal, DealAILog, DealParticipant, DealRound,
+    DealChatMessage, DealViewer,
+    UserNotification,
+    Offer, OfferPolicy,
+    Reservation, ReservationSettlement, ReservationPayment,
+    SellerReview, SellerRatingAggregate,
+    EventLog,
+    PolicyDeclaration, PolicyProposal,
+    PingpongLog, PingpongCase,
+    SpectatorPrediction, SpectatorMonthlyStats, SpectatorBadge,
+    Report, UploadedFile, PayoutRequest,
+)
 
-    # 검증: buyers 테이블이 실제로 존재하는지 확인
-    _inspector = _inspect(engine)
-    _tables = _inspector.get_table_names()
-    print(f"✅ [module-level] create_all OK — {len(_tables)} tables: {_tables[:10]}")
-    if "buyers" not in _tables:
-        print(f"⚠️  WARNING: 'buyers' table NOT found after create_all! tables={_tables}")
-        # 재시도: engine.begin() 컨텍스트 안에서 명시적 실행
+# ✅ 모듈 레벨에서 테이블 생성 — 반드시 성공해야 함
+import sqlalchemy as _sa
+_registered = sorted(Base.metadata.tables.keys())
+print(f"📋 Registered models on Base.metadata: {len(_registered)} tables")
+print(f"   {_registered}")
+
+try:
+    Base.metadata.create_all(bind=engine)
+    _inspector = _sa.inspect(engine)
+    _db_tables = sorted(_inspector.get_table_names())
+    print(f"✅ [create_all] OK — {len(_db_tables)} tables in DB")
+    print(f"   {_db_tables}")
+
+    # 검증: 핵심 테이블 존재 여부
+    _required = {"users", "buyers", "sellers", "deals", "offers", "reservations"}
+    _missing = _required - set(_db_tables)
+    if _missing:
+        print(f"❌ MISSING required tables: {_missing}")
+        # 재시도: engine.begin() 안에서
         with engine.begin() as _conn:
             Base.metadata.create_all(bind=_conn)
-        _tables2 = _inspect(engine).get_table_names()
-        print(f"   Retry result: {len(_tables2)} tables: {_tables2[:10]}")
+        _db_tables2 = sorted(_sa.inspect(engine).get_table_names())
+        _missing2 = _required - set(_db_tables2)
+        print(f"   Retry: {len(_db_tables2)} tables, still missing={_missing2 or 'none'}")
 except Exception as _cae:
-    import traceback as _tb
-    print(f"❌ [module-level] create_all FAILED: {_cae.__class__.__name__}: {_cae}")
-    _tb.print_exc()
+    print(f"❌ [create_all] FAILED: {_cae.__class__.__name__}: {_cae}")
+    traceback.print_exc()
 
 
 class Utf8JSONResponse(JSONResponse):
@@ -162,8 +186,8 @@ async def lifespan(app: FastAPI):
     # ✅ DB 테이블 생성 (module-level이 실패했을 경우 재시도)
     try:
         Base.metadata.create_all(bind=engine)
-        _tbl_names = _inspect(engine).get_table_names()
-        print(f"✅ [lifespan] create_all OK — {len(_tbl_names)} tables")
+        _tbl_names = sorted(_sa.inspect(engine).get_table_names())
+        print(f"✅ [lifespan] create_all OK — {len(_tbl_names)} tables: {_tbl_names[:5]}...")
     except Exception as e:
         print(f"❌ [lifespan] create_all FAILED: {e.__class__.__name__}: {e}")
         traceback.print_exc()
