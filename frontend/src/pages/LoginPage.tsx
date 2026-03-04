@@ -5,6 +5,7 @@ import type { AuthUser } from '../contexts/AuthContext';
 import { FEATURES } from '../config';
 import apiClient, { loginApi } from '../api/client';
 import { API } from '../api/endpoints';
+import { showToast } from '../components/common/Toast';
 
 const C = {
   bgDeep:   '#0a0a0f',
@@ -99,11 +100,10 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (method: string) => {
     if (method === 'phone') {
-      alert('소셜 로그인은 준비 중이에요. 이메일로 가입해주세요!');
+      showToast('전화번호 로그인은 준비 중이에요. 이메일로 로그인해주세요!', 'info');
       return;
     }
-    // 소셜 로그인 준비 중 안내
-    alert('소셜 로그인은 준비 중이에요. 이메일로 가입해주세요!');
+    showToast('소셜 로그인은 준비 중이에요. 이메일로 로그인해주세요!', 'info');
   };
 
   return (

@@ -353,8 +353,7 @@ function ExtraInfoStep({
 
   const selectStyle: React.CSSProperties = {
     flex: 1, padding: '10px 8px', borderRadius: 12, fontSize: 13,
-    background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
-    appearance: 'none' as const, WebkitAppearance: 'none' as const,
+    background: '#1a1a2e', border: `1px solid ${C.border}`, color: '#ffffff',
   };
 
   return (
@@ -498,16 +497,16 @@ function ExtraInfoStep({
           <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>생년월일</label>
           <div style={{ display: 'flex', gap: 8 }}>
             <select value={birthYear} onChange={e => setBirthYear(e.target.value)} style={selectStyle}>
-              <option value="">년도</option>
-              {years.map(y => <option key={y} value={y}>{y}년</option>)}
+              <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>년도</option>
+              {years.map(y => <option key={y} value={y} style={{ background: '#1a1a2e', color: '#ffffff' }}>{y}년</option>)}
             </select>
             <select value={birthMonth} onChange={e => setBirthMonth(e.target.value)} style={selectStyle}>
-              <option value="">월</option>
-              {months.map(m => <option key={m} value={m}>{m}월</option>)}
+              <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>월</option>
+              {months.map(m => <option key={m} value={m} style={{ background: '#1a1a2e', color: '#ffffff' }}>{m}월</option>)}
             </select>
             <select value={birthDay} onChange={e => setBirthDay(e.target.value)} style={selectStyle}>
-              <option value="">일</option>
-              {days.map(d => <option key={d} value={d}>{d}일</option>)}
+              <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>일</option>
+              {days.map(d => <option key={d} value={d} style={{ background: '#1a1a2e', color: '#ffffff' }}>{d}일</option>)}
             </select>
           </div>
           {birthError && <div style={{ fontSize: 11, color: C.red, marginTop: 6 }}>{birthError}</div>}
@@ -536,8 +535,8 @@ function ExtraInfoStep({
               );
             })}
           </div>
-          <div style={{ fontSize: 11, color: C.textSec, marginTop: 6 }}>
-            선호 결제수단입니다. 실제 결제 시 상세 정보를 입력합니다.
+          <div style={{ fontSize: 12, color: C.orange, marginTop: 8, padding: '8px 12px', background: 'rgba(255,152,0,0.06)', borderRadius: 8, lineHeight: 1.6 }}>
+            선호 결제수단입니다. 실제 결제 시 PG사를 통해 안전하게 처리됩니다.
           </div>
         </div>
       </div>

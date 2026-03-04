@@ -16,7 +16,8 @@ now_ts = time.time
 
 import requests
 from openai import OpenAI
-from dotenv import load_dotenv; load_dotenv()
+from pathlib import Path as _P
+from dotenv import load_dotenv; load_dotenv(_P(__file__).resolve().parent.parent / ".env", override=True)
 
 # ============================================================
 # Config

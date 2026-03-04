@@ -22,11 +22,11 @@ if DATABASE_URL.startswith("postgres://"):
 elif DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
-print(f"✅ Using DATABASE_URL: {DATABASE_URL}")
+print(f"[OK] Using DATABASE_URL: {DATABASE_URL}", flush=True)
 if DATABASE_URL.startswith("sqlite:///"):
     sqlite_path = DATABASE_URL.replace("sqlite:///", "")
     try:
-        print(f"➡️  SQLite file absolute path: {Path(sqlite_path).resolve()}")
+        print(f"[->] SQLite file absolute path: {Path(sqlite_path).resolve()}", flush=True)
     except Exception:
         pass
 

@@ -145,6 +145,8 @@ export default function MyPage() {
   // ── Withdraw Modal State ────────────────────────────────
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [withdrawPw, setWithdrawPw] = useState('');
+  const [withdrawReason, setWithdrawReason] = useState('');
+  const [withdrawReasonText, setWithdrawReasonText] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
 
   const openEditModal = () => {
@@ -247,14 +249,18 @@ export default function MyPage() {
   };
 
   const handleWithdraw = async () => {
+    if (!withdrawReason) { showToast('탈퇴 사유를 선택해주세요', 'error'); return; }
+    if (withdrawReason === '기타' && !withdrawReasonText.trim()) { showToast('탈퇴 사유를 입력해주세요', 'error'); return; }
     if (!withdrawPw) { showToast('비밀번호를 입력해주세요', 'error'); return; }
     setWithdrawing(true);
+    const reason = withdrawReason === '기타' ? withdrawReasonText.trim() : withdrawReason;
     try {
       await apiClient.delete(API.ACCOUNT.WITHDRAW, {
         data: {
           user_id: u.id,
           user_type: 'buyer',
           password: withdrawPw,
+          reason,
         },
       });
       showToast('회원 탈퇴가 완료되었어요', 'info');
@@ -283,8 +289,7 @@ export default function MyPage() {
 
   const selectStyle: React.CSSProperties = {
     flex: 1, padding: '8px 6px', borderRadius: 10, fontSize: 13,
-    background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
-    appearance: 'none' as const, WebkitAppearance: 'none' as const,
+    background: '#1a1a2e', border: `1px solid ${C.border}`, color: '#ffffff',
   };
 
   const inputStyle: React.CSSProperties = {
@@ -413,7 +418,7 @@ export default function MyPage() {
         {/* 회원 탈퇴 */}
         <div style={{ textAlign: 'center', marginTop: 16, marginBottom: 32 }}>
           <button
-            onClick={() => { setWithdrawPw(''); setShowWithdraw(true); }}
+            onClick={() => { setWithdrawPw(''); setWithdrawReason(''); setWithdrawReasonText(''); setShowWithdraw(true); }}
             style={{ fontSize: 12, color: C.textDim, cursor: 'pointer', background: 'none', border: 'none', textDecoration: 'underline' }}
           >회원 탈퇴</button>
         </div>
@@ -485,16 +490,16 @@ export default function MyPage() {
               <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>생년월일</div>
               <div style={{ display: 'flex', gap: 6 }}>
                 <select value={editBirthYear} onChange={e => setEditBirthYear(e.target.value)} style={selectStyle}>
-                  <option value="">년도</option>
-                  {years.map(y => <option key={y} value={y}>{y}년</option>)}
+                  <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>년도</option>
+                  {years.map(y => <option key={y} value={y} style={{ background: '#1a1a2e', color: '#ffffff' }}>{y}년</option>)}
                 </select>
                 <select value={editBirthMonth} onChange={e => setEditBirthMonth(e.target.value)} style={selectStyle}>
-                  <option value="">월</option>
-                  {months.map(m => <option key={m} value={m}>{m}월</option>)}
+                  <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>월</option>
+                  {months.map(m => <option key={m} value={m} style={{ background: '#1a1a2e', color: '#ffffff' }}>{m}월</option>)}
                 </select>
                 <select value={editBirthDay} onChange={e => setEditBirthDay(e.target.value)} style={selectStyle}>
-                  <option value="">일</option>
-                  {days.map(d => <option key={d} value={d}>{d}일</option>)}
+                  <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>일</option>
+                  {days.map(d => <option key={d} value={d} style={{ background: '#1a1a2e', color: '#ffffff' }}>{d}일</option>)}
                 </select>
               </div>
             </div>
@@ -641,8 +646,47 @@ export default function MyPage() {
               적립된 포인트는 모두 소멸됩니다.
             </div>
 
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>탈퇴 사유 *</div>
+              <select
+                value={withdrawReason}
+                onChange={e => setWithdrawReason(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
+                  background: '#1a1a2e', border: `1px solid ${C.border}`, color: '#ffffff',
+                  boxSizing: 'border-box' as const,
+                }}
+              >
+                <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>사유를 선택해주세요</option>
+                <option value="서비스를 잘 이용하지 않아요" style={{ background: '#1a1a2e', color: '#ffffff' }}>서비스를 잘 이용하지 않아요</option>
+                <option value="원하는 딜이 없어요" style={{ background: '#1a1a2e', color: '#ffffff' }}>원하는 딜이 없어요</option>
+                <option value="다른 서비스를 이용하고 있어요" style={{ background: '#1a1a2e', color: '#ffffff' }}>다른 서비스를 이용하고 있어요</option>
+                <option value="개인정보가 걱정돼요" style={{ background: '#1a1a2e', color: '#ffffff' }}>개인정보가 걱정돼요</option>
+                <option value="서비스 불만이 있어요" style={{ background: '#1a1a2e', color: '#ffffff' }}>서비스 불만이 있어요</option>
+                <option value="기타" style={{ background: '#1a1a2e', color: '#ffffff' }}>기타</option>
+              </select>
+            </div>
+
+            {withdrawReason === '기타' && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>상세 사유 *</div>
+                <textarea
+                  value={withdrawReasonText}
+                  onChange={e => setWithdrawReasonText(e.target.value.slice(0, 200))}
+                  placeholder="탈퇴 사유를 입력해주세요 (최대 200자)"
+                  rows={3}
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
+                    background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
+                    boxSizing: 'border-box' as const, resize: 'none',
+                  }}
+                />
+                <div style={{ fontSize: 11, color: C.textDim, textAlign: 'right', marginTop: 4 }}>{withdrawReasonText.length}/200</div>
+              </div>
+            )}
+
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>비밀번호 확인</div>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>비밀번호 확인 *</div>
               <input
                 type="password" value={withdrawPw}
                 onChange={e => setWithdrawPw(e.target.value)}
