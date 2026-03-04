@@ -73,6 +73,30 @@ except Exception as _cae:
     print(f"[DB_INIT] M1 FAILED: {_cae.__class__.__name__}: {_cae}", flush=True)
     traceback.print_exc()
 
+# ── ALTER TABLE: add new columns to existing tables ──
+_alter_cols = [
+    ("deals", "brand", "VARCHAR"),
+    ("deals", "model_number", "VARCHAR"),
+    ("deals", "options", "TEXT"),
+    ("deals", "free_text", "TEXT"),
+]
+try:
+    _insp = _sa.inspect(engine)
+    _existing_cols = {c["name"] for c in _insp.get_columns("deals")} if _insp.has_table("deals") else set()
+    _need_alter = [(t, c, typ) for t, c, typ in _alter_cols if c not in _existing_cols]
+    if _need_alter:
+        with engine.begin() as _conn:
+            for _tbl, _col, _typ in _need_alter:
+                try:
+                    _conn.execute(_sa.text(f"ALTER TABLE {_tbl} ADD COLUMN {_col} {_typ}"))
+                    print(f"[DB_INIT] Added column {_tbl}.{_col}", flush=True)
+                except Exception:
+                    pass
+    else:
+        print("[DB_INIT] ALTER TABLE skipped — all columns exist", flush=True)
+except Exception as _ae:
+    print(f"[DB_INIT] ALTER TABLE error: {_ae}", flush=True)
+
 # ── Method 2: Raw psycopg fallback (PostgreSQL only) ──
 if "postgres" in _DATABASE_URL_RAW:
     try:

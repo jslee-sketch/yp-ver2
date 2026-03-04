@@ -745,6 +745,11 @@ def create_deal(db: Session, deal: schemas.DealCreate):
         # 🔹 pricing guardrail anchor (AI Helper naver_lowest_price 에서 전달)
         anchor_price=deal.anchor_price,
 
+        # 🔹 AI Helper 추출 필드
+        brand=deal.brand,
+        model_number=deal.model_number,
+        options=deal.options,
+
         # 🔹 옵션 필드 매핑
         option1_title=deal.option1_title,
         option1_value=deal.option1_value,

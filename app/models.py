@@ -251,6 +251,8 @@ class Deal(Base):
 
     # --- AI Helper 추출 필드 ---
     brand = Column(String, nullable=True)                       # 브랜드명 (AI Helper 추출)
+    model_number = Column(String, nullable=True)                # 모델번호 (AI Helper 추출)
+    options = Column(Text, nullable=True)                       # 옵션 JSON 문자열 (AI Helper 추출)
 
     # 옵션 1~5
     option1_title = Column(String, nullable=True)

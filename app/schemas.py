@@ -328,6 +328,10 @@ class DealCreate(BaseModel):
     # pricing guardrail anchor (AI Helper의 naver_lowest_price 를 여기에 전달)
     anchor_price: Optional[float] = None
 
+    brand: Optional[str] = None
+    model_number: Optional[str] = None
+    options: Optional[str] = None         # 옵션 JSON 문자열
+
     option1_title: Optional[str] = None
     option1_value: Optional[str] = None
     option2_title: Optional[str] = None
@@ -359,6 +363,8 @@ class DealOut(ORMModel):
     max_budget: Optional[float] = None
     anchor_price: Optional[float] = None
     brand: Optional[str] = None
+    model_number: Optional[str] = None
+    options: Optional[str] = None
     status: str = "open"
     deadline_at: Optional[datetime] = None
     rounds: List["DealRoundOut"] = Field(default_factory=list)  # forward ref 안전
