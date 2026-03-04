@@ -236,14 +236,14 @@ function RoleStep({ role, onSelect, onNext }: {
 
 // ── Step 2: 프로필 ────────────────────────────────────────
 function ProfileStep({ role, method, nickname, setNickname, nickStatus, recommender, setRecommender,
-  email, setEmail, password, setPassword, apiError, registering, onNext }: {
+  email, setEmail, password, setPassword, apiError, onNext }: {
   role: string; method: string;
   nickname: string; setNickname: (v: string) => void;
   nickStatus: 'idle' | 'checking' | 'ok' | 'taken';
   recommender: string; setRecommender: (v: string) => void;
   email: string; setEmail: (v: string) => void;
   password: string; setPassword: (v: string) => void;
-  apiError: string; registering: boolean;
+  apiError: string;
   onNext: () => void;
 }) {
   const nickMsg   = { idle: '', checking: '확인 중...', ok: '사용 가능한 닉네임이에요 ✓', taken: '이미 사용 중인 닉네임이에요' }[nickStatus];
@@ -871,7 +871,6 @@ export default function RegisterPage() {
                 password={password}
                 setPassword={setPassword}
                 apiError={apiError}
-                registering={registering}
                 onNext={() => { void goNext(); }}
               />
             )}
