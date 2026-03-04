@@ -1261,15 +1261,17 @@ def openai_generate(client: OpenAI, category: str, question: str, docs: str, his
 {docs if docs else "(없음)"}
 """.strip()
 
-    resp = client.responses.create(
+    resp = client.chat.completions.create(
         model=OPENAI_MODEL,
-        instructions=instructions_for(category, user_name),
-        input=prompt,
-        text={"verbosity": "medium"},
-        max_output_tokens=450,
-        store=False,
+        messages=[
+            {"role": "system", "content": instructions_for(category, user_name)},
+            {"role": "user", "content": prompt},
+        ],
+        max_tokens=450,
+        temperature=0.3,
+        timeout=30,
     )
-    return (resp.output_text or "").strip()
+    return (resp.choices[0].message.content or "").strip()
 
 def _fmt_kst_min(dt: datetime) -> str:
     # YYYY-MM-DD HH:MM (KST)

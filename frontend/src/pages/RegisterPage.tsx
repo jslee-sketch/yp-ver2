@@ -406,6 +406,9 @@ function ExtraInfoStep({ phone, setPhone, address, setAddress, shippingAddr, set
               );
             })}
           </div>
+          <div style={{ fontSize: 11, color: C.textSec, marginTop: 6 }}>
+            실제 결제 시 상세 정보를 입력합니다
+          </div>
         </div>
       </div>
 

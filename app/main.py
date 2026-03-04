@@ -29,6 +29,12 @@ from app.config import project_rules as R
 from app import crud, models, database
 from app.database import Base, engine
 
+# ✅ 모듈 레벨에서 테이블 생성 (lifespan이 안 불릴 경우 대비)
+try:
+    Base.metadata.create_all(bind=engine)
+    print("✅ [module-level] Base.metadata.create_all OK")
+except Exception as _cae:
+    print(f"[warn] module-level create_all failed: {_cae.__class__.__name__}: {_cae}")
 
 
 class Utf8JSONResponse(JSONResponse):
