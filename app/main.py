@@ -46,33 +46,81 @@ from app.models import (  # noqa: F401
     Report, UploadedFile, PayoutRequest,
 )
 
-# ✅ 모듈 레벨에서 테이블 생성 — 반드시 성공해야 함
+# ═══════════════════════════════════════════════════════════
+# ✅ DB 테이블 생성 — 3단계 cascade (module-level, 반드시 성공해야 함)
+# ═══════════════════════════════════════════════════════════
 import sqlalchemy as _sa
-_registered = sorted(Base.metadata.tables.keys())
-print(f"📋 Registered models on Base.metadata: {len(_registered)} tables")
-print(f"   {_registered}")
 
+_DATABASE_URL_RAW = os.environ.get("DATABASE_URL", "")
+print(f"[DB_INIT] DATABASE_URL type: {'postgresql' if 'postgres' in _DATABASE_URL_RAW else 'sqlite'}", flush=True)
+print(f"[DB_INIT] engine.url = {engine.url}", flush=True)
+
+_registered = sorted(Base.metadata.tables.keys())
+print(f"[DB_INIT] Registered models: {len(_registered)}", flush=True)
+
+_REQUIRED = {"users", "buyers", "sellers", "deals", "offers", "reservations",
+             "reservation_settlements", "point_transactions", "policy_declarations"}
+
+# ── Method 1: SQLAlchemy create_all ──
+print("[DB_INIT] Method 1: Base.metadata.create_all()", flush=True)
 try:
     Base.metadata.create_all(bind=engine)
     _inspector = _sa.inspect(engine)
     _db_tables = sorted(_inspector.get_table_names())
-    print(f"✅ [create_all] OK — {len(_db_tables)} tables in DB")
-    print(f"   {_db_tables}")
-
-    # 검증: 핵심 테이블 존재 여부
-    _required = {"users", "buyers", "sellers", "deals", "offers", "reservations"}
-    _missing = _required - set(_db_tables)
-    if _missing:
-        print(f"❌ MISSING required tables: {_missing}")
-        # 재시도: engine.begin() 안에서
-        with engine.begin() as _conn:
-            Base.metadata.create_all(bind=_conn)
-        _db_tables2 = sorted(_sa.inspect(engine).get_table_names())
-        _missing2 = _required - set(_db_tables2)
-        print(f"   Retry: {len(_db_tables2)} tables, still missing={_missing2 or 'none'}")
+    _missing = _REQUIRED - set(_db_tables)
+    print(f"[DB_INIT] M1 result: {len(_db_tables)} tables, missing={_missing or 'none'}", flush=True)
 except Exception as _cae:
-    print(f"❌ [create_all] FAILED: {_cae.__class__.__name__}: {_cae}")
+    print(f"[DB_INIT] M1 FAILED: {_cae.__class__.__name__}: {_cae}", flush=True)
     traceback.print_exc()
+
+# ── Method 2: Raw psycopg fallback (PostgreSQL only) ──
+if "postgres" in _DATABASE_URL_RAW:
+    try:
+        _m2_tables = set(_sa.inspect(engine).get_table_names())
+        _m2_missing = _REQUIRED - _m2_tables
+        if _m2_missing:
+            print(f"[DB_INIT] Method 2: raw psycopg (missing: {_m2_missing})", flush=True)
+            import psycopg
+            _conn_url = _DATABASE_URL_RAW
+            if "postgresql+psycopg://" in _conn_url:
+                _conn_url = _conn_url.replace("postgresql+psycopg://", "postgresql://")
+            elif "postgres://" in _conn_url and "postgresql://" not in _conn_url:
+                _conn_url = _conn_url.replace("postgres://", "postgresql://")
+
+            _raw_conn = psycopg.connect(_conn_url)
+            _raw_cur = _raw_conn.cursor()
+
+            from sqlalchemy.schema import CreateTable as _CT
+            from sqlalchemy.dialects import postgresql as _pg_dialect
+
+            for _tbl in Base.metadata.sorted_tables:
+                if _tbl.name in _m2_tables:
+                    continue
+                try:
+                    _ddl = _CT(_tbl, if_not_exists=True)
+                    _sql = str(_ddl.compile(dialect=_pg_dialect.dialect())).strip()
+                    _raw_cur.execute(_sql)
+                    print(f"  [M2] created: {_tbl.name}", flush=True)
+                except Exception as _te:
+                    print(f"  [M2] {_tbl.name} FAILED: {_te}", flush=True)
+
+            _raw_conn.commit()
+            _raw_cur.close()
+            _raw_conn.close()
+            print("[DB_INIT] M2 done", flush=True)
+        else:
+            print("[DB_INIT] M2 skipped — all required tables exist", flush=True)
+    except Exception as _e:
+        print(f"[DB_INIT] M2 FAILED: {_e}", flush=True)
+        traceback.print_exc()
+
+# ── Final verification ──
+try:
+    _final_tables = sorted(_sa.inspect(engine).get_table_names())
+    _final_missing = _REQUIRED - set(_final_tables)
+    print(f"[DB_INIT] FINAL: {len(_final_tables)} tables, missing={_final_missing or 'none'}", flush=True)
+except Exception as _ve:
+    print(f"[DB_INIT] verification error: {_ve}", flush=True)
 
 
 class Utf8JSONResponse(JSONResponse):
