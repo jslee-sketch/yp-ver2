@@ -26,7 +26,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 # 초기화(DB/모델 로드)
 from app.config import project_rules as R
 
-from app import crud, database
+from app import crud, models, database
 from app.database import Base, engine
 
 # ✅ 모든 모델 명시적 import — 하나라도 빠지면 테이블 안 만들어짐
