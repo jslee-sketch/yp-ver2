@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { DealHeader } from '../components/deal/DealHeader';
 import { DealStageProgress } from '../components/deal/DealStageProgress';
 import { PriceDashboard } from '../components/deal/PriceDashboard';
@@ -8,38 +8,37 @@ import { OfferList } from '../components/deal/OfferList';
 import { PingpongCard } from '../components/common/PingpongCard';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { ProductDetailSheet } from '../components/deal/ProductDetailSheet';
+import { fetchDeal } from '../api/dealApi';
 import type { Deal, Offer, SpectatorStats, DealStage } from '../types';
 
-// ── Mock 데이터 ──────────────────────────────────────
-const DEAL: Deal & {
-  current_stage: string;
-  stage_deadline_at: string;
-  stages: DealStage[];
-} = {
-  id: 15,
-  product_name: '에어팟 프로 2세대 (USB-C)',
-  brand: 'Apple',
-  category: '전자기기',
-  desired_price: 95000,
-  anchor_price: 103900,
-  status: 'OPEN',
-  deadline_at: new Date(Date.now() + 23 * 3600000 + 14 * 60000 + 7000).toISOString(),
-  participants_count: 12,
-  spectator_count: 87,
-  offer_count: 4,
-  avg_prediction: 92000,
-  created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-  current_stage: 'offer_competing',
-  stage_deadline_at: new Date(Date.now() + 23 * 3600000 + 14 * 60000 + 7000).toISOString(),
-  stages: [
-    { key: 'deal_open',       label: '딜 모집',   completed: true },
-    { key: 'offer_competing', label: '오퍼 경쟁', completed: false, deadline_at: new Date(Date.now() + 23 * 3600000 + 14 * 60000 + 7000).toISOString() },
-    { key: 'deal_closed',     label: '성사',       completed: false },
-    { key: 'payment',         label: '결제',       completed: false },
-    { key: 'shipping',        label: '배송',       completed: false },
-    { key: 'completed',       label: '완료',       completed: false },
-  ],
-};
+// ── Mock 데이터 (API 실패 시 fallback) ──────────────
+function makeMockDeal(id: number): Deal & { current_stage: string; stage_deadline_at: string; stages: DealStage[] } {
+  return {
+    id,
+    product_name: '(로딩 실패)',
+    brand: '',
+    category: '',
+    desired_price: 0,
+    anchor_price: 0,
+    status: 'OPEN',
+    deadline_at: new Date(Date.now() + 23 * 3600000).toISOString(),
+    participants_count: 0,
+    spectator_count: 0,
+    offer_count: 0,
+    avg_prediction: 0,
+    created_at: new Date().toISOString(),
+    current_stage: 'deal_open',
+    stage_deadline_at: new Date(Date.now() + 23 * 3600000).toISOString(),
+    stages: [
+      { key: 'deal_open',       label: '딜 모집',   completed: true },
+      { key: 'offer_competing', label: '오퍼 경쟁', completed: false },
+      { key: 'deal_closed',     label: '성사',       completed: false },
+      { key: 'payment',         label: '결제',       completed: false },
+      { key: 'shipping',        label: '배송',       completed: false },
+      { key: 'completed',       label: '완료',       completed: false },
+    ],
+  };
+}
 
 const OFFERS: Offer[] = [
   { id: 1, seller_name: '디지털플러스', price: 89000, tier: 'PREMIUM',  rating: 4.8, review_count: 342, shipping_fee: 0,    delivery_days: 2, warranty_months: 12 },
@@ -85,7 +84,7 @@ const MOCK_CHAT = [
   { id: 5, user: '사냥꾼87',   msg: '맞아요, 1년보증까지 있으니 좋은 것 같아요', time: '13:47' },
 ];
 
-function getPingpongMessage(deal: typeof DEAL, offers: Offer[]): string {
+function getPingpongMessage(deal: Deal, offers: Offer[]): string {
   if (!offers.length) return '아직 오퍼가 없어요. 판매자들이 준비 중이에요 — 조금만 기다려주세요! ⏳';
   const lowest = offers[0];
   const premiumCount = offers.filter(o => o.tier === 'PREMIUM').length;
@@ -100,11 +99,52 @@ function getPingpongMessage(deal: typeof DEAL, offers: Offer[]): string {
 // ── 페이지 ───────────────────────────────────────────
 export default function DealDetailPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const dealId = Number(id) || 0;
+
+  const [deal, setDeal] = useState<Deal & { current_stage: string; stage_deadline_at: string; stages: DealStage[] }>(makeMockDeal(dealId));
+  const [loading, setLoading] = useState(true);
   const [spectatorStats, setSpectatorStats] = useState<SpectatorStats>(SPECTATOR_STATS);
   const [chatSheetOpen, setChatSheetOpen]   = useState(false);
   const [productSheetOpen, setProductSheetOpen] = useState(false);
   const [chatMsg, setChatMsg] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // ── 딜 데이터 페칭 ──
+  useEffect(() => {
+    if (!dealId) return;
+    setLoading(true);
+    fetchDeal(dealId).then(raw => {
+      if (raw && typeof raw === 'object') {
+        const d = raw as Record<string, unknown>;
+        setDeal({
+          id: dealId,
+          product_name: (d.product_name as string) || `딜 #${dealId}`,
+          brand: (d.brand as string) || '',
+          category: (d.category as string) || '',
+          desired_price: (d.target_price as number) ?? (d.max_budget as number) ?? 0,
+          anchor_price: (d.anchor_price as number) ?? 0,
+          status: d.status === 'open' ? 'OPEN' : d.status === 'closed' ? 'CLOSED' : 'OPEN',
+          deadline_at: (d.deadline_at as string) || new Date(Date.now() + 72 * 3600000).toISOString(),
+          participants_count: (d.current_qty as number) ?? 0,
+          spectator_count: 0,
+          offer_count: 0,
+          avg_prediction: 0,
+          created_at: (d.created_at as string) || new Date().toISOString(),
+          current_stage: d.status === 'closed' ? 'deal_closed' : 'offer_competing',
+          stage_deadline_at: (d.deadline_at as string) || new Date(Date.now() + 72 * 3600000).toISOString(),
+          stages: [
+            { key: 'deal_open',       label: '딜 모집',   completed: true },
+            { key: 'offer_competing', label: '오퍼 경쟁', completed: d.status !== 'open', deadline_at: (d.deadline_at as string) || undefined },
+            { key: 'deal_closed',     label: '성사',       completed: d.status === 'closed' || d.status === 'archived' },
+            { key: 'payment',         label: '결제',       completed: false },
+            { key: 'shipping',        label: '배송',       completed: false },
+            { key: 'completed',       label: '완료',       completed: d.status === 'archived' },
+          ],
+        });
+      }
+    }).finally(() => setLoading(false));
+  }, [dealId]);
 
   useEffect(() => {
     if (chatSheetOpen) {
@@ -113,7 +153,18 @@ export default function DealDetailPage() {
   }, [chatSheetOpen]);
 
   const lowestOffer = OFFERS[0];
-  const pingpongMsg = getPingpongMessage(DEAL, OFFERS);
+  const pingpongMsg = getPingpongMessage(deal, OFFERS);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🔄</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>딜 정보를 불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100dvh', paddingBottom: 32 }}>
@@ -132,7 +183,7 @@ export default function DealDetailPage() {
         >←</button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <button
-            onClick={() => navigate(`/deal/${DEAL.id}/journey`)}
+            onClick={() => navigate(`/deal/${deal.id}/journey`)}
             style={{
               padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700,
               background: 'rgba(0,230,118,0.1)', border: '1px solid rgba(0,230,118,0.2)',
@@ -148,22 +199,22 @@ export default function DealDetailPage() {
       <div className="page-enter">
         {/* 딜 헤더 (상품명 탭 → 상품 상세 시트) */}
         <div onClick={() => setProductSheetOpen(true)} style={{ cursor: 'pointer' }}>
-          <DealHeader deal={DEAL} />
+          <DealHeader deal={deal} />
         </div>
 
         {/* 딜 단계 프로그레스 + 카운트다운 */}
         <DealStageProgress
-          stages={DEAL.stages}
-          currentStageKey={DEAL.current_stage}
-          deadlineAt={DEAL.stage_deadline_at}
+          stages={deal.stages}
+          currentStageKey={deal.current_stage}
+          deadlineAt={deal.stage_deadline_at}
         />
 
         <div style={{ height: 1, background: 'var(--border-subtle)', margin: '0 16px 16px' }} />
 
         {/* 가격 대시보드 */}
         <PriceDashboard
-          anchorPrice={DEAL.anchor_price}
-          desiredPrice={DEAL.desired_price}
+          anchorPrice={deal.anchor_price}
+          desiredPrice={deal.desired_price}
           lowestOfferPrice={lowestOffer?.price ?? null}
         />
 
@@ -274,8 +325,8 @@ export default function DealDetailPage() {
       <ProductDetailSheet
         isOpen={productSheetOpen}
         onClose={() => setProductSheetOpen(false)}
-        productName={DEAL.product_name}
-        brand={DEAL.brand}
+        productName={deal.product_name}
+        brand={deal.brand}
         canonicalName="Apple AirPods Pro 2nd Gen USB-C"
         options={PRODUCT_DETAIL.options}
         conditions={PRODUCT_DETAIL.conditions}

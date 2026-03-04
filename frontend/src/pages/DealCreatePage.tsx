@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { aiDealHelper } from '../api/aiApi';
@@ -58,6 +58,7 @@ type AIResult = {
 interface OptionGroup {
   title: string;
   values: string[];
+  selectedIndex: number;  // 선택된 값 인덱스 (-1 = 미선택)
 }
 
 // ── Mock 데이터 ──────────────────────────────────────────
@@ -444,6 +445,10 @@ export default function DealCreatePage() {
   // Step 4: 생성
   const [creating, setCreating] = useState(false);
 
+  // 스크롤 위치 보존용
+  const scrollRef = useRef(0);
+  useEffect(() => { window.scrollTo(0, scrollRef.current); }, [optionGroups]);
+
   // ── 이동 ─────────────────────────────────────────────
   const goTo = (n: number) => { setDir(n > step ? 1 : -1); setStep(n); };
 
@@ -564,11 +569,11 @@ export default function DealCreatePage() {
     // 신품 기본
     setConditionNew(true);
 
-    // 옵션 그룹
-    const groups: OptionGroup[] = result.suggested_options.map(o => ({
-      title: o.title,
-      values: [...o.values],
-    }));
+    // 옵션 그룹 (selected_value가 있으면 해당 인덱스 선택)
+    const groups: OptionGroup[] = result.suggested_options.map(o => {
+      const selIdx = o.selected_value ? o.values.indexOf(o.selected_value) : 0;
+      return { title: o.title, values: [...o.values], selectedIndex: selIdx >= 0 ? selIdx : 0 };
+    });
     setOptionGroups(groups);
     if (groups.length > 0) filled.add('options');
 
@@ -597,26 +602,33 @@ export default function DealCreatePage() {
   };
 
   // ── 옵션 그룹 핸들러 ──────────────────────────────────
+  const saveScroll = () => { scrollRef.current = window.scrollY; };
+
   const updateGroupTitle = (idx: number, title: string) => {
+    saveScroll();
     setOptionGroups(prev => prev.map((g, i) => i === idx ? { ...g, title } : g));
   };
   const addValueToGroup = (idx: number, val: string) => {
     if (!val.trim()) return;
+    saveScroll();
     setOptionGroups(prev => prev.map((g, i) =>
       i === idx ? { ...g, values: [...g.values, val.trim()] } : g
     ));
   };
-  const removeValueFromGroup = (gIdx: number, vIdx: number) => {
+  const selectValueInGroup = (gIdx: number, vIdx: number) => {
+    saveScroll();
     setOptionGroups(prev => prev.map((g, i) =>
-      i === gIdx ? { ...g, values: g.values.filter((_, j) => j !== vIdx) } : g
+      i === gIdx ? { ...g, selectedIndex: vIdx } : g
     ));
   };
   const removeGroup = (idx: number) => {
+    saveScroll();
     setOptionGroups(prev => prev.filter((_, i) => i !== idx));
   };
   const addGroup = () => {
-    if (optionGroups.length >= 5) return;
-    setOptionGroups(prev => [...prev, { title: '', values: [] }]);
+    if (optionGroups.length >= 10) return;
+    saveScroll();
+    setOptionGroups(prev => [...prev, { title: '', values: [], selectedIndex: -1 }]);
   };
 
   // ── 딜 생성 API ─────────────────────────────────────
@@ -631,7 +643,11 @@ export default function DealCreatePage() {
         product_detail: productDetail || null,
         product_code: productCode || null,
         condition: conditionNew ? 'new' : 'refurbished',
-        options: optionGroups.length > 0 ? JSON.stringify(optionGroups) : null,
+        options: optionGroups.length > 0 ? JSON.stringify(optionGroups.map(g => ({
+          title: g.title,
+          values: g.values,
+          selected_value: g.selectedIndex >= 0 && g.selectedIndex < g.values.length ? g.values[g.selectedIndex] : null,
+        }))) : null,
         free_text: freeTextNote || null,
         desired_qty: 1,
         anchor_price: aiResult?.price?.center_price || null,
@@ -692,7 +708,7 @@ export default function DealCreatePage() {
     </button>
   );
 
-  // ── 옵션 태그 입력 컴포넌트 ────────────────────────────
+  // ── 옵션항목(사양) 에디터 ────────────────────────────
   const OptionGroupEditor = ({ group, gIdx }: { group: OptionGroup; gIdx: number }) => {
     const [newVal, setNewVal] = useState('');
     return (
@@ -705,7 +721,7 @@ export default function DealCreatePage() {
           <input
             value={group.title}
             onChange={e => updateGroupTitle(gIdx, e.target.value)}
-            placeholder="옵션명 (예: 색상)"
+            placeholder="옵션항목(사양) 이름 (예: 색상)"
             className="dc-input"
             style={{
               flex: 1, padding: '8px 10px', fontSize: 13, borderRadius: 8,
@@ -722,50 +738,49 @@ export default function DealCreatePage() {
           >✕</button>
         </div>
 
-        {/* 태그들 */}
+        {/* 옵션값 라디오 선택 */}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-          {group.values.map((val, vIdx) => (
-            <span key={vIdx} style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '5px 10px', borderRadius: 16, fontSize: 12, fontWeight: 600,
-              background: `${C.cyan}15`, border: `1px solid ${C.cyan}30`, color: C.cyan,
-            }}>
-              {val}
+          {group.values.map((val, vIdx) => {
+            const selected = group.selectedIndex === vIdx;
+            return (
               <button
-                onClick={() => removeValueFromGroup(gIdx, vIdx)}
+                key={vIdx}
+                onClick={() => selectValueInGroup(gIdx, vIdx)}
                 style={{
-                  background: 'none', border: 'none', color: C.cyan, fontSize: 12,
-                  cursor: 'pointer', padding: 0, lineHeight: 1,
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  padding: '6px 12px', borderRadius: 16, fontSize: 12, fontWeight: 600,
+                  background: selected ? `${C.green}20` : C.bgSurface,
+                  border: `1.5px solid ${selected ? C.green : C.border}`,
+                  color: selected ? C.green : C.textSec,
+                  cursor: 'pointer', transition: 'all 0.15s',
                 }}
-              >✕</button>
-            </span>
-          ))}
+              >
+                {selected && '✓ '}{val}
+              </button>
+            );
+          })}
         </div>
 
-        {/* 값 추가 */}
-        <div style={{ display: 'flex', gap: 6 }}>
-          <input
-            value={newVal}
-            onChange={e => setNewVal(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') { e.preventDefault(); addValueToGroup(gIdx, newVal); setNewVal(''); }
-            }}
-            placeholder="값 입력 후 Enter"
-            className="dc-input"
-            style={{
-              flex: 1, padding: '7px 10px', fontSize: 12, borderRadius: 8,
-              background: C.bgInput, border: `1px solid ${C.border}`, color: C.textPri,
-            }}
-          />
-          <button
-            onClick={() => { addValueToGroup(gIdx, newVal); setNewVal(''); }}
-            style={{
-              padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-              background: `${C.cyan}20`, border: `1px solid ${C.cyan}40`, color: C.cyan,
-              cursor: 'pointer',
-            }}
-          >+ 추가</button>
-        </div>
+        {/* 옵션내용 추가 입력 */}
+        <input
+          value={newVal}
+          onChange={e => setNewVal(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (newVal.trim()) {
+                addValueToGroup(gIdx, newVal);
+                setNewVal('');
+              }
+            }
+          }}
+          placeholder="옵션내용 입력 후 Enter"
+          className="dc-input"
+          style={{
+            padding: '7px 10px', fontSize: 12, borderRadius: 8,
+            background: C.bgInput, border: `1px solid ${C.border}`, color: C.textPri,
+          }}
+        />
       </div>
     );
   };
@@ -1091,14 +1106,14 @@ export default function DealCreatePage() {
                   </div>
                 </div>
 
-                {/* 옵션 그룹 */}
+                {/* 옵션항목(사양) */}
                 <div>
-                  <SectionTitle>📦 옵션</SectionTitle>
+                  <SectionTitle>📦 옵션항목(사양)</SectionTitle>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {optionGroups.map((group, gIdx) => (
                       <OptionGroupEditor key={gIdx} group={group} gIdx={gIdx} />
                     ))}
-                    {optionGroups.length < 5 && (
+                    {optionGroups.length < 10 ? (
                       <button
                         onClick={addGroup}
                         style={{
@@ -1106,7 +1121,11 @@ export default function DealCreatePage() {
                           background: 'transparent', border: `1.5px dashed ${C.border}`,
                           color: C.textDim, cursor: 'pointer', transition: 'all 0.15s',
                         }}
-                      >+ 옵션그룹 추가</button>
+                      >+ 옵션항목(사양) 추가</button>
+                    ) : (
+                      <div style={{ fontSize: 11, color: C.orange, textAlign: 'center', padding: '8px 0' }}>
+                        최대 10개까지만 추가할 수 있어요
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1177,8 +1196,12 @@ export default function DealCreatePage() {
                     { label: '제품명',     value: productDetail || '-' },
                     { label: '제품코드',   value: productCode || '-' },
                     { label: '신품 여부',  value: conditionNew ? '신품' : '리퍼/중고' },
-                    { label: '옵션',       value: optionGroups.length > 0
-                      ? optionGroups.map(g => `${g.title}: ${g.values.join(', ')}`).join(' / ')
+                    { label: '옵션항목(사양)', value: optionGroups.length > 0
+                      ? optionGroups.map(g => {
+                          const sel = g.selectedIndex >= 0 && g.selectedIndex < g.values.length
+                            ? g.values[g.selectedIndex] : g.values[0] || '-';
+                          return `${g.title}: ${sel}`;
+                        }).join(' / ')
                       : '없음' },
                     ...(freeTextNote ? [{ label: '기타 요청', value: freeTextNote }] : []),
                   ].map(({ label, value }, idx, arr) => (
