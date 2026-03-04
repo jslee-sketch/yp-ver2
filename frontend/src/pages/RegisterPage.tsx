@@ -285,12 +285,192 @@ function ProfileStep({ role, method, nickname, setNickname, nickStatus, recommen
         )}
       </div>
 
-      <PrimaryBtn label={registering ? '가입 중...' : '다음'} onClick={onNext} disabled={!canNext || registering} />
+      <PrimaryBtn label="다음" onClick={onNext} disabled={!canNext} />
     </div>
   );
 }
 
-// ── Step 3: 사업자 정보 ───────────────────────────────────
+// ── Step 3: 추가 정보 ─────────────────────────────────────
+function ExtraInfoStep({ phone, setPhone, address, setAddress, shippingAddr, setShippingAddr,
+  sameAsAddr, setSameAsAddr, gender, setGender, birthDate, setBirthDate, onNext }: {
+  phone: string; setPhone: (v: string) => void;
+  address: string; setAddress: (v: string) => void;
+  shippingAddr: string; setShippingAddr: (v: string) => void;
+  sameAsAddr: boolean; setSameAsAddr: (v: boolean) => void;
+  gender: string; setGender: (v: string) => void;
+  birthDate: string; setBirthDate: (v: string) => void;
+  onNext: () => void;
+}) {
+  const canNext = !!phone.replace(/\D/g, '');
+
+  return (
+    <div style={{ padding: '40px 24px' }}>
+      <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 6 }}>추가 정보를 입력해요</div>
+      <div style={{ fontSize: 13, color: C.textSec, marginBottom: 28 }}>원활한 거래를 위해 정보를 입력해주세요. (전화번호만 필수)</div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
+        <InputField label="전화번호 *" value={phone} onChange={setPhone} placeholder="010-0000-0000" type="tel" />
+        <InputField label="주소" value={address} onChange={setAddress} placeholder="서울시 강남구..." />
+
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>배송지 주소</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: C.textSec, cursor: 'pointer' }}>
+              <input type="checkbox" checked={sameAsAddr} onChange={e => { setSameAsAddr(e.target.checked); if (e.target.checked) setShippingAddr(address); }} />
+              위와 동일
+            </label>
+          </div>
+          <input
+            type="text"
+            value={sameAsAddr ? address : shippingAddr}
+            onChange={e => setShippingAddr(e.target.value)}
+            disabled={sameAsAddr}
+            placeholder="배송받을 주소"
+            style={{
+              width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
+              background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+              opacity: sameAsAddr ? 0.5 : 1,
+            }}
+          />
+        </div>
+
+        {/* 성별 */}
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8 }}>성별</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[{ key: 'male', label: '남성' }, { key: 'female', label: '여성' }, { key: 'other', label: '기타' }].map(g => {
+              const active = gender === g.key;
+              return (
+                <button
+                  key={g.key}
+                  onClick={() => setGender(active ? '' : g.key)}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+                    background: active ? `${C.green}20` : C.bgInput,
+                    border: `1px solid ${active ? C.green : C.border}`,
+                    color: active ? C.green : C.textSec,
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  {g.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 생년월일 */}
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>생년월일</label>
+          <input
+            type="date"
+            value={birthDate}
+            onChange={e => setBirthDate(e.target.value)}
+            style={{
+              width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
+              background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+            }}
+          />
+        </div>
+      </div>
+
+      <PrimaryBtn label="다음" onClick={onNext} disabled={!canNext} />
+    </div>
+  );
+}
+
+// ── Step 4: 약관 동의 ─────────────────────────────────────
+function TermsStep({ termsAgreed, setTermsAgreed, privacyAgreed, setPrivacyAgreed,
+  marketingAgreed, setMarketingAgreed, onNext }: {
+  termsAgreed: boolean; setTermsAgreed: (v: boolean) => void;
+  privacyAgreed: boolean; setPrivacyAgreed: (v: boolean) => void;
+  marketingAgreed: boolean; setMarketingAgreed: (v: boolean) => void;
+  onNext: () => void;
+}) {
+  const allChecked = termsAgreed && privacyAgreed && marketingAgreed;
+  const toggleAll = () => {
+    const next = !allChecked;
+    setTermsAgreed(next); setPrivacyAgreed(next); setMarketingAgreed(next);
+  };
+  const canNext = termsAgreed && privacyAgreed;
+
+  const CheckRow = ({ checked, onChange, label, required, linkLabel }: {
+    checked: boolean; onChange: (v: boolean) => void; label: string; required?: boolean; linkLabel?: string;
+  }) => (
+    <label style={{
+      display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+      background: checked ? `${C.green}08` : 'transparent',
+      borderRadius: 12, cursor: 'pointer', transition: 'background 0.15s',
+    }}>
+      <div style={{
+        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: checked ? C.green : 'transparent',
+        border: `2px solid ${checked ? C.green : C.border}`,
+        color: '#0a0a0f', fontSize: 14, fontWeight: 900,
+        transition: 'all 0.15s',
+      }}>
+        {checked && '✓'}
+      </div>
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} style={{ display: 'none' }} />
+      <div style={{ flex: 1 }}>
+        <span style={{ fontSize: 13, color: C.text, fontWeight: 500 }}>
+          {label}
+          {required && <span style={{ color: '#ff5252', marginLeft: 4 }}>(필수)</span>}
+          {!required && <span style={{ color: C.textSec, marginLeft: 4 }}>(선택)</span>}
+        </span>
+      </div>
+      {linkLabel && (
+        <button
+          onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+          style={{ fontSize: 11, color: C.cyan, cursor: 'pointer', whiteSpace: 'nowrap' }}
+        >{linkLabel}</button>
+      )}
+    </label>
+  );
+
+  return (
+    <div style={{ padding: '40px 24px' }}>
+      <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 6 }}>약관에 동의해주세요</div>
+      <div style={{ fontSize: 13, color: C.textSec, marginBottom: 28 }}>서비스 이용을 위해 약관 동의가 필요해요.</div>
+
+      {/* 전체 동의 */}
+      <label style={{
+        display: 'flex', alignItems: 'center', gap: 12, padding: '16px',
+        background: allChecked ? `${C.green}12` : C.bgCard,
+        border: `1.5px solid ${allChecked ? C.green : C.border}`,
+        borderRadius: 14, cursor: 'pointer', marginBottom: 12,
+      }}>
+        <div style={{
+          width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: allChecked ? C.green : 'transparent',
+          border: `2px solid ${allChecked ? C.green : C.border}`,
+          color: '#0a0a0f', fontSize: 15, fontWeight: 900,
+        }}>
+          {allChecked && '✓'}
+        </div>
+        <input type="checkbox" checked={allChecked} onChange={toggleAll} style={{ display: 'none' }} />
+        <span style={{ fontSize: 15, fontWeight: 700, color: allChecked ? C.green : C.text }}>전체 동의</span>
+      </label>
+
+      <div style={{
+        background: C.bgCard, border: `1px solid ${C.border}`,
+        borderRadius: 14, overflow: 'hidden', marginBottom: 28,
+      }}>
+        <CheckRow checked={termsAgreed} onChange={setTermsAgreed} label="이용약관 동의" required linkLabel="보기" />
+        <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
+        <CheckRow checked={privacyAgreed} onChange={setPrivacyAgreed} label="개인정보처리방침 동의" required linkLabel="보기" />
+        <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
+        <CheckRow checked={marketingAgreed} onChange={setMarketingAgreed} label="마케팅 수신 동의" linkLabel="보기" />
+      </div>
+
+      <PrimaryBtn label="다음" onClick={onNext} disabled={!canNext} />
+    </div>
+  );
+}
+
+// ── Step 5: 사업자 정보 ───────────────────────────────────
 function BizStep({ role, onNext }: { role: string; onNext: () => void }) {
   // 셀러용
   const [bizName,    setBizName]    = useState('');
@@ -408,7 +588,7 @@ function BizStep({ role, onNext }: { role: string; onNext: () => void }) {
   );
 }
 
-// ── Step 4: 완료 ──────────────────────────────────────────
+// ── Step 6: 완료 ──────────────────────────────────────────
 const METHOD_LABELS: Record<string, string> = {
   kakao: '카카오', naver: '네이버', google: 'Google', phone: '전화번호',
 };
@@ -536,6 +716,19 @@ export default function RegisterPage() {
   const [nickname,    setNicknameRaw] = useState('');
   const [nickStatus,  setNickStatus]  = useState<'idle' | 'checking' | 'ok' | 'taken'>('idle');
   const [recommender, setRecommender] = useState('');
+
+  // step 3 — extra info
+  const [phone,        setPhone]        = useState('');
+  const [address,      setAddress]      = useState('');
+  const [shippingAddr, setShippingAddr] = useState('');
+  const [sameAsAddr,   setSameAsAddr]   = useState(false);
+  const [gender,       setGender]       = useState('');
+  const [birthDate,    setBirthDate]    = useState('');
+
+  // step 4 — terms
+  const [termsAgreed,     setTermsAgreed]     = useState(false);
+  const [privacyAgreed,   setPrivacyAgreed]   = useState(false);
+  const [marketingAgreed, setMarketingAgreed] = useState(false);
   const nickTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const setNickname = (val: string) => {
@@ -553,10 +746,15 @@ export default function RegisterPage() {
 
   const goTo = (n: number) => { setDir(n > step ? 1 : -1); setStep(n); };
 
+  const TOTAL_STEPS = 5; // 1~5 visible steps (role, profile, extra, terms, biz/complete)
+
   const goNext = async () => {
     if (step === 0) { goTo(1); return; }
     if (step === 1) { goTo(2); return; }
-    if (step === 2) {
+    if (step === 2) { goTo(3); return; }
+    if (step === 3) { goTo(4); return; }
+    if (step === 4) {
+      // 약관 동의 후 → API 가입 실행
       if (FEATURES.USE_API_AUTH && method === 'email') {
         setRegistering(true);
         setApiError('');
@@ -564,6 +762,10 @@ export default function RegisterPage() {
           await apiClient.post(API.BUYERS.LIST, {
             email: email.trim(), password,
             name: nickname, nickname,
+            phone: phone || undefined,
+            address: address || undefined,
+            gender: gender || undefined,
+            birth_date: birthDate || undefined,
           });
           const loginRes = await loginApi(email.trim(), password);
           const { access_token } = loginRes.data as { access_token: string };
@@ -573,7 +775,7 @@ export default function RegisterPage() {
             name: nickname, nickname,
             role: 'buyer', level: 1, points: 0,
           });
-          goTo(4);
+          goTo(role === 'buyer' ? 6 : 5);
         } catch (err: unknown) {
           const e = err as { response?: { data?: { detail?: unknown } } };
           const detail = e.response?.data?.detail;
@@ -583,24 +785,27 @@ export default function RegisterPage() {
         }
         return;
       }
-      goTo(role === 'buyer' ? 4 : 3);
+      goTo(role === 'buyer' ? 6 : 5);
       return;
     }
-    if (step === 3) goTo(4);
+    if (step === 5) goTo(6);
   };
 
   const goBack = () => {
     if (step === 0 || step === 1) navigate('/login');
     else if (step === 2) goTo(1);
     else if (step === 3) goTo(2);
+    else if (step === 4) goTo(3);
+    else if (step === 5) goTo(4);
   };
 
-  const stepLabel = step >= 1 && step <= 3 ? `${step}/3` : null;
+  const visibleStep = step >= 1 && step <= TOTAL_STEPS ? step : null;
+  const stepLabel = visibleStep ? `${visibleStep}/${TOTAL_STEPS}` : null;
 
   return (
     <div style={{ minHeight: '100dvh', background: C.bgDeep, overflow: 'hidden' }}>
       {/* TopBar */}
-      {step < 4 && (
+      {step < 6 && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, height: 56,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -613,8 +818,8 @@ export default function RegisterPage() {
           </button>
           {stepLabel && (
             <div style={{ fontSize: 13, fontWeight: 700 }}>
-              <span style={{ color: C.green }}>{step}</span>
-              <span style={{ color: C.textSec }}>/3</span>
+              <span style={{ color: C.green }}>{visibleStep}</span>
+              <span style={{ color: C.textSec }}>/{TOTAL_STEPS}</span>
             </div>
           )}
           <div style={{ width: 48 }} />
@@ -622,10 +827,10 @@ export default function RegisterPage() {
       )}
 
       {/* 진행 바 */}
-      {step >= 1 && step <= 3 && (
+      {step >= 1 && step <= TOTAL_STEPS && (
         <div style={{ position: 'fixed', top: 56, left: 0, right: 0, height: 3, zIndex: 10, background: C.border }}>
           <div style={{
-            height: '100%', width: `${(step / 3) * 100}%`,
+            height: '100%', width: `${(step / TOTAL_STEPS) * 100}%`,
             background: `linear-gradient(90deg, ${C.green}, ${C.cyan})`,
             transition: 'width 0.3s ease',
           }} />
@@ -633,7 +838,7 @@ export default function RegisterPage() {
       )}
 
       {/* 콘텐츠 */}
-      <div style={{ paddingTop: step < 4 ? 60 : 0, minHeight: '100dvh' }}>
+      <div style={{ paddingTop: step < 6 ? 60 : 0, minHeight: '100dvh' }}>
         <AnimatePresence mode="wait" custom={dir}>
           <motion.div
             key={step}
@@ -670,8 +875,39 @@ export default function RegisterPage() {
                 onNext={() => { void goNext(); }}
               />
             )}
-            {step === 3 && <BizStep role={role} onNext={() => { void goNext(); }} />}
+            {step === 3 && (
+              <ExtraInfoStep
+                phone={phone} setPhone={setPhone}
+                address={address} setAddress={setAddress}
+                shippingAddr={shippingAddr} setShippingAddr={setShippingAddr}
+                sameAsAddr={sameAsAddr} setSameAsAddr={setSameAsAddr}
+                gender={gender} setGender={setGender}
+                birthDate={birthDate} setBirthDate={setBirthDate}
+                onNext={() => { void goNext(); }}
+              />
+            )}
             {step === 4 && (
+              <div>
+                <TermsStep
+                  termsAgreed={termsAgreed} setTermsAgreed={setTermsAgreed}
+                  privacyAgreed={privacyAgreed} setPrivacyAgreed={setPrivacyAgreed}
+                  marketingAgreed={marketingAgreed} setMarketingAgreed={setMarketingAgreed}
+                  onNext={() => { void goNext(); }}
+                />
+                {apiError && (
+                  <div style={{ padding: '0 24px 20px', marginTop: -16 }}>
+                    <div style={{ fontSize: 12, color: '#ff5252', padding: '10px 14px', borderRadius: 10, background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.25)' }}>
+                      {apiError}
+                    </div>
+                  </div>
+                )}
+                {registering && (
+                  <div style={{ textAlign: 'center', padding: '0 24px 20px', fontSize: 13, color: C.textSec }}>가입 처리 중...</div>
+                )}
+              </div>
+            )}
+            {step === 5 && <BizStep role={role} onNext={() => { void goNext(); }} />}
+            {step === 6 && (
               <CompleteStep
                 method={method}
                 role={role}

@@ -60,7 +60,7 @@ function ActionRow({ icon, label, onClick }: { icon: string; label: string; onCl
       }}
     >
       <span style={{ fontSize: 13, color: C.textSec }}>{icon} {label}</span>
-      <span style={{ fontSize: 14, color: C.textDim }}>›</span>
+      <span style={{ fontSize: 14, color: C.textDim }}>&rsaquo;</span>
     </button>
   );
 }
@@ -73,6 +73,8 @@ interface PaymentMethod {
   isDefault: boolean;
 }
 
+const GENDER_LABELS: Record<string, string> = { male: '남성', female: '여성', other: '기타' };
+
 export default function MyPage() {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
@@ -82,7 +84,18 @@ export default function MyPage() {
   const [editNickname, setEditNickname] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editAddress, setEditAddress] = useState('');
+  const [editGender, setEditGender] = useState('');
+  const [editBirthDate, setEditBirthDate] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // password change
+  const [showPwModal, setShowPwModal] = useState(false);
+  const [curPw, setCurPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [newPwConfirm, setNewPwConfirm] = useState('');
+  const [pwError, setPwError] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
 
   useEffect(() => {
     if (!authUser) return;
@@ -101,6 +114,8 @@ export default function MyPage() {
     points:       Number(apiProfile?.points ?? authUser?.points ?? 0),
     phone:        String(apiProfile?.phone ?? ''),
     address:      String(apiProfile?.address ?? ''),
+    gender:       String(apiProfile?.gender ?? ''),
+    birth_date:   String(apiProfile?.birth_date ?? '').split('T')[0] || '',
     created_at:   String(apiProfile?.created_at ?? '').split('T')[0] || '-',
     total_orders: Number(apiProfile?.total_orders ?? 0),
     total_deals:  Number(apiProfile?.total_deals ?? 0),
@@ -113,6 +128,8 @@ export default function MyPage() {
     setEditNickname(u.nickname);
     setEditPhone(u.phone);
     setEditAddress(u.address);
+    setEditGender(u.gender);
+    setEditBirthDate(u.birth_date);
     setShowProfileEdit(true);
   };
 
@@ -124,6 +141,8 @@ export default function MyPage() {
         nickname: editNickname,
         phone: editPhone || undefined,
         address: editAddress || undefined,
+        gender: editGender || undefined,
+        birth_date: editBirthDate || undefined,
       });
       setApiProfile(prev => ({
         ...prev,
@@ -131,12 +150,36 @@ export default function MyPage() {
         nickname: editNickname,
         phone: editPhone,
         address: editAddress,
+        gender: editGender,
+        birth_date: editBirthDate,
       }));
       setShowProfileEdit(false);
     } catch {
-      alert('프로필 수정에 실패했어요');
+      alert('회원정보 수정에 실패했어요');
     }
     setSaving(false);
+  };
+
+  const handlePasswordChange = async () => {
+    setPwError('');
+    if (!curPw || !newPw) { setPwError('모든 필드를 입력해주세요'); return; }
+    if (newPw.length < 8) { setPwError('새 비밀번호는 8자 이상이어야 해요'); return; }
+    if (newPw !== newPwConfirm) { setPwError('새 비밀번호가 일치하지 않아요'); return; }
+    setPwSaving(true);
+    try {
+      await apiClient.post('/auth/change-password', {
+        current_password: curPw,
+        new_password: newPw,
+      });
+      setShowPwModal(false);
+      setCurPw(''); setNewPw(''); setNewPwConfirm('');
+      alert('비밀번호가 변경되었어요');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { detail?: unknown } } };
+      const detail = e.response?.data?.detail;
+      setPwError(typeof detail === 'string' ? detail : '비밀번호 변경에 실패했어요');
+    }
+    setPwSaving(false);
   };
 
   const [showPayModal, setShowPayModal] = useState(false);
@@ -160,9 +203,9 @@ export default function MyPage() {
         padding: '0 16px',
         background: C.bg, borderBottom: `1px solid ${C.border}`,
       }}>
-        <button onClick={() => navigate(-1)} style={{ fontSize: 20, color: C.text, cursor: 'pointer', lineHeight: 1 }}>←</button>
+        <button onClick={() => navigate(-1)} style={{ fontSize: 20, color: C.text, cursor: 'pointer', lineHeight: 1 }}>&#x2190;</button>
         <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>마이페이지</span>
-        <button onClick={() => navigate('/notifications')} style={{ fontSize: 20, color: C.textSec, cursor: 'pointer', lineHeight: 1 }}>🔔</button>
+        <button onClick={() => navigate('/notifications')} style={{ fontSize: 20, color: C.textSec, cursor: 'pointer', lineHeight: 1 }}>&#x1F514;</button>
       </div>
 
       <div style={{ padding: '16px 16px 0' }}>
@@ -190,17 +233,35 @@ export default function MyPage() {
               width: '100%', padding: '9px 0', borderRadius: 10, fontSize: 13, fontWeight: 700,
               background: `${C.green}22`, border: `1px solid ${C.green}66`, color: C.green, cursor: 'pointer',
             }}
-          >프로필 수정</button>
+          >회원정보 수정</button>
+        </Card>
+
+        {/* 회원 정보 */}
+        <Card>
+          <CardTitle>회원 정보</CardTitle>
+          <InfoRow icon="&#x1F4E7;" label="이메일" value={u.email} />
+          <InfoRow icon="&#x1F464;" label="닉네임" value={u.nickname || '-'} />
+          <InfoRow icon="&#x1F4DE;" label="전화번호" value={u.phone || '미등록'} />
+          <InfoRow icon="&#x1F3E0;" label="주소" value={u.address || '미등록'} />
+          <InfoRow icon="&#x1F9D1;" label="성별" value={GENDER_LABELS[u.gender] || '미등록'} />
+          <InfoRow icon="&#x1F382;" label="생년월일" value={u.birth_date || '미등록'} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0' }}>
+            <span style={{ fontSize: 13, color: C.textSec }}>&#x1F512; 비밀번호</span>
+            <button
+              onClick={() => { setPwError(''); setCurPw(''); setNewPw(''); setNewPwConfirm(''); setShowPwModal(true); }}
+              style={{ fontSize: 12, fontWeight: 700, color: C.blue, cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+            >변경하기</button>
+          </div>
         </Card>
 
         {/* 구매자 정보 */}
         <Card>
           <CardTitle>구매자 정보</CardTitle>
-          <InfoRow icon="📊" label="레벨"     value={`Lv.${u.level}`}    valueColor={C.blue} />
-          <InfoRow icon="🏆" label="신뢰티어"  value={u.trust_tier}       valueColor="#c0c0c0" />
-          <InfoRow icon="💰" label="포인트"    value={`${u.points.toLocaleString()}P`} valueColor={C.yellow} />
-          <InfoRow icon="📅" label="가입일"    value={u.created_at.replace(/-/g, '.')} />
-          <InfoRow icon="📦" label="총 참여"   value={`${u.total_orders}건`} />
+          <InfoRow icon="&#x1F4CA;" label="레벨"     value={`Lv.${u.level}`}    valueColor={C.blue} />
+          <InfoRow icon="&#x1F3C6;" label="신뢰티어"  value={u.trust_tier}       valueColor="#c0c0c0" />
+          <InfoRow icon="&#x1F4B0;" label="포인트"    value={`${u.points.toLocaleString()}P`} valueColor={C.yellow} />
+          <InfoRow icon="&#x1F4C5;" label="가입일"    value={u.created_at.replace(/-/g, '.')} />
+          <InfoRow icon="&#x1F4E6;" label="총 참여"   value={`${u.total_orders}건`} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0' }}>
             <span style={{ fontSize: 13, color: C.textSec }}>생성한 딜</span>
             <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{u.total_deals}건</span>
@@ -211,17 +272,17 @@ export default function MyPage() {
         {u.isSeller && u.seller && (
           <Card>
             <CardTitle>판매자 정보</CardTitle>
-            <InfoRow icon="🏪" label="사업자명"      value={u.seller.business_name} />
-            <InfoRow icon="📊" label="판매자 레벨"   value={`Lv.${u.seller.level}`}       valueColor={C.blue} />
-            <InfoRow icon="💰" label="판매자 포인트" value={`${u.seller.points.toLocaleString()}P`} valueColor={C.yellow} />
+            <InfoRow icon="&#x1F3EA;" label="사업자명"      value={u.seller.business_name} />
+            <InfoRow icon="&#x1F4CA;" label="판매자 레벨"   value={`Lv.${u.seller.level}`}       valueColor={C.blue} />
+            <InfoRow icon="&#x1F4B0;" label="판매자 포인트" value={`${u.seller.points.toLocaleString()}P`} valueColor={C.yellow} />
             {/* 판매자 빠른 메뉴 */}
             <div style={{ marginTop: 12 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 10 }}>빠른 메뉴</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {[
-                  { icon: '💵', label: '정산내역', path: '/settlements' },
-                  { icon: '📝', label: '오퍼관리', path: '/seller/offers' },
-                  { icon: '⭐', label: '리뷰관리', path: '/seller/reviews' },
+                  { icon: '&#x1F4B5;', label: '정산내역', path: '/settlements' },
+                  { icon: '&#x1F4DD;', label: '오퍼관리', path: '/seller/offers' },
+                  { icon: '&#x2B50;', label: '리뷰관리', path: '/seller/reviews' },
                 ].map(m => (
                   <button
                     key={m.label}
@@ -233,7 +294,7 @@ export default function MyPage() {
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                     }}
                   >
-                    <span style={{ fontSize: 18 }}>{m.icon}</span>
+                    <span style={{ fontSize: 18 }} dangerouslySetInnerHTML={{ __html: m.icon }} />
                     <span>{m.label}</span>
                   </button>
                 ))}
@@ -254,7 +315,7 @@ export default function MyPage() {
             }}
           >
             <span style={{ fontSize: 13, color: C.textSec }}>💳 결제수단 관리</span>
-            <span style={{ fontSize: 14, color: C.textDim }}>›</span>
+            <span style={{ fontSize: 14, color: C.textDim }}>&rsaquo;</span>
           </button>
           <ActionRow icon="🔔" label="알림 설정" onClick={() => navigate('/settings')} />
           <ActionRow icon="📋" label="이용약관" onClick={() => navigate('/terms')} />
@@ -263,7 +324,7 @@ export default function MyPage() {
 
       </div>
 
-      {/* 프로필 수정 모달 */}
+      {/* 회원정보 수정 모달 */}
       {showProfileEdit && (
         <div
           onClick={() => setShowProfileEdit(false)}
@@ -272,25 +333,25 @@ export default function MyPage() {
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              width: '100%', maxHeight: '80dvh', background: C.bgCard,
+              width: '100%', maxHeight: '85dvh', background: C.bgCard,
               borderRadius: '20px 20px 0 0', padding: '20px 20px 40px', overflowY: 'auto',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>프로필 수정</span>
-              <button onClick={() => setShowProfileEdit(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer' }}>✕</button>
+              <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>회원정보 수정</span>
+              <button onClick={() => setShowProfileEdit(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer' }}>&#x2715;</button>
             </div>
 
             {[
-              { label: '이름', value: editName, onChange: setEditName },
-              { label: '닉네임', value: editNickname, onChange: setEditNickname },
-              { label: '연락처', value: editPhone, onChange: setEditPhone },
-              { label: '주소', value: editAddress, onChange: setEditAddress },
+              { label: '이름', value: editName, onChange: setEditName, type: 'text' },
+              { label: '닉네임', value: editNickname, onChange: setEditNickname, type: 'text' },
+              { label: '전화번호', value: editPhone, onChange: setEditPhone, type: 'tel' },
+              { label: '주소', value: editAddress, onChange: setEditAddress, type: 'text' },
             ].map(field => (
               <div key={field.label} style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>{field.label}</div>
                 <input
-                  type="text" value={field.value}
+                  type={field.type} value={field.value}
                   onChange={e => field.onChange(e.target.value)}
                   style={{
                     width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
@@ -301,6 +362,43 @@ export default function MyPage() {
               </div>
             ))}
 
+            {/* 성별 */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>성별</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[{ key: 'male', label: '남성' }, { key: 'female', label: '여성' }, { key: 'other', label: '기타' }].map(g => {
+                  const active = editGender === g.key;
+                  return (
+                    <button
+                      key={g.key}
+                      onClick={() => setEditGender(active ? '' : g.key)}
+                      style={{
+                        flex: 1, padding: '8px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                        background: active ? `${C.green}22` : C.bgEl,
+                        border: `1px solid ${active ? C.green : C.border}`,
+                        color: active ? C.green : C.textSec,
+                        cursor: 'pointer',
+                      }}
+                    >{g.label}</button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 생년월일 */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>생년월일</div>
+              <input
+                type="date" value={editBirthDate}
+                onChange={e => setEditBirthDate(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
+                  background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
+                  boxSizing: 'border-box' as const,
+                }}
+              />
+            </div>
+
             <button
               onClick={saveProfile}
               disabled={saving}
@@ -310,6 +408,98 @@ export default function MyPage() {
                 color: C.green, cursor: saving ? 'not-allowed' : 'pointer',
               }}
             >{saving ? '저장 중...' : '저장'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* 비밀번호 변경 모달 */}
+      {showPwModal && (
+        <div
+          onClick={() => setShowPwModal(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 2000, display: 'flex', alignItems: 'flex-end' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxHeight: '70dvh', background: C.bgCard,
+              borderRadius: '20px 20px 0 0', padding: '20px 20px 40px', overflowY: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>비밀번호 변경</span>
+              <button onClick={() => setShowPwModal(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer' }}>&#x2715;</button>
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>현재 비밀번호</div>
+              <input
+                type="password" value={curPw}
+                onChange={e => setCurPw(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
+                  background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
+                  boxSizing: 'border-box' as const,
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>새 비밀번호</div>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showNewPw ? 'text' : 'password'} value={newPw}
+                  onChange={e => setNewPw(e.target.value)}
+                  placeholder="8자 이상 입력"
+                  style={{
+                    width: '100%', padding: '10px 36px 10px 12px', borderRadius: 10, fontSize: 13,
+                    background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
+                    boxSizing: 'border-box' as const,
+                  }}
+                />
+                <button
+                  onClick={() => setShowNewPw(!showNewPw)}
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 16, cursor: 'pointer', color: C.textDim, background: 'none', border: 'none' }}
+                >{showNewPw ? '🙈' : '👁'}</button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>새 비밀번호 확인</div>
+              <input
+                type="password" value={newPwConfirm}
+                onChange={e => setNewPwConfirm(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
+                  background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
+                  boxSizing: 'border-box' as const,
+                }}
+              />
+            </div>
+
+            {pwError && (
+              <div style={{ fontSize: 12, color: '#ff5252', marginBottom: 14, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,82,82,0.08)' }}>
+                {pwError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setShowPwModal(false)}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                  background: C.bgEl, border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer',
+                }}
+              >취소</button>
+              <button
+                onClick={handlePasswordChange}
+                disabled={pwSaving}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                  background: pwSaving ? `${C.green}55` : `${C.green}22`, border: `1px solid ${C.green}66`,
+                  color: C.green, cursor: pwSaving ? 'not-allowed' : 'pointer',
+                }}
+              >{pwSaving ? '변경 중...' : '변경'}</button>
+            </div>
           </div>
         </div>
       )}
@@ -329,7 +519,7 @@ export default function MyPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>💳 결제수단 관리</span>
-              <button onClick={() => setShowPayModal(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setShowPayModal(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer' }}>&#x2715;</button>
             </div>
 
             <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, letterSpacing: 1, marginBottom: 10 }}>등록된 결제수단</div>

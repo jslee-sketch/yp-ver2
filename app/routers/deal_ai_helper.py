@@ -297,8 +297,14 @@ def _run_ai_deal_helper(raw_title: str, raw_free_text: str) -> DealAIResponse:
     # ━━━ 1단계: LLM 제품 구조화 ━━━
     prompt = _build_prompt(raw_title, raw_free_text)
     client = get_client()
-    resp = client.responses.create(model="gpt-4.1-mini", input=prompt)
-    text = resp.output[0].content[0].text
+    resp = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+        timeout=30,
+        max_tokens=800,
+    )
+    text = resp.choices[0].message.content or ""
     data = _parse_json_safely(text)
 
     # ━━━ 2단계: 네이버 API 검색 ━━━

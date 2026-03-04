@@ -257,14 +257,27 @@ export default function LoginPage() {
           <span style={{ fontSize: 18 }}>📱</span>전화번호로 시작하기
         </button>
 
-        {/* 푸터 */}
-        <div style={{ marginTop: 24, textAlign: 'center', fontSize: 11, color: C.textSec, lineHeight: 1.7 }}>
-          계정이 없으신가요?{' '}
+        {/* 회원가입 버튼 */}
+        <div style={{ marginTop: 16, textAlign: 'center' }}>
+          <div style={{ fontSize: 12, color: C.textSec, marginBottom: 10 }}>아직 계정이 없으신가요?</div>
           <button
             onClick={() => navigate('/register?method=email')}
-            style={{ color: C.cyan, fontSize: 11, cursor: 'pointer', fontWeight: 700 }}
-          >회원가입</button>
-          <br />
+            style={{
+              width: '100%', padding: '14px', borderRadius: 14,
+              background: 'transparent',
+              border: `2px solid ${C.green}`,
+              color: C.green, fontSize: 15, fontWeight: 700,
+              cursor: 'pointer', transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${C.green}15`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+          >
+            회원가입하기
+          </button>
+        </div>
+
+        {/* 약관 안내 */}
+        <div style={{ marginTop: 16, textAlign: 'center', fontSize: 11, color: C.textSec, lineHeight: 1.7 }}>
           가입 시{' '}
           <button style={{ color: C.cyan, fontSize: 11, cursor: 'pointer' }}>이용약관</button>
           {' '}및{' '}
