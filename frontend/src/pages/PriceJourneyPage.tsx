@@ -2,287 +2,73 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchDeal } from '../api/dealApi';
+import { fetchOffersByDeal } from '../api/offerApi';
 import { fetchChatMessages, sendChatMessage } from '../api/chatApi';
 import { submitPrediction } from '../api/spectatorApi';
 import { createReservation } from '../api/reservationApi';
 import { showToast } from '../components/common/Toast';
-import { FEATURES } from '../config';
 import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer } from 'recharts';
 import { PriceFaceSection }   from '../components/journey/PriceFaceSection';
 import { OfferListSection }   from '../components/journey/OfferListSection';
 import { GroupCurveSection }  from '../components/journey/GroupCurveSection';
 import { OfferDetailSheet }   from '../components/journey/OfferDetailSheet';
 import { T }                  from '../components/journey/journeyTokens';
-import type { JourneyOffer }  from '../components/journey/types';
+import type { JourneyOffer, OfferGroup, VerdictType }  from '../components/journey/types';
 
-// ── 가격 상수 ───────────────────────────────────────────
-const P_ANCHOR  = 349000;
-const P_TARGET  = 279000;
-const CURRENT_Q = 32;
-const Q_TARGET  = 100;
+// ── 백엔드 오퍼 → JourneyOffer 매핑 ──
+function mapApiOfferToJourney(raw: Record<string, unknown>, targetPrice: number, idx: number): JourneyOffer {
+  const price = (raw.price as number) ?? 0;
+  const sellerName = (raw.seller_nickname as string) || (raw.business_name as string) || `셀러 #${raw.seller_id ?? idx + 1}`;
+  const icons = ['⛵','🚤','🛶','🚢','🎯','🏪','💻','👑','⚡','🎪','🏬','🔧'];
+  const shipFeeNum = (raw.shipping_fee_per_reservation as number) ?? (raw.shipping_fee as number) ?? 0;
+  const shipDays = (raw.delivery_days as number) ?? 3;
+  const totalQty = (raw.total_available_qty as number) ?? 1;
+  const remainQty = totalQty - ((raw.sold_qty as number) ?? 0) - ((raw.reserved_qty as number) ?? 0);
 
-// ── 딜 방장/단계 Mock ──────────────────────────────────
-const MOCK_DEAL_EXTENDED = {
-  creator_id: 1,
-  phase: 'RECRUITING' as 'RECRUITING' | 'OFFER_PHASE',
-  target_price_reason: '',
-  target_price_images: [] as string[],
-};
-const CURRENT_USER_ID = 1;
+  const group: OfferGroup = price < targetPrice ? 'PREMIUM' : price <= targetPrice * 1.05 ? 'MATCHING' : 'BELOW';
+  const priceDiff = price - targetPrice;
+  const verdictType: VerdictType = priceDiff <= 0 ? 'good' : priceDiff <= targetPrice * 0.1 ? 'close' : 'far';
 
-// ── Mock 오퍼 데이터 ────────────────────────────────────
-const MOCK_OFFERS: JourneyOffer[] = [
-  {
-    id: 1, seller: '디지텍', icon: '⛵',
-    rawPrice: 305000, adjPrice: 286500,
-    offerIndexPct: 109,
-    totalQty: 20, remainQty: 14,
-    shipDays: 2, shipFee: '3,000원', refund: '보통', asGrade: '보통',
-    sellerTier: '프로', sellerScore: 82, sellerDeals: 47, sellerRate: '96%',
+  return {
+    id: (raw.id as number) ?? idx,
+    seller: sellerName,
+    icon: icons[idx % icons.length],
+    rawPrice: price,
+    adjPrice: price, // no backend pricing engine data — show raw price
+    offerIndexPct: targetPrice > 0 ? Math.round(price / targetPrice * 1000) / 10 : 100,
+    totalQty,
+    remainQty: Math.max(0, remainQty),
+    shipDays,
+    shipFee: shipFeeNum === 0 ? '무료' : `${shipFeeNum.toLocaleString()}원`,
+    refund: '보통',
+    asGrade: '보통',
+    sellerTier: '일반',
+    sellerScore: 0,
+    sellerDeals: 0,
+    sellerRate: '-',
     condTags: [
-      { text: '배송 2일',   type: 'good' },
-      { text: '배송비 별도', type: 'neutral' },
-      { text: '환불 보통',  type: 'neutral' },
-      { text: '정품 보장',  type: 'good' },
+      { text: `배송 ${shipDays}일`, type: shipDays <= 2 ? 'good' : shipDays <= 4 ? 'neutral' : 'bad' },
+      { text: shipFeeNum === 0 ? '무료배송' : `배송비 ${shipFeeNum.toLocaleString()}원`, type: shipFeeNum === 0 ? 'good' : 'neutral' },
     ],
-    group: 'BELOW',
-    groupAdj: -12200, groupResult: 292800,
-    condAdj: -6300, condResult: 286500,
-    condDetail: '배송 빠름 +3.2% · 배송비 별도 −2.1% · 환불 보통 −0.1% · 신뢰도 높음 +1.8%',
-    verdictType: 'good', verdictEmoji: '🎯', verdictTitle: '목표가에 거의 도달!',
-    verdictDesc: '액면가로는 <strong>26,000원 차이</strong>지만 동일 기준 보정 후 <strong style="color:#39ff14">7,500원 차이</strong>예요.',
-  },
-  {
-    id: 2, seller: '테크마트', icon: '🚤',
-    rawPrice: 319000, adjPrice: 289100,
-    offerIndexPct: 114,
-    totalQty: 30, remainQty: 22,
-    shipDays: 3, shipFee: '무료', refund: '우수', asGrade: '우수',
-    sellerTier: '마스터', sellerScore: 91, sellerDeals: 123, sellerRate: '98%',
-    condTags: [
-      { text: '배송 3일', type: 'good' },
-      { text: '무료배송', type: 'good' },
-      { text: '환불 우수', type: 'good' },
-      { text: 'AS 우수',  type: 'good' },
-    ],
-    group: 'BELOW',
-    groupAdj: -19100, groupResult: 299900,
-    condAdj: -10800, condResult: 289100,
-    condDetail: '배송 보통 +0.5% · 무료배송 +2.1% · 환불 우수 +2.3% · 신뢰도 매우 높음 +3.1%',
-    verdictType: 'good', verdictEmoji: '✨', verdictTitle: '조건이 뛰어난 오퍼',
-    verdictDesc: '액면가는 높지만 <strong>모든 조건이 우수</strong>해서 보정 후 <strong style="color:#39ff14">10,100원 차이</strong>예요.',
-  },
-  {
-    id: 3, seller: '옥션셀러', icon: '🛶',
-    rawPrice: 298000, adjPrice: 302500,
-    offerIndexPct: 107,
-    totalQty: 15, remainQty: 15,
-    shipDays: 5, shipFee: '무료', refund: '보통', asGrade: '기본',
-    sellerTier: '루키', sellerScore: 58, sellerDeals: 8, sellerRate: '88%',
-    condTags: [
-      { text: '배송 5일', type: 'bad' },
-      { text: '무료배송', type: 'good' },
-      { text: '환불 보통', type: 'neutral' },
-      { text: 'AS 기본',  type: 'bad' },
-    ],
-    group: 'BELOW',
-    groupAdj: -6800, groupResult: 291200,
-    condAdj: 11300, condResult: 302500,
-    condDetail: '배송 느림 −2.8% · 무료배송 +2.1% · 환불 보통 −0.1% · 신뢰도 낮음 −3.2%',
-    verdictType: 'close', verdictEmoji: '⚠️', verdictTitle: '조건 보정 시 불리',
-    verdictDesc: '액면가는 싸 보이지만 <strong>배송 느리고 신뢰도 낮아서</strong> 보정 후 <strong style="color:#ff8c42">23,500원 차이</strong>예요.',
-  },
-  {
-    id: 4, seller: '디지털프라자', icon: '🚢',
-    rawPrice: 295000, adjPrice: 315800,
-    offerIndexPct: 106,
-    totalQty: 10, remainQty: 10,
-    shipDays: 7, shipFee: '5,000원', refund: '불가', asGrade: '없음',
-    sellerTier: '신규', sellerScore: 42, sellerDeals: 3, sellerRate: '67%',
-    condTags: [
-      { text: '배송 7일',       type: 'bad' },
-      { text: '배송비 5,000원', type: 'bad' },
-      { text: '환불 불가',      type: 'bad' },
-      { text: 'AS 없음',        type: 'bad' },
-    ],
-    group: 'BELOW',
-    groupAdj: -3200, groupResult: 291800,
-    condAdj: 24000, condResult: 315800,
-    condDetail: '배송 매우 느림 −4.1% · 배송비 높음 −3.5% · 환불 불가 −5.2% · 신뢰도 매우 낮음 −4.8%',
-    verdictType: 'far', verdictEmoji: '🚫', verdictTitle: '조건이 많이 불리',
-    verdictDesc: '액면가 최저지만 <strong>조건이 나빠서</strong> 보정 후 <strong style="color:#ff2d78">36,800원 차이</strong>.',
-  },
-  {
-    id: 5, seller: '스마트딜', icon: '🎯',
-    rawPrice: 275000, adjPrice: 272000,
-    offerIndexPct: 99,
-    totalQty: 5, remainQty: 2,
-    shipDays: 1, shipFee: '무료', refund: '우수', asGrade: '우수',
-    sellerTier: '마스터', sellerScore: 95, sellerDeals: 201, sellerRate: '99%',
-    condTags: [
-      { text: '배송 1일', type: 'good' },
-      { text: '무료배송', type: 'good' },
-      { text: '환불 우수', type: 'good' },
-      { text: 'AS 우수',  type: 'good' },
-    ],
-    group: 'PREMIUM',
-    groupAdj: -1500, groupResult: 273500,
-    condAdj: -1500, condResult: 272000,
-    condDetail: '배송 매우 빠름 +4.2% · 무료배송 +2.1% · 환불 우수 +2.3% · 신뢰도 최상 +3.5%',
-    verdictType: 'good', verdictEmoji: '🏆', verdictTitle: '목표가 이하! 최고 오퍼',
-    verdictDesc: '<strong style="color:#39ff14">목표가보다 7,000원 저렴</strong>하고 모든 조건이 최상급!',
-    detail: '정품 Apple AirPods Pro 2세대 (USB-C) 미개봉 새제품입니다.\n\n■ 구성품\n- AirPods Pro 본체\n- MagSafe 충전 케이스 (USB-C)\n- 이어팁 4사이즈 (XS/S/M/L)\n- USB-C 케이블\n- 설명서\n\n■ 보증\n- Apple 공식 1년 보증\n- 구매일 기준 AppleCare+ 가입 가능\n\n■ 기타\n- 정식 수입 정품 (KOR 버전)\n- 시리얼 번호 확인 가능\n- 재고 보유 중 (즉시 발송 가능)',
-    images: [],
-  },
-  {
-    id: 6, seller: '가전천국', icon: '🏪',
-    rawPrice: 279000, adjPrice: 278500,
-    offerIndexPct: 100,
-    totalQty: 25, remainQty: 18,
-    shipDays: 2, shipFee: '무료', refund: '우수', asGrade: '보통',
-    sellerTier: '프로', sellerScore: 85, sellerDeals: 67, sellerRate: '95%',
-    condTags: [
-      { text: '배송 2일', type: 'good' },
-      { text: '무료배송', type: 'good' },
-      { text: '환불 우수', type: 'good' },
-      { text: 'AS 보통',  type: 'neutral' },
-    ],
-    group: 'MATCHING',
-    groupAdj: -8200, groupResult: 270800,
-    condAdj: 7700, condResult: 278500,
-    condDetail: '배송 빠름 +3.2% · 무료배송 +2.1% · 환불 우수 +2.3% · 신뢰도 높음 +1.8%',
-    verdictType: 'good', verdictEmoji: '✅', verdictTitle: '목표가에 부합!',
-    verdictDesc: '보정 후에도 <strong style="color:#39ff14">목표가와 거의 동일</strong>한 수준이에요.',
-  },
-  {
-    id: 7, seller: 'IT마켓', icon: '💻',
-    rawPrice: 312000, adjPrice: 294000,
-    offerIndexPct: Math.round(312000 / P_TARGET * 1000) / 10,
-    totalQty: 40, remainQty: 35,
-    shipDays: 2, shipFee: '무료', refund: '우수', asGrade: '우수',
-    sellerTier: '마스터', sellerScore: 88, sellerDeals: 89, sellerRate: '97%',
-    condTags: [
-      { text: '배송 2일',   type: 'good' },
-      { text: '무료배송',   type: 'good' },
-      { text: '환불 우수',  type: 'good' },
-      { text: '대량 가능',  type: 'good' },
-    ],
-    group: 'BELOW',
-    groupAdj: -14000, groupResult: 298000,
-    condAdj: -4000, condResult: 294000,
-    condDetail: '배송 빠름 +3.2% · 무료배송 +2.1% · 환불 우수 +2.3% · 신뢰도 높음 +2.4%',
-    verdictType: 'good', verdictEmoji: '📦', verdictTitle: '대량 참여에 유리',
-    verdictDesc: '수량이 <strong>40개로 가장 많고</strong> 조건도 우수. 보정 후 <strong style="color:#39ff14">15,000원 차이</strong>.',
-  },
-  {
-    id: 8, seller: '할인왕', icon: '👑',
-    rawPrice: 308000, adjPrice: 299000,
-    offerIndexPct: Math.round(308000 / P_TARGET * 1000) / 10,
-    totalQty: 15, remainQty: 8,
-    shipDays: 3, shipFee: '2,500원', refund: '보통', asGrade: '보통',
-    sellerTier: '프로', sellerScore: 76, sellerDeals: 34, sellerRate: '94%',
-    condTags: [
-      { text: '배송 3일',      type: 'good' },
-      { text: '배송비 2,500원', type: 'neutral' },
-      { text: '환불 보통',     type: 'neutral' },
-    ],
-    group: 'BELOW',
-    groupAdj: -8000, groupResult: 300000,
-    condAdj: -1000, condResult: 299000,
-    condDetail: '배송 보통 +0.5% · 배송비 소폭 −0.8% · 환불 보통 −0.1% · 신뢰도 보통 +0.7%',
-    verdictType: 'close', verdictEmoji: '🤏', verdictTitle: '아쉽게 근접',
-    verdictDesc: '보정 후 <strong style="color:#ffe156">20,000원 차이</strong>. 조건이 조금 더 좋으면 근접할 수 있어요.',
-  },
-  {
-    id: 9, seller: '베스트일렉', icon: '⚡',
-    rawPrice: 325000, adjPrice: 298500,
-    offerIndexPct: Math.round(325000 / P_TARGET * 1000) / 10,
-    totalQty: 50, remainQty: 45,
-    shipDays: 1, shipFee: '무료', refund: '우수', asGrade: '우수',
-    sellerTier: '마스터', sellerScore: 93, sellerDeals: 156, sellerRate: '99%',
-    condTags: [
-      { text: '당일배송',  type: 'good' },
-      { text: '무료배송',  type: 'good' },
-      { text: '환불 우수', type: 'good' },
-      { text: 'AS 우수',   type: 'good' },
-    ],
-    group: 'BELOW',
-    groupAdj: -22000, groupResult: 303000,
-    condAdj: -4500, condResult: 298500,
-    condDetail: '배송 매우 빠름 +4.2% · 무료배송 +2.1% · 환불 우수 +2.3% · 신뢰도 최상 +3.5%',
-    verdictType: 'close', verdictEmoji: '⚡', verdictTitle: '최다 수량 + 최상 조건',
-    verdictDesc: '수량 <strong>50개 최다</strong>, 조건 최상급이지만 액면가가 높아 보정 후 <strong style="color:#ffe156">19,500원 차이</strong>.',
-  },
-  {
-    id: 10, seller: '굿프라이스', icon: '🎪',
-    rawPrice: 310000, adjPrice: 305000,
-    offerIndexPct: Math.round(310000 / P_TARGET * 1000) / 10,
-    totalQty: 12, remainQty: 7,
-    shipDays: 4, shipFee: '무료', refund: '보통', asGrade: '기본',
-    sellerTier: '루키', sellerScore: 62, sellerDeals: 11, sellerRate: '91%',
-    condTags: [
-      { text: '배송 4일',  type: 'neutral' },
-      { text: '무료배송',  type: 'good' },
-      { text: '환불 보통', type: 'neutral' },
-    ],
-    group: 'BELOW',
-    groupAdj: -5000, groupResult: 305000,
-    condAdj: 0, condResult: 305000,
-    condDetail: '배송 약간 느림 −1.2% · 무료배송 +2.1% · 환불 보통 −0.1% · 신뢰도 보통 −0.8%',
-    verdictType: 'close', verdictEmoji: '😐', verdictTitle: '보통 수준',
-    verdictDesc: '보정 후에도 <strong style="color:#ffe156">26,000원 차이</strong>로 크게 달라지지 않아요.',
-  },
-  {
-    id: 11, seller: '다이렉트몰', icon: '🏬',
-    rawPrice: 335000, adjPrice: 310000,
-    offerIndexPct: Math.round(335000 / P_TARGET * 1000) / 10,
-    totalQty: 20, remainQty: 20,
-    shipDays: 3, shipFee: '무료', refund: '우수', asGrade: '우수',
-    sellerTier: '프로', sellerScore: 80, sellerDeals: 52, sellerRate: '96%',
-    condTags: [
-      { text: '배송 3일',  type: 'good' },
-      { text: '무료배송',  type: 'good' },
-      { text: '환불 우수', type: 'good' },
-    ],
-    group: 'BELOW',
-    groupAdj: -13000, groupResult: 322000,
-    condAdj: -12000, condResult: 310000,
-    condDetail: '배송 보통 +0.5% · 무료배송 +2.1% · 환불 우수 +2.3% · 신뢰도 높음 +1.8%',
-    verdictType: 'close', verdictEmoji: '📉', verdictTitle: '액면가 대비 보정 효과 큼',
-    verdictDesc: '보정으로 <strong>25,000원 절약</strong>되지만 여전히 <strong style="color:#ffe156">31,000원 차이</strong>.',
-  },
-  {
-    id: 12, seller: '테크아울렛', icon: '🔧',
-    rawPrice: 342000, adjPrice: 325000,
-    offerIndexPct: Math.round(342000 / P_TARGET * 1000) / 10,
-    totalQty: 8, remainQty: 8,
-    shipDays: 5, shipFee: '4,000원', refund: '기본', asGrade: '없음',
-    sellerTier: '신규', sellerScore: 38, sellerDeals: 2, sellerRate: '50%',
-    condTags: [
-      { text: '배송 5일',      type: 'bad' },
-      { text: '배송비 4,000원', type: 'bad' },
-      { text: '환불 기본',     type: 'bad' },
-      { text: 'AS 없음',      type: 'bad' },
-    ],
-    group: 'BELOW',
-    groupAdj: -2000, groupResult: 340000,
-    condAdj: -15000, condResult: 325000,
-    condDetail: '배송 느림 −2.8% · 배송비 높음 −2.8% · 환불 기본 −2.5% · 신뢰도 매우 낮음 −5.2%',
-    verdictType: 'far', verdictEmoji: '🚫', verdictTitle: '조건이 전반적으로 불리',
-    verdictDesc: '액면가도 높고 조건도 나빠서 보정 후 <strong style="color:#ff2d78">46,000원 차이</strong>.',
-  },
-];
+    group,
+    groupAdj: 0,
+    groupResult: price,
+    condAdj: 0,
+    condResult: price,
+    condDetail: '',
+    verdictType,
+    verdictEmoji: verdictType === 'good' ? '🎯' : verdictType === 'close' ? '🤏' : '⚠️',
+    verdictTitle: verdictType === 'good' ? '목표가 이하' : verdictType === 'close' ? '목표가 근접' : '목표가 초과',
+    verdictDesc: priceDiff <= 0
+      ? `목표가보다 <strong style="color:#39ff14">${Math.abs(priceDiff).toLocaleString()}원 저렴</strong>해요!`
+      : `목표가보다 <strong style="color:#ff8c42">${priceDiff.toLocaleString()}원 비쌈</strong>`,
+  };
+}
 
-const LOWEST_BELOW = [...MOCK_OFFERS]
-  .filter(o => o.group === 'BELOW')
-  .sort((a, b) => a.adjPrice - b.adjPrice)[0];
+// (Mock 오퍼 제거 — API 데이터 사용)
 
 // ── 딜 단계 ───────────────────────────────────────────────
 const STAGES = ['딜모집', '오퍼경쟁', '성사', '결제', '배송', '완료'];
-const STAGE_CURRENT = 1;
-
-// ── 마감 타이머 (모듈 로드 시점 기준) ────────────────────
-const DEADLINE_MS = Date.now() + (23 * 3600 + 14 * 60) * 1000;
 
 function getCountdownColor(diff: number): string {
   if (diff < 10 * 60 * 1000)  return '#ff2d78';
@@ -292,26 +78,8 @@ function getCountdownColor(diff: number): string {
   return '#e8eaed';
 }
 
-// ── 관전자 예측 데이터 ────────────────────────────────────
-const PREDICTION_BUCKETS = [
-  { range: '85-88만', count: 12 },
-  { range: '88-91만', count: 35 },
-  { range: '91-94만', count: 28 },
-  { range: '94-97만', count: 18 },
-  { range: '97-100만', count: 7 },
-];
-const PRED_MAX = Math.max(...PREDICTION_BUCKETS.map(b => b.count));
-const AVG_PREDICTION = 920000;
-
 // ── 채팅 ──────────────────────────────────────────────────
 interface ChatMsg { id: number; user: string; msg: string; time: string; isMe?: boolean; }
-const INIT_CHAT: ChatMsg[] = [
-  { id: 1, user: '구매왕',    msg: '이 딜 실제로 성사 가능성 있나요? 🤔', time: '14:23' },
-  { id: 2, user: '핑퐁이',    msg: '현재 오퍼가 12건이고, 목표가 대비 6,000원 저렴한 오퍼도 있어요! 성사 가능성 높습니다 😊', time: '14:24' },
-  { id: 3, user: '테크러버',  msg: '에어팟 프로 2 USB-C 정품 맞죠?', time: '14:31' },
-  { id: 4, user: '스마트딜',  msg: '안녕하세요! 저희 오퍼는 100% 정품 보장입니다 🏆', time: '14:32' },
-  { id: 5, user: '알뜰구매자', msg: '배송비 포함 가격으로 비교하면 어디가 제일 좋아요?', time: '15:02' },
-];
 
 // ── 페이지 ───────────────────────────────────────────────
 export default function PriceJourneyPage() {
@@ -321,19 +89,34 @@ export default function PriceJourneyPage() {
   const { user } = useAuth();
   const [selectedOffer, setSelectedOffer] = useState<JourneyOffer | null>(null);
   const [apiDeal, setApiDeal] = useState<Record<string, unknown> | null>(null);
-  const [offers, setOffers] = useState<JourneyOffer[]>(MOCK_OFFERS);
+  const [offers, setOffers] = useState<JourneyOffer[]>([]);
+
+  // ── 딜 가격 상태 (API 로드 후 업데이트) ──
+  const [pAnchor, setPAnchor] = useState(0);
+  const [pTarget, setPTarget] = useState(0);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [qTarget, setQTarget] = useState(0);
+  const [dealCreatorId, setDealCreatorId] = useState<number | null>(null);
+  const [dealPhase, setDealPhase] = useState<'RECRUITING' | 'OFFER_PHASE'>('RECRUITING');
+  const [deadlineMs, setDeadlineMs] = useState(Date.now() + 72 * 3600000);
+  const stageCurrent = dealPhase === 'RECRUITING' ? 1 : 2;
+  const [predBuckets, _setPredBuckets] = useState<{range: string; count: number}[]>([]);
+  const [avgPrediction, _setAvgPrediction] = useState(0);
+  void _setPredBuckets; void _setAvgPrediction; // TODO: wire to spectator API
+  const predMax = Math.max(1, ...predBuckets.map(b => b.count));
+  const lowestOffer = offers.length > 0 ? [...offers].sort((a, b) => a.adjPrice - b.adjPrice)[0] : null;
 
   // ── 방장 목표가 수정 상태 ──
-  const isCreator      = MOCK_DEAL_EXTENDED.creator_id === CURRENT_USER_ID;
-  const canEditTarget  = isCreator && MOCK_DEAL_EXTENDED.phase === 'RECRUITING';
-  const [currentTargetReason, setCurrentTargetReason] = useState(MOCK_DEAL_EXTENDED.target_price_reason);
-  const [currentTargetImages, setCurrentTargetImages] = useState<string[]>(MOCK_DEAL_EXTENDED.target_price_images);
+  const isCreator      = dealCreatorId != null && dealCreatorId === (user?.id ?? 0);
+  const canEditTarget  = isCreator && dealPhase === 'RECRUITING';
+  const [currentTargetReason, setCurrentTargetReason] = useState('');
+  const [currentTargetImages, setCurrentTargetImages] = useState<string[]>([]);
   const [showTargetEditModal, setShowTargetEditModal] = useState(false);
-  const [newTargetPrice, setNewTargetPrice]           = useState(P_TARGET);
+  const [newTargetPrice, setNewTargetPrice]           = useState(0);
   const [targetReason, setTargetReason]               = useState('');
   const [targetImages, setTargetImages]               = useState<string[]>([]);
   const [targetSubmitting, setTargetSubmitting]       = useState(false);
-  const [currentDisplayPrice, setCurrentDisplayPrice] = useState(P_TARGET);
+  const [currentDisplayPrice, setCurrentDisplayPrice] = useState(0);
   const targetImgRef = useRef<HTMLInputElement>(null);
 
   // ── 예측 모달 ──
@@ -359,16 +142,16 @@ export default function PriceJourneyPage() {
     const myOffer: JourneyOffer = {
       id: 99, seller: '내 오퍼', icon: '🙋',
       rawPrice: newPrice, adjPrice: Math.round(newPrice * 0.98),
-      offerIndexPct: Math.round(newPrice / P_TARGET * 1000) / 10,
+      offerIndexPct: pTarget > 0 ? Math.round(newPrice / pTarget * 1000) / 10 : 100,
       totalQty: newQty, remainQty: newQty,
       shipDays: 2, shipFee: shipFeeText, refund: '우수', asGrade: '우수',
       sellerTier: '신규', sellerScore: 0, sellerDeals: 0, sellerRate: '-',
       condTags: [],
-      group: newPrice < P_TARGET ? 'PREMIUM' : newPrice === P_TARGET ? 'MATCHING' : 'BELOW',
+      group: newPrice < pTarget ? 'PREMIUM' : newPrice <= pTarget * 1.05 ? 'MATCHING' : 'BELOW',
       groupAdj: 0, groupResult: newPrice,
       condAdj: Math.round(newPrice * -0.02), condResult: Math.round(newPrice * 0.98),
       condDetail: '내가 등록한 오퍼',
-      verdictType: newPrice <= P_TARGET ? 'good' : newPrice <= P_TARGET * 1.1 ? 'close' : 'far',
+      verdictType: newPrice <= pTarget ? 'good' : newPrice <= pTarget * 1.1 ? 'close' : 'far',
       verdictEmoji: '🙋', verdictTitle: '내 오퍼',
       verdictDesc: '직접 등록한 오퍼입니다.',
       isMine: true,
@@ -383,10 +166,12 @@ export default function PriceJourneyPage() {
 
   // ── 타이머 ──
   const [countdown, setCountdown] = useState('');
+  const [countdownDiff, setCountdownDiff] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   useEffect(() => {
     const tick = () => {
-      const diff = DEADLINE_MS - Date.now();
+      const diff = deadlineMs - Date.now();
+      setCountdownDiff(diff);
       if (diff <= 0) { setCountdown('마감'); clearInterval(timerRef.current); return; }
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
@@ -396,47 +181,75 @@ export default function PriceJourneyPage() {
     tick();
     timerRef.current = setInterval(tick, 1000);
     return () => clearInterval(timerRef.current);
-  }, []);
+  }, [deadlineMs]);
 
-  const countdownDiff = DEADLINE_MS - Date.now();
   const countdownColor = getCountdownColor(countdownDiff);
   const isBlinking = countdownDiff < 10 * 60 * 1000;
 
-  // ── API: 딜 메타 + 채팅 로드 ──
+  // ── API: 딜 메타 + 오퍼 + 채팅 로드 ──
   useEffect(() => {
-    if (!FEATURES.USE_API_DEALS) return;
     const numId = Number(dealId);
     if (!numId) return;
-    fetchDeal(numId).then(d => { if (d) setApiDeal(d as Record<string, unknown>); }).catch(() => {});
-  }, [dealId]);
 
-  useEffect(() => {
-    if (!FEATURES.USE_API_DEALS) return;
-    const numId = Number(dealId);
-    if (!numId) return;
-    const buyerId = user?.id ?? CURRENT_USER_ID;
-    fetchChatMessages(numId, buyerId).then(msgs => {
-      if (!msgs || !Array.isArray(msgs) || msgs.length === 0) return;
-      setChatMessages(msgs.map((m: Record<string, unknown>, i: number) => ({
-        id:   typeof m.id === 'number' ? m.id : i + 1,
-        user: typeof m.sender_nickname === 'string' ? m.sender_nickname
-            : typeof m.sender_name === 'string' ? m.sender_name : '익명',
-        msg:  typeof m.text === 'string' ? m.text
-            : typeof m.content === 'string' ? m.content : '',
-        time: typeof m.created_at === 'string'
-          ? new Date(m.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
-          : '',
-        isMe: typeof m.buyer_id === 'number' && m.buyer_id === buyerId,
-      })));
+    // 딜 메타
+    fetchDeal(numId).then(d => {
+      if (!d) return;
+      const raw = d as Record<string, unknown>;
+      setApiDeal(raw);
+      const anchor = (raw.anchor_price as number) ?? 0;
+      const target = (raw.target_price as number) ?? (raw.max_budget as number) ?? 0;
+      setPAnchor(anchor);
+      setPTarget(target);
+      setCurrentDisplayPrice(target);
+      setNewTargetPrice(target);
+      setCurrentQ((raw.current_qty as number) ?? 0);
+      setQTarget((raw.desired_qty as number) ?? 100);
+      setDealCreatorId((raw.creator_id as number) ?? null);
+      setDealPhase(raw.status === 'open' ? 'RECRUITING' : 'OFFER_PHASE');
+      if (raw.deadline_at) {
+        setDeadlineMs(new Date(raw.deadline_at as string).getTime());
+      }
+
+      // 오퍼 (딜 로드 후 target 확정된 상태에서)
+      fetchOffersByDeal(numId).then(offersRaw => {
+        let items: Record<string, unknown>[] = [];
+        if (Array.isArray(offersRaw)) items = offersRaw;
+        else if (offersRaw && typeof offersRaw === 'object' && Array.isArray((offersRaw as Record<string, unknown>).items))
+          items = (offersRaw as Record<string, unknown>).items as Record<string, unknown>[];
+        if (items.length > 0) {
+          const mapped = items.map((o, i) => mapApiOfferToJourney(o, target, i));
+          mapped.sort((a, b) => a.rawPrice - b.rawPrice);
+          setOffers(mapped);
+        }
+      }).catch(() => {});
     }).catch(() => {});
+
+    // 채팅
+    const buyerId = user?.id ?? 0;
+    if (buyerId) {
+      fetchChatMessages(numId, buyerId).then(msgs => {
+        if (!msgs || !Array.isArray(msgs) || msgs.length === 0) return;
+        setChatMessages(msgs.map((m: Record<string, unknown>, i: number) => ({
+          id:   typeof m.id === 'number' ? m.id : i + 1,
+          user: typeof m.sender_nickname === 'string' ? m.sender_nickname
+              : typeof m.sender_name === 'string' ? m.sender_name : '익명',
+          msg:  typeof m.text === 'string' ? m.text
+              : typeof m.content === 'string' ? m.content : '',
+          time: typeof m.created_at === 'string'
+            ? new Date(m.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+            : '',
+          isMe: typeof m.buyer_id === 'number' && m.buyer_id === buyerId,
+        })));
+      }).catch(() => {});
+    }
   }, [dealId, user]);
 
   // ── 채팅 ──
-  const [chatMessages, setChatMessages] = useState<ChatMsg[]>(INIT_CHAT);
+  const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatExpanded, setChatExpanded] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
-  const nextChatId = useRef(INIT_CHAT.length + 1);
+  const nextChatId = useRef(1);
 
   const sendChat = () => {
     const txt = chatInput.trim();
@@ -445,9 +258,9 @@ export default function PriceJourneyPage() {
     const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
     setChatMessages(prev => [...prev, { id: nextChatId.current++, user: '나', msg: txt, time, isMe: true }]);
     setChatInput('');
-    if (FEATURES.USE_API_DEALS) {
-      const numId = Number(dealId);
-      const userId = user?.id ?? CURRENT_USER_ID;
+    const numId = Number(dealId);
+    const userId = user?.id ?? 0;
+    if (numId && userId) {
       sendChatMessage(numId, txt, userId, user?.role ?? 'buyer').catch(() => {});
     }
   };
@@ -521,7 +334,7 @@ export default function PriceJourneyPage() {
       <div style={{ padding: '12px 20px 14px', fontSize: 14, fontWeight: 500, color: T.text }}>
         🎧 {apiDeal ? String(apiDeal.product_name ?? '에어팟 프로 2 (USB-C)') : '에어팟 프로 2 (USB-C)'}
         <div style={{ fontSize: 12, color: T.textSec, marginTop: 4 }}>
-          👥 현재 {apiDeal ? Number(apiDeal.current_qty ?? CURRENT_Q) : CURRENT_Q}명 참여 · 목표 {apiDeal ? Number(apiDeal.desired_qty ?? Q_TARGET) : Q_TARGET}명 · 🏷️ 오퍼 {offers.length}건 · ⏰ 2일 남음
+          👥 현재 {currentQ}명 참여 · 목표 {qTarget}명 · 🏷️ 오퍼 {offers.length}건 · ⏰ {countdown || '로딩 중'}
         </div>
       </div>
 
@@ -539,8 +352,8 @@ export default function PriceJourneyPage() {
                 {i > 0 && (
                   <div style={{
                     flex: 1, height: 2,
-                    background: i <= STAGE_CURRENT
-                      ? `linear-gradient(90deg, ${T.green}, ${i === STAGE_CURRENT ? T.green + '88' : T.green})`
+                    background: i <= stageCurrent
+                      ? `linear-gradient(90deg, ${T.green}, ${i === stageCurrent ? T.green + '88' : T.green})`
                       : T.border,
                   }} />
                 )}
@@ -549,20 +362,20 @@ export default function PriceJourneyPage() {
                   width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11, fontWeight: 700,
-                  ...(i < STAGE_CURRENT
+                  ...(i < stageCurrent
                     ? { background: T.green, color: T.bgDeep }
-                    : i === STAGE_CURRENT
+                    : i === stageCurrent
                     ? { background: T.green, color: T.bgDeep, animation: 'stagePulse 2s infinite' }
                     : { background: T.bgDeep, border: `1px solid ${T.border}`, color: T.textSec }
                   ),
                 }}>
-                  {i < STAGE_CURRENT ? '✓' : i + 1}
+                  {i < stageCurrent ? '✓' : i + 1}
                 </div>
                 {/* 마지막 원 이후 빈 공간 */}
                 {i < STAGES.length - 1 && (
                   <div style={{
                     flex: 1, height: 2,
-                    background: i < STAGE_CURRENT ? T.green : T.border,
+                    background: i < stageCurrent ? T.green : T.border,
                   }} />
                 )}
               </div>
@@ -573,8 +386,8 @@ export default function PriceJourneyPage() {
             {STAGES.map((s, i) => (
               <div key={i} style={{
                 flex: 1, textAlign: 'center',
-                fontSize: 10, fontWeight: i === STAGE_CURRENT ? 700 : 400,
-                color: i <= STAGE_CURRENT ? T.text : T.textSec,
+                fontSize: 10, fontWeight: i === stageCurrent ? 700 : 400,
+                color: i <= stageCurrent ? T.text : T.textSec,
                 letterSpacing: '-0.2px',
               }}>
                 {s}
@@ -587,7 +400,7 @@ export default function PriceJourneyPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             <div>
-              <span style={{ fontSize: 12, color: T.green, fontWeight: 700 }}>현재: {STAGES[STAGE_CURRENT]}</span>
+              <span style={{ fontSize: 12, color: T.green, fontWeight: 700 }}>현재: {STAGES[stageCurrent]}</span>
               <span style={{ fontSize: 11, color: T.textSec, marginLeft: 6 }}>— 셀러들이 오퍼를 제출 중이에요</span>
             </div>
             <div style={{ fontSize: 12, fontWeight: 600, color: countdownColor }}>
@@ -599,11 +412,11 @@ export default function PriceJourneyPage() {
 
       {/* ── ① 전면: 목표가 vs 최저오퍼 ── */}
       <PriceFaceSection
-        anchor={P_ANCHOR}
+        anchor={pAnchor}
         target={currentDisplayPrice}
-        lowestPrice={LOWEST_BELOW.rawPrice}
-        lowestSeller={LOWEST_BELOW.seller}
-        lowestQty={LOWEST_BELOW.totalQty}
+        lowestPrice={lowestOffer?.rawPrice ?? 0}
+        lowestSeller={lowestOffer?.seller ?? '-'}
+        lowestQty={lowestOffer?.totalQty ?? 0}
         onEditTarget={canEditTarget ? () => {
           setNewTargetPrice(currentDisplayPrice);
           setTargetReason('');
@@ -633,17 +446,17 @@ export default function PriceJourneyPage() {
       {/* ── ② 전체 오퍼 리스트 ── */}
       <OfferListSection
         offers={offers}
-        target={P_TARGET}
+        target={pTarget}
         onSelectOffer={setSelectedOffer}
       />
 
       {/* ── ③ 공동구매 기대가격 곡선 ── */}
       <GroupCurveSection
-        anchor={P_ANCHOR}
-        target={P_TARGET}
-        currentQ={CURRENT_Q}
-        qTarget={Q_TARGET}
-        lowestOfferPrice={LOWEST_BELOW.rawPrice}
+        anchor={pAnchor}
+        target={pTarget}
+        currentQ={currentQ}
+        qTarget={qTarget}
+        lowestOfferPrice={lowestOffer?.rawPrice ?? 0}
       />
 
       {/* ── 딜 참여하기 플로팅 버튼 (fixed) ── */}
@@ -689,14 +502,14 @@ export default function PriceJourneyPage() {
           <div style={{ fontSize: 12, color: T.textSec, marginBottom: 14 }}>
             {chatMessages.length + 45}명이 예측에 참여했어요 · 평균 예측가:&nbsp;
             <span style={{ color: T.green, fontWeight: 700 }}>
-              {AVG_PREDICTION.toLocaleString()}원
+              {avgPrediction.toLocaleString()}원
             </span>
           </div>
 
           {/* 바 차트 (div-based for design consistency) */}
           <div style={{ height: 140 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={PREDICTION_BUCKETS} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
+              <BarChart data={predBuckets} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
                 <XAxis
                   dataKey="range"
                   tick={{ fill: T.textSec, fontSize: 10 }}
@@ -709,10 +522,10 @@ export default function PriceJourneyPage() {
                   tickLine={false}
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {PREDICTION_BUCKETS.map((b, i) => (
+                  {predBuckets.map((b, i) => (
                     <Cell
                       key={i}
-                      fill={b.count === PRED_MAX ? T.green : 'rgba(0,230,118,0.25)'}
+                      fill={b.count === predMax ? T.green : 'rgba(0,230,118,0.25)'}
                     />
                   ))}
                 </Bar>
@@ -909,7 +722,7 @@ export default function PriceJourneyPage() {
       {/* ── 오퍼 상세 시트 ── */}
       <OfferDetailSheet
         offer={selectedOffer}
-        target={P_TARGET}
+        target={pTarget}
         onClose={() => setSelectedOffer(null)}
         onBuy={async (offer) => {
           if (!window.confirm('이 오퍼로 구매 예약을 진행하시겠어요?')) return;

@@ -445,9 +445,15 @@ export default function DealCreatePage() {
   // Step 4: 생성
   const [creating, setCreating] = useState(false);
 
-  // 스크롤 위치 보존용
+  // 옵션 입력값 (parent-level로 관리 → 리렌더링 시 소실 방지)
+  const [optionInputs, setOptionInputs] = useState<Record<number, string>>({});
+  const isTypingRef = useRef(false);
+
+  // 스크롤 위치 보존용 (타이핑 중에는 복원 안 함)
   const scrollRef = useRef(0);
-  useEffect(() => { window.scrollTo(0, scrollRef.current); }, [optionGroups]);
+  useEffect(() => {
+    if (!isTypingRef.current) window.scrollTo(0, scrollRef.current);
+  }, [optionGroups]);
 
   // ── 이동 ─────────────────────────────────────────────
   const goTo = (n: number) => { setDir(n > step ? 1 : -1); setStep(n); };
@@ -708,11 +714,11 @@ export default function DealCreatePage() {
     </button>
   );
 
-  // ── 옵션항목(사양) 에디터 ────────────────────────────
-  const OptionGroupEditor = ({ group, gIdx }: { group: OptionGroup; gIdx: number }) => {
-    const [newVal, setNewVal] = useState('');
+  // ── 옵션항목(사양) 에디터 (인라인 — parent state 사용) ──
+  const renderOptionGroup = (group: OptionGroup, gIdx: number) => {
+    const inputVal = optionInputs[gIdx] || '';
     return (
-      <div style={{
+      <div key={gIdx} style={{
         ...cardStyle,
         borderColor: aiFilledFields.has('options') ? `${C.green}40` : C.border,
         padding: '14px 16px',
@@ -721,6 +727,8 @@ export default function DealCreatePage() {
           <input
             value={group.title}
             onChange={e => updateGroupTitle(gIdx, e.target.value)}
+            onFocus={() => { isTypingRef.current = true; }}
+            onBlur={() => { isTypingRef.current = false; }}
             placeholder="옵션항목(사양) 이름 (예: 색상)"
             className="dc-input"
             style={{
@@ -763,18 +771,21 @@ export default function DealCreatePage() {
 
         {/* 옵션내용 추가 입력 */}
         <input
-          value={newVal}
-          onChange={e => setNewVal(e.target.value)}
+          value={inputVal}
+          onChange={e => setOptionInputs(prev => ({ ...prev, [gIdx]: e.target.value }))}
+          onFocus={() => { isTypingRef.current = true; }}
+          onBlur={() => { isTypingRef.current = false; }}
           onKeyDown={e => {
             if (e.key === 'Enter') {
               e.preventDefault();
-              if (newVal.trim()) {
-                addValueToGroup(gIdx, newVal);
-                setNewVal('');
+              const v = (optionInputs[gIdx] || '').trim();
+              if (v) {
+                addValueToGroup(gIdx, v);
+                setOptionInputs(prev => ({ ...prev, [gIdx]: '' }));
               }
             }
           }}
-          placeholder="옵션내용 입력 후 Enter"
+          placeholder="원하는 내용이 없을 시, 여기 기재 후, Enter"
           className="dc-input"
           style={{
             padding: '7px 10px', fontSize: 12, borderRadius: 8,
@@ -1110,9 +1121,7 @@ export default function DealCreatePage() {
                 <div>
                   <SectionTitle>📦 옵션항목(사양)</SectionTitle>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {optionGroups.map((group, gIdx) => (
-                      <OptionGroupEditor key={gIdx} group={group} gIdx={gIdx} />
-                    ))}
+                    {optionGroups.map((group, gIdx) => renderOptionGroup(group, gIdx))}
                     {optionGroups.length < 10 ? (
                       <button
                         onClick={addGroup}

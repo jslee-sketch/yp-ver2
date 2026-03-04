@@ -9,6 +9,9 @@ import { PingpongCard } from '../components/common/PingpongCard';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { ProductDetailSheet } from '../components/deal/ProductDetailSheet';
 import { fetchDeal } from '../api/dealApi';
+import { fetchOffersByDeal } from '../api/offerApi';
+import { fetchChatMessages, sendChatMessage } from '../api/chatApi';
+import { useAuth } from '../contexts/AuthContext';
 import type { Deal, Offer, SpectatorStats, DealStage } from '../types';
 
 // ── Mock 데이터 (API 실패 시 fallback) ──────────────
@@ -40,49 +43,65 @@ function makeMockDeal(id: number): Deal & { current_stage: string; stage_deadlin
   };
 }
 
-const OFFERS: Offer[] = [
-  { id: 1, seller_name: '디지털플러스', price: 89000, tier: 'PREMIUM',  rating: 4.8, review_count: 342, shipping_fee: 0,    delivery_days: 2, warranty_months: 12 },
-  { id: 2, seller_name: '테크마켓',     price: 91000, tier: 'PREMIUM',  rating: 4.6, review_count: 215, shipping_fee: 0,    delivery_days: 3, warranty_months: 6  },
-  { id: 3, seller_name: '애플매니아',   price: 93500, tier: 'MATCHING', rating: 4.9, review_count: 891, shipping_fee: 0,    delivery_days: 1, warranty_months: 12 },
-  { id: 4, seller_name: '전자왕',       price: 96000, tier: 'BELOW',    rating: 4.2, review_count: 67,  shipping_fee: 3000, delivery_days: 4, warranty_months: 0  },
-];
+// ── 백엔드 오퍼 → 프론트 Offer 매핑 ──
+function mapOffer(raw: Record<string, unknown>, idx: number): Offer {
+  const price = (raw.price as number) ?? 0;
+  return {
+    id: (raw.id as number) ?? idx,
+    seller_name: (raw.seller_nickname as string) || (raw.business_name as string) || `셀러 #${raw.seller_id ?? idx}`,
+    price,
+    tier: (raw.tier as Offer['tier']) || 'MATCHING',
+    rating: (raw.rating as number) ?? 0,
+    review_count: (raw.review_count as number) ?? 0,
+    shipping_fee: (raw.shipping_fee_per_reservation as number) ?? (raw.shipping_fee as number) ?? 0,
+    delivery_days: (raw.delivery_days as number) ?? 0,
+    warranty_months: (raw.warranty_months as number) ?? 0,
+  };
+}
 
-const SPECTATOR_STATS: SpectatorStats = {
-  deal_id: 15,
-  total_count: 87,
-  avg_predicted_price: 92000,
-  median_predicted_price: 91000,
-  buckets: [
-    { label: '85-88K', min: 85000, max: 88000, count: 10, pct: 12 },
-    { label: '88-91K', min: 88000, max: 91000, count: 30, pct: 35 },
-    { label: '91-94K', min: 91000, max: 94000, count: 24, pct: 28 },
-    { label: '94-97K', min: 94000, max: 97000, count: 16, pct: 18 },
-    { label: '97-100K', min: 97000, max: 100000, count: 7, pct: 7 },
-  ],
-  my_prediction: null,
-};
+// ── 백엔드 채팅 → 표시용 매핑 ──
+interface ChatMsg { id: number; user: string; msg: string; time: string }
+function mapChat(raw: Record<string, unknown>): ChatMsg {
+  const d = raw.created_at ? new Date(raw.created_at as string) : new Date();
+  return {
+    id: (raw.id as number) ?? 0,
+    user: (raw.sender_nickname as string) || `유저 ${raw.buyer_id ?? ''}`,
+    msg: (raw.text as string) || '',
+    time: `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`,
+  };
+}
 
-const PRODUCT_DETAIL = {
-  options: [
-    { title: '색상', selected_value: '블랙', values: ['화이트', '블랙'] },
-    { title: '용량', selected_value: '256GB', values: ['128GB', '256GB', '512GB'] },
-  ],
-  conditions: {
-    shipping_fee_krw: 0, warranty_months: 12, delivery_days: 2,
-    return_policy: '7일 이내 무료 반품', condition_grade: '미개봉',
-  },
-  naver_lowest_price: 103900,
-  naver_product_name: 'Apple 에어팟 프로 2세대 (USB-C)',
-  ai_analyzed_at: new Date(Date.now() - 3600000).toISOString(),
-};
+// ── 딜 데이터에서 상품 상세 추출 ──
+function buildProductDetail(d: Record<string, unknown>) {
+  let options: { title: string; selected_value: string; values: string[] }[] = [];
+  try {
+    const raw = d.options;
+    if (typeof raw === 'string' && raw.startsWith('[')) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        options = parsed.map((g: Record<string, unknown>) => ({
+          title: (g.title as string) || '',
+          selected_value: (g.selected_value as string) || ((g.values as string[])?.[0] ?? ''),
+          values: Array.isArray(g.values) ? g.values as string[] : [],
+        }));
+      }
+    }
+  } catch { /* ignore parse errors */ }
 
-const MOCK_CHAT = [
-  { id: 1, user: '가격파괴자',  msg: '무료배송 아닌 오퍼도 있나요?',              time: '13:41' },
-  { id: 2, user: '사냥꾼87',   msg: '디지털플러스 1년보증 괜찮은듯',              time: '13:43' },
-  { id: 3, user: '가격파괴자',  msg: 'ㅇㅇ 그거 선택하려구',                      time: '13:44' },
-  { id: 4, user: '절약왕_kim', msg: '배송 2일이면 충분히 빠른 거 아닌가요?',     time: '13:45' },
-  { id: 5, user: '사냥꾼87',   msg: '맞아요, 1년보증까지 있으니 좋은 것 같아요', time: '13:47' },
-];
+  return {
+    options,
+    conditions: {
+      shipping_fee_krw: 0,
+      warranty_months: 0,
+      delivery_days: 0,
+      return_policy: '',
+      condition_grade: (d.condition as string) || '신품',
+    },
+    naver_lowest_price: (d.anchor_price as number) ?? null,
+    naver_product_name: (d.product_detail as string) || (d.product_name as string) || '',
+    ai_analyzed_at: (d.created_at as string) || null,
+  };
+}
 
 function getPingpongMessage(deal: Deal, offers: Offer[]): string {
   if (!offers.length) return '아직 오퍼가 없어요. 판매자들이 준비 중이에요 — 조금만 기다려주세요! ⏳';
@@ -101,22 +120,34 @@ export default function DealDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const dealId = Number(id) || 0;
+  const { user } = useAuth();
+  const buyerId = user?.id ?? null;
 
   const [deal, setDeal] = useState<Deal & { current_stage: string; stage_deadline_at: string; stages: DealStage[] }>(makeMockDeal(dealId));
   const [loading, setLoading] = useState(true);
-  const [spectatorStats, setSpectatorStats] = useState<SpectatorStats>(SPECTATOR_STATS);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [spectatorStats, setSpectatorStats] = useState<SpectatorStats>({
+    deal_id: dealId, total_count: 0, avg_predicted_price: null, median_predicted_price: null, buckets: [], my_prediction: null,
+  });
+  const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
+  const [productDetail, setProductDetail] = useState<ReturnType<typeof buildProductDetail> | null>(null);
   const [chatSheetOpen, setChatSheetOpen]   = useState(false);
   const [productSheetOpen, setProductSheetOpen] = useState(false);
   const [chatMsg, setChatMsg] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const rawDealRef = useRef<Record<string, unknown>>({});
 
-  // ── 딜 데이터 페칭 ──
+  // ── 딜 + 오퍼 + 채팅 데이터 페칭 ──
   useEffect(() => {
     if (!dealId) return;
     setLoading(true);
-    fetchDeal(dealId).then(raw => {
+
+    const fetchAll = async () => {
+      // 딜 데이터
+      const raw = await fetchDeal(dealId);
       if (raw && typeof raw === 'object') {
         const d = raw as Record<string, unknown>;
+        rawDealRef.current = d;
         setDeal({
           id: dealId,
           product_name: (d.product_name as string) || `딜 #${dealId}`,
@@ -142,9 +173,33 @@ export default function DealDetailPage() {
             { key: 'completed',       label: '완료',       completed: d.status === 'archived' },
           ],
         });
+        setProductDetail(buildProductDetail(d));
       }
-    }).finally(() => setLoading(false));
-  }, [dealId]);
+
+      // 오퍼 데이터
+      const offersRaw = await fetchOffersByDeal(dealId);
+      if (Array.isArray(offersRaw)) {
+        const mapped = offersRaw.map((o: Record<string, unknown>, i: number) => mapOffer(o, i));
+        mapped.sort((a, b) => a.price - b.price);
+        setOffers(mapped);
+      } else if (offersRaw && typeof offersRaw === 'object' && Array.isArray((offersRaw as Record<string, unknown>).items)) {
+        const items = (offersRaw as Record<string, unknown>).items as Record<string, unknown>[];
+        const mapped = items.map((o, i) => mapOffer(o, i));
+        mapped.sort((a, b) => a.price - b.price);
+        setOffers(mapped);
+      }
+
+      // 채팅 데이터
+      if (buyerId) {
+        const chatRaw = await fetchChatMessages(dealId, buyerId);
+        if (Array.isArray(chatRaw)) {
+          setChatMessages(chatRaw.map((m: Record<string, unknown>) => mapChat(m)));
+        }
+      }
+    };
+
+    fetchAll().finally(() => setLoading(false));
+  }, [dealId, buyerId]);
 
   useEffect(() => {
     if (chatSheetOpen) {
@@ -152,8 +207,8 @@ export default function DealDetailPage() {
     }
   }, [chatSheetOpen]);
 
-  const lowestOffer = OFFERS[0];
-  const pingpongMsg = getPingpongMessage(deal, OFFERS);
+  const lowestOffer = offers[0] ?? null;
+  const pingpongMsg = getPingpongMessage(deal, offers);
 
   if (loading) {
     return (
@@ -225,7 +280,7 @@ export default function DealDetailPage() {
         />
 
         {/* 오퍼 목록 */}
-        <OfferList offers={OFFERS} />
+        <OfferList offers={offers} />
 
         {/* 핑퐁이 인사이트 */}
         <div style={{ margin: '0 16px 16px' }}>
@@ -249,11 +304,11 @@ export default function DealDetailPage() {
               cursor: 'pointer',
             }}
           >
-            <span>💬 딜방 채팅 ({MOCK_CHAT.length})</span>
+            <span>💬 딜방 채팅 ({chatMessages.length})</span>
             <span style={{ fontSize: 12, color: 'var(--accent-blue)' }}>펼치기 ↑</span>
           </button>
           <div style={{ background: 'var(--bg-secondary)', padding: '10px 16px' }}>
-            {MOCK_CHAT.slice(-3).map((c, i, arr) => (
+            {chatMessages.slice(-3).map((c, i, arr) => (
               <div key={c.id} style={{
                 display: 'flex', gap: 8, padding: '5px 0', alignItems: 'flex-start',
                 borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none',
@@ -274,7 +329,7 @@ export default function DealDetailPage() {
       <BottomSheet isOpen={chatSheetOpen} onClose={() => setChatSheetOpen(false)} title="💬 딜방 채팅" height="70vh">
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px' }}>
-            {MOCK_CHAT.map(c => (
+            {chatMessages.map(c => (
               <div key={c.id} style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', marginBottom: 3 }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-blue)' }}>{c.user}</span>
@@ -299,7 +354,17 @@ export default function DealDetailPage() {
             <input
               value={chatMsg}
               onChange={e => setChatMsg(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && chatMsg.trim()) setChatMsg(''); }}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && chatMsg.trim() && buyerId) {
+                  const msg = chatMsg.trim();
+                  setChatMsg('');
+                  sendChatMessage(dealId, msg, buyerId).then(() => {
+                    fetchChatMessages(dealId, buyerId).then(raw => {
+                      if (Array.isArray(raw)) setChatMessages(raw.map((m: Record<string, unknown>) => mapChat(m)));
+                    });
+                  });
+                }
+              }}
               type="text" placeholder="메시지 입력..."
               style={{
                 flex: 1, padding: '10px 14px', fontSize: 13,
@@ -310,7 +375,17 @@ export default function DealDetailPage() {
               }}
             />
             <button
-              onClick={() => setChatMsg('')}
+              onClick={() => {
+                if (chatMsg.trim() && buyerId) {
+                  const msg = chatMsg.trim();
+                  setChatMsg('');
+                  sendChatMessage(dealId, msg, buyerId).then(() => {
+                    fetchChatMessages(dealId, buyerId).then(raw => {
+                      if (Array.isArray(raw)) setChatMessages(raw.map((m: Record<string, unknown>) => mapChat(m)));
+                    });
+                  });
+                }
+              }}
               style={{
                 padding: '10px 16px', background: 'var(--accent-green)',
                 color: '#0a0a0f', borderRadius: 'var(--radius-sm)',
@@ -327,12 +402,12 @@ export default function DealDetailPage() {
         onClose={() => setProductSheetOpen(false)}
         productName={deal.product_name}
         brand={deal.brand}
-        canonicalName="Apple AirPods Pro 2nd Gen USB-C"
-        options={PRODUCT_DETAIL.options}
-        conditions={PRODUCT_DETAIL.conditions}
-        naverLowestPrice={PRODUCT_DETAIL.naver_lowest_price}
-        naverProductName={PRODUCT_DETAIL.naver_product_name}
-        aiAnalyzedAt={PRODUCT_DETAIL.ai_analyzed_at}
+        canonicalName={(rawDealRef.current.product_detail as string) || deal.product_name}
+        options={productDetail?.options ?? []}
+        conditions={productDetail?.conditions ?? { shipping_fee_krw: 0, warranty_months: 0, delivery_days: 0, return_policy: '', condition_grade: '신품' }}
+        naverLowestPrice={productDetail?.naver_lowest_price ?? null}
+        naverProductName={productDetail?.naver_product_name ?? ''}
+        aiAnalyzedAt={productDetail?.ai_analyzed_at ?? null}
       />
     </div>
   );
