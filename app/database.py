@@ -16,9 +16,11 @@ def _default_sqlite_url() -> str:
 # ✅ 환경변수 DATABASE_URL이 있으면 그걸 최우선으로 사용
 DATABASE_URL = (os.environ.get("DATABASE_URL") or "").strip() or _default_sqlite_url()
 
-# Railway PostgreSQL uses postgres:// but SQLAlchemy 2.x requires postgresql://
+# Railway PostgreSQL uses postgres:// — switch to psycopg3 driver
 if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
 print(f"✅ Using DATABASE_URL: {DATABASE_URL}")
 if DATABASE_URL.startswith("sqlite:///"):
