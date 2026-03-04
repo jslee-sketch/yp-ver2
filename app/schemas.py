@@ -47,9 +47,9 @@ class BuyerBase(BaseModel):
     nickname: str = Field(
         ...,
         min_length=2,
-        max_length=15,
+        max_length=20,
         pattern=_NICKNAME_PATTERN,
-        description="2~15자, 한글/영문/숫자/_ 가능, 공백·특수문자 불가",
+        description="2~20자, 한글/영문/숫자/_ 가능, 공백·특수문자 불가",
     )
     phone: Optional[str] = None
     address: Optional[str] = None
@@ -102,9 +102,9 @@ class SellerCreate(BaseModel):
     nickname: str = Field(
         ...,
         min_length=2,
-        max_length=15,
+        max_length=20,
         pattern=_NICKNAME_PATTERN,
-        description="2~15자, 한글/영문/숫자/_ 가능, 공백·특수문자 불가",
+        description="2~20자, 한글/영문/숫자/_ 가능, 공백·특수문자 불가",
     )
     business_number: str
     phone: str

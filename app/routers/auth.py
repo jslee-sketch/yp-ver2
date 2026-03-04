@@ -13,6 +13,29 @@ from jose import jwt as jose_jwt, JWTError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+
+# ─────────────────────────────────────────────────────────────
+# GET /auth/check-email
+# ─────────────────────────────────────────────────────────────
+from fastapi import Query
+
+
+@router.get("/check-email", summary="이메일 중복 확인")
+def check_email(
+    email: str = Query(..., description="확인할 이메일"),
+    db: Session = Depends(database.get_db),
+):
+    """Buyer + Seller 테이블에서 이메일 중복 여부를 확인합니다."""
+    email_lower = email.strip().lower()
+    buyer = db.query(models.Buyer).filter(models.Buyer.email == email_lower).first()
+    if buyer:
+        return {"available": False}
+    seller = db.query(models.Seller).filter(models.Seller.email == email_lower).first()
+    if seller:
+        return {"available": False}
+    return {"available": True}
+
+
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
     """

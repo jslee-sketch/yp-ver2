@@ -99,21 +99,11 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (method: string) => {
     if (method === 'phone') {
-      alert('전화번호 로그인은 준비 중입니다.\n이메일로 로그인해주세요.');
+      alert('소셜 로그인은 준비 중이에요. 이메일로 가입해주세요!');
       return;
     }
-    if (FEATURES.USE_API_AUTH) {
-      try {
-        const res = await apiClient.get(`/auth/social/${method}/authorize`);
-        const { url } = res.data as { url: string };
-        window.location.href = url;
-      } catch {
-        alert(`${method} 소셜 로그인 설정이 아직 완료되지 않았어요.\n이메일로 로그인해주세요.`);
-      }
-    } else {
-      login('mock-token-12345', MOCK_USER);
-      navigate(`/register?method=${method}`);
-    }
+    // 소셜 로그인 준비 중 안내
+    alert('소셜 로그인은 준비 중이에요. 이메일로 가입해주세요!');
   };
 
   return (

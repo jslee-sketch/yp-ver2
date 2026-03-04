@@ -1,10 +1,22 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient, { loginApi } from '../api/client';
 import { API } from '../api/endpoints';
 import { FEATURES } from '../config';
+import { showToast } from '../components/common/Toast';
+
+// ── Daum Postcode 타입 ───────────────────────────────────────
+declare global {
+  interface Window {
+    daum?: {
+      Postcode: new (options: {
+        oncomplete: (data: { zonecode: string; address: string }) => void;
+      }) => { open: () => void };
+    };
+  }
+}
 
 // ── 디자인 토큰 ──────────────────────────────────────────
 const C = {
@@ -21,7 +33,18 @@ const C = {
   text:        '#e8eaed',
   textSec:     '#78909c',
   textDim:     'rgba(255,255,255,0.25)',
+  red:         '#ff5252',
 };
+
+// ── 상수 ──────────────────────────────────────────────────
+const BANNED_NICKNAMES = new Set([
+  '관리자', 'admin', '운영자', '역핑', 'yeokping',
+  'test', '테스트', 'system', '시스템',
+]);
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PW_RE = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+const NICK_RE = /^[가-힣a-zA-Z0-9_]{2,20}$/;
 
 // ── 방향 애니메이션 ──────────────────────────────────────
 const variants = {
@@ -30,33 +53,45 @@ const variants = {
   exit:   (dir: number) => ({ x: dir > 0 ? '-60%' : '60%', opacity: 0, transition: { duration: 0.18 } }),
 };
 
-// ── 공용 컴포넌트 ────────────────────────────────────────
+// ── 공용 InputField ──────────────────────────────────────
 function InputField({
-  label, value, onChange, placeholder, type = 'text', disabled,
+  label, value, onChange, placeholder, type = 'text', disabled, hint, error, suffix,
 }: {
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; type?: string; disabled?: boolean;
+  hint?: string; error?: string; suffix?: React.ReactNode;
 }) {
   const [focused, setFocused] = useState(false);
+  const borderColor = error ? C.red : focused ? C.borderFocus : C.border;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        disabled={disabled}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={{
-          padding: '13px 14px', fontSize: 14, borderRadius: 12,
-          background: C.bgInput,
-          border: `1px solid ${focused ? C.borderFocus : C.border}`,
-          color: C.text, transition: 'border-color 0.15s',
-          opacity: disabled ? 0.5 : 1,
-        }}
-      />
+      <div style={{ position: 'relative' }}>
+        <input
+          type={type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            padding: suffix ? '13px 40px 13px 14px' : '13px 14px', fontSize: 14, borderRadius: 12,
+            background: C.bgInput,
+            border: `1px solid ${borderColor}`,
+            color: C.text, transition: 'border-color 0.15s',
+            opacity: disabled ? 0.5 : 1,
+          }}
+        />
+        {suffix && (
+          <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)' }}>
+            {suffix}
+          </div>
+        )}
+      </div>
+      {hint && !error && <div style={{ fontSize: 11, color: C.textSec, paddingLeft: 2 }}>{hint}</div>}
+      {error && <div style={{ fontSize: 11, color: C.red, paddingLeft: 2 }}>{error}</div>}
     </div>
   );
 }
@@ -76,113 +111,6 @@ function PrimaryBtn({ label, onClick, disabled }: { label: string; onClick: () =
     >
       {label}
     </button>
-  );
-}
-
-// ── Step 0: 전화번호 인증 ─────────────────────────────────
-function PhoneStep({ onNext }: { onNext: () => void }) {
-  const [phone, setPhone]       = useState('');
-  const [otpSent, setOtpSent]   = useState(false);
-  const [otp, setOtp]           = useState(['', '', '', '', '', '']);
-  const [timer, setTimer]       = useState(0);
-  const otpRefs    = useRef<(HTMLInputElement | null)[]>([]);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
-
-  const sendOtp = () => {
-    if (phone.replace(/\D/g, '').length < 10) return;
-    setOtpSent(true);
-    setTimer(180);
-    clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      setTimer(prev => {
-        if (prev <= 1) { clearInterval(intervalRef.current); return 0; }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  useEffect(() => () => clearInterval(intervalRef.current), []);
-
-  const handleOtp = (idx: number, val: string) => {
-    const next = [...otp];
-    next[idx] = val.replace(/\D/g, '').slice(-1);
-    setOtp(next);
-    if (val && idx < 5) otpRefs.current[idx + 1]?.focus();
-  };
-
-  const handleOtpKey = (idx: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[idx] && idx > 0) {
-      otpRefs.current[idx - 1]?.focus();
-    }
-  };
-
-  const otpFilled = otp.every(d => d !== '');
-  const fmtTimer  = `${String(Math.floor(timer / 60)).padStart(2, '0')}:${String(timer % 60).padStart(2, '0')}`;
-
-  return (
-    <div style={{ padding: '40px 24px' }}>
-      <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 6 }}>내 번호를 확인해요</div>
-      <div style={{ fontSize: 13, color: C.textSec, marginBottom: 32 }}>인증 후 역핑 서비스를 시작할 수 있어요.</div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {/* 전화번호 입력 */}
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{ flex: 1 }}>
-            <InputField label="전화번호" value={phone} onChange={setPhone} placeholder="010-0000-0000" type="tel" />
-          </div>
-          <button
-            onClick={sendOtp}
-            disabled={phone.replace(/\D/g, '').length < 10}
-            style={{
-              alignSelf: 'flex-end', padding: '13px 16px',
-              borderRadius: 12, fontSize: 13, fontWeight: 700,
-              background: phone.replace(/\D/g, '').length >= 10 ? C.cyan : C.bgInput,
-              color: phone.replace(/\D/g, '').length >= 10 ? '#000' : C.textDim,
-              cursor: phone.replace(/\D/g, '').length >= 10 ? 'pointer' : 'not-allowed',
-              border: `1px solid ${C.border}`, transition: 'all 0.15s', whiteSpace: 'nowrap',
-            }}
-          >
-            {otpSent ? '재전송' : '인증번호 전송'}
-          </button>
-        </div>
-
-        {/* OTP 박스 */}
-        {otpSent && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8 }}>
-              인증번호 6자리
-              {timer > 0 && <span style={{ color: C.orange, marginLeft: 8 }}>{fmtTimer}</span>}
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {otp.map((d, i) => (
-                <input
-                  key={i}
-                  ref={el => { otpRefs.current[i] = el; }}
-                  value={d}
-                  onChange={e => handleOtp(i, e.target.value)}
-                  onKeyDown={e => handleOtpKey(i, e)}
-                  maxLength={1}
-                  inputMode="numeric"
-                  style={{
-                    flex: 1, height: 52, borderRadius: 12, textAlign: 'center',
-                    fontSize: 22, fontWeight: 700, color: C.text,
-                    background: C.bgInput,
-                    border: `1px solid ${d ? C.green : C.border}`,
-                    transition: 'border-color 0.15s',
-                  }}
-                />
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        <PrimaryBtn
-          label="확인하고 시작하기 →"
-          onClick={onNext}
-          disabled={otpSent ? !otpFilled : true}
-        />
-      </div>
-    </div>
   );
 }
 
@@ -235,21 +163,44 @@ function RoleStep({ role, onSelect, onNext }: {
 }
 
 // ── Step 2: 프로필 ────────────────────────────────────────
-function ProfileStep({ role, method, nickname, setNickname, nickStatus, recommender, setRecommender,
-  email, setEmail, password, setPassword, apiError, onNext }: {
-  role: string; method: string;
+function ProfileStep({
+  nickname, setNickname, nickStatus, nickMsg,
+  recommender, setRecommender, role,
+  email, setEmail, emailStatus, emailMsg,
+  password, setPassword, passwordConfirm, setPasswordConfirm,
+  showPw, setShowPw, showPwConfirm, setShowPwConfirm,
+  pwError, pwConfirmError,
+  apiError, onNext,
+}: {
   nickname: string; setNickname: (v: string) => void;
-  nickStatus: 'idle' | 'checking' | 'ok' | 'taken';
-  recommender: string; setRecommender: (v: string) => void;
+  nickStatus: 'idle' | 'checking' | 'ok' | 'taken' | 'banned' | 'invalid';
+  nickMsg: string;
+  recommender: string; setRecommender: (v: string) => void; role: string;
   email: string; setEmail: (v: string) => void;
+  emailStatus: 'idle' | 'checking' | 'ok' | 'taken' | 'invalid';
+  emailMsg: string;
   password: string; setPassword: (v: string) => void;
+  passwordConfirm: string; setPasswordConfirm: (v: string) => void;
+  showPw: boolean; setShowPw: (v: boolean) => void;
+  showPwConfirm: boolean; setShowPwConfirm: (v: boolean) => void;
+  pwError: string; pwConfirmError: string;
   apiError: string;
   onNext: () => void;
 }) {
-  const nickMsg   = { idle: '', checking: '확인 중...', ok: '사용 가능한 닉네임이에요 ✓', taken: '이미 사용 중인 닉네임이에요' }[nickStatus];
-  const nickColor = { idle: C.textSec, checking: C.yellow, ok: C.green, taken: '#ff5252' }[nickStatus];
-  const isEmail   = method === 'email';
-  const canNext   = !!nickname && nickStatus === 'ok' && (!isEmail || (!!email && !!password));
+  const nickColor = { idle: C.textSec, checking: C.yellow, ok: C.green, taken: C.red, banned: C.red, invalid: C.red }[nickStatus];
+  const emailColor = { idle: C.textSec, checking: C.yellow, ok: C.green, taken: C.red, invalid: C.red }[emailStatus];
+
+  const canNext = !!nickname && nickStatus === 'ok'
+    && !!email && emailStatus === 'ok'
+    && !!password && !pwError
+    && !!passwordConfirm && !pwConfirmError;
+
+  const EyeBtn = ({ show, toggle }: { show: boolean; toggle: () => void }) => (
+    <button
+      type="button" onClick={toggle}
+      style={{ fontSize: 16, cursor: 'pointer', color: C.textDim, background: 'none', border: 'none', padding: 0 }}
+    >{show ? '🙈' : '👁'}</button>
+  );
 
   return (
     <div style={{ padding: '40px 24px' }}>
@@ -257,15 +208,47 @@ function ProfileStep({ role, method, nickname, setNickname, nickStatus, recommen
       <div style={{ fontSize: 13, color: C.textSec, marginBottom: 28 }}>딜에서 사용할 정보를 입력해요.</div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
-        {isEmail && (
-          <>
-            <InputField label="이메일" value={email} onChange={setEmail} placeholder="example@email.com" type="email" />
-            <InputField label="비밀번호" value={password} onChange={setPassword} placeholder="8자 이상 입력" type="password" />
-          </>
-        )}
+        {/* 이메일 */}
         <div>
-          <InputField label="닉네임" value={nickname} onChange={setNickname} placeholder="역핑에서 쓸 이름" />
-          {nickMsg && (
+          <InputField
+            label="이메일" value={email} onChange={setEmail}
+            placeholder="example@email.com" type="email"
+            hint="실제 사용하는 이메일을 입력해주세요"
+            error={emailMsg && emailStatus !== 'ok' && emailStatus !== 'idle' && emailStatus !== 'checking' ? emailMsg : undefined}
+          />
+          {emailMsg && (emailStatus === 'ok' || emailStatus === 'checking') && (
+            <div style={{ fontSize: 11, color: emailColor, marginTop: 4, paddingLeft: 2 }}>{emailMsg}</div>
+          )}
+        </div>
+
+        {/* 비밀번호 */}
+        <InputField
+          label="비밀번호" value={password} onChange={setPassword}
+          placeholder="8자 이상, 영문+숫자+특수문자"
+          type={showPw ? 'text' : 'password'}
+          hint={!pwError ? '비밀번호는 8자 이상, 영문+숫자+특수문자를 포함해야 해요' : undefined}
+          error={pwError}
+          suffix={<EyeBtn show={showPw} toggle={() => setShowPw(!showPw)} />}
+        />
+
+        {/* 비밀번호 확인 */}
+        <InputField
+          label="비밀번호 확인" value={passwordConfirm} onChange={setPasswordConfirm}
+          placeholder="비밀번호를 한 번 더 입력해주세요"
+          type={showPwConfirm ? 'text' : 'password'}
+          error={pwConfirmError}
+          suffix={<EyeBtn show={showPwConfirm} toggle={() => setShowPwConfirm(!showPwConfirm)} />}
+        />
+
+        {/* 닉네임 */}
+        <div>
+          <InputField
+            label="닉네임" value={nickname} onChange={setNickname}
+            placeholder="역핑에서 쓸 이름"
+            hint="2~20글자, 특수문자 제외"
+            error={nickMsg && nickStatus !== 'ok' && nickStatus !== 'idle' && nickStatus !== 'checking' ? nickMsg : undefined}
+          />
+          {nickMsg && (nickStatus === 'ok' || nickStatus === 'checking') && (
             <div style={{ fontSize: 11, color: nickColor, marginTop: 4, paddingLeft: 2 }}>{nickMsg}</div>
           )}
         </div>
@@ -279,7 +262,7 @@ function ProfileStep({ role, method, nickname, setNickname, nickStatus, recommen
         )}
 
         {apiError && (
-          <div style={{ fontSize: 12, color: '#ff5252', padding: '10px 14px', borderRadius: 10, background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.25)' }}>
+          <div style={{ fontSize: 12, color: C.red, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.25)' }}>
             {apiError}
           </div>
         )}
@@ -299,19 +282,80 @@ const REG_PAYMENT_OPTIONS = [
   { key: 'toss',  label: '토스페이',      icon: '💙' },
 ];
 
-function ExtraInfoStep({ phone, setPhone, address, setAddress, shippingAddr, setShippingAddr,
-  sameAsAddr, setSameAsAddr, gender, setGender, birthDate, setBirthDate,
-  paymentMethod, setPaymentMethod, onNext }: {
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
+
+function isUnder14(year: number, month: number, day: number): boolean {
+  const today = new Date();
+  const birth = new Date(year, month - 1, day);
+  const age14 = new Date(birth);
+  age14.setFullYear(age14.getFullYear() + 14);
+  return today < age14;
+}
+
+function ExtraInfoStep({
+  phone, setPhone, phoneStatus, phoneMsg,
+  address, setAddress, zipCode, setZipCode, addressDetail, setAddressDetail,
+  shippingAddr, setShippingAddr, shippingZip, setShippingZip, shippingDetail, setShippingDetail,
+  sameAsAddr, setSameAsAddr,
+  gender, setGender,
+  birthYear, setBirthYear, birthMonth, setBirthMonth, birthDay, setBirthDay, birthError,
+  paymentMethod, setPaymentMethod,
+  onNext,
+}: {
   phone: string; setPhone: (v: string) => void;
+  phoneStatus: 'idle' | 'checking' | 'ok' | 'taken' | 'invalid';
+  phoneMsg: string;
   address: string; setAddress: (v: string) => void;
+  zipCode: string; setZipCode: (v: string) => void;
+  addressDetail: string; setAddressDetail: (v: string) => void;
   shippingAddr: string; setShippingAddr: (v: string) => void;
+  shippingZip: string; setShippingZip: (v: string) => void;
+  shippingDetail: string; setShippingDetail: (v: string) => void;
   sameAsAddr: boolean; setSameAsAddr: (v: boolean) => void;
   gender: string; setGender: (v: string) => void;
-  birthDate: string; setBirthDate: (v: string) => void;
+  birthYear: string; setBirthYear: (v: string) => void;
+  birthMonth: string; setBirthMonth: (v: string) => void;
+  birthDay: string; setBirthDay: (v: string) => void;
+  birthError: string;
   paymentMethod: string; setPaymentMethod: (v: string) => void;
   onNext: () => void;
 }) {
-  const canNext = !!phone.replace(/\D/g, '');
+  const phoneColor = { idle: C.textSec, checking: C.yellow, ok: C.green, taken: C.red, invalid: C.red }[phoneStatus];
+
+  const openDaumPost = (target: 'main' | 'shipping') => {
+    if (!window.daum?.Postcode) {
+      showToast('주소 검색 서비스를 불러오는 중이에요. 잠시 후 다시 시도해주세요.', 'info');
+      return;
+    }
+    new window.daum.Postcode({
+      oncomplete: (data) => {
+        if (target === 'main') {
+          setAddress(data.address);
+          setZipCode(data.zonecode);
+        } else {
+          setShippingAddr(data.address);
+          setShippingZip(data.zonecode);
+        }
+      },
+    }).open();
+  };
+
+  const phoneDigits = phone.replace(/\D/g, '');
+  const canNext = phoneDigits.length === 11 && phoneDigits.startsWith('010') && phoneStatus !== 'taken';
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1920 + 1 }, (_, i) => currentYear - i);
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+  const maxDay = birthYear && birthMonth ? daysInMonth(Number(birthYear), Number(birthMonth)) : 31;
+  const days = Array.from({ length: maxDay }, (_, i) => i + 1);
+
+  const selectStyle: React.CSSProperties = {
+    flex: 1, padding: '10px 8px', borderRadius: 12, fontSize: 13,
+    background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+    appearance: 'none' as const, WebkitAppearance: 'none' as const,
+  };
 
   return (
     <div style={{ padding: '40px 24px' }}>
@@ -319,29 +363,109 @@ function ExtraInfoStep({ phone, setPhone, address, setAddress, shippingAddr, set
       <div style={{ fontSize: 13, color: C.textSec, marginBottom: 28 }}>원활한 거래를 위해 정보를 입력해주세요. (전화번호만 필수)</div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
-        <InputField label="전화번호 *" value={phone} onChange={setPhone} placeholder="010-0000-0000" type="tel" />
-        <InputField label="주소" value={address} onChange={setAddress} placeholder="서울시 강남구..." />
+        {/* 전화번호 */}
+        <div>
+          <InputField
+            label="전화번호 *" value={phone} onChange={setPhone}
+            placeholder="010-0000-0000" type="tel"
+            error={phoneMsg && phoneStatus !== 'ok' && phoneStatus !== 'idle' && phoneStatus !== 'checking' ? phoneMsg : undefined}
+          />
+          {phoneMsg && (phoneStatus === 'ok' || phoneStatus === 'checking') && (
+            <div style={{ fontSize: 11, color: phoneColor, marginTop: 4, paddingLeft: 2 }}>{phoneMsg}</div>
+          )}
+        </div>
 
+        {/* 주소 (Daum Postcode) */}
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 6 }}>주소</div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <input
+              readOnly value={zipCode ? `[${zipCode}] ${address}` : address}
+              placeholder="주소 검색을 눌러주세요"
+              style={{
+                flex: 1, padding: '13px 14px', fontSize: 14, borderRadius: 12,
+                background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+              }}
+            />
+            <button
+              onClick={() => openDaumPost('main')}
+              style={{
+                padding: '13px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                background: C.bgInput, border: `1px solid ${C.border}`, color: C.cyan,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+              }}
+            >주소 검색</button>
+          </div>
+          <input
+            value={addressDetail}
+            onChange={e => setAddressDetail(e.target.value)}
+            placeholder="상세주소 입력 (동/호수 등)"
+            style={{
+              width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
+              background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+            }}
+          />
+        </div>
+
+        {/* 배송지 주소 */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>배송지 주소</label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: C.textSec, cursor: 'pointer' }}>
-              <input type="checkbox" checked={sameAsAddr} onChange={e => { setSameAsAddr(e.target.checked); if (e.target.checked) setShippingAddr(address); }} />
+              <input
+                type="checkbox" checked={sameAsAddr}
+                onChange={e => {
+                  setSameAsAddr(e.target.checked);
+                  if (e.target.checked) {
+                    setShippingAddr(address);
+                    setShippingZip(zipCode);
+                    setShippingDetail(addressDetail);
+                  }
+                }}
+              />
               위와 동일
             </label>
           </div>
-          <input
-            type="text"
-            value={sameAsAddr ? address : shippingAddr}
-            onChange={e => setShippingAddr(e.target.value)}
-            disabled={sameAsAddr}
-            placeholder="배송받을 주소"
-            style={{
-              width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
-              background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
-              opacity: sameAsAddr ? 0.5 : 1,
-            }}
-          />
+          {sameAsAddr ? (
+            <input
+              readOnly
+              value={zipCode ? `[${zipCode}] ${address} ${addressDetail}` : `${address} ${addressDetail}`}
+              style={{
+                width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
+                background: C.bgInput, border: `1px solid ${C.border}`, color: C.text, opacity: 0.5,
+              }}
+            />
+          ) : (
+            <>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <input
+                  readOnly value={shippingZip ? `[${shippingZip}] ${shippingAddr}` : shippingAddr}
+                  placeholder="주소 검색을 눌러주세요"
+                  style={{
+                    flex: 1, padding: '13px 14px', fontSize: 14, borderRadius: 12,
+                    background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+                  }}
+                />
+                <button
+                  onClick={() => openDaumPost('shipping')}
+                  style={{
+                    padding: '13px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                    background: C.bgInput, border: `1px solid ${C.border}`, color: C.cyan,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}
+                >주소 검색</button>
+              </div>
+              <input
+                value={shippingDetail}
+                onChange={e => setShippingDetail(e.target.value)}
+                placeholder="상세주소 입력 (동/호수 등)"
+                style={{
+                  width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
+                  background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+                }}
+              />
+            </>
+          )}
         </div>
 
         {/* 성별 */}
@@ -369,18 +493,24 @@ function ExtraInfoStep({ phone, setPhone, address, setAddress, shippingAddr, set
           </div>
         </div>
 
-        {/* 생년월일 */}
+        {/* 생년월일 — 3 selects */}
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>생년월일</label>
-          <input
-            type="date"
-            value={birthDate}
-            onChange={e => setBirthDate(e.target.value)}
-            style={{
-              width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
-              background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
-            }}
-          />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <select value={birthYear} onChange={e => setBirthYear(e.target.value)} style={selectStyle}>
+              <option value="">년도</option>
+              {years.map(y => <option key={y} value={y}>{y}년</option>)}
+            </select>
+            <select value={birthMonth} onChange={e => setBirthMonth(e.target.value)} style={selectStyle}>
+              <option value="">월</option>
+              {months.map(m => <option key={m} value={m}>{m}월</option>)}
+            </select>
+            <select value={birthDay} onChange={e => setBirthDay(e.target.value)} style={selectStyle}>
+              <option value="">일</option>
+              {days.map(d => <option key={d} value={d}>{d}일</option>)}
+            </select>
+          </div>
+          {birthError && <div style={{ fontSize: 11, color: C.red, marginTop: 6 }}>{birthError}</div>}
         </div>
 
         {/* 결제수단 */}
@@ -407,7 +537,7 @@ function ExtraInfoStep({ phone, setPhone, address, setAddress, shippingAddr, set
             })}
           </div>
           <div style={{ fontSize: 11, color: C.textSec, marginTop: 6 }}>
-            실제 결제 시 상세 정보를 입력합니다
+            선호 결제수단입니다. 실제 결제 시 상세 정보를 입력합니다.
           </div>
         </div>
       </div>
@@ -432,8 +562,16 @@ function TermsStep({ termsAgreed, setTermsAgreed, privacyAgreed, setPrivacyAgree
   };
   const canNext = termsAgreed && privacyAgreed;
 
-  const CheckRow = ({ checked, onChange, label, required, linkLabel }: {
-    checked: boolean; onChange: (v: boolean) => void; label: string; required?: boolean; linkLabel?: string;
+  const [termModal, setTermModal] = useState<string | null>(null);
+
+  const TERM_CONTENTS: Record<string, string> = {
+    '이용약관': '역핑 서비스 이용약관\n\n제1조 (목적)\n이 약관은 역핑(이하 "회사")이 제공하는 공동구매 중개 서비스(이하 "서비스")의 이용 조건 및 절차에 관한 사항을 규정함을 목적으로 합니다.\n\n제2조 (정의)\n1. "이용자"란 회사의 서비스에 접속하여 이 약관에 따라 회사가 제공하는 서비스를 이용하는 회원을 말합니다.\n2. "딜"이란 이용자가 공동구매를 위해 생성하는 거래 요청을 말합니다.\n3. "오퍼"란 판매자가 딜에 대해 제안하는 가격 및 조건을 말합니다.\n\n제3조 (약관의 효력)\n이 약관은 서비스 화면에 게시하거나 기타의 방법으로 이용자에게 공지함으로써 효력을 발생합니다.',
+    '개인정보처리방침': '개인정보처리방침\n\n역핑(이하 "회사")은 이용자의 개인정보를 중요시하며, "개인정보 보호법" 등 관련 법령을 준수합니다.\n\n1. 수집하는 개인정보 항목\n- 필수: 이메일, 비밀번호, 닉네임\n- 선택: 전화번호, 주소, 성별, 생년월일\n\n2. 개인정보의 수집 및 이용 목적\n- 서비스 이용에 따른 본인확인, 회원관리\n- 공동구매 거래 처리 및 정산\n- 서비스 개선 및 마케팅 활용\n\n3. 개인정보의 보유 및 이용 기간\n- 회원 탈퇴 시까지 (법령에 따른 보관 의무가 있는 경우 해당 기간까지)',
+    '마케팅 수신': '마케팅 정보 수신 동의\n\n역핑에서 제공하는 이벤트, 할인 정보, 신규 서비스 안내 등의 마케팅 정보를 이메일, SMS, 푸시 알림 등으로 수신하는 것에 동의합니다.\n\n마케팅 수신 동의는 선택사항이며, 동의하지 않아도 서비스 이용에는 제한이 없습니다.\n\n수신 동의 후에도 마이페이지에서 언제든 수신 거부할 수 있습니다.',
+  };
+
+  const CheckRow = ({ checked, onChange, label, required, termKey }: {
+    checked: boolean; onChange: (v: boolean) => void; label: string; required?: boolean; termKey?: string;
   }) => (
     <label style={{
       display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
@@ -453,16 +591,15 @@ function TermsStep({ termsAgreed, setTermsAgreed, privacyAgreed, setPrivacyAgree
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} style={{ display: 'none' }} />
       <div style={{ flex: 1 }}>
         <span style={{ fontSize: 13, color: C.text, fontWeight: 500 }}>
+          {required ? <span style={{ color: C.red, marginRight: 4 }}>[필수]</span> : <span style={{ color: C.textSec, marginRight: 4 }}>[선택]</span>}
           {label}
-          {required && <span style={{ color: '#ff5252', marginLeft: 4 }}>(필수)</span>}
-          {!required && <span style={{ color: C.textSec, marginLeft: 4 }}>(선택)</span>}
         </span>
       </div>
-      {linkLabel && (
+      {termKey && (
         <button
-          onClick={e => { e.preventDefault(); e.stopPropagation(); }}
-          style={{ fontSize: 11, color: C.cyan, cursor: 'pointer', whiteSpace: 'nowrap' }}
-        >{linkLabel}</button>
+          onClick={e => { e.preventDefault(); e.stopPropagation(); setTermModal(termKey); }}
+          style={{ fontSize: 11, color: C.cyan, cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }}
+        >보기</button>
       )}
     </label>
   );
@@ -496,28 +633,57 @@ function TermsStep({ termsAgreed, setTermsAgreed, privacyAgreed, setPrivacyAgree
         background: C.bgCard, border: `1px solid ${C.border}`,
         borderRadius: 14, overflow: 'hidden', marginBottom: 28,
       }}>
-        <CheckRow checked={termsAgreed} onChange={setTermsAgreed} label="이용약관 동의" required linkLabel="보기" />
+        <CheckRow checked={termsAgreed} onChange={setTermsAgreed} label="이용약관 동의" required termKey="이용약관" />
         <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
-        <CheckRow checked={privacyAgreed} onChange={setPrivacyAgreed} label="개인정보처리방침 동의" required linkLabel="보기" />
+        <CheckRow checked={privacyAgreed} onChange={setPrivacyAgreed} label="개인정보처리방침 동의" required termKey="개인정보처리방침" />
         <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
-        <CheckRow checked={marketingAgreed} onChange={setMarketingAgreed} label="마케팅 수신 동의" linkLabel="보기" />
+        <CheckRow checked={marketingAgreed} onChange={setMarketingAgreed} label="마케팅 수신 동의" termKey="마케팅 수신" />
       </div>
 
       <PrimaryBtn label="다음" onClick={onNext} disabled={!canNext} />
+
+      {/* 약관 보기 모달 */}
+      {termModal && (
+        <div
+          onClick={() => setTermModal(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 3000, display: 'flex', alignItems: 'flex-end' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxHeight: '80dvh', background: '#1a1a2e',
+              borderRadius: '20px 20px 0 0', padding: '20px 20px 40px', overflowY: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>{termModal}</span>
+              <button onClick={() => setTermModal(null)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer', background: 'none', border: 'none' }}>✕</button>
+            </div>
+            <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+              {TERM_CONTENTS[termModal] ?? '약관 내용을 불러올 수 없습니다.'}
+            </div>
+            <button
+              onClick={() => setTermModal(null)}
+              style={{
+                width: '100%', marginTop: 20, padding: '14px', borderRadius: 14,
+                background: C.green, color: '#0a0a0f', fontSize: 14, fontWeight: 800, cursor: 'pointer',
+              }}
+            >확인</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // ── Step 5: 사업자 정보 ───────────────────────────────────
 function BizStep({ role, onNext }: { role: string; onNext: () => void }) {
-  // 셀러용
   const [bizName,    setBizName]    = useState('');
   const [bizNum,     setBizNum]     = useState('');
   const [bizVerify,  setBizVerify]  = useState<'idle' | 'checking' | 'ok'>('idle');
   const [ceoName,    setCeoName]    = useState('');
   const [bankName,   setBankName]   = useState('');
   const [accountNum, setAccountNum] = useState('');
-  // 액추에이터용
   const [manager, setManager] = useState('');
   const [contact,  setContact]  = useState('');
   const [region,   setRegion]   = useState('');
@@ -549,7 +715,6 @@ function BizStep({ role, onNext }: { role: string; onNext: () => void }) {
         {isSeller ? (
           <>
             <InputField label="사업자명" value={bizName} onChange={setBizName} placeholder="상호명 입력" />
-
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>사업자번호</label>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -578,9 +743,7 @@ function BizStep({ role, onNext }: { role: string; onNext: () => void }) {
                 </button>
               </div>
             </div>
-
             <InputField label="대표자 이름" value={ceoName} onChange={setCeoName} placeholder="대표자 성함" />
-
             <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 12 }}>정산 계좌</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -627,12 +790,8 @@ function BizStep({ role, onNext }: { role: string; onNext: () => void }) {
 }
 
 // ── Step 6: 완료 ──────────────────────────────────────────
-const METHOD_LABELS: Record<string, string> = {
-  kakao: '카카오', naver: '네이버', google: 'Google', phone: '전화번호',
-};
-const ROLE_LABELS: Record<string, string> = {
-  buyer: '구매자', seller: '판매자', actuator: '액추에이터',
-};
+const METHOD_LABELS: Record<string, string> = { kakao: '카카오', naver: '네이버', google: 'Google', phone: '전화번호', email: '이메일' };
+const ROLE_LABELS: Record<string, string> = { buyer: '구매자', seller: '판매자', actuator: '액추에이터' };
 
 function CompleteStep({ method, role, nickname, onFinish, navigate }: {
   method: string; role: string; nickname: string; onFinish: () => void;
@@ -643,27 +802,17 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
       minHeight: '100dvh', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', padding: '24px',
     }}>
-      <style>{`
-        @keyframes checkPop {
-          0%   { transform: scale(0); opacity: 0; }
-          60%  { transform: scale(1.2); }
-          100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
-
+      <style>{`@keyframes checkPop { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }`}</style>
       <div style={{
         width: 80, height: 80, borderRadius: '50%',
         background: `linear-gradient(135deg, ${C.green}, ${C.cyan})`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 36, color: '#0a0a0f', fontWeight: 900,
-        marginBottom: 24,
-        animation: 'checkPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both',
-      }}>
-        ✓
-      </div>
+        marginBottom: 24, animation: 'checkPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both',
+      }}>✓</div>
 
       <div style={{ fontSize: 24, fontWeight: 900, color: C.text, marginBottom: 6, textAlign: 'center' }}>가입 완료!</div>
-      <div style={{ fontSize: 14, color: C.textSec, marginBottom: 36, textAlign: 'center' }}>역핑에 오신 걸 환영해요 🎉</div>
+      <div style={{ fontSize: 14, color: C.textSec, marginBottom: 36, textAlign: 'center' }}>역핑에 오신 걸 환영해요</div>
 
       <div style={{
         width: '100%', maxWidth: 320,
@@ -686,7 +835,6 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
         ))}
       </div>
 
-      {/* 결제수단 안내 */}
       <div style={{
         width: '100%', maxWidth: 320,
         background: 'rgba(255,152,0,0.06)',
@@ -724,9 +872,7 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
           background: `linear-gradient(135deg, ${C.green}, ${C.cyan})`,
           color: '#0a0a0f', cursor: 'pointer',
         }}
-      >
-        역핑 시작하기 →
-      </button>
+      >역핑 시작하기 →</button>
     </div>
   );
 }
@@ -735,76 +881,230 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
 export default function RegisterPage() {
   const navigate       = useNavigate();
   const [searchParams] = useSearchParams();
-  const method         = searchParams.get('method') ?? 'kakao';
+  const method         = searchParams.get('method') ?? 'email';
   const { login }      = useAuth();
 
-  const [step, setStep] = useState(method === 'phone' ? 0 : 1);
+  const [step, setStep] = useState(1);
   const [dir,  setDir]  = useState(1);
 
-  // step 1
+  // step 1 — role
   const [role, setRole] = useState<'buyer' | 'seller' | 'actuator' | ''>('');
 
-  // step 2 — email auth fields
-  const [email,       setEmail]       = useState('');
-  const [password,    setPassword]    = useState('');
-  const [apiError,    setApiError]    = useState('');
-  const [registering, setRegistering] = useState(false);
+  // step 2 — email / password
+  const [email,            setEmailRaw]          = useState('');
+  const [emailStatus,      setEmailStatus]       = useState<'idle' | 'checking' | 'ok' | 'taken' | 'invalid'>('idle');
+  const [emailMsg,         setEmailMsg]          = useState('');
+  const [password,         setPasswordRaw]       = useState('');
+  const [passwordConfirm,  setPasswordConfirmRaw]= useState('');
+  const [showPw,           setShowPw]            = useState(false);
+  const [showPwConfirm,    setShowPwConfirm]     = useState(false);
+  const [apiError,         setApiError]          = useState('');
+  const [registering,      setRegistering]       = useState(false);
 
-  // step 2 — profile fields
+  // step 2 — nickname
   const [nickname,    setNicknameRaw] = useState('');
-  const [nickStatus,  setNickStatus]  = useState<'idle' | 'checking' | 'ok' | 'taken'>('idle');
+  const [nickStatus,  setNickStatus]  = useState<'idle' | 'checking' | 'ok' | 'taken' | 'banned' | 'invalid'>('idle');
+  const [nickMsg,     setNickMsg]     = useState('');
   const [recommender, setRecommender] = useState('');
 
   // step 3 — extra info
-  const [phone,        setPhone]        = useState('');
-  const [address,      setAddress]      = useState('');
-  const [shippingAddr, setShippingAddr] = useState('');
-  const [sameAsAddr,   setSameAsAddr]   = useState(false);
-  const [gender,         setGender]         = useState('');
-  const [birthDate,      setBirthDate]      = useState('');
-  const [paymentMethod,  setPaymentMethod]  = useState('');
+  const [phone,         setPhoneRaw]     = useState('');
+  const [phoneStatus,   setPhoneStatus]  = useState<'idle' | 'checking' | 'ok' | 'taken' | 'invalid'>('idle');
+  const [phoneMsg,      setPhoneMsg]     = useState('');
+  const [address,       setAddress]      = useState('');
+  const [zipCode,       setZipCode]      = useState('');
+  const [addressDetail, setAddressDetail]= useState('');
+  const [shippingAddr,  setShippingAddr] = useState('');
+  const [shippingZip,   setShippingZip]  = useState('');
+  const [shippingDetail,setShippingDetail]= useState('');
+  const [sameAsAddr,    setSameAsAddr]   = useState(false);
+  const [gender,        setGender]       = useState('');
+  const [birthYear,     setBirthYear]    = useState('');
+  const [birthMonth,    setBirthMonth]   = useState('');
+  const [birthDay,      setBirthDay]     = useState('');
+  const [paymentMethod, setPaymentMethod]= useState('');
 
   // step 4 — terms
   const [termsAgreed,     setTermsAgreed]     = useState(false);
   const [privacyAgreed,   setPrivacyAgreed]   = useState(false);
   const [marketingAgreed, setMarketingAgreed] = useState(false);
-  const nickTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const setNickname = (val: string) => {
-    setNicknameRaw(val);
-    setNickStatus('idle');
+  // ── Debounce timers ─────────────────────────────────────
+  const nickTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const emailTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const phoneTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => {
     clearTimeout(nickTimer.current);
-    if (!val) return;
+    clearTimeout(emailTimer.current);
+    clearTimeout(phoneTimer.current);
+  }, []);
+
+  // ── Nickname handler ────────────────────────────────────
+  const setNickname = useCallback((val: string) => {
+    setNicknameRaw(val);
+    clearTimeout(nickTimer.current);
+
+    if (!val) { setNickStatus('idle'); setNickMsg(''); return; }
+    if (val.length < 2) {
+      setNickStatus('invalid');
+      setNickMsg('닉네임은 2글자 이상이어야 해요');
+      return;
+    }
+    if (BANNED_NICKNAMES.has(val.toLowerCase())) {
+      setNickStatus('banned');
+      setNickMsg('사용할 수 없는 닉네임이에요');
+      return;
+    }
+    if (!NICK_RE.test(val)) {
+      setNickStatus('invalid');
+      setNickMsg('한글, 영문, 숫자, _만 사용할 수 있어요');
+      return;
+    }
+
     setNickStatus('checking');
-    nickTimer.current = setTimeout(() => {
-      setNickStatus(val === '역핑왕' ? 'taken' : 'ok');
+    setNickMsg('확인 중...');
+    nickTimer.current = setTimeout(async () => {
+      try {
+        const res = await apiClient.get(API.AUTH.CHECK_NICKNAME, { params: { nickname: val } });
+        const data = res.data as { available: boolean; reason?: string };
+        if (data.available) {
+          setNickStatus('ok');
+          setNickMsg('사용할 수 있는 닉네임이에요 ✓');
+        } else if (data.reason === 'banned') {
+          setNickStatus('banned');
+          setNickMsg('사용할 수 없는 닉네임이에요');
+        } else {
+          setNickStatus('taken');
+          setNickMsg('이미 사용 중인 닉네임이에요');
+        }
+      } catch {
+        setNickStatus('ok');
+        setNickMsg('사용할 수 있는 닉네임이에요 ✓');
+      }
     }, 600);
+  }, []);
+
+  // ── Email handler ───────────────────────────────────────
+  const setEmail = useCallback((val: string) => {
+    setEmailRaw(val);
+    clearTimeout(emailTimer.current);
+
+    if (!val) { setEmailStatus('idle'); setEmailMsg(''); return; }
+    if (!EMAIL_RE.test(val)) {
+      setEmailStatus('invalid');
+      setEmailMsg('올바른 이메일 형식이 아니에요');
+      return;
+    }
+
+    setEmailStatus('checking');
+    setEmailMsg('확인 중...');
+    emailTimer.current = setTimeout(async () => {
+      try {
+        const res = await apiClient.get(API.AUTH.CHECK_EMAIL, { params: { email: val.trim() } });
+        const data = res.data as { available: boolean };
+        if (data.available) {
+          setEmailStatus('ok');
+          setEmailMsg('사용할 수 있는 이메일이에요 ✓');
+        } else {
+          setEmailStatus('taken');
+          setEmailMsg('이미 사용 중인 이메일이에요');
+        }
+      } catch {
+        setEmailStatus('ok');
+        setEmailMsg('사용할 수 있는 이메일이에요 ✓');
+      }
+    }, 600);
+  }, []);
+
+  // ── Password validation ─────────────────────────────────
+  const pwError = password && !PW_RE.test(password)
+    ? '비밀번호는 8자 이상, 영문+숫자+특수문자를 포함해야 해요'
+    : '';
+  const pwConfirmError = passwordConfirm && password !== passwordConfirm
+    ? '비밀번호가 일치하지 않아요'
+    : '';
+
+  const setPassword = (val: string) => setPasswordRaw(val);
+  const setPasswordConfirm = (val: string) => setPasswordConfirmRaw(val);
+
+  // ── Phone handler ───────────────────────────────────────
+  const formatPhone = (raw: string): string => {
+    const digits = raw.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
   };
 
-  useEffect(() => () => clearTimeout(nickTimer.current), []);
+  const setPhone = useCallback((val: string) => {
+    const formatted = formatPhone(val);
+    setPhoneRaw(formatted);
+    clearTimeout(phoneTimer.current);
 
+    const digits = formatted.replace(/\D/g, '');
+    if (!digits) { setPhoneStatus('idle'); setPhoneMsg(''); return; }
+    if (!digits.startsWith('010') || digits.length !== 11) {
+      setPhoneStatus('invalid');
+      setPhoneMsg('올바른 전화번호 형식이 아니에요 (010-XXXX-XXXX)');
+      return;
+    }
+
+    setPhoneStatus('checking');
+    setPhoneMsg('확인 중...');
+    phoneTimer.current = setTimeout(async () => {
+      try {
+        const res = await apiClient.get(API.AUTH.CHECK_PHONE, { params: { phone: digits } });
+        const data = res.data as { available: boolean };
+        if (data.available) {
+          setPhoneStatus('ok');
+          setPhoneMsg('사용할 수 있는 전화번호예요 ✓');
+        } else {
+          setPhoneStatus('taken');
+          setPhoneMsg('이미 등록된 전화번호예요');
+        }
+      } catch {
+        setPhoneStatus('ok');
+        setPhoneMsg('사용할 수 있는 전화번호예요 ✓');
+      }
+    }, 600);
+  }, []);
+
+  // ── Birth date validation ───────────────────────────────
+  const birthError = birthYear && birthMonth && birthDay
+    ? isUnder14(Number(birthYear), Number(birthMonth), Number(birthDay))
+      ? '만 14세 이상만 가입할 수 있어요'
+      : ''
+    : '';
+
+  // ── Navigation ──────────────────────────────────────────
   const goTo = (n: number) => { setDir(n > step ? 1 : -1); setStep(n); };
 
-  const TOTAL_STEPS = 5; // 1~5 visible steps (role, profile, extra, terms, biz/complete)
+  const TOTAL_STEPS = 5;
 
   const goNext = async () => {
-    if (step === 0) { goTo(1); return; }
     if (step === 1) { goTo(2); return; }
     if (step === 2) { goTo(3); return; }
     if (step === 3) { goTo(4); return; }
     if (step === 4) {
-      // 약관 동의 후 → API 가입 실행
+      // 약관 동의 후 → API 가입
       if (FEATURES.USE_API_AUTH && method === 'email') {
         setRegistering(true);
         setApiError('');
+
+        const fullAddress = address ? (addressDetail ? `${address} ${addressDetail}` : address) : undefined;
+        const fullBirthDate = birthYear && birthMonth && birthDay
+          ? `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`
+          : undefined;
+
         try {
           await apiClient.post(API.BUYERS.LIST, {
             email: email.trim(), password,
             name: nickname, nickname,
-            phone: phone || undefined,
-            address: address || undefined,
+            phone: phone.replace(/\D/g, '') || undefined,
+            address: fullAddress,
+            zip_code: zipCode || undefined,
             gender: gender || undefined,
-            birth_date: birthDate || undefined,
+            birth_date: fullBirthDate || undefined,
             payment_method: paymentMethod || undefined,
           });
           const loginRes = await loginApi(email.trim(), password);
@@ -832,7 +1132,7 @@ export default function RegisterPage() {
   };
 
   const goBack = () => {
-    if (step === 0 || step === 1) navigate('/login');
+    if (step === 1) navigate('/login');
     else if (step === 2) goTo(1);
     else if (step === 3) goTo(2);
     else if (step === 4) goTo(3);
@@ -853,7 +1153,7 @@ export default function RegisterPage() {
           background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(10px)',
           borderBottom: `1px solid ${C.border}`,
         }}>
-          <button onClick={goBack} style={{ fontSize: 14, color: C.textSec, cursor: 'pointer', padding: '6px 2px' }}>
+          <button onClick={goBack} style={{ fontSize: 14, color: C.textSec, cursor: 'pointer', padding: '6px 2px', background: 'none', border: 'none' }}>
             ← 뒤로
           </button>
           {stepLabel && (
@@ -889,7 +1189,6 @@ export default function RegisterPage() {
             exit="exit"
             style={{ width: '100%', maxWidth: 480, margin: '0 auto' }}
           >
-            {step === 0 && <PhoneStep onNext={() => { void goNext(); }} />}
             {step === 1 && (
               <RoleStep
                 role={role}
@@ -899,17 +1198,17 @@ export default function RegisterPage() {
             )}
             {step === 2 && (
               <ProfileStep
+                nickname={nickname} setNickname={setNickname}
+                nickStatus={nickStatus} nickMsg={nickMsg}
+                recommender={recommender} setRecommender={setRecommender}
                 role={role}
-                method={method}
-                nickname={nickname}
-                setNickname={setNickname}
-                nickStatus={nickStatus}
-                recommender={recommender}
-                setRecommender={setRecommender}
-                email={email}
-                setEmail={setEmail}
-                password={password}
-                setPassword={setPassword}
+                email={email} setEmail={setEmail}
+                emailStatus={emailStatus} emailMsg={emailMsg}
+                password={password} setPassword={setPassword}
+                passwordConfirm={passwordConfirm} setPasswordConfirm={setPasswordConfirm}
+                showPw={showPw} setShowPw={setShowPw}
+                showPwConfirm={showPwConfirm} setShowPwConfirm={setShowPwConfirm}
+                pwError={pwError} pwConfirmError={pwConfirmError}
                 apiError={apiError}
                 onNext={() => { void goNext(); }}
               />
@@ -917,11 +1216,19 @@ export default function RegisterPage() {
             {step === 3 && (
               <ExtraInfoStep
                 phone={phone} setPhone={setPhone}
+                phoneStatus={phoneStatus} phoneMsg={phoneMsg}
                 address={address} setAddress={setAddress}
+                zipCode={zipCode} setZipCode={setZipCode}
+                addressDetail={addressDetail} setAddressDetail={setAddressDetail}
                 shippingAddr={shippingAddr} setShippingAddr={setShippingAddr}
+                shippingZip={shippingZip} setShippingZip={setShippingZip}
+                shippingDetail={shippingDetail} setShippingDetail={setShippingDetail}
                 sameAsAddr={sameAsAddr} setSameAsAddr={setSameAsAddr}
                 gender={gender} setGender={setGender}
-                birthDate={birthDate} setBirthDate={setBirthDate}
+                birthYear={birthYear} setBirthYear={setBirthYear}
+                birthMonth={birthMonth} setBirthMonth={setBirthMonth}
+                birthDay={birthDay} setBirthDay={setBirthDay}
+                birthError={birthError}
                 paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
                 onNext={() => { void goNext(); }}
               />
@@ -936,7 +1243,7 @@ export default function RegisterPage() {
                 />
                 {apiError && (
                   <div style={{ padding: '0 24px 20px', marginTop: -16 }}>
-                    <div style={{ fontSize: 12, color: '#ff5252', padding: '10px 14px', borderRadius: 10, background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.25)' }}>
+                    <div style={{ fontSize: 12, color: C.red, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.25)' }}>
                       {apiError}
                     </div>
                   </div>

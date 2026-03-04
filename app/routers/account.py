@@ -26,6 +26,7 @@ router = APIRouter(prefix="/account", tags=["account"])
 class WithdrawRequest(BaseModel):
     user_id: int
     user_type: str  # "buyer" | "seller" | "actuator"
+    password: str
     reason: Optional[str] = None
 
 
@@ -75,13 +76,32 @@ def _check_active_reservations_seller(db: Session, seller_id: int) -> bool:
     description="진행 중인 거래가 있으면 409를 반환하고, 개인정보를 비식별화합니다.",
 )
 def withdraw_account(body: WithdrawRequest, db: Session = Depends(get_db)):
+    from app.security import verify_password
+
     user_id = body.user_id
     user_type = body.user_type.lower()
     now = datetime.now(timezone.utc)
 
+    # ── 0. 비밀번호 검증 ─────────────────────────────────────────
+    if user_type == "buyer":
+        pw_obj = db.query(models.Buyer).filter(models.Buyer.id == user_id).first()
+    elif user_type == "seller":
+        pw_obj = db.query(models.Seller).filter(models.Seller.id == user_id).first()
+    elif user_type == "actuator":
+        pw_obj = db.query(models.Actuator).filter(models.Actuator.id == user_id).first()
+    else:
+        raise HTTPException(status_code=422, detail="invalid_user_type: buyer, seller, actuator 중 하나여야 합니다.")
+
+    if not pw_obj:
+        raise HTTPException(status_code=404, detail=f"{user_type}_not_found")
+
+    stored_hash = getattr(pw_obj, "password_hash", None) or ""
+    if not verify_password(body.password, stored_hash):
+        raise HTTPException(status_code=401, detail="wrong_password")
+
     # ── 1. 사용자 조회 ──────────────────────────────────────────
     if user_type == "buyer":
-        obj = db.query(models.Buyer).filter(models.Buyer.id == user_id).first()
+        obj = pw_obj
         if not obj:
             raise HTTPException(status_code=404, detail="buyer_not_found")
 

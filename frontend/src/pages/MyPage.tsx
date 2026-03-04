@@ -3,6 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
+import { showToast } from '../components/common/Toast';
+
+// ── Daum Postcode 타입 ───────────────────────────────────
+declare global {
+  interface Window {
+    daum?: {
+      Postcode: new (options: {
+        oncomplete: (data: { zonecode: string; address: string }) => void;
+      }) => { open: () => void };
+    };
+  }
+}
 
 const C = {
   bg:      'var(--bg-primary)',
@@ -16,7 +28,38 @@ const C = {
   blue:    'var(--accent-blue)',
   orange:  'var(--accent-orange)',
   yellow:  '#ffe156',
+  red:     '#ff5252',
 };
+
+const PAYMENT_OPTIONS = [
+  { key: 'card',  label: '신용/체크카드', icon: '💳' },
+  { key: 'bank',  label: '계좌이체',      icon: '🏦' },
+  { key: 'kakao', label: '카카오페이',    icon: '💛' },
+  { key: 'naver', label: '네이버페이',    icon: '💚' },
+  { key: 'toss',  label: '토스페이',      icon: '💙' },
+];
+
+const GENDER_LABELS: Record<string, string> = { male: '남성', female: '여성', other: '기타' };
+
+function formatKSTDate(raw: string): string {
+  if (!raw || raw === '-') return '-';
+  try {
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return raw.split('T')[0]?.replace(/-/g, '.') || '-';
+    // UTC → KST (+9h)
+    d.setHours(d.getHours() + 9);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}.${m}.${day}`;
+  } catch {
+    return '-';
+  }
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
 
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
@@ -30,73 +73,21 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
   );
 }
 
-function CardTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
-      {children}
-    </div>
-  );
-}
-
-function InfoRow({ icon, label, value, valueColor }: {
-  icon: string; label: string; value: string; valueColor?: string;
+function InfoRow({ label, value, valueColor }: {
+  label: string; value: string; valueColor?: string;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0', borderBottom: `1px solid ${C.border}` }}>
-      <span style={{ fontSize: 13, color: C.textSec }}>{icon} {label}</span>
-      <span style={{ fontSize: 13, fontWeight: 600, color: valueColor ?? C.text }}>{value}</span>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 0', borderBottom: `1px solid ${C.border}` }}>
+      <span style={{ fontSize: 13, color: C.textSec }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: valueColor ?? C.text, maxWidth: '60%', textAlign: 'right', wordBreak: 'break-word' }}>{value}</span>
     </div>
   );
 }
-
-function ActionRow({ icon, label, onClick }: { icon: string; label: string; onClick?: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '11px 0', background: 'none', border: 'none', cursor: 'pointer',
-        borderBottom: `1px solid ${C.border}`,
-      }}
-    >
-      <span style={{ fontSize: 13, color: C.textSec }}>{icon} {label}</span>
-      <span style={{ fontSize: 14, color: C.textDim }}>&rsaquo;</span>
-    </button>
-  );
-}
-
-const PAYMENT_OPTIONS = [
-  { key: 'card',  label: '신용/체크카드', icon: '💳' },
-  { key: 'bank',  label: '계좌이체',      icon: '🏦' },
-  { key: 'kakao', label: '카카오페이',    icon: '💛' },
-  { key: 'naver', label: '네이버페이',    icon: '💚' },
-  { key: 'toss',  label: '토스페이',      icon: '💙' },
-];
-
-const GENDER_LABELS: Record<string, string> = { male: '남성', female: '여성', other: '기타' };
 
 export default function MyPage() {
   const navigate = useNavigate();
-  const { user: authUser } = useAuth();
+  const { user: authUser, logout } = useAuth();
   const [apiProfile, setApiProfile] = useState<Record<string, unknown> | null>(null);
-  const [showProfileEdit, setShowProfileEdit] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editNickname, setEditNickname] = useState('');
-  const [editPhone, setEditPhone] = useState('');
-  const [editAddress, setEditAddress] = useState('');
-  const [editGender, setEditGender] = useState('');
-  const [editBirthDate, setEditBirthDate] = useState('');
-  const [editPaymentMethod, setEditPaymentMethod] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  // password change
-  const [showPwModal, setShowPwModal] = useState(false);
-  const [curPw, setCurPw] = useState('');
-  const [newPw, setNewPw] = useState('');
-  const [newPwConfirm, setNewPwConfirm] = useState('');
-  const [pwError, setPwError] = useState('');
-  const [pwSaving, setPwSaving] = useState(false);
-  const [showNewPw, setShowNewPw] = useState(false);
 
   useEffect(() => {
     if (!authUser) return;
@@ -106,108 +97,200 @@ export default function MyPage() {
   }, [authUser]);
 
   const u = {
-    id:           Number(apiProfile?.id ?? authUser?.id ?? 0),
-    name:         String(apiProfile?.name ?? authUser?.name ?? '사용자'),
-    nickname:     String(apiProfile?.nickname ?? authUser?.nickname ?? ''),
-    email:        String(apiProfile?.email ?? authUser?.email ?? ''),
-    level:        Number(apiProfile?.level ?? authUser?.level ?? 1),
-    trust_tier:   String(apiProfile?.trust_tier ?? authUser?.trust_tier ?? 'Bronze'),
-    points:       Number(apiProfile?.points ?? authUser?.points ?? 0),
-    phone:        String(apiProfile?.phone ?? ''),
-    address:      String(apiProfile?.address ?? ''),
-    gender:       String(apiProfile?.gender ?? ''),
-    birth_date:   String(apiProfile?.birth_date ?? '').split('T')[0] || '',
-    payment_method: String(apiProfile?.payment_method ?? ''),
-    created_at:   String(apiProfile?.created_at ?? '').split('T')[0] || '-',
-    total_orders: Number(apiProfile?.total_orders ?? 0),
-    total_deals:  Number(apiProfile?.total_deals ?? 0),
-    isSeller:     authUser?.role === 'seller' || authUser?.role === 'both',
-    seller:       authUser?.seller,
+    id:              Number(apiProfile?.id ?? authUser?.id ?? 0),
+    name:            String(apiProfile?.name ?? authUser?.name ?? '사용자'),
+    nickname:        String(apiProfile?.nickname ?? authUser?.nickname ?? ''),
+    email:           String(apiProfile?.email ?? authUser?.email ?? ''),
+    level:           Number(apiProfile?.level ?? authUser?.level ?? 1),
+    trust_tier:      String(apiProfile?.trust_tier ?? authUser?.trust_tier ?? 'Bronze'),
+    points:          Number(apiProfile?.points ?? authUser?.points ?? 0),
+    phone:           String(apiProfile?.phone ?? ''),
+    address:         String(apiProfile?.address ?? ''),
+    zip_code:        String(apiProfile?.zip_code ?? ''),
+    shipping_address:String(apiProfile?.shipping_address ?? ''),
+    gender:          String(apiProfile?.gender ?? ''),
+    birth_date:      String(apiProfile?.birth_date ?? '').split('T')[0] || '',
+    payment_method:  String(apiProfile?.payment_method ?? ''),
+    created_at:      String(apiProfile?.created_at ?? ''),
+    is_active:       Boolean(apiProfile?.is_active ?? true),
+    isSeller:        authUser?.role === 'seller' || authUser?.role === 'both',
+    seller:          authUser?.seller,
   };
 
-  const openProfileEdit = () => {
-    setEditName(u.name);
+  // ── Edit Modal State ────────────────────────────────────
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editNickname, setEditNickname] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editZipCode, setEditZipCode] = useState('');
+  const [editAddressDetail, setEditAddressDetail] = useState('');
+  const [editShippingAddr, setEditShippingAddr] = useState('');
+  const [editShippingZip, setEditShippingZip] = useState('');
+  const [editShippingDetail, setEditShippingDetail] = useState('');
+  const [editSameAddr, setEditSameAddr] = useState(false);
+  const [editGender, setEditGender] = useState('');
+  const [editBirthYear, setEditBirthYear] = useState('');
+  const [editBirthMonth, setEditBirthMonth] = useState('');
+  const [editBirthDay, setEditBirthDay] = useState('');
+  const [editPaymentMethod, setEditPaymentMethod] = useState('');
+
+  // password change in edit modal
+  const [editCurPw, setEditCurPw] = useState('');
+  const [editNewPw, setEditNewPw] = useState('');
+  const [editNewPwConfirm, setEditNewPwConfirm] = useState('');
+  const [showEditNewPw, setShowEditNewPw] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  // ── Withdraw Modal State ────────────────────────────────
+  const [showWithdraw, setShowWithdraw] = useState(false);
+  const [withdrawPw, setWithdrawPw] = useState('');
+  const [withdrawing, setWithdrawing] = useState(false);
+
+  const openEditModal = () => {
     setEditNickname(u.nickname);
     setEditPhone(u.phone);
+    // parse address (may contain detail after base)
     setEditAddress(u.address);
+    setEditZipCode(u.zip_code);
+    setEditAddressDetail('');
+    setEditShippingAddr(u.shipping_address);
+    setEditShippingZip('');
+    setEditShippingDetail('');
+    setEditSameAddr(false);
     setEditGender(u.gender);
-    setEditBirthDate(u.birth_date);
+    // parse birth_date
+    if (u.birth_date) {
+      const parts = u.birth_date.split('-');
+      setEditBirthYear(parts[0] || '');
+      setEditBirthMonth(parts[1] ? String(Number(parts[1])) : '');
+      setEditBirthDay(parts[2] ? String(Number(parts[2])) : '');
+    } else {
+      setEditBirthYear(''); setEditBirthMonth(''); setEditBirthDay('');
+    }
     setEditPaymentMethod(u.payment_method);
-    setShowProfileEdit(true);
+    setEditCurPw(''); setEditNewPw(''); setEditNewPwConfirm('');
+    setShowEditNewPw(false);
+    setEditError('');
+    setShowEditModal(true);
+  };
+
+  const openDaumPost = (target: 'main' | 'shipping') => {
+    if (!window.daum?.Postcode) {
+      showToast('주소 검색 서비스를 불러오는 중이에요.', 'info');
+      return;
+    }
+    new window.daum.Postcode({
+      oncomplete: (data) => {
+        if (target === 'main') {
+          setEditAddress(data.address);
+          setEditZipCode(data.zonecode);
+        } else {
+          setEditShippingAddr(data.address);
+          setEditShippingZip(data.zonecode);
+        }
+      },
+    }).open();
   };
 
   const saveProfile = async () => {
-    setSaving(true);
+    setEditSaving(true);
+    setEditError('');
     try {
-      await apiClient.patch(API.BUYERS.UPDATE(u.id), {
-        name: editName,
-        nickname: editNickname,
-        phone: editPhone || undefined,
-        address: editAddress || undefined,
-        gender: editGender || undefined,
-        birth_date: editBirthDate || undefined,
-        payment_method: editPaymentMethod || undefined,
-      });
-      setApiProfile(prev => ({
-        ...prev,
-        name: editName,
-        nickname: editNickname,
-        phone: editPhone,
-        address: editAddress,
-        gender: editGender,
-        birth_date: editBirthDate,
-        payment_method: editPaymentMethod,
-      }));
-      setShowProfileEdit(false);
-    } catch {
-      alert('회원정보 수정에 실패했어요');
-    }
-    setSaving(false);
-  };
+      const fullAddress = editAddress ? (editAddressDetail ? `${editAddress} ${editAddressDetail}` : editAddress) : undefined;
+      const fullBirthDate = editBirthYear && editBirthMonth && editBirthDay
+        ? `${editBirthYear}-${String(editBirthMonth).padStart(2, '0')}-${String(editBirthDay).padStart(2, '0')}`
+        : undefined;
 
-  const handlePasswordChange = async () => {
-    setPwError('');
-    if (!curPw || !newPw) { setPwError('모든 필드를 입력해주세요'); return; }
-    if (newPw.length < 8) { setPwError('새 비밀번호는 8자 이상이어야 해요'); return; }
-    if (newPw !== newPwConfirm) { setPwError('새 비밀번호가 일치하지 않아요'); return; }
-    setPwSaving(true);
-    try {
-      await apiClient.post('/auth/change-password', {
-        user_id: u.id,
-        user_type: u.isSeller ? 'seller' : 'buyer',
-        current_password: curPw,
-        new_password: newPw,
+      await apiClient.patch(API.BUYERS.UPDATE(u.id), {
+        nickname: editNickname || undefined,
+        phone: editPhone || undefined,
+        address: fullAddress,
+        zip_code: editZipCode || undefined,
+        gender: editGender || undefined,
+        birth_date: fullBirthDate || undefined,
+        payment_method: editPaymentMethod || null,
       });
-      setShowPwModal(false);
-      setCurPw(''); setNewPw(''); setNewPwConfirm('');
-      alert('비밀번호가 변경되었어요');
+
+      // password change if filled
+      if (editCurPw && editNewPw) {
+        if (editNewPw.length < 8) {
+          setEditError('새 비밀번호는 8자 이상이어야 해요');
+          setEditSaving(false);
+          return;
+        }
+        if (editNewPw !== editNewPwConfirm) {
+          setEditError('새 비밀번호가 일치하지 않아요');
+          setEditSaving(false);
+          return;
+        }
+        await apiClient.post(API.AUTH.CHANGE_PASSWORD, {
+          user_id: u.id,
+          user_type: u.isSeller ? 'seller' : 'buyer',
+          current_password: editCurPw,
+          new_password: editNewPw,
+        });
+      }
+
+      // refresh profile
+      const res = await apiClient.get(API.BUYERS.PROFILE);
+      if (res.data) setApiProfile(res.data as Record<string, unknown>);
+
+      setShowEditModal(false);
+      showToast('회원정보가 수정되었어요', 'success');
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: unknown } } };
       const detail = e.response?.data?.detail;
-      setPwError(typeof detail === 'string' ? detail : '비밀번호 변경에 실패했어요');
+      setEditError(typeof detail === 'string' ? detail : '회원정보 수정에 실패했어요');
     }
-    setPwSaving(false);
+    setEditSaving(false);
   };
 
-  const [showPayModal, setShowPayModal] = useState(false);
-  const [payModalMethod, setPayModalMethod] = useState('');
-  const [payModalSaving, setPayModalSaving] = useState(false);
-
-  const openPayModal = () => {
-    setPayModalMethod(u.payment_method);
-    setShowPayModal(true);
-  };
-
-  const savePaymentMethod = async () => {
-    setPayModalSaving(true);
+  const handleWithdraw = async () => {
+    if (!withdrawPw) { showToast('비밀번호를 입력해주세요', 'error'); return; }
+    setWithdrawing(true);
     try {
-      await apiClient.patch(API.BUYERS.UPDATE(u.id), { payment_method: payModalMethod || null });
-      setApiProfile(prev => ({ ...prev, payment_method: payModalMethod }));
-      setShowPayModal(false);
-    } catch {
-      alert('결제수단 저장에 실패했어요');
+      await apiClient.delete(API.ACCOUNT.WITHDRAW, {
+        data: {
+          user_id: u.id,
+          user_type: 'buyer',
+          password: withdrawPw,
+        },
+      });
+      showToast('회원 탈퇴가 완료되었어요', 'info');
+      logout();
+      navigate('/login');
+    } catch (err: unknown) {
+      const e = err as { response?: { status?: number; data?: { detail?: unknown } } };
+      if (e.response?.status === 409) {
+        showToast('진행 중인 딜이 있어요. 완료 후 탈퇴해주세요.', 'error');
+      } else if (e.response?.status === 401) {
+        showToast('비밀번호가 올바르지 않아요', 'error');
+      } else {
+        const detail = e.response?.data?.detail;
+        showToast(typeof detail === 'string' ? detail : '탈퇴에 실패했어요', 'error');
+      }
     }
-    setPayModalSaving(false);
+    setWithdrawing(false);
+  };
+
+  // ── Edit modal helpers ──────────────────────────────────
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1920 + 1 }, (_, i) => currentYear - i);
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+  const maxDay = editBirthYear && editBirthMonth ? daysInMonth(Number(editBirthYear), Number(editBirthMonth)) : 31;
+  const days = Array.from({ length: maxDay }, (_, i) => i + 1);
+
+  const selectStyle: React.CSSProperties = {
+    flex: 1, padding: '8px 6px', borderRadius: 10, fontSize: 13,
+    background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
+    appearance: 'none' as const, WebkitAppearance: 'none' as const,
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
+    background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
+    boxSizing: 'border-box' as const,
   };
 
   return (
@@ -220,87 +303,70 @@ export default function MyPage() {
         padding: '0 16px',
         background: C.bg, borderBottom: `1px solid ${C.border}`,
       }}>
-        <button onClick={() => navigate(-1)} style={{ fontSize: 20, color: C.text, cursor: 'pointer', lineHeight: 1 }}>&#x2190;</button>
+        <button onClick={() => navigate(-1)} style={{ fontSize: 20, color: C.text, cursor: 'pointer', lineHeight: 1, background: 'none', border: 'none' }}>&#x2190;</button>
         <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>마이페이지</span>
-        <button onClick={() => navigate('/notifications')} style={{ fontSize: 20, color: C.textSec, cursor: 'pointer', lineHeight: 1 }}>&#x1F514;</button>
+        <button onClick={() => navigate('/notifications')} style={{ fontSize: 20, color: C.textSec, cursor: 'pointer', lineHeight: 1, background: 'none', border: 'none' }}>&#x1F514;</button>
       </div>
 
       <div style={{ padding: '16px 16px 0' }}>
 
-        {/* 프로필 카드 */}
+        {/* 프로필 카드 — View Only */}
         <Card style={{ borderTop: `3px solid ${C.green}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
             <div style={{
-              width: 60, height: 60, borderRadius: '50%', flexShrink: 0,
+              width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
               background: 'linear-gradient(135deg, #00e676, #00b0ff)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 24, fontWeight: 800, color: '#0a0a0f',
+              fontSize: 22, fontWeight: 800, color: '#0a0a0f',
             }}>
-              {u.name[0]}
+              {(u.nickname || u.name)[0]}
             </div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{u.name}</div>
-              <div style={{ fontSize: 12, color: C.textSec }}>@{u.nickname}</div>
-              <div style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>{u.email}</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{u.nickname || u.name}</div>
+              <div style={{ fontSize: 12, color: C.textSec }}>{u.email} | {u.phone || '전화번호 미등록'}</div>
             </div>
           </div>
+
+          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+            <InfoRow label="주소" value={u.address || '미등록'} />
+            <InfoRow label="배송지주소" value={u.shipping_address || u.address || '미등록'} />
+            <InfoRow label="성별" value={GENDER_LABELS[u.gender] || '미등록'} />
+            <InfoRow label="생년월일" value={u.birth_date ? u.birth_date.replace(/-/g, '.') : '미등록'} />
+            <InfoRow label="가입일" value={formatKSTDate(u.created_at)} />
+            <InfoRow label="결제수단" value={PAYMENT_OPTIONS.find(p => p.key === u.payment_method)?.label || '미등록'} />
+          </div>
+
           <button
-            onClick={openProfileEdit}
+            onClick={openEditModal}
             style={{
-              width: '100%', padding: '9px 0', borderRadius: 10, fontSize: 13, fontWeight: 700,
+              width: '100%', marginTop: 14, padding: '11px 0', borderRadius: 12, fontSize: 13, fontWeight: 700,
               background: `${C.green}22`, border: `1px solid ${C.green}66`, color: C.green, cursor: 'pointer',
             }}
           >회원정보 수정</button>
         </Card>
 
-        {/* 회원 정보 */}
-        <Card>
-          <CardTitle>회원 정보</CardTitle>
-          <InfoRow icon="&#x1F4E7;" label="이메일" value={u.email} />
-          <InfoRow icon="&#x1F464;" label="닉네임" value={u.nickname || '-'} />
-          <InfoRow icon="&#x1F4DE;" label="전화번호" value={u.phone || '미등록'} />
-          <InfoRow icon="&#x1F3E0;" label="주소" value={u.address || '미등록'} />
-          <InfoRow icon="&#x1F9D1;" label="성별" value={GENDER_LABELS[u.gender] || '미등록'} />
-          <InfoRow icon="&#x1F382;" label="생년월일" value={u.birth_date || '미등록'} />
-          <InfoRow icon="&#x1F4B3;" label="결제수단" value={PAYMENT_OPTIONS.find(p => p.key === u.payment_method)?.label || '미등록'} />
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0' }}>
-            <span style={{ fontSize: 13, color: C.textSec }}>&#x1F512; 비밀번호</span>
-            <button
-              onClick={() => { setPwError(''); setCurPw(''); setNewPw(''); setNewPwConfirm(''); setShowPwModal(true); }}
-              style={{ fontSize: 12, fontWeight: 700, color: C.blue, cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
-            >변경하기</button>
-          </div>
-        </Card>
-
         {/* 구매자 정보 */}
         <Card>
-          <CardTitle>구매자 정보</CardTitle>
-          <InfoRow icon="&#x1F4CA;" label="레벨"     value={`Lv.${u.level}`}    valueColor={C.blue} />
-          <InfoRow icon="&#x1F3C6;" label="신뢰티어"  value={u.trust_tier}       valueColor="#c0c0c0" />
-          <InfoRow icon="&#x1F4B0;" label="포인트"    value={`${u.points.toLocaleString()}P`} valueColor={C.yellow} />
-          <InfoRow icon="&#x1F4C5;" label="가입일"    value={u.created_at.replace(/-/g, '.')} />
-          <InfoRow icon="&#x1F4E6;" label="총 참여"   value={`${u.total_orders}건`} />
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0' }}>
-            <span style={{ fontSize: 13, color: C.textSec }}>생성한 딜</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{u.total_deals}건</span>
-          </div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>구매자 정보</div>
+          <InfoRow label="레벨" value={`Lv.${u.level}`} valueColor={C.blue} />
+          <InfoRow label="신뢰티어" value={u.trust_tier} valueColor="#c0c0c0" />
+          <InfoRow label="포인트" value={`${u.points.toLocaleString()}P`} valueColor={C.yellow} />
         </Card>
 
         {/* 판매자 정보 */}
         {u.isSeller && u.seller && (
           <Card>
-            <CardTitle>판매자 정보</CardTitle>
-            <InfoRow icon="&#x1F3EA;" label="사업자명"      value={u.seller.business_name} />
-            <InfoRow icon="&#x1F4CA;" label="판매자 레벨"   value={`Lv.${u.seller.level}`}       valueColor={C.blue} />
-            <InfoRow icon="&#x1F4B0;" label="판매자 포인트" value={`${u.seller.points.toLocaleString()}P`} valueColor={C.yellow} />
-            {/* 판매자 빠른 메뉴 */}
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>판매자 정보</div>
+            <InfoRow label="사업자명" value={u.seller.business_name} />
+            <InfoRow label="판매자 레벨" value={`Lv.${u.seller.level}`} valueColor={C.blue} />
+            <InfoRow label="판매자 포인트" value={`${u.seller.points.toLocaleString()}P`} valueColor={C.yellow} />
             <div style={{ marginTop: 12 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 10 }}>빠른 메뉴</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {[
-                  { icon: '&#x1F4B5;', label: '정산내역', path: '/settlements' },
-                  { icon: '&#x1F4DD;', label: '오퍼관리', path: '/seller/offers' },
-                  { icon: '&#x2B50;', label: '리뷰관리', path: '/seller/reviews' },
+                  { icon: '💵', label: '정산내역', path: '/settlements' },
+                  { icon: '📝', label: '오퍼관리', path: '/seller/offers' },
+                  { icon: '⭐', label: '리뷰관리', path: '/seller/reviews' },
                 ].map(m => (
                   <button
                     key={m.label}
@@ -312,7 +378,7 @@ export default function MyPage() {
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                     }}
                   >
-                    <span style={{ fontSize: 18 }} dangerouslySetInnerHTML={{ __html: m.icon }} />
+                    <span style={{ fontSize: 18 }}>{m.icon}</span>
                     <span>{m.label}</span>
                   </button>
                 ))}
@@ -323,62 +389,73 @@ export default function MyPage() {
 
         {/* 계정 관리 */}
         <Card>
-          <CardTitle>계정 관리</CardTitle>
-          <button
-            onClick={openPayModal}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '11px 0', background: 'none', border: 'none', cursor: 'pointer',
-              borderBottom: `1px solid ${C.border}`,
-            }}
-          >
-            <span style={{ fontSize: 13, color: C.textSec }}>💳 결제수단 관리</span>
-            <span style={{ fontSize: 14, color: C.textDim }}>&rsaquo;</span>
-          </button>
-          <ActionRow icon="🔔" label="알림 설정" onClick={() => navigate('/settings')} />
-          <ActionRow icon="📋" label="이용약관" onClick={() => navigate('/terms')} />
-          <ActionRow icon="💬" label="고객센터" onClick={() => navigate('/support')} />
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>계정 관리</div>
+          {[
+            { icon: '🔔', label: '알림 설정', path: '/settings' },
+            { icon: '📋', label: '이용약관', path: '/terms' },
+            { icon: '💬', label: '고객센터', path: '/support' },
+          ].map(m => (
+            <button
+              key={m.label}
+              onClick={() => navigate(m.path)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '11px 0', background: 'none', border: 'none', cursor: 'pointer',
+                borderBottom: `1px solid ${C.border}`,
+              }}
+            >
+              <span style={{ fontSize: 13, color: C.textSec }}>{m.icon} {m.label}</span>
+              <span style={{ fontSize: 14, color: C.textDim }}>&rsaquo;</span>
+            </button>
+          ))}
         </Card>
 
+        {/* 회원 탈퇴 */}
+        <div style={{ textAlign: 'center', marginTop: 16, marginBottom: 32 }}>
+          <button
+            onClick={() => { setWithdrawPw(''); setShowWithdraw(true); }}
+            style={{ fontSize: 12, color: C.textDim, cursor: 'pointer', background: 'none', border: 'none', textDecoration: 'underline' }}
+          >회원 탈퇴</button>
+        </div>
       </div>
 
-      {/* 회원정보 수정 모달 */}
-      {showProfileEdit && (
+      {/* ════════════════════════════════════════════════════
+          회원정보 수정 BottomSheet
+         ════════════════════════════════════════════════════ */}
+      {showEditModal && (
         <div
-          onClick={() => setShowProfileEdit(false)}
+          onClick={() => setShowEditModal(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 2000, display: 'flex', alignItems: 'flex-end' }}
         >
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              width: '100%', maxHeight: '85dvh', background: C.bgCard,
+              width: '100%', maxHeight: '90dvh', background: C.bgCard,
               borderRadius: '20px 20px 0 0', padding: '20px 20px 40px', overflowY: 'auto',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>회원정보 수정</span>
-              <button onClick={() => setShowProfileEdit(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer' }}>&#x2715;</button>
+              <button onClick={() => setShowEditModal(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer', background: 'none', border: 'none' }}>✕</button>
             </div>
 
-            {[
-              { label: '이름', value: editName, onChange: setEditName, type: 'text' },
-              { label: '닉네임', value: editNickname, onChange: setEditNickname, type: 'text' },
-              { label: '전화번호', value: editPhone, onChange: setEditPhone, type: 'tel' },
-              { label: '주소', value: editAddress, onChange: setEditAddress, type: 'text' },
-            ].map(field => (
-              <div key={field.label} style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>{field.label}</div>
-                <input
-                  type={field.type} value={field.value}
-                  onChange={e => field.onChange(e.target.value)}
-                  style={{
-                    width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
-                    background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
-                    boxSizing: 'border-box' as const,
-                  }}
-                />
-              </div>
-            ))}
+            {/* 기본 정보 */}
+            <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, marginBottom: 10, letterSpacing: 1 }}>기본 정보</div>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>이메일 (변경 불가)</div>
+              <input readOnly value={u.email} style={{ ...inputStyle, opacity: 0.5 }} />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>닉네임</div>
+              <input value={editNickname} onChange={e => setEditNickname(e.target.value)} style={inputStyle} />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>전화번호</div>
+              <input type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} style={inputStyle} />
+            </div>
 
             {/* 성별 */}
             <div style={{ marginBottom: 14 }}>
@@ -403,206 +480,200 @@ export default function MyPage() {
               </div>
             </div>
 
-            {/* 생년월일 */}
+            {/* 생년월일 — 3 selects */}
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>생년월일</div>
-              <input
-                type="date" value={editBirthDate}
-                onChange={e => setEditBirthDate(e.target.value)}
-                style={{
-                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
-                  background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
-                  boxSizing: 'border-box' as const,
-                }}
-              />
-            </div>
-
-            {/* 결제수단 */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>결제수단</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {PAYMENT_OPTIONS.map(opt => {
-                  const active = editPaymentMethod === opt.key;
-                  return (
-                    <button
-                      key={opt.key}
-                      onClick={() => setEditPaymentMethod(active ? '' : opt.key)}
-                      style={{
-                        padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                        background: active ? `${C.green}22` : C.bgEl,
-                        border: `1px solid ${active ? C.green : C.border}`,
-                        color: active ? C.green : C.textSec,
-                        cursor: 'pointer',
-                      }}
-                    >{opt.icon} {opt.label}</button>
-                  );
-                })}
+              <div style={{ display: 'flex', gap: 6 }}>
+                <select value={editBirthYear} onChange={e => setEditBirthYear(e.target.value)} style={selectStyle}>
+                  <option value="">년도</option>
+                  {years.map(y => <option key={y} value={y}>{y}년</option>)}
+                </select>
+                <select value={editBirthMonth} onChange={e => setEditBirthMonth(e.target.value)} style={selectStyle}>
+                  <option value="">월</option>
+                  {months.map(m => <option key={m} value={m}>{m}월</option>)}
+                </select>
+                <select value={editBirthDay} onChange={e => setEditBirthDay(e.target.value)} style={selectStyle}>
+                  <option value="">일</option>
+                  {days.map(d => <option key={d} value={d}>{d}일</option>)}
+                </select>
               </div>
             </div>
 
-            <button
-              onClick={saveProfile}
-              disabled={saving}
-              style={{
-                width: '100%', padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
-                background: saving ? `${C.green}55` : `${C.green}22`, border: `1px solid ${C.green}66`,
-                color: C.green, cursor: saving ? 'not-allowed' : 'pointer',
-              }}
-            >{saving ? '저장 중...' : '저장'}</button>
-          </div>
-        </div>
-      )}
+            {/* 주소 */}
+            <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, marginTop: 16, marginBottom: 10, letterSpacing: 1 }}>주소</div>
 
-      {/* 비밀번호 변경 모달 */}
-      {showPwModal && (
-        <div
-          onClick={() => setShowPwModal(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 2000, display: 'flex', alignItems: 'flex-end' }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              width: '100%', maxHeight: '70dvh', background: C.bgCard,
-              borderRadius: '20px 20px 0 0', padding: '20px 20px 40px', overflowY: 'auto',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>비밀번호 변경</span>
-              <button onClick={() => setShowPwModal(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer' }}>&#x2715;</button>
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                <input readOnly value={editZipCode ? `[${editZipCode}] ${editAddress}` : editAddress} placeholder="주소 검색" style={{ ...inputStyle, flex: 1 }} />
+                <button onClick={() => openDaumPost('main')} style={{ padding: '10px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, background: C.bgEl, border: `1px solid ${C.border}`, color: C.blue, cursor: 'pointer', whiteSpace: 'nowrap' }}>주소 검색</button>
+              </div>
+              <input value={editAddressDetail} onChange={e => setEditAddressDetail(e.target.value)} placeholder="상세주소" style={inputStyle} />
             </div>
 
             <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 11, color: C.textDim }}>배송지 주소</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: C.textSec, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={editSameAddr} onChange={e => {
+                    setEditSameAddr(e.target.checked);
+                    if (e.target.checked) {
+                      setEditShippingAddr(editAddress);
+                      setEditShippingZip(editZipCode);
+                      setEditShippingDetail(editAddressDetail);
+                    }
+                  }} />
+                  위와 동일
+                </label>
+              </div>
+              {!editSameAddr && (
+                <>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                    <input readOnly value={editShippingZip ? `[${editShippingZip}] ${editShippingAddr}` : editShippingAddr} placeholder="주소 검색" style={{ ...inputStyle, flex: 1 }} />
+                    <button onClick={() => openDaumPost('shipping')} style={{ padding: '10px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, background: C.bgEl, border: `1px solid ${C.border}`, color: C.blue, cursor: 'pointer', whiteSpace: 'nowrap' }}>주소 검색</button>
+                  </div>
+                  <input value={editShippingDetail} onChange={e => setEditShippingDetail(e.target.value)} placeholder="상세주소" style={inputStyle} />
+                </>
+              )}
+            </div>
+
+            {/* 결제수단 */}
+            <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, marginTop: 16, marginBottom: 10, letterSpacing: 1 }}>결제수단</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+              {PAYMENT_OPTIONS.map(opt => {
+                const active = editPaymentMethod === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={() => setEditPaymentMethod(active ? '' : opt.key)}
+                    style={{
+                      padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                      background: active ? `${C.green}22` : C.bgEl,
+                      border: `1px solid ${active ? C.green : C.border}`,
+                      color: active ? C.green : C.textSec,
+                      cursor: 'pointer',
+                    }}
+                  >{opt.icon} {opt.label}</button>
+                );
+              })}
+            </div>
+
+            {/* 비밀번호 변경 */}
+            <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, marginTop: 16, marginBottom: 10, letterSpacing: 1 }}>비밀번호 변경</div>
+            <div style={{ fontSize: 11, color: C.textSec, marginBottom: 10 }}>변경하지 않으려면 비워두세요</div>
+
+            <div style={{ marginBottom: 10 }}>
               <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>현재 비밀번호</div>
-              <input
-                type="password" value={curPw}
-                onChange={e => setCurPw(e.target.value)}
-                style={{
-                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
-                  background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
-                  boxSizing: 'border-box' as const,
-                }}
-              />
+              <input type="password" value={editCurPw} onChange={e => setEditCurPw(e.target.value)} style={inputStyle} />
             </div>
 
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 10 }}>
               <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>새 비밀번호</div>
               <div style={{ position: 'relative' }}>
                 <input
-                  type={showNewPw ? 'text' : 'password'} value={newPw}
-                  onChange={e => setNewPw(e.target.value)}
-                  placeholder="8자 이상 입력"
-                  style={{
-                    width: '100%', padding: '10px 36px 10px 12px', borderRadius: 10, fontSize: 13,
-                    background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
-                    boxSizing: 'border-box' as const,
-                  }}
+                  type={showEditNewPw ? 'text' : 'password'} value={editNewPw}
+                  onChange={e => setEditNewPw(e.target.value)}
+                  placeholder="8자 이상"
+                  style={{ ...inputStyle, paddingRight: 36 }}
                 />
                 <button
-                  onClick={() => setShowNewPw(!showNewPw)}
+                  onClick={() => setShowEditNewPw(!showEditNewPw)}
                   style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 16, cursor: 'pointer', color: C.textDim, background: 'none', border: 'none' }}
-                >{showNewPw ? '🙈' : '👁'}</button>
+                >{showEditNewPw ? '🙈' : '👁'}</button>
               </div>
             </div>
 
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>새 비밀번호 확인</div>
-              <input
-                type="password" value={newPwConfirm}
-                onChange={e => setNewPwConfirm(e.target.value)}
-                style={{
-                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
-                  background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
-                  boxSizing: 'border-box' as const,
-                }}
-              />
+              <input type="password" value={editNewPwConfirm} onChange={e => setEditNewPwConfirm(e.target.value)} style={inputStyle} />
             </div>
 
-            {pwError && (
-              <div style={{ fontSize: 12, color: '#ff5252', marginBottom: 14, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,82,82,0.08)' }}>
-                {pwError}
+            {editError && (
+              <div style={{ fontSize: 12, color: C.red, marginBottom: 14, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,82,82,0.08)' }}>
+                {editError}
               </div>
             )}
 
             <div style={{ display: 'flex', gap: 8 }}>
               <button
-                onClick={() => setShowPwModal(false)}
+                onClick={() => setShowEditModal(false)}
                 style={{
                   flex: 1, padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
                   background: C.bgEl, border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer',
                 }}
               >취소</button>
               <button
-                onClick={handlePasswordChange}
-                disabled={pwSaving}
+                onClick={saveProfile}
+                disabled={editSaving}
                 style={{
                   flex: 1, padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
-                  background: pwSaving ? `${C.green}55` : `${C.green}22`, border: `1px solid ${C.green}66`,
-                  color: C.green, cursor: pwSaving ? 'not-allowed' : 'pointer',
+                  background: editSaving ? `${C.green}55` : `${C.green}22`, border: `1px solid ${C.green}66`,
+                  color: C.green, cursor: editSaving ? 'not-allowed' : 'pointer',
                 }}
-              >{pwSaving ? '변경 중...' : '변경'}</button>
+              >{editSaving ? '저장 중...' : '저장'}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 결제수단 관리 모달 */}
-      {showPayModal && (
+      {/* ════════════════════════════════════════════════════
+          회원 탈퇴 BottomSheet
+         ════════════════════════════════════════════════════ */}
+      {showWithdraw && (
         <div
-          onClick={() => setShowPayModal(false)}
+          onClick={() => setShowWithdraw(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 2000, display: 'flex', alignItems: 'flex-end' }}
         >
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              width: '100%', maxHeight: '80dvh', background: C.bgCard,
-              borderRadius: '20px 20px 0 0', padding: '20px 20px 40px', overflowY: 'auto',
+              width: '100%', background: C.bgCard,
+              borderRadius: '20px 20px 0 0', padding: '20px 20px 40px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>결제수단 관리</span>
-              <button onClick={() => setShowPayModal(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer' }}>&#x2715;</button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <span style={{ fontSize: 16, fontWeight: 800, color: C.red }}>회원 탈퇴</span>
+              <button onClick={() => setShowWithdraw(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer', background: 'none', border: 'none' }}>✕</button>
             </div>
 
-            <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, letterSpacing: 1, marginBottom: 12 }}>선호 결제수단 선택</div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-              {PAYMENT_OPTIONS.map(opt => {
-                const active = payModalMethod === opt.key;
-                return (
-                  <button
-                    key={opt.key}
-                    onClick={() => setPayModalMethod(active ? '' : opt.key)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '14px 16px', borderRadius: 12, cursor: 'pointer',
-                      background: active ? `${C.green}12` : C.bgEl,
-                      border: `1.5px solid ${active ? C.green : C.border}`,
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    <span style={{ fontSize: 20 }}>{opt.icon}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: active ? C.green : C.text, flex: 1, textAlign: 'left' }}>{opt.label}</span>
-                    {active && <span style={{ fontSize: 14, color: C.green, fontWeight: 800 }}>&#x2713;</span>}
-                  </button>
-                );
-              })}
+            <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.8, marginBottom: 20, padding: '12px 14px', background: 'rgba(255,82,82,0.06)', borderRadius: 12, border: '1px solid rgba(255,82,82,0.2)' }}>
+              탈퇴 시 모든 개인정보가 삭제되며 복구할 수 없습니다.<br />
+              진행 중인 거래가 있으면 탈퇴할 수 없습니다.<br />
+              적립된 포인트는 모두 소멸됩니다.
             </div>
 
-            <div style={{ padding: '12px 14px', background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.25)', borderRadius: 10, marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: C.orange, lineHeight: 1.7 }}>
-                오퍼 마감 후 결제 시간은 단 <strong>5분</strong>입니다. 미리 결제수단을 등록해주세요!
-              </div>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>비밀번호 확인</div>
+              <input
+                type="password" value={withdrawPw}
+                onChange={e => setWithdrawPw(e.target.value)}
+                placeholder="비밀번호를 입력해주세요"
+                style={{
+                  width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
+                  background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
+                  boxSizing: 'border-box' as const,
+                }}
+              />
             </div>
 
-            <button
-              onClick={savePaymentMethod}
-              disabled={payModalSaving}
-              style={{
-                width: '100%', padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
-                background: payModalSaving ? `${C.green}55` : `${C.green}22`, border: `1px solid ${C.green}66`,
-                color: C.green, cursor: payModalSaving ? 'not-allowed' : 'pointer',
-              }}
-            >{payModalSaving ? '저장 중...' : '저장'}</button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setShowWithdraw(false)}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                  background: C.bgEl, border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer',
+                }}
+              >취소</button>
+              <button
+                onClick={handleWithdraw}
+                disabled={withdrawing}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                  background: withdrawing ? 'rgba(255,82,82,0.3)' : 'rgba(255,82,82,0.15)',
+                  border: '1px solid rgba(255,82,82,0.4)',
+                  color: C.red, cursor: withdrawing ? 'not-allowed' : 'pointer',
+                }}
+              >{withdrawing ? '처리 중...' : '탈퇴하기'}</button>
+            </div>
           </div>
         </div>
       )}

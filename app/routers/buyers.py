@@ -52,6 +52,8 @@ def read_me(
                         "nickname": getattr(buyer, "nickname", None),
                         "phone": getattr(buyer, "phone", None),
                         "address": getattr(buyer, "address", None),
+                        "zip_code": getattr(buyer, "zip_code", None),
+                        "shipping_address": getattr(buyer, "shipping_address", None),
                         "gender": getattr(buyer, "gender", None),
                         "birth_date": str(getattr(buyer, "birth_date", "") or ""),
                         "payment_method": getattr(buyer, "payment_method", None),
@@ -105,6 +107,7 @@ class BuyerUpdateIn(BaseModel):
     nickname: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
+    zip_code: Optional[str] = None
     gender: Optional[str] = None
     birth_date: Optional[str] = None
     payment_method: Optional[str] = None
@@ -136,6 +139,8 @@ def update_buyer(
         buyer.phone = body.phone
     if body.address is not None:
         buyer.address = body.address
+    if body.zip_code is not None:
+        buyer.zip_code = body.zip_code
     if body.gender is not None:
         buyer.gender = body.gender
     if body.birth_date is not None:

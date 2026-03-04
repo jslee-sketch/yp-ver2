@@ -12,10 +12,17 @@ export const API = {
     REFRESH:         '/auth/refresh',
     CHECK_EMAIL:     '/auth/check-email',
     CHECK_NICKNAME:  '/users/check-nickname',
+    CHECK_PHONE:     '/users/check-phone',
+    CHANGE_PASSWORD: '/auth/change-password',
     SELLER_LOGIN:    '/auth/seller/login',
     SELLER_ME:       '/auth/seller/me',
     SOCIAL_AUTHORIZE: (provider: string) => `/auth/social/${provider}/authorize`,
     SOCIAL_CALLBACK:  (provider: string) => `/auth/social/${provider}/callback`,
+  },
+
+  // ── 계정 ────────────────────────────────────────────────────
+  ACCOUNT: {
+    WITHDRAW:        '/account/withdraw',
   },
 
   // ── 바이어 ───────────────────────────────────────────────────
