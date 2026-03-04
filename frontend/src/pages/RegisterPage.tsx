@@ -291,14 +291,24 @@ function ProfileStep({ role, method, nickname, setNickname, nickStatus, recommen
 }
 
 // ── Step 3: 추가 정보 ─────────────────────────────────────
+const REG_PAYMENT_OPTIONS = [
+  { key: 'card',  label: '신용/체크카드', icon: '💳' },
+  { key: 'bank',  label: '계좌이체',      icon: '🏦' },
+  { key: 'kakao', label: '카카오페이',    icon: '💛' },
+  { key: 'naver', label: '네이버페이',    icon: '💚' },
+  { key: 'toss',  label: '토스페이',      icon: '💙' },
+];
+
 function ExtraInfoStep({ phone, setPhone, address, setAddress, shippingAddr, setShippingAddr,
-  sameAsAddr, setSameAsAddr, gender, setGender, birthDate, setBirthDate, onNext }: {
+  sameAsAddr, setSameAsAddr, gender, setGender, birthDate, setBirthDate,
+  paymentMethod, setPaymentMethod, onNext }: {
   phone: string; setPhone: (v: string) => void;
   address: string; setAddress: (v: string) => void;
   shippingAddr: string; setShippingAddr: (v: string) => void;
   sameAsAddr: boolean; setSameAsAddr: (v: boolean) => void;
   gender: string; setGender: (v: string) => void;
   birthDate: string; setBirthDate: (v: string) => void;
+  paymentMethod: string; setPaymentMethod: (v: string) => void;
   onNext: () => void;
 }) {
   const canNext = !!phone.replace(/\D/g, '');
@@ -371,6 +381,31 @@ function ExtraInfoStep({ phone, setPhone, address, setAddress, shippingAddr, set
               background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
             }}
           />
+        </div>
+
+        {/* 결제수단 */}
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8 }}>선호 결제수단</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {REG_PAYMENT_OPTIONS.map(opt => {
+              const active = paymentMethod === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => setPaymentMethod(active ? '' : opt.key)}
+                  style={{
+                    padding: '8px 14px', borderRadius: 12, fontSize: 12, fontWeight: 600,
+                    background: active ? `${C.green}20` : C.bgInput,
+                    border: `1px solid ${active ? C.green : C.border}`,
+                    color: active ? C.green : C.textSec,
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  {opt.icon} {opt.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -722,8 +757,9 @@ export default function RegisterPage() {
   const [address,      setAddress]      = useState('');
   const [shippingAddr, setShippingAddr] = useState('');
   const [sameAsAddr,   setSameAsAddr]   = useState(false);
-  const [gender,       setGender]       = useState('');
-  const [birthDate,    setBirthDate]    = useState('');
+  const [gender,         setGender]         = useState('');
+  const [birthDate,      setBirthDate]      = useState('');
+  const [paymentMethod,  setPaymentMethod]  = useState('');
 
   // step 4 — terms
   const [termsAgreed,     setTermsAgreed]     = useState(false);
@@ -766,6 +802,7 @@ export default function RegisterPage() {
             address: address || undefined,
             gender: gender || undefined,
             birth_date: birthDate || undefined,
+            payment_method: paymentMethod || undefined,
           });
           const loginRes = await loginApi(email.trim(), password);
           const { access_token } = loginRes.data as { access_token: string };
@@ -882,6 +919,7 @@ export default function RegisterPage() {
                 sameAsAddr={sameAsAddr} setSameAsAddr={setSameAsAddr}
                 gender={gender} setGender={setGender}
                 birthDate={birthDate} setBirthDate={setBirthDate}
+                paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
                 onNext={() => { void goNext(); }}
               />
             )}

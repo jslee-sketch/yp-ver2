@@ -26,10 +26,17 @@ export function mapDealResponseToDisplay(d: DealResponse): Deal {
   };
 }
 
-export async function fetchDeals(page = 1, size = 100) {
+export async function fetchDeals(
+  page = 1,
+  size = 100,
+  opts?: { keyword?: string; buyer_id?: number },
+) {
   if (!FEATURES.USE_API_DEALS) return null;
   try {
-    const res = await apiClient.get(API.DEALS.LIST, { params: { page, size } });
+    const params: Record<string, unknown> = { page, size };
+    if (opts?.keyword) params.keyword = opts.keyword;
+    if (opts?.buyer_id != null) params.buyer_id = opts.buyer_id;
+    const res = await apiClient.get(API.DEALS.LIST, { params });
     // Backend returns { items: [...], total, page, size, pages }
     const data = res.data;
     return Array.isArray(data) ? data : (data?.items ?? []);

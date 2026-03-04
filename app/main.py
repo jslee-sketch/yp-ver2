@@ -175,6 +175,15 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass  # already exists
 
+    # ✅ payment_method 컬럼 마이그레이션
+    try:
+        with engine.connect() as _conn:
+            _conn.execute(_text("ALTER TABLE buyers ADD COLUMN payment_method VARCHAR(50)"))
+            _conn.commit()
+            print("[migration] ALTER TABLE buyers ADD COLUMN payment_method OK")
+    except Exception:
+        pass
+
     # ✅ social login 컬럼 마이그레이션
     for _col, _type in [("social_provider", "VARCHAR(20)"), ("social_id", "VARCHAR(100)")]:
         try:

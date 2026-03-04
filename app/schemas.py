@@ -56,6 +56,7 @@ class BuyerBase(BaseModel):
     zip_code: Optional[str] = None
     gender: Optional[str] = None
     birth_date: Optional[datetime] = None
+    payment_method: Optional[str] = None
 
 
 class BuyerCreate(BuyerBase):
@@ -79,6 +80,7 @@ class BuyerOut(ORMModel):
     zip_code: Optional[str] = None
     gender: Optional[str] = None
     birth_date: Optional[datetime] = None
+    payment_method: Optional[str] = None
 
 
 # ---------------- Seller ----------------

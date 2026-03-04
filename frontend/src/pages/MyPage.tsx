@@ -65,13 +65,13 @@ function ActionRow({ icon, label, onClick }: { icon: string; label: string; onCl
   );
 }
 
-interface PaymentMethod {
-  id: number;
-  type: 'card' | 'bank';
-  name: string;
-  last4: string;
-  isDefault: boolean;
-}
+const PAYMENT_OPTIONS = [
+  { key: 'card',  label: '신용/체크카드', icon: '💳' },
+  { key: 'bank',  label: '계좌이체',      icon: '🏦' },
+  { key: 'kakao', label: '카카오페이',    icon: '💛' },
+  { key: 'naver', label: '네이버페이',    icon: '💚' },
+  { key: 'toss',  label: '토스페이',      icon: '💙' },
+];
 
 const GENDER_LABELS: Record<string, string> = { male: '남성', female: '여성', other: '기타' };
 
@@ -86,6 +86,7 @@ export default function MyPage() {
   const [editAddress, setEditAddress] = useState('');
   const [editGender, setEditGender] = useState('');
   const [editBirthDate, setEditBirthDate] = useState('');
+  const [editPaymentMethod, setEditPaymentMethod] = useState('');
   const [saving, setSaving] = useState(false);
 
   // password change
@@ -116,6 +117,7 @@ export default function MyPage() {
     address:      String(apiProfile?.address ?? ''),
     gender:       String(apiProfile?.gender ?? ''),
     birth_date:   String(apiProfile?.birth_date ?? '').split('T')[0] || '',
+    payment_method: String(apiProfile?.payment_method ?? ''),
     created_at:   String(apiProfile?.created_at ?? '').split('T')[0] || '-',
     total_orders: Number(apiProfile?.total_orders ?? 0),
     total_deals:  Number(apiProfile?.total_deals ?? 0),
@@ -130,6 +132,7 @@ export default function MyPage() {
     setEditAddress(u.address);
     setEditGender(u.gender);
     setEditBirthDate(u.birth_date);
+    setEditPaymentMethod(u.payment_method);
     setShowProfileEdit(true);
   };
 
@@ -143,6 +146,7 @@ export default function MyPage() {
         address: editAddress || undefined,
         gender: editGender || undefined,
         birth_date: editBirthDate || undefined,
+        payment_method: editPaymentMethod || undefined,
       });
       setApiProfile(prev => ({
         ...prev,
@@ -152,6 +156,7 @@ export default function MyPage() {
         address: editAddress,
         gender: editGender,
         birth_date: editBirthDate,
+        payment_method: editPaymentMethod,
       }));
       setShowProfileEdit(false);
     } catch {
@@ -168,6 +173,8 @@ export default function MyPage() {
     setPwSaving(true);
     try {
       await apiClient.post('/auth/change-password', {
+        user_id: u.id,
+        user_type: u.isSeller ? 'seller' : 'buyer',
         current_password: curPw,
         new_password: newPw,
       });
@@ -183,15 +190,25 @@ export default function MyPage() {
   };
 
   const [showPayModal, setShowPayModal] = useState(false);
-  const [payMethods, setPayMethods] = useState<PaymentMethod[]>([
-    { id: 1, type: 'card', name: '신한카드',      last4: '1234', isDefault: true },
-    { id: 2, type: 'bank', name: '국민은행 자동이체', last4: '5678', isDefault: false },
-  ]);
+  const [payModalMethod, setPayModalMethod] = useState('');
+  const [payModalSaving, setPayModalSaving] = useState(false);
 
-  const setDefault = (id: number) =>
-    setPayMethods(prev => prev.map(m => ({ ...m, isDefault: m.id === id })));
-  const removeMethod = (id: number) =>
-    setPayMethods(prev => prev.filter(m => m.id !== id));
+  const openPayModal = () => {
+    setPayModalMethod(u.payment_method);
+    setShowPayModal(true);
+  };
+
+  const savePaymentMethod = async () => {
+    setPayModalSaving(true);
+    try {
+      await apiClient.patch(API.BUYERS.UPDATE(u.id), { payment_method: payModalMethod || null });
+      setApiProfile(prev => ({ ...prev, payment_method: payModalMethod }));
+      setShowPayModal(false);
+    } catch {
+      alert('결제수단 저장에 실패했어요');
+    }
+    setPayModalSaving(false);
+  };
 
   return (
     <div style={{ minHeight: '100dvh', background: C.bg, paddingBottom: 100 }}>
@@ -245,6 +262,7 @@ export default function MyPage() {
           <InfoRow icon="&#x1F3E0;" label="주소" value={u.address || '미등록'} />
           <InfoRow icon="&#x1F9D1;" label="성별" value={GENDER_LABELS[u.gender] || '미등록'} />
           <InfoRow icon="&#x1F382;" label="생년월일" value={u.birth_date || '미등록'} />
+          <InfoRow icon="&#x1F4B3;" label="결제수단" value={PAYMENT_OPTIONS.find(p => p.key === u.payment_method)?.label || '미등록'} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0' }}>
             <span style={{ fontSize: 13, color: C.textSec }}>&#x1F512; 비밀번호</span>
             <button
@@ -307,7 +325,7 @@ export default function MyPage() {
         <Card>
           <CardTitle>계정 관리</CardTitle>
           <button
-            onClick={() => setShowPayModal(true)}
+            onClick={openPayModal}
             style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '11px 0', background: 'none', border: 'none', cursor: 'pointer',
@@ -386,7 +404,7 @@ export default function MyPage() {
             </div>
 
             {/* 생년월일 */}
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>생년월일</div>
               <input
                 type="date" value={editBirthDate}
@@ -397,6 +415,29 @@ export default function MyPage() {
                   boxSizing: 'border-box' as const,
                 }}
               />
+            </div>
+
+            {/* 결제수단 */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>결제수단</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {PAYMENT_OPTIONS.map(opt => {
+                  const active = editPaymentMethod === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      onClick={() => setEditPaymentMethod(active ? '' : opt.key)}
+                      style={{
+                        padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                        background: active ? `${C.green}22` : C.bgEl,
+                        border: `1px solid ${active ? C.green : C.border}`,
+                        color: active ? C.green : C.textSec,
+                        cursor: 'pointer',
+                      }}
+                    >{opt.icon} {opt.label}</button>
+                  );
+                })}
+              </div>
             </div>
 
             <button
@@ -518,47 +559,50 @@ export default function MyPage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>💳 결제수단 관리</span>
+              <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>결제수단 관리</span>
               <button onClick={() => setShowPayModal(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer' }}>&#x2715;</button>
             </div>
 
-            <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, letterSpacing: 1, marginBottom: 10 }}>등록된 결제수단</div>
+            <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, letterSpacing: 1, marginBottom: 12 }}>선호 결제수단 선택</div>
 
-            {payMethods.map(m => (
-              <div key={m.id} style={{
-                background: C.bgEl, border: `1px solid ${m.isDefault ? C.green : C.border}`,
-                borderRadius: 12, padding: '14px', marginBottom: 10,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 18 }}>{m.type === 'card' ? '💳' : '🏦'}</span>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{m.name}</div>
-                      <div style={{ fontSize: 11, color: C.textSec }}>**** {m.last4}</div>
-                    </div>
-                  </div>
-                  {m.isDefault && (
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: `${C.green}22`, color: C.green }}>기본</span>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {!m.isDefault && (
-                    <button onClick={() => setDefault(m.id)} style={{ flex: 1, padding: '6px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: `${C.blue}22`, border: `1px solid ${C.blue}66`, color: C.blue, cursor: 'pointer' }}>기본으로 설정</button>
-                  )}
-                  <button onClick={() => removeMethod(m.id)} style={{ flex: 1, padding: '6px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: 'rgba(255,82,82,0.1)', border: '1px solid rgba(255,82,82,0.3)', color: '#ff5252', cursor: 'pointer' }}>삭제</button>
-                </div>
-              </div>
-            ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+              {PAYMENT_OPTIONS.map(opt => {
+                const active = payModalMethod === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={() => setPayModalMethod(active ? '' : opt.key)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '14px 16px', borderRadius: 12, cursor: 'pointer',
+                      background: active ? `${C.green}12` : C.bgEl,
+                      border: `1.5px solid ${active ? C.green : C.border}`,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <span style={{ fontSize: 20 }}>{opt.icon}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: active ? C.green : C.text, flex: 1, textAlign: 'left' }}>{opt.label}</span>
+                    {active && <span style={{ fontSize: 14, color: C.green, fontWeight: 800 }}>&#x2713;</span>}
+                  </button>
+                );
+              })}
+            </div>
 
-            {payMethods.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '20px 0', color: C.textDim, fontSize: 13 }}>등록된 결제수단이 없어요</div>
-            )}
-
-            <div style={{ padding: '12px 14px', background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.25)', borderRadius: 10, marginTop: 8 }}>
+            <div style={{ padding: '12px 14px', background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.25)', borderRadius: 10, marginBottom: 16 }}>
               <div style={{ fontSize: 12, color: C.orange, lineHeight: 1.7 }}>
                 오퍼 마감 후 결제 시간은 단 <strong>5분</strong>입니다. 미리 결제수단을 등록해주세요!
               </div>
             </div>
+
+            <button
+              onClick={savePaymentMethod}
+              disabled={payModalSaving}
+              style={{
+                width: '100%', padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                background: payModalSaving ? `${C.green}55` : `${C.green}22`, border: `1px solid ${C.green}66`,
+                color: C.green, cursor: payModalSaving ? 'not-allowed' : 'pointer',
+              }}
+            >{payModalSaving ? '저장 중...' : '저장'}</button>
           </div>
         </div>
       )}

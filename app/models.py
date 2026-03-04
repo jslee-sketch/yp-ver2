@@ -62,6 +62,7 @@ class Buyer(Base):
     # (NEW) 레벨 (티어와는 별개)
     level = Column(Integer, default=6, nullable=False)
     # 소셜 로그인
+    payment_method = Column(String, nullable=True)  # 'card', 'bank' 등
     social_provider = Column(String(20), nullable=True)   # kakao|naver|google
     social_id       = Column(String(100), nullable=True, index=True)
     # 계정 상태 (탈퇴/차단)

@@ -52,6 +52,9 @@ def read_me(
                         "nickname": getattr(buyer, "nickname", None),
                         "phone": getattr(buyer, "phone", None),
                         "address": getattr(buyer, "address", None),
+                        "gender": getattr(buyer, "gender", None),
+                        "birth_date": str(getattr(buyer, "birth_date", "") or ""),
+                        "payment_method": getattr(buyer, "payment_method", None),
                         "points": getattr(buyer, "points", 0),
                         "level": getattr(buyer, "level", 1),
                         "trust_tier": getattr(buyer, "trust_tier", "Bronze"),
@@ -92,6 +95,80 @@ def list_buyers(
     db: Session = Depends(database.get_db),
 ):
     return crud.get_buyers(db, skip=skip, limit=limit)
+
+
+# -----------------------------------------------------
+# 4️⃣ Buyer 프로필 수정
+# -----------------------------------------------------
+class BuyerUpdateIn(BaseModel):
+    name: Optional[str] = None
+    nickname: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    gender: Optional[str] = None
+    birth_date: Optional[str] = None
+    payment_method: Optional[str] = None
+
+
+@router.patch("/{buyer_id}")
+def update_buyer(
+    buyer_id: int,
+    body: BuyerUpdateIn,
+    db: Session = Depends(database.get_db),
+):
+    """Buyer 프로필 수정 (name, nickname, phone, address, gender, birth_date, payment_method)"""
+    buyer = db.query(models.Buyer).filter(models.Buyer.id == buyer_id).first()
+    if not buyer:
+        raise HTTPException(status_code=404, detail="Buyer not found")
+
+    if body.name is not None:
+        buyer.name = body.name
+    if body.nickname is not None:
+        # 닉네임 중복 체크
+        existing = db.query(models.Buyer).filter(
+            models.Buyer.nickname == body.nickname,
+            models.Buyer.id != buyer_id,
+        ).first()
+        if existing:
+            raise HTTPException(status_code=409, detail="이미 사용 중인 닉네임이에요")
+        buyer.nickname = body.nickname
+    if body.phone is not None:
+        buyer.phone = body.phone
+    if body.address is not None:
+        buyer.address = body.address
+    if body.gender is not None:
+        buyer.gender = body.gender
+    if body.birth_date is not None:
+        if body.birth_date:
+            try:
+                from datetime import datetime as _dt
+                buyer.birth_date = _dt.fromisoformat(body.birth_date)
+            except ValueError:
+                buyer.birth_date = None
+        else:
+            buyer.birth_date = None
+    if body.payment_method is not None:
+        buyer.payment_method = body.payment_method
+
+    db.commit()
+    db.refresh(buyer)
+
+    return {
+        "id": buyer.id,
+        "email": buyer.email,
+        "name": buyer.name,
+        "nickname": getattr(buyer, "nickname", None),
+        "phone": getattr(buyer, "phone", None),
+        "address": getattr(buyer, "address", None),
+        "gender": getattr(buyer, "gender", None),
+        "birth_date": str(getattr(buyer, "birth_date", "") or ""),
+        "payment_method": getattr(buyer, "payment_method", None),
+        "points": getattr(buyer, "points", 0),
+        "level": getattr(buyer, "level", 1),
+        "trust_tier": getattr(buyer, "trust_tier", "Bronze"),
+        "is_active": getattr(buyer, "is_active", True),
+        "created_at": str(getattr(buyer, "created_at", "")),
+    }
 
 
 class BuyerBasicOut(BaseModel):

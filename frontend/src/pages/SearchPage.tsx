@@ -167,7 +167,7 @@ export default function SearchPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef    = useRef<HTMLInputElement>(null);
 
-  // 초기 로드: API에서 전체 딜 목록 가져오기
+  // 초기 로드: API에서 전체 딜 목록 가져오기 (인기 딜 표시용)
   useEffect(() => {
     void (async () => {
       const apiData = await fetchDeals(1, 200);
@@ -177,36 +177,42 @@ export default function SearchPage() {
     })();
   }, []);
 
-  const doSearch = (q: string) => {
+  const doSearch = async (q: string) => {
     const trimmed = q.trim();
     if (!trimmed) { setIsSearching(false); setResults([]); setSelectedCat(null); return; }
     setIsSearching(true);
 
-    const filterFn = (d: SearchDeal) =>
-      d.product_name.toLowerCase().includes(trimmed.toLowerCase()) ||
-      (d.brand && d.brand.toLowerCase().includes(trimmed.toLowerCase())) ||
-      d.category.includes(trimmed);
-
-    setResults(allDeals.filter(filterFn));
+    // 서버 사이드 키워드 검색
+    const apiData = await fetchDeals(1, 200, { keyword: trimmed });
+    if (apiData) {
+      setResults((apiData as DealResponse[]).map(mapToSearchDeal));
+    } else {
+      // API 실패 시 클라이언트 사이드 폴백
+      const filterFn = (d: SearchDeal) =>
+        d.product_name.toLowerCase().includes(trimmed.toLowerCase()) ||
+        (d.brand && d.brand.toLowerCase().includes(trimmed.toLowerCase())) ||
+        d.category.includes(trimmed);
+      setResults(allDeals.filter(filterFn));
+    }
   };
 
   const handleInput = (val: string) => {
     setQuery(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { doSearch(val); }, 300);
+    debounceRef.current = setTimeout(() => { void doSearch(val); }, 300);
   };
 
   const handleEnter = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    doSearch(query);
+    void doSearch(query);
   };
 
-  const handleKeyword = (kw: string) => { setQuery(kw); setSelectedCat(null); doSearch(kw); };
+  const handleKeyword = (kw: string) => { setQuery(kw); setSelectedCat(null); void doSearch(kw); };
 
   const handleCategory = (cat: string) => {
     const next = selectedCat === cat ? null : cat;
     setSelectedCat(next);
-    if (next) { setQuery(next); doSearch(next); }
+    if (next) { setQuery(next); void doSearch(next); }
     else { setQuery(''); setIsSearching(false); setResults([]); }
   };
 
@@ -216,7 +222,7 @@ export default function SearchPage() {
   };
 
   // 초기 URL 파라미터 동기화
-  useEffect(() => { if (initialQ) doSearch(initialQ); }, [allDeals]); // eslint-disable-line
+  useEffect(() => { if (initialQ) void doSearch(initialQ); }, [allDeals]); // eslint-disable-line
 
   const hotDeals = [...allDeals].sort((a, b) => b.current_qty - a.current_qty).slice(0, 4);
 
