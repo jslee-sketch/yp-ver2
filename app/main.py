@@ -79,11 +79,20 @@ _alter_cols = [
     ("deals", "model_number", "VARCHAR"),
     ("deals", "options", "TEXT"),
     ("deals", "free_text", "TEXT"),
+    ("deals", "category", "VARCHAR"),
+    ("deals", "product_detail", "VARCHAR"),
+    ("deals", "product_code", "VARCHAR"),
+    ("deals", "condition", "VARCHAR"),
+    ("deal_ai_logs", "note", "TEXT"),
 ]
 try:
     _insp = _sa.inspect(engine)
-    _existing_cols = {c["name"] for c in _insp.get_columns("deals")} if _insp.has_table("deals") else set()
-    _need_alter = [(t, c, typ) for t, c, typ in _alter_cols if c not in _existing_cols]
+    _cols_cache: dict = {}
+    def _get_existing(tbl: str) -> set:
+        if tbl not in _cols_cache:
+            _cols_cache[tbl] = {c["name"] for c in _insp.get_columns(tbl)} if _insp.has_table(tbl) else set()
+        return _cols_cache[tbl]
+    _need_alter = [(t, c, typ) for t, c, typ in _alter_cols if c not in _get_existing(t)]
     if _need_alter:
         with engine.begin() as _conn:
             for _tbl, _col, _typ in _need_alter:

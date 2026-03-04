@@ -764,6 +764,12 @@ def create_deal(db: Session, deal: schemas.DealCreate):
 
         free_text=deal.free_text,
 
+        # 🔹 신규 상품 정보 필드
+        category=deal.category,
+        product_detail=deal.product_detail,
+        product_code=deal.product_code,
+        condition=deal.condition,
+
         # 🔹 딜 조건 (AI Helper DealConditions에서 매핑)
         shipping_fee_krw=deal.shipping_fee_krw,
         refund_days=deal.refund_days,

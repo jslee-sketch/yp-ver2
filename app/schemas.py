@@ -345,6 +345,12 @@ class DealCreate(BaseModel):
 
     free_text: Optional[str] = None
 
+    # 신규 상품 정보 필드
+    category: Optional[str] = None
+    product_detail: Optional[str] = None
+    product_code: Optional[str] = None
+    condition: Optional[str] = "new"
+
     # 딜 조건 (AI Helper DealConditions에서 매핑)
     shipping_fee_krw: Optional[int] = None
     refund_days:      Optional[int] = None
@@ -365,6 +371,10 @@ class DealOut(ORMModel):
     brand: Optional[str] = None
     model_number: Optional[str] = None
     options: Optional[str] = None
+    category: Optional[str] = None
+    product_detail: Optional[str] = None
+    product_code: Optional[str] = None
+    condition: Optional[str] = None
     status: str = "open"
     deadline_at: Optional[datetime] = None
     rounds: List["DealRoundOut"] = Field(default_factory=list)  # forward ref 안전

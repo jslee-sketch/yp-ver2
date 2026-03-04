@@ -2,10 +2,12 @@ import apiClient from './client';
 import { API } from './endpoints';
 import { FEATURES } from '../config';
 
-export async function aiDealHelper(productName: string) {
+export async function aiDealHelper(productName: string, freeText?: string) {
   if (!FEATURES.USE_API_AI) return null;
   try {
-    const res = await apiClient.post(API.AI.DEAL_HELPER, { raw_title: productName });
+    const body: Record<string, string> = { raw_title: productName };
+    if (freeText) body.raw_free_text = freeText;
+    const res = await apiClient.post(API.AI.DEAL_HELPER, body);
     return res.data;
   } catch (err) {
     console.error('AI 딜 헬퍼 API 실패:', err);

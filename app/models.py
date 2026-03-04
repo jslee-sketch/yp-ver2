@@ -268,6 +268,12 @@ class Deal(Base):
 
     free_text = Column(Text, nullable=True)
 
+    # --- 신규 상품 정보 필드 ---
+    category = Column(String, nullable=True)
+    product_detail = Column(String, nullable=True)       # 제품명 (상세)
+    product_code = Column(String, nullable=True)          # 제품코드/모델번호
+    condition = Column(String, nullable=True, default="new")  # new/refurbished
+
     # --- 딜 조건 (DealConditions, AI Helper에서 추출) ---
     shipping_fee_krw = Column(Integer, nullable=True)   # 무료배송=0, null=미입력
     refund_days      = Column(Integer, nullable=True)   # 환불 가능 기간(일)

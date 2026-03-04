@@ -63,6 +63,9 @@ class DealAIResponse(BaseModel):
     canonical_name: str
     model_name: str
     brand: Optional[str] = None
+    brands: List[str] = []                  # 브랜드 후보 리스트
+    product_code: Optional[str] = None      # 제품코드/모델번호
+    product_detail: Optional[str] = None    # 상세 제품명
     suggested_options: List[SuggestedOption] = []
     price: PriceSuggestion
     conditions: Optional[DealConditions] = None
@@ -98,6 +101,12 @@ def _build_prompt(raw_title: str, raw_free_text: str) -> str:
   브랜드명 + 정확한 모델명을 포함. 액세서리/케이스/호환품이 아닌 본품만 검색되도록 구성.
   예: "Apple 에어팟 프로 2세대 본체", "LG 그램 17Z90S 1TB", "삼성 갤럭시 S25 256GB 자급제"
 - category: 이 제품의 대분류 카테고리 (한국어).
+- brands: 이 제품의 브랜드 후보 리스트 (1~5개). 확실한 브랜드가 1개이면 그것만. 식품 등 여러 브랜드가 가능하면 최대 5개.
+  예: ["Apple"], ["종가집", "비비고", "풀무원", "처갓집", "피코크"]
+- product_code: 이 제품의 모델번호/제품코드 (식별 가능하면). 없으면 null.
+  예: "SM-S936N", "MTJV3KH/A", null
+- product_detail: 구체적 제품명 (브랜드+모델+용량 등 포함).
+  예: "종가집 포기김치 2.5kg", "삼성 갤럭시 S25 울트라 256GB 자급제"
   예: "무선이어폰", "노트북", "스마트폰", "쌀", "청소기", "게임기"
 - expected_price_range: [최소가격, 최대가격] (원 단위, 정수).
   이 제품의 한국 시장에서의 일반적인 가격 범위. 넉넉히 잡을 것.
@@ -127,6 +136,9 @@ normalized_free_text: 사용자 설명을 한두 문장으로 정리. 없으면 
   "canonical_name": "Apple AirPods Pro 2nd Gen",
   "model_name": "애플 에어팟 프로 2세대",
   "brand": "Apple",
+  "brands": ["Apple"],
+  "product_code": "MTJV3KH/A",
+  "product_detail": "애플 에어팟 프로 2세대 USB-C MagSafe",
   "search_keyword": "Apple 에어팟 프로 2세대 본체",
   "category": "무선이어폰",
   "expected_price_range": [250000, 450000],
@@ -369,6 +381,14 @@ def _run_ai_deal_helper(raw_title: str, raw_free_text: str) -> DealAIResponse:
             )
 
     data["price"] = price_data
+
+    # ── brands 리스트 보강 ────────────────────────────
+    brands = data.get("brands") or []
+    if data.get("brand") and data["brand"] not in brands:
+        brands.insert(0, data["brand"])
+    if naver and naver.get("brand") and naver["brand"] not in brands:
+        brands.append(naver["brand"])
+    data["brands"] = brands[:5]
 
     # ── 스키마 검증 + 옵션 10개 상한 ────────────────────
     opts = data.get("suggested_options") or []
