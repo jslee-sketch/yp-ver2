@@ -66,9 +66,9 @@ class Buyer(Base):
     social_provider = Column(String(20), nullable=True)   # kakao|naver|google
     social_id       = Column(String(100), nullable=True, index=True)
     # 계정 상태 (탈퇴/차단)
-    is_active = Column(Boolean, default=True, nullable=False, server_default="1")
+    is_active = Column(Boolean, default=True, nullable=False, server_default="true")
     withdrawn_at = Column(DateTime, nullable=True)
-    is_banned = Column(Boolean, default=False, nullable=False, server_default="0")
+    is_banned = Column(Boolean, default=False, nullable=False, server_default="false")
     banned_until = Column(DateTime, nullable=True)
     ban_reason = Column(Text, nullable=True)
     participants = relationship("DealParticipant", back_populates="buyer")
@@ -119,9 +119,9 @@ class Seller(Base):
     rating_aggregate = relationship("SellerRatingAggregate", back_populates="seller", uselist=False, cascade="all, delete-orphan")
 
     # 계정 상태 (탈퇴/차단)
-    is_active = Column(Boolean, default=True, nullable=False, server_default="1")
+    is_active = Column(Boolean, default=True, nullable=False, server_default="true")
     withdrawn_at = Column(DateTime, nullable=True)
-    is_banned = Column(Boolean, default=False, nullable=False, server_default="0")
+    is_banned = Column(Boolean, default=False, nullable=False, server_default="false")
     banned_until = Column(DateTime, nullable=True)
     ban_reason = Column(Text, nullable=True)
 
@@ -393,7 +393,7 @@ class UserNotification(Base):
     is_read = Column(
         Boolean,
         nullable=False,
-        server_default=text("0"),
+        server_default="false",
     )
 
     # JSON 메타 문자열 (role, deal_id, offer_id 등)
@@ -428,7 +428,7 @@ class DealChatMessage(Base):
     text = Column(Text, nullable=False)
 
     # 모더레이션(욕설/개인정보 등)으로 숨긴 메시지
-    blocked = Column(Boolean, nullable=False, default=False, server_default="0")
+    blocked = Column(Boolean, nullable=False, default=False, server_default="false")
     blocked_reason = Column(String(255), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -647,7 +647,7 @@ class Reservation(Base):
     # (선택) 연관 관계 – 필요하면 추가
     policy = relationship("OfferPolicy", backref="reservations", lazy="joined")
 
-    delivery_auto_confirmed = Column(Boolean, default=False, nullable=False, server_default="0")
+    delivery_auto_confirmed = Column(Boolean, default=False, nullable=False, server_default="false")
     delivery_confirmed_source = Column(String(50), nullable=True)  # "batch_auto" | "buyer_manual"
 
     __table_args__ = (
