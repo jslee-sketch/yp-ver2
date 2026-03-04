@@ -246,6 +246,7 @@ class Deal(Base):
 
     # --- pricing guardrail (Target vs Anchor) ---
     anchor_price = Column(Float, nullable=True)                 # async anchor, may be None
+    market_price = Column(Float, nullable=True)                  # 시장가 (네이버/AI 기준)
     anchor_confidence = Column(Float, nullable=True, default=1.0)
     evidence_score = Column(Integer, nullable=True, default=0)  # 0~100
 

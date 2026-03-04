@@ -83,6 +83,7 @@ _alter_cols = [
     ("deals", "product_detail", "VARCHAR"),
     ("deals", "product_code", "VARCHAR"),
     ("deals", "condition", "VARCHAR"),
+    ("deals", "market_price", "FLOAT"),
     ("deal_ai_logs", "note", "TEXT"),
 ]
 try:
