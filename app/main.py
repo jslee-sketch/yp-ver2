@@ -364,6 +364,76 @@ async def lifespan(app: FastAPI):
     except Exception as _se:
         print(f"[warn] seed data failed: {_se}")
 
+    # ✅ seed: 정책 선언 DB 자동 시드 (policy_declarations 테이블이 비어있으면 .md 파일에서 로드)
+    try:
+        _pol_db = database.SessionLocal()
+        try:
+            _pol_count = _pol_db.query(models.PolicyDeclaration).filter(
+                models.PolicyDeclaration.is_active == True,
+            ).count()
+            if _pol_count == 0:
+                print("[seed] policy_declarations empty — seeding from .md files...")
+                _app_dir = _P(__file__).resolve().parent
+                _doc_roots = [
+                    _app_dir / "policy" / "docs" / "public",
+                    _app_dir / "policy" / "docs" / "admin",
+                    _app_dir / "policy" / "docs" / "admin" / "ssot",
+                ]
+                _pol_inserted = 0
+                for _dr in _doc_roots:
+                    if not _dr.exists():
+                        continue
+                    for _fp in sorted(_dr.rglob("*.md")):
+                        if not _fp.is_file():
+                            continue
+                        _md_text = _fp.read_text(encoding="utf-8", errors="replace").strip()
+                        if not _md_text:
+                            continue
+                        try:
+                            _rel = _fp.relative_to(_app_dir / "policy" / "docs").as_posix().removesuffix(".md")
+                        except Exception:
+                            _rel = _fp.stem
+                        _kl = _rel.lower()
+                        _domain = (
+                            "REFUND" if "refund" in _kl else
+                            "SHIPPING" if "shipping" in _kl else
+                            "SETTLEMENT" if "settlement" in _kl else
+                            "FEES" if "fee" in _kl else
+                            "TIERS" if "tier" in _kl else
+                            "PRICING" if "pricing" in _kl or "price" in _kl else
+                            "GUARDRAILS" if "guardrail" in _kl else
+                            "TIME" if "time" in _kl else
+                            "PARTICIPANTS" if "participant" in _kl else
+                            "PINGPONG" if "pingpong" in _kl else
+                            "ACTUATOR" if "actuator" in _kl else
+                            "BUYER" if "buyer" in _kl else
+                            "SELLER" if "seller" in _kl else
+                            "GENERAL"
+                        )
+                        _title = _fp.stem
+                        for _line in _md_text.splitlines():
+                            _ls = _line.strip()
+                            if _ls.startswith("# ") and _ls[2:].strip():
+                                _title = _ls[2:].strip()
+                                break
+                        _pol_db.add(models.PolicyDeclaration(
+                            domain=_domain,
+                            policy_key=_rel,
+                            title=_title,
+                            description_md=_md_text,
+                            version=1,
+                            is_active=1,
+                        ))
+                        _pol_inserted += 1
+                _pol_db.commit()
+                print(f"[seed] Inserted {_pol_inserted} policy declarations")
+            else:
+                print(f"[seed] policy_declarations already has {_pol_count} active rows — skip")
+        finally:
+            _pol_db.close()
+    except Exception as _pe:
+        print(f"[warn] policy seed failed: {_pe}")
+
     # ✅ 워커 시작
     try:
         await start_auto_expire_worker()

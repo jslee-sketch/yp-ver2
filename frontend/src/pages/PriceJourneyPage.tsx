@@ -746,7 +746,7 @@ export default function PriceJourneyPage() {
       {showTargetEditModal && (
         <div
           onClick={() => setShowTargetEditModal(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 500, display: 'flex', alignItems: 'flex-end' }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9990, display: 'flex', alignItems: 'flex-end' }}
         >
           <div
             onClick={e => e.stopPropagation()}
