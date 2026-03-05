@@ -279,7 +279,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <SectionTitle>판매자</SectionTitle>
                     <MenuItem icon="🔍" label="딜 탐색"    onClick={() => go('/deals')} />
                     <MenuItem icon="📝" label="내 오퍼 현황" onClick={() => go('/seller/offers')} />
-                    <MenuItem icon="📦" label="배송 관리"  onClick={() => go('/seller/shipping')} />
+                    <MenuItem icon="📦" label="배송 관리"  onClick={() => go('/seller/delivery')} />
                     <MenuItem icon="💵" label="정산 관리"  onClick={() => go('/settlements')} />
                     <MenuItem icon="📊" label="판매 통계"  onClick={() => go('/seller/stats')} />
                   </>
@@ -301,6 +301,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="👥" label="판매자 관리"    onClick={() => go('/admin/sellers')} />
                     <MenuItem icon="👤" label="구매자 관리"    onClick={() => go('/admin/buyers')} />
                     <MenuItem icon="🔧" label="액츄에이터 관리" onClick={() => go('/admin/actuators')} />
+                    <MenuItem icon="⚠️" label="분쟁 관리"       onClick={() => go('/admin/disputes')} />
+                    <MenuItem icon="💵" label="정산 관리"       onClick={() => go('/admin/settlements')} />
                   </>
                 )}
               </div>

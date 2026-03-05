@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchDeal, addParticipant } from '../api/dealApi';
-
-// ── 색상 ─────────────────────────────────────────────
+import { fetchDeal } from '../api/dealApi';
+import { fetchOffersByDeal, createReservation, payReservation } from '../api/reservationApi';
+import { showToast } from '../components/common/Toast';
 
 const C = {
   bgDeep: '#0a0e1a', bgCard: '#111827', bgSurface: '#1a2236', bgInput: '#0f1625',
@@ -13,24 +13,22 @@ const C = {
   border: 'rgba(0,240,255,0.12)',
 };
 
-const variants = {
-  enter:  (d: number) => ({ x: d > 0 ? '60%' : '-60%', opacity: 0 }),
-  center: { x: 0, opacity: 1, transition: { type: 'spring' as const, damping: 28, stiffness: 300 } },
-  exit:   (d: number) => ({ x: d > 0 ? '-60%' : '60%', opacity: 0, transition: { duration: 0.18 } }),
-};
+const fmtP = (n: number) => '₩' + n.toLocaleString('ko-KR');
 
-// ── 공용 컴포넌트 ────────────────────────────────────
-
-function ReadonlyRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${C.border}` }}>
-      <span style={{ fontSize: 13, color: C.textSec }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{value}</span>
-        <span style={{ fontSize: 11, color: C.textDim }}>🔒</span>
-      </div>
-    </div>
-  );
+interface OfferItem {
+  id: number;
+  seller_id: number;
+  seller_name: string;
+  price: number;
+  total_available_qty: number;
+  sold_qty: number;
+  reserved_qty: number;
+  shipping_mode: string;
+  shipping_fee_per_reservation: number;
+  shipping_fee_per_qty: number;
+  delivery_days: number;
+  comment: string;
+  is_active: boolean;
 }
 
 interface DealInfo {
@@ -38,80 +36,124 @@ interface DealInfo {
   brand: string;
   target_price: number;
   market_price: number | null;
-  participant_count: number;
-  desired_qty: number;
-  options: string | null;
-  category: string | null;
-  condition: string | null;
-  free_text: string | null;
-  created_at: string | null;
 }
-
-function parseDealFromApi(raw: Record<string, unknown>): DealInfo {
-  // Parse options: could be JSON array of {title,values} or simple string
-  let optStr: string | null = null;
-  if (raw.options && typeof raw.options === 'string') {
-    try {
-      const parsed = JSON.parse(raw.options as string);
-      if (Array.isArray(parsed)) {
-        optStr = parsed.map((g: { title?: string; values?: string[] }) =>
-          `${g.title || ''}: ${(g.values || []).join(', ')}`
-        ).join(' / ');
-      } else {
-        optStr = raw.options as string;
-      }
-    } catch {
-      optStr = raw.options as string;
-    }
-  }
-
-  // days left from created_at (rough: 7 days default deal duration)
-  return {
-    product_name: (raw.product_name as string) || '상품명 없음',
-    brand: (raw.brand as string) || '',
-    target_price: (raw.target_price as number) || (raw.market_price as number) || 0,
-    market_price: (raw.market_price as number) ?? null,
-    participant_count: (raw.participant_count as number) || 0,
-    desired_qty: (raw.desired_qty as number) || 1,
-    options: optStr,
-    category: (raw.category as string) ?? null,
-    condition: (raw.condition as string) ?? null,
-    free_text: (raw.free_text as string) ?? null,
-    created_at: (raw.created_at as string) ?? null,
-  };
-}
-
-// ── 메인 ─────────────────────────────────────────────
 
 export default function DealJoinPage() {
   const { id: dealId } = useParams<{ id: string }>();
-  const navigate       = useNavigate();
-  const { user }       = useAuth();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const [deal, setDeal]       = useState<DealInfo | null>(null);
+  const [deal, setDeal] = useState<DealInfo | null>(null);
+  const [offers, setOffers] = useState<OfferItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadErr, setLoadErr] = useState(false);
-  const [step, setStep] = useState(1);
-  const [dir,  setDir]  = useState(1);
-  const [qty,  setQty]  = useState(1);
-  const [done, setDone] = useState(false);
-  const [loading, setLoading] = useState(false);
+
+  // Flow: 'offers' → 'confirm' → 'checkout' → 'done'
+  const [step, setStep] = useState<'offers' | 'confirm' | 'checkout' | 'done'>('offers');
+  const [selectedOffer, setSelectedOffer] = useState<OfferItem | null>(null);
+  const [qty, setQty] = useState(1);
+  const [reservationData, setReservationData] = useState<Record<string, unknown> | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!dealId) { setLoadErr(true); return; }
     (async () => {
-      const raw = await fetchDeal(Number(dealId));
-      if (!raw) { setLoadErr(true); return; }
-      setDeal(parseDealFromApi(raw as Record<string, unknown>));
+      try {
+        const [rawDeal, rawOffers] = await Promise.all([
+          fetchDeal(Number(dealId)),
+          fetchOffersByDeal(Number(dealId)),
+        ]);
+        if (!rawDeal) { setLoadErr(true); return; }
+        const d = rawDeal as Record<string, unknown>;
+        setDeal({
+          product_name: String(d.product_name ?? ''),
+          brand: String(d.brand ?? ''),
+          target_price: (d.target_price as number) || 0,
+          market_price: (d.market_price as number) ?? null,
+        });
+        if (rawOffers && Array.isArray(rawOffers)) {
+          setOffers(rawOffers.map((o: Record<string, unknown>) => {
+            const seller = o.seller as Record<string, unknown> | undefined;
+            return {
+              id: o.id as number,
+              seller_id: o.seller_id as number,
+              seller_name: String(seller?.business_name ?? seller?.nickname ?? `판매자#${o.seller_id}`),
+              price: (o.price as number) || 0,
+              total_available_qty: (o.total_available_qty as number) || 0,
+              sold_qty: (o.sold_qty as number) || 0,
+              reserved_qty: (o.reserved_qty as number) || 0,
+              shipping_mode: String(o.shipping_mode ?? 'FLAT'),
+              shipping_fee_per_reservation: (o.shipping_fee_per_reservation as number) || 0,
+              shipping_fee_per_qty: (o.shipping_fee_per_qty as number) || 0,
+              delivery_days: (o.delivery_days as number) || 7,
+              comment: String(o.comment ?? ''),
+              is_active: o.is_active !== false,
+            };
+          }).filter(o => o.is_active));
+        }
+      } catch {
+        setLoadErr(true);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [dealId]);
 
-  const goTo = (n: number) => { setDir(n > step ? 1 : -1); setStep(n); };
+  const calcShipping = (offer: OfferItem, q: number) => {
+    if (offer.shipping_mode === 'FREE') return 0;
+    if (offer.shipping_mode === 'PER_ITEM') return offer.shipping_fee_per_qty * q;
+    return offer.shipping_fee_per_reservation;
+  };
 
-  // 로딩 중
-  if (!deal && !loadErr) {
+  const handleSelectOffer = (offer: OfferItem) => {
+    setSelectedOffer(offer);
+    setQty(1);
+    setStep('confirm');
+  };
+
+  const handleReserve = async () => {
+    if (!user || !selectedOffer) return;
+    setSubmitting(true);
+    try {
+      const result = await createReservation({
+        deal_id: Number(dealId),
+        offer_id: selectedOffer.id,
+        buyer_id: user.id,
+        qty,
+      });
+      setReservationData(result as Record<string, unknown>);
+      setStep('checkout');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { detail?: unknown } } };
+      const detail = e.response?.data?.detail;
+      showToast(typeof detail === 'string' ? detail : '예약 생성에 실패했어요', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePay = async () => {
+    if (!user || !reservationData || !selectedOffer) return;
+    setSubmitting(true);
+    try {
+      const resId = reservationData.id as number;
+      const total = (reservationData.amount_total as number) || selectedOffer.price * qty + calcShipping(selectedOffer, qty);
+      await payReservation(resId, user.id, total);
+      setStep('done');
+      showToast('결제가 완료되었어요!', 'success');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { detail?: unknown } } };
+      const detail = e.response?.data?.detail;
+      showToast(typeof detail === 'string' ? detail : '결제 처리에 실패했어요', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
     return (
       <div style={{ minHeight: '100dvh', background: C.bgDeep, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: 14, color: C.textSec }}>딜 정보 불러오는 중...</div>
+        <div style={{ fontSize: 14, color: C.textSec }}>불러오는 중...</div>
       </div>
     );
   }
@@ -126,236 +168,225 @@ export default function DealJoinPage() {
     );
   }
 
-  if (done) {
+  // Done state
+  if (step === 'done') {
     return (
       <div style={{ minHeight: '100dvh', background: C.bgDeep, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
-        <style>{`@keyframes popIn { 0%{transform:scale(0.5);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }`}</style>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', damping: 24 }}
-          style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}
-        >
-          <div style={{ fontSize: 64, marginBottom: 20, animation: 'popIn 0.6s cubic-bezier(.175,.885,.32,1.275) both' }}>🎉</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: C.textPri, marginBottom: 8 }}>딜에 참여했어요!</div>
-          <div style={{ fontSize: 14, color: C.textSec, marginBottom: 32 }}>
-            {deal.product_name} · {qty}개
-          </div>
-
-          <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px', marginBottom: 24, textAlign: 'left' }}>
-            <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.7 }}>
-              딜방에서 다른 참여자들과<br />소통해보세요! 함께 더 좋은 가격을<br />만들어갈 수 있어요 🤝
-            </div>
-          </div>
-
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
+          <div style={{ fontSize: 64, marginBottom: 20 }}>🎉</div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: C.textPri, marginBottom: 8 }}>결제가 완료되었어요!</div>
+          <div style={{ fontSize: 14, color: C.textSec, marginBottom: 32 }}>판매자가 상품을 준비합니다.</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <button
-              onClick={() => navigate(`/deal/${dealId ?? ''}`)}
-              style={{ padding: '15px', borderRadius: 14, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg, ${C.cyan}, ${C.green})`, color: '#0a0e1a', cursor: 'pointer' }}
-            >딜 페이지로 이동</button>
-            <button
-              onClick={() => navigate('/my-orders')}
-              style={{ padding: '14px', borderRadius: 14, fontSize: 14, fontWeight: 600, background: 'transparent', border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer' }}
-            >참여/결제/배송 보기</button>
+            <button onClick={() => navigate('/my-orders')} style={{ padding: '15px', borderRadius: 14, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg, ${C.cyan}, ${C.green})`, color: '#0a0e1a', cursor: 'pointer' }}>
+              내 주문 확인하기
+            </button>
+            <button onClick={() => navigate(`/deal/${dealId ?? ''}`)} style={{ padding: '14px', borderRadius: 14, fontSize: 14, fontWeight: 600, background: 'transparent', border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer' }}>
+              딜 페이지로 이동
+            </button>
           </div>
         </motion.div>
       </div>
     );
   }
 
-  const handleJoin = async () => {
-    if (!user) { navigate('/login'); return; }
-    setLoading(true);
-    try {
-      await addParticipant(Number(dealId), user.id, qty);
-      setDone(true);
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { detail?: unknown } } };
-      const detail = e.response?.data?.detail;
-      alert(typeof detail === 'string' ? detail : '딜 참여에 실패했어요. 다시 시도해주세요.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const stepLabel = step === 'offers' ? '오퍼 선택' : step === 'confirm' ? '예약 확인' : '결제';
+  const stepNum = step === 'offers' ? 1 : step === 'confirm' ? 2 : 3;
 
   return (
-    <div style={{ minHeight: '100dvh', background: C.bgDeep, overflow: 'hidden' }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-
+    <div style={{ minHeight: '100dvh', background: C.bgDeep }}>
       {/* TopBar */}
       <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 56,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 20px', zIndex: 10,
-        background: 'rgba(10,14,26,0.92)', backdropFilter: 'blur(10px)',
-        borderBottom: `1px solid ${C.border}`,
+        position: 'fixed', top: 0, left: 0, right: 0, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 20px', zIndex: 10, background: 'rgba(10,14,26,0.92)', backdropFilter: 'blur(10px)', borderBottom: `1px solid ${C.border}`,
       }}>
-        <button
-          onClick={() => { if (step === 1) navigate(-1); else goTo(1); }}
-          style={{ fontSize: 13, color: C.textSec, cursor: 'pointer' }}
-        >← {step === 1 ? '뒤로' : '이전'}</button>
+        <button onClick={() => {
+          if (step === 'offers') navigate(-1);
+          else if (step === 'confirm') setStep('offers');
+          else setStep('confirm');
+        }} style={{ fontSize: 13, color: C.textSec, cursor: 'pointer' }}>← {step === 'offers' ? '뒤로' : '이전'}</button>
         <div style={{ fontSize: 13, fontWeight: 700 }}>
-          <span style={{ color: C.cyan }}>{step}</span>
-          <span style={{ color: C.textSec }}>/2</span>
+          <span style={{ color: C.cyan }}>{stepLabel}</span>
+          <span style={{ color: C.textDim }}> ({stepNum}/3)</span>
         </div>
         <div style={{ width: 48 }} />
       </div>
 
-      {/* 진행 바 */}
       <div style={{ position: 'fixed', top: 56, left: 0, right: 0, height: 3, zIndex: 10, background: C.border }}>
-        <div style={{ height: '100%', width: `${(step / 2) * 100}%`, background: `linear-gradient(90deg, ${C.cyan}, ${C.green})`, transition: 'width 0.35s ease' }} />
+        <div style={{ height: '100%', width: `${(stepNum / 3) * 100}%`, background: `linear-gradient(90deg, ${C.cyan}, ${C.green})`, transition: 'width 0.35s' }} />
       </div>
 
-      {/* 콘텐츠 */}
-      <div style={{ paddingTop: 60, minHeight: '100dvh' }}>
-        <AnimatePresence mode="wait" custom={dir}>
-          <motion.div
-            key={step} custom={dir} variants={variants}
-            initial="enter" animate="center" exit="exit"
-            style={{ width: '100%', maxWidth: 500, margin: '0 auto', padding: '24px 20px 100px' }}
-          >
+      <div style={{ paddingTop: 64, maxWidth: 500, margin: '0 auto', padding: '64px 20px 100px' }}>
+        <AnimatePresence mode="wait">
+          {/* Step 1: 오퍼 목록 */}
+          {step === 'offers' && (
+            <motion.div key="offers" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: C.textPri, marginBottom: 4 }}>📦 {deal.product_name}</div>
+                <div style={{ fontSize: 12, color: C.textSec }}>{[deal.brand, deal.target_price ? `목표가 ${fmtP(deal.target_price)}` : ''].filter(Boolean).join(' · ')}</div>
+              </div>
 
-            {/* ══ Step 1: 딜 정보 확인 + 수량 ══ */}
-            {step === 1 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                {/* 딜 정보 헤더 */}
-                <div>
-                  <div style={{ fontSize: 13, color: C.textSec, marginBottom: 4 }}>딜 참여하기</div>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: C.textPri, marginBottom: 4 }}>
-                    📦 {deal.product_name}
-                  </div>
-                  <div style={{ fontSize: 12, color: C.textSec }}>
-                    {[deal.brand, deal.category, deal.options].filter(Boolean).join(' · ')}
-                  </div>
+              {offers.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: C.textDim }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+                  <div style={{ fontSize: 14 }}>아직 오퍼가 없어요</div>
+                  <div style={{ fontSize: 12, marginTop: 6 }}>판매자의 오퍼를 기다려주세요!</div>
                 </div>
-
-                {/* 요약 통계 */}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {[
-                    { label: '목표가', value: deal.target_price ? `₩${deal.target_price.toLocaleString()}` : '-', color: C.green },
-                    { label: '현재 참여', value: `${deal.participant_count}명`, color: C.yellow },
-                    { label: '상태', value: deal.condition === 'new' ? '신품' : deal.condition || '신품', color: C.orange },
-                  ].map(item => (
-                    <div key={item.label} style={{ flex: 1, textAlign: 'center', padding: '10px 4px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 10 }}>
-                      <div style={{ fontSize: 10, color: C.textDim, marginBottom: 4 }}>{item.label}</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: item.color }}>{item.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* 딜 정보 (변경 불가) */}
-                <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 12 }}>딜 정보 (변경 불가)</div>
-                  <ReadonlyRow label="상품" value={deal.product_name} />
-                  {deal.target_price > 0 && <ReadonlyRow label="목표가" value={`₩${deal.target_price.toLocaleString()}`} />}
-                  {deal.market_price && <ReadonlyRow label="시장가" value={`₩${deal.market_price.toLocaleString()}`} />}
-                  {deal.brand && <ReadonlyRow label="브랜드" value={deal.brand} />}
-                  {deal.options && <ReadonlyRow label="옵션" value={deal.options} />}
-                  {deal.condition && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
-                      <span style={{ fontSize: 13, color: C.textSec }}>상태</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{deal.condition === 'new' ? '신품' : deal.condition}</span>
-                        <span style={{ fontSize: 11, color: C.textDim }}>🔒</span>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {offers.map(offer => {
+                    const avail = offer.total_available_qty - offer.sold_qty - offer.reserved_qty;
+                    const shippingLabel = offer.shipping_mode === 'FREE' ? '무료배송' : `배송비 ${fmtP(offer.shipping_fee_per_reservation || offer.shipping_fee_per_qty)}`;
+                    return (
+                      <div key={offer.id} style={{
+                        background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 16, cursor: avail > 0 ? 'pointer' : 'default',
+                        opacity: avail > 0 ? 1 : 0.5, transition: 'border-color 0.15s',
+                      }}
+                        onClick={() => avail > 0 && handleSelectOffer(offer)}
+                        onMouseEnter={e => { if (avail > 0) e.currentTarget.style.borderColor = C.cyan; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,240,255,0.12)'; }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 2 }}>{offer.seller_name}</div>
+                            {offer.comment && <div style={{ fontSize: 11, color: C.textDim }}>{offer.comment}</div>}
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 18, fontWeight: 900, color: C.green }}>{fmtP(offer.price)}</div>
+                            <div style={{ fontSize: 10, color: C.textDim }}>개당</div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 6, background: 'rgba(0,240,255,0.08)', color: C.cyan }}>{shippingLabel}</span>
+                          <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 6, background: 'rgba(255,225,86,0.08)', color: C.yellow }}>리드타임 {offer.delivery_days}일</span>
+                          <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 6, background: avail > 0 ? 'rgba(57,255,20,0.08)' : 'rgba(255,82,82,0.08)', color: avail > 0 ? C.green : '#ff5252' }}>
+                            {avail > 0 ? `잔여 ${avail}개` : '품절'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
+              )}
+            </motion.div>
+          )}
 
-                {/* 참여 수량 */}
-                <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 14, letterSpacing: 1 }}>참여 수량</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
-                    <button
-                      onClick={() => setQty(q => Math.max(1, q - 1))}
-                      style={{ width: 40, height: 40, borderRadius: 10, fontSize: 20, fontWeight: 700, background: C.bgSurface, border: `1px solid ${C.border}`, color: C.textPri, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >−</button>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: 28, fontWeight: 900, color: C.cyan, lineHeight: 1 }}>{qty}</div>
-                      <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>개</div>
-                    </div>
-                    <button
-                      onClick={() => setQty(q => Math.min(99, q + 1))}
-                      style={{ width: 40, height: 40, borderRadius: 10, fontSize: 20, fontWeight: 700, background: C.bgSurface, border: `1px solid ${C.border}`, color: C.textPri, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >+</button>
-                  </div>
-                  <div style={{ textAlign: 'center', fontSize: 11, color: C.textDim, marginTop: 10 }}>
-                    최소 1개 ~ 최대 99개
-                  </div>
-                </div>
+          {/* Step 2: 예약 확인 */}
+          {step === 'confirm' && selectedOffer && (
+            <motion.div key="confirm" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: C.textPri, marginBottom: 16 }}>예약 확인</div>
 
-                <button
-                  onClick={() => goTo(2)}
-                  style={{ width: '100%', padding: '15px', borderRadius: 14, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg, ${C.cyan}, ${C.green})`, color: '#0a0e1a', cursor: 'pointer' }}
-                >다음 →</button>
+              <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 16, marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 12 }}>오퍼 정보</div>
+                {[
+                  { icon: '📦', label: '상품', value: deal.product_name },
+                  { icon: '🏪', label: '판매자', value: selectedOffer.seller_name },
+                  { icon: '💰', label: '단가', value: fmtP(selectedOffer.price) },
+                  { icon: '🚚', label: '배송', value: selectedOffer.shipping_mode === 'FREE' ? '무료' : fmtP(calcShipping(selectedOffer, qty)) },
+                ].map(r => (
+                  <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: `1px solid ${C.border}` }}>
+                    <span style={{ fontSize: 13, color: C.textSec }}>{r.icon} {r.label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{r.value}</span>
+                  </div>
+                ))}
               </div>
-            )}
 
-            {/* ══ Step 2: 확인 ══ */}
-            {step === 2 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: C.textPri }}>참여 확인</div>
-
-                {/* 참여 요약 */}
-                <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 14 }}>참여 요약</div>
-                  {[
-                    { icon: '📦', label: '상품',    value: deal.product_name },
-                    ...(deal.target_price > 0 ? [{ icon: '🎯', label: '목표가',  value: `₩${deal.target_price.toLocaleString()}` }] : []),
-                    { icon: '📊', label: '참여 수량', value: `${qty}개` },
-                    ...(deal.target_price > 0 ? [{ icon: '💰', label: '예상 금액', value: `₩${(deal.target_price * qty).toLocaleString()}` }] : []),
-                  ].map(row => (
-                    <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid ${C.border}` }}>
-                      <span style={{ fontSize: 16, flexShrink: 0 }}>{row.icon}</span>
-                      <span style={{ fontSize: 13, color: C.textSec, flex: 1 }}>{row.label}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: C.textPri }}>{row.value}</span>
-                    </div>
-                  ))}
-                  <div style={{ fontSize: 11, color: C.textDim, marginTop: 10, lineHeight: 1.6 }}>
-                    ⚠️ 실제 결제 금액은 오퍼 확정 후 결정됩니다.
+              {/* 수량 선택 */}
+              <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 16, marginBottom: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 14, letterSpacing: 1 }}>수량</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+                  <button onClick={() => setQty(q => Math.max(1, q - 1))}
+                    style={{ width: 40, height: 40, borderRadius: 10, fontSize: 20, fontWeight: 700, background: C.bgSurface, border: `1px solid ${C.border}`, color: C.textPri, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 28, fontWeight: 900, color: C.cyan }}>{qty}</div>
+                    <div style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>개</div>
                   </div>
-                </div>
-
-                {/* 기타 요청사항 */}
-                {deal.free_text && (
-                  <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 8 }}>기타 요청사항</div>
-                    <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>{deal.free_text}</div>
-                  </div>
-                )}
-
-                {/* 핑퐁이 안내 */}
-                <div style={{ background: 'rgba(0,240,255,0.04)', border: `1px solid rgba(0,240,255,0.2)`, borderRadius: 14, padding: '14px 16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <span style={{ fontSize: 20 }}>🤖</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.cyan }}>핑퐁이 안내</span>
-                  </div>
-                  <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.7 }}>
-                    참여하시면 딜방 채팅에 참여할 수 있어요!<br />
-                    다른 참여자들과 소통하며 더 좋은 가격을 만들어보세요.
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleJoin}
-                  disabled={loading}
-                  style={{
-                    width: '100%', padding: '15px', borderRadius: 14, fontSize: 15, fontWeight: 800,
-                    background: loading ? `${C.green}40` : `linear-gradient(135deg, ${C.cyan}, ${C.green})`,
-                    color: '#0a0e1a', cursor: loading ? 'not-allowed' : 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  <button onClick={() => {
+                    const avail = selectedOffer.total_available_qty - selectedOffer.sold_qty - selectedOffer.reserved_qty;
+                    setQty(q => Math.min(avail, q + 1));
                   }}
-                >
-                  {loading && <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#0a0e1a', animation: 'spin 0.8s linear infinite' }} />}
-                  🤝 딜 참여하기
-                </button>
-
-                <div style={{ textAlign: 'center', fontSize: 12, color: C.textDim }}>
-                  ⚠️ 참여 후에도 취소 가능해요
+                    style={{ width: 40, height: 40, borderRadius: 10, fontSize: 20, fontWeight: 700, background: C.bgSurface, border: `1px solid ${C.border}`, color: C.textPri, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                 </div>
               </div>
-            )}
 
-          </motion.div>
+              {/* 금액 요약 */}
+              <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderTop: `3px solid ${C.green}`, borderRadius: 16, padding: 16, marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                  <span style={{ fontSize: 13, color: C.textSec }}>상품 금액</span>
+                  <span style={{ fontSize: 13, color: C.textPri }}>{fmtP(selectedOffer.price * qty)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
+                  <span style={{ fontSize: 13, color: C.textSec }}>배송비</span>
+                  <span style={{ fontSize: 13, color: C.textPri }}>{calcShipping(selectedOffer, qty) === 0 ? '무료' : fmtP(calcShipping(selectedOffer, qty))}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0 0' }}>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: C.textPri }}>총 결제 예상 금액</span>
+                  <span style={{ fontSize: 18, fontWeight: 900, color: C.green }}>{fmtP(selectedOffer.price * qty + calcShipping(selectedOffer, qty))}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleReserve}
+                disabled={submitting}
+                style={{
+                  width: '100%', padding: '15px', borderRadius: 14, fontSize: 15, fontWeight: 800,
+                  background: submitting ? `${C.green}40` : `linear-gradient(135deg, ${C.cyan}, ${C.green})`,
+                  color: '#0a0e1a', cursor: submitting ? 'not-allowed' : 'pointer',
+                }}
+              >{submitting ? '예약 중...' : '🛒 예약하기'}</button>
+              <div style={{ textAlign: 'center', fontSize: 11, color: C.textDim, marginTop: 8 }}>예약 후 결제를 진행합니다</div>
+            </motion.div>
+          )}
+
+          {/* Step 3: 결제 */}
+          {step === 'checkout' && reservationData && selectedOffer && (
+            <motion.div key="checkout" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: C.textPri, marginBottom: 16 }}>결제</div>
+
+              <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 16, marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 12 }}>결제 정보</div>
+                {[
+                  { label: '예약 번호', value: `#${reservationData.id}` },
+                  { label: '상품', value: deal.product_name },
+                  { label: '판매자', value: selectedOffer.seller_name },
+                  { label: '수량', value: `${reservationData.qty ?? qty}개` },
+                  { label: '상품 금액', value: fmtP((reservationData.amount_goods as number) || selectedOffer.price * qty) },
+                  { label: '배송비', value: (reservationData.amount_shipping as number) ? fmtP(reservationData.amount_shipping as number) : '무료' },
+                ].map(r => (
+                  <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: `1px solid ${C.border}` }}>
+                    <span style={{ fontSize: 13, color: C.textSec }}>{r.label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{r.value}</span>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0' }}>
+                  <span style={{ fontSize: 16, fontWeight: 800, color: C.textPri }}>총 결제 금액</span>
+                  <span style={{ fontSize: 20, fontWeight: 900, color: C.green }}>{fmtP((reservationData.amount_total as number) || 0)}</span>
+                </div>
+              </div>
+
+              <div style={{ background: 'rgba(0,240,255,0.04)', border: `1px solid rgba(0,240,255,0.15)`, borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
+                <div style={{ fontSize: 12, color: C.cyan, fontWeight: 700, marginBottom: 4 }}>테스트 결제 안내</div>
+                <div style={{ fontSize: 12, color: C.textSec, lineHeight: 1.6 }}>
+                  실제 PG 결제는 준비 중입니다.<br />테스트 결제로 즉시 처리됩니다.
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  onClick={() => { setStep('confirm'); }}
+                  style={{ flex: 1, padding: '15px', borderRadius: 14, fontSize: 14, fontWeight: 700, background: C.bgCard, border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer' }}
+                >취소</button>
+                <button
+                  onClick={handlePay}
+                  disabled={submitting}
+                  style={{
+                    flex: 2, padding: '15px', borderRadius: 14, fontSize: 15, fontWeight: 800,
+                    background: submitting ? `${C.green}40` : `linear-gradient(135deg, ${C.cyan}, ${C.green})`,
+                    color: '#0a0e1a', cursor: submitting ? 'not-allowed' : 'pointer',
+                  }}
+                >{submitting ? '처리 중...' : '💳 결제하기'}</button>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>

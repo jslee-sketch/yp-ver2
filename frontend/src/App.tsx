@@ -34,6 +34,8 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminSellersPage from './pages/AdminSellersPage';
 import AdminBuyersPage from './pages/AdminBuyersPage';
 import AdminActuatorsPage from './pages/AdminActuatorsPage';
+import AdminDisputePage from './pages/AdminDisputePage';
+import AdminSettlementsPage from './pages/AdminSettlementsPage';
 
 function App() {
   return (
@@ -70,6 +72,7 @@ function App() {
           <Route path="/points"      element={<ProtectedRoute><PointsPage /></ProtectedRoute>} />
           <Route path="/review/write/:reservationId" element={<ProtectedRoute><ReviewWritePage /></ProtectedRoute>} />
           <Route path="/seller/ship/:reservationId"  element={<ProtectedRoute><SellerShipPage /></ProtectedRoute>} />
+          <Route path="/seller/delivery"               element={<ProtectedRoute><SellerShipPage /></ProtectedRoute>} />
           <Route path="/settlements" element={<ProtectedRoute><SettlementsPage /></ProtectedRoute>} />
           <Route path="/seller/offers" element={<ProtectedRoute><SellerOffersPage /></ProtectedRoute>} />
           <Route path="/seller/reviews" element={<ProtectedRoute><SellerReviewsPage /></ProtectedRoute>} />
@@ -79,7 +82,9 @@ function App() {
           <Route path="/admin"           element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
           <Route path="/admin/sellers"   element={<ProtectedRoute><AdminSellersPage /></ProtectedRoute>} />
           <Route path="/admin/buyers"    element={<ProtectedRoute><AdminBuyersPage /></ProtectedRoute>} />
-          <Route path="/admin/actuators" element={<ProtectedRoute><AdminActuatorsPage /></ProtectedRoute>} />
+          <Route path="/admin/actuators"    element={<ProtectedRoute><AdminActuatorsPage /></ProtectedRoute>} />
+          <Route path="/admin/disputes"     element={<ProtectedRoute><AdminDisputePage /></ProtectedRoute>} />
+          <Route path="/admin/settlements"  element={<ProtectedRoute><AdminSettlementsPage /></ProtectedRoute>} />
 
           {/* 404 catch-all */}
           <Route path="*" element={<NotFoundPage />} />

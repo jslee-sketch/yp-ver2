@@ -99,10 +99,10 @@ export const API = {
   // ── 예약/결제 (v3.5) ─────────────────────────────────────────
   RESERVATIONS: {
     CREATE:            '/reservations/',
-    LIST_BUYER:        '/reservations/buyer/',
-    LIST_SELLER:       '/reservations/seller/',
+    LIST_BUYER:        (buyerId: number) => `/reservations/buyer/${buyerId}`,
+    LIST_SELLER:       (sellerId: number) => `/reservations/seller/${sellerId}`,
     DETAIL:            (id: number) => `/reservations/${id}`,
-    PAY:               (id: number) => `/reservations/${id}/pay`,
+    PAY:               '/reservations/pay',
     SHIP:              (id: number) => `/reservations/${id}/ship`,
     CONFIRM_ARRIVAL:   (id: number) => `/reservations/${id}/arrival_confirm`,
     CANCEL:            (id: number) => `/reservations/${id}/cancel`,
@@ -118,9 +118,12 @@ export const API = {
     SHIP:              (id: number) => `/v3_6/reservations/${id}/ship`,
     CONFIRM_ARRIVAL:   (id: number) => `/v3_6/reservations/${id}/arrival_confirm`,
     CANCEL:            (id: number) => `/v3_6/reservations/${id}/cancel`,
-    REFUND_PREVIEW:    (id: number) => `/v3_6/reservations/${id}/refund_preview`,
+    REFUND:            '/v3_6/reservations/refund',
+    REFUND_PREVIEW:    '/v3_6/reservations/refund/preview',
     ADMIN_CANCEL:      (id: number) => `/v3_6/reservations/${id}/admin_cancel`,
     ADMIN_FORCE_SHIP:  (id: number) => `/v3_6/reservations/${id}/admin_force_ship`,
+    DISPUTE_OPEN:      (id: number) => `/v3_6/${id}/dispute/open`,
+    DISPUTE_CLOSE:     (id: number) => `/v3_6/${id}/dispute/close`,
   },
 
   // ── 예약 검색/필터 ───────────────────────────────────────────
