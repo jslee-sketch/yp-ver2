@@ -85,6 +85,7 @@ except Exception as _cae:
 
 # ── ALTER TABLE: add new columns to existing tables ──
 _alter_cols = [
+    ("users", "name", "VARCHAR(50)"),
     ("deals", "brand", "VARCHAR"),
     ("deals", "model_number", "VARCHAR"),
     ("deals", "options", "TEXT"),

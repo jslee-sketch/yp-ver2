@@ -103,19 +103,42 @@ export default function HomePage() {
     }}>
       <div style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-        {/* 마이페이지 아이콘 */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
-          <button
-            onClick={() => navigate('/mypage')}
-            style={{
-              width: 36, height: 36, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              fontSize: 18, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-            aria-label="마이페이지"
-          >👤</button>
+        {/* 상단 네비 */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 4 }}>
+          {isLoggedIn ? (
+            <>
+              <button
+                onClick={() => navigate('/mypage')}
+                style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  fontSize: 18, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+                aria-label="마이페이지"
+              >👤</button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  padding: '8px 16px', borderRadius: 10,
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#e8eaed', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}
+              >로그인</button>
+              <button
+                onClick={() => navigate('/register')}
+                style={{
+                  padding: '8px 16px', borderRadius: 10,
+                  background: 'linear-gradient(135deg, #00e676, #00b0ff)',
+                  border: 'none', color: '#0a0a0f', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                }}
+              >회원가입</button>
+            </>
+          )}
         </div>
 
         {/* 로고 */}
@@ -140,7 +163,39 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 토스트: showToast() 사용 — 전역 */}
+        {/* 비로그인 환영 배너 */}
+        {!isLoggedIn && (
+          <div style={{
+            textAlign: 'center', padding: '24px 16px', marginBottom: 20,
+            background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 16,
+          }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#e8eaed', marginBottom: 6 }}>
+              역핑에 오신 것을 환영합니다!
+            </div>
+            <div style={{ fontSize: 13, color: '#78909c', marginBottom: 18 }}>
+              소비자 주도형 공동구매 플랫폼
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  padding: '12px 28px', borderRadius: 12,
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                  color: '#e8eaed', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                }}
+              >로그인</button>
+              <button
+                onClick={() => navigate('/register')}
+                style={{
+                  padding: '12px 28px', borderRadius: 12,
+                  background: 'linear-gradient(135deg, #00e676, #00b0ff)',
+                  border: 'none', color: '#0a0a0f', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                }}
+              >회원가입</button>
+            </div>
+          </div>
+        )}
 
         {/* 검색 바 */}
         <div style={{
