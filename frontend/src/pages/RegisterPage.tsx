@@ -1091,41 +1091,53 @@ function BizStep({
             {/* 주요 운영 지역 (선택) */}
             <InputField label="주요 운영 지역 (선택)" value={region} onChange={setRegion} placeholder="예: 서울·경기" />
 
-            {/* 정산 계좌 */}
-            <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, opacity: actIsBusiness ? 0.45 : 1, transition: 'opacity 0.2s' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 4 }}>정산 계좌</div>
-              {actIsBusiness && (
-                <div style={{ fontSize: 11, color: C.textDim, marginBottom: 10 }}>사업자 등록 시 선택 항목입니다</div>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <InputField label={actIsBusiness ? '은행명' : '은행명 *'} value={bankName} onChange={setBankName} placeholder="예: 국민은행" disabled={actIsBusiness} />
-                <InputField label={actIsBusiness ? '계좌번호' : '계좌번호 *'} value={accountNum} onChange={setAccountNum} placeholder="- 없이 숫자만" type="tel" disabled={actIsBusiness} />
-                <InputField label={actIsBusiness ? '예금주' : '예금주 *'} value={accountHolder} onChange={setAccountHolder} placeholder="예금주명" disabled={actIsBusiness} />
-                <FileUploadRow label="통장사본" url={bankbookUrl} field="bankbook" required={!actIsBusiness} disabled={actIsBusiness} />
+            {/* 유형 선택: 개인 / 사업자 */}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8 }}>유형 선택</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {([false, true] as const).map(isBiz => {
+                  const selected = actIsBusiness === isBiz;
+                  const label = isBiz ? '사업자' : '개인';
+                  const icon = isBiz ? '🏢' : '👤';
+                  const accentColor = isBiz ? C.yellow : C.green;
+                  return (
+                    <button key={label} onClick={() => setActIsBusiness(isBiz)} style={{
+                      flex: 1, padding: '14px 12px', borderRadius: 12, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.15s',
+                      background: selected ? `${accentColor}10` : 'transparent',
+                      border: `1.5px solid ${selected ? accentColor : C.border}`,
+                    }}>
+                      <div style={{
+                        width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: selected ? accentColor : 'transparent',
+                        border: `2px solid ${selected ? accentColor : C.border}`,
+                        transition: 'all 0.15s',
+                      }}>
+                        {selected && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#0a0a0f' }} />}
+                      </div>
+                      <span style={{ fontSize: 14 }}>{icon}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: selected ? accentColor : C.text }}>{label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* 사업자 체크박스 */}
-            <label style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
-              background: actIsBusiness ? `${C.yellow}08` : 'transparent',
-              border: `1px solid ${actIsBusiness ? C.yellow : C.border}`,
-              borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s',
-            }}>
-              <div style={{
-                width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: actIsBusiness ? C.yellow : 'transparent',
-                border: `2px solid ${actIsBusiness ? C.yellow : C.border}`,
-                color: '#0a0a0f', fontSize: 14, fontWeight: 900, transition: 'all 0.15s',
-              }}>
-                {actIsBusiness && '✓'}
+            {/* ── 개인 선택 시 ── */}
+            {!actIsBusiness && (
+              <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 12 }}>정산 계좌</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <InputField label="은행명 *" value={bankName} onChange={setBankName} placeholder="예: 국민은행" />
+                  <InputField label="계좌번호 *" value={accountNum} onChange={setAccountNum} placeholder="- 없이 숫자만" type="tel" />
+                  <InputField label="예금주 *" value={accountHolder} onChange={setAccountHolder} placeholder="예금주명" />
+                  <FileUploadRow label="통장사본" url={bankbookUrl} field="bankbook" required />
+                </div>
               </div>
-              <input type="checkbox" checked={actIsBusiness} onChange={e => setActIsBusiness(e.target.checked)} style={{ display: 'none' }} />
-              <span style={{ fontSize: 13, color: actIsBusiness ? C.yellow : C.text, fontWeight: 600 }}>사업자입니다</span>
-            </label>
+            )}
 
-            {/* 사업자 정보 (체크 시) */}
+            {/* ── 사업자 선택 시 ── */}
             {actIsBusiness && (
               <>
                 <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
@@ -1179,6 +1191,18 @@ function BizStep({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <FileUploadRow label="사업자등록증" url={actBizLicenseUrl} field="bizLicense" required />
                     <FileUploadRow label="통신판매업신고증 (선택)" url={actEcommercePermitUrl} field="ecommercePermit" />
+                  </div>
+                </div>
+
+                {/* 사업자 정산 계좌 (선택) */}
+                <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 4 }}>정산 계좌 (선택)</div>
+                  <div style={{ fontSize: 11, color: C.textDim, marginBottom: 10 }}>사업자의 경우 선택 항목입니다</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <InputField label="은행명" value={bankName} onChange={setBankName} placeholder="예: 국민은행" />
+                    <InputField label="계좌번호" value={accountNum} onChange={setAccountNum} placeholder="- 없이 숫자만" type="tel" />
+                    <InputField label="예금주" value={accountHolder} onChange={setAccountHolder} placeholder="예금주명" />
+                    <FileUploadRow label="통장사본" url={bankbookUrl} field="bankbook" />
                   </div>
                 </div>
               </>
