@@ -245,6 +245,7 @@ export const API = {
     LIST:              '/actuators/',
     CREATE:            '/actuators/',
     DETAIL:            (id: number) => `/actuators/${id}`,
+    BY_EMAIL:          (email: string) => `/actuators/by-email?email=${encodeURIComponent(email)}`,
   },
 
 } as const;

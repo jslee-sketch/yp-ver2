@@ -736,7 +736,7 @@ function BizStep({
   role,
   bizName, setBizName, bizNum, setBizNum, ceoName, setCeoName,
   bankName, setBankName, accountNum, setAccountNum, accountHolder, setAccountHolder,
-  actuatorCode, setActuatorCode, actuatorVerified, setActuatorVerified,
+  actuatorCode, setActuatorCode, actuatorVerified, setActuatorVerified, setActuatorResolvedId,
   bizLicenseUrl, setBizLicenseUrl, ecommercePermitUrl, setEcommercePermitUrl, bankbookUrl, setBankbookUrl,
   // actuator biz fields
   actIsBusiness, setActIsBusiness,
@@ -757,6 +757,7 @@ function BizStep({
   accountHolder: string; setAccountHolder: (v: string) => void;
   actuatorCode: string; setActuatorCode: (v: string) => void;
   actuatorVerified: boolean; setActuatorVerified: (v: boolean) => void;
+  setActuatorResolvedId: (v: number | null) => void;
   bizLicenseUrl: string; setBizLicenseUrl: (v: string) => void;
   ecommercePermitUrl: string; setEcommercePermitUrl: (v: string) => void;
   bankbookUrl: string; setBankbookUrl: (v: string) => void;
@@ -793,20 +794,22 @@ function BizStep({
   };
 
   const doVerifyActuator = async () => {
-    if (!actuatorCode) return;
-    setActuatorError('');
-    const codeNum = Number(actuatorCode);
-    if (!codeNum || codeNum <= 0) {
-      setActuatorError('숫자로 된 코드를 입력해주세요');
+    const email = actuatorCode.trim();
+    if (!email) return;
+    if (!email.includes('@')) {
+      setActuatorError('이메일 형식으로 입력해주세요');
       return;
     }
+    setActuatorError('');
     try {
-      const res = await apiClient.get(API.ACTUATORS.DETAIL(codeNum));
-      const data = res.data as { name?: string; nickname?: string };
-      setActuatorName(data.nickname || data.name || `액추에이터 #${actuatorCode}`);
+      const res = await apiClient.get(API.ACTUATORS.BY_EMAIL(email));
+      const data = res.data as { id: number; name?: string; nickname?: string };
+      setActuatorName(data.nickname || data.name || `액추에이터 #${data.id}`);
+      setActuatorResolvedId(data.id);
       setActuatorVerified(true);
     } catch {
-      setActuatorError('유효하지 않은 코드예요');
+      setActuatorError('등록된 액추에이터를 찾을 수 없어요');
+      setActuatorResolvedId(null);
       setActuatorVerified(false);
     }
   };
@@ -958,12 +961,12 @@ function BizStep({
 
             {/* 액추에이터 추천 코드 */}
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>액추에이터 추천 코드 (선택)</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>액추에이터 ID (이메일 주소) — 선택</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   value={actuatorCode}
-                  onChange={e => { setActuatorCode(e.target.value.trim()); setActuatorVerified(false); setActuatorError(''); }}
-                  placeholder="추천 코드 입력 (액추에이터 ID)"
+                  onChange={e => { setActuatorCode(e.target.value); setActuatorVerified(false); setActuatorResolvedId(null); setActuatorError(''); }}
+                  placeholder="액추에이터 이메일 주소"
                   disabled={actuatorVerified}
                   style={{
                     flex: 1, padding: '13px 14px', fontSize: 14, borderRadius: 12,
@@ -1343,8 +1346,9 @@ export default function RegisterPage() {
   const [bankName,      setBankName]      = useState('');
   const [accountNum,    setAccountNum]    = useState('');
   const [accountHolder, setAccountHolder] = useState('');
-  const [actuatorCode,     setActuatorCode]     = useState('');
+  const [actuatorCode,     setActuatorCode]     = useState('');  // 입력값 (이메일)
   const [actuatorVerified, setActuatorVerified] = useState(false);
+  const [actuatorResolvedId, setActuatorResolvedId] = useState<number | null>(null);  // 확인된 DB id
   const [bizLicenseUrl,       setBizLicenseUrl]       = useState('');
   const [ecommercePermitUrl,  setEcommercePermitUrl]  = useState('');
   const [bankbookUrl,         setBankbookUrl]         = useState('');
@@ -1595,7 +1599,7 @@ export default function RegisterPage() {
               bank_name: bankName || undefined,
               account_number: accountNum || undefined,
               account_holder: accountHolder || undefined,
-              actuator_id: actuatorVerified && actuatorCode ? Number(actuatorCode) : undefined,
+              actuator_id: actuatorVerified && actuatorResolvedId ? actuatorResolvedId : undefined,
               business_license_image: bizLicenseUrl || undefined,
               ecommerce_permit_image: ecommercePermitUrl || undefined,
               bankbook_image: bankbookUrl || undefined,
@@ -1783,7 +1787,7 @@ export default function RegisterPage() {
                   accountNum={accountNum} setAccountNum={setAccountNum}
                   accountHolder={accountHolder} setAccountHolder={setAccountHolder}
                   actuatorCode={actuatorCode} setActuatorCode={setActuatorCode}
-                  actuatorVerified={actuatorVerified} setActuatorVerified={setActuatorVerified}
+                  actuatorVerified={actuatorVerified} setActuatorVerified={setActuatorVerified} setActuatorResolvedId={setActuatorResolvedId}
                   bizLicenseUrl={bizLicenseUrl} setBizLicenseUrl={setBizLicenseUrl}
                   ecommercePermitUrl={ecommercePermitUrl} setEcommercePermitUrl={setEcommercePermitUrl}
                   bankbookUrl={bankbookUrl} setBankbookUrl={setBankbookUrl}

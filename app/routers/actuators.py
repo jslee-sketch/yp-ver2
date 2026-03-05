@@ -2,7 +2,7 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -19,6 +19,17 @@ router = APIRouter(
     prefix="/actuators",
     tags=["actuators (NO-AUTH DEV)"],
 )
+
+
+@router.get("/by-email", response_model=schemas.ActuatorOut, summary="이메일로 액추에이터 조회")
+def get_actuator_by_email(
+    email: str = Query(..., description="액추에이터 이메일"),
+    db: Session = Depends(get_db),
+):
+    act = db.query(models.Actuator).filter(models.Actuator.email == email.strip().lower()).first()
+    if not act:
+        raise HTTPException(status_code=404, detail="해당 이메일로 등록된 액추에이터를 찾을 수 없습니다")
+    return act
 
 
 @router.post("/", response_model=schemas.ActuatorOut)
