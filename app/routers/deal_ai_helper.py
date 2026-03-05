@@ -27,6 +27,8 @@ class DealAIRequest(BaseModel):
     """프론트에서 보내는 요청"""
     raw_title: str = Field(..., description="사용자가 입력한 제품명/제목 그대로")
     raw_free_text: Optional[str] = Field(None, description="사용자가 쓴 설명/요구사항 (선택)")
+    recalc_price: bool = Field(False, description="True면 가격만 재계산 (네이버 검색)")
+    selected_options: Optional[str] = Field(None, description="선택된 옵션 텍스트 (가격 재계산용)")
 
 
 class SuggestedOption(BaseModel):
@@ -412,6 +414,45 @@ def ai_deal_helper(
 
         if not raw_title:
             raise HTTPException(status_code=400, detail="raw_title is required")
+
+        # ── 가격 재계산 모드 (옵션 변경 시 네이버 검색만) ──
+        if body.recalc_price:
+            search_q = raw_title
+            if body.selected_options:
+                search_q = f"{raw_title} {body.selected_options}"
+            naver_items = _fetch_naver_items(search_q, display=5)
+            naver = None
+            if naver_items:
+                naver = _select_best_product(
+                    {"canonical_name": raw_title, "brand": "", "category": "", "expected_price_range": []},
+                    naver_items,
+                )
+            price_data: dict = {}
+            if naver and naver["lowest_price"] > 0:
+                price_data["center_price"] = float(naver["lowest_price"])
+                price_data["naver_lowest_price"] = naver["lowest_price"]
+                price_data["naver_product_name"] = naver["product_name"]
+                price_data["naver_product_url"] = naver["link"]
+                price_data["naver_mall_name"] = naver["mall_name"]
+                price_data["price_source"] = "naver"
+                price_data["commentary"] = (
+                    f"네이버 최저가 {naver['lowest_price']:,}원 기준"
+                    + (f" ({naver['mall_name']})" if naver.get("mall_name") else "")
+                    + ". 옵션 반영 재계산 결과입니다."
+                )
+                price_data["desired_price_suggestion"] = round(naver["lowest_price"] * 0.95, -2)
+                price_data["max_budget_suggestion"] = round(naver["lowest_price"] * 1.05, -2)
+            else:
+                price_data["price_source"] = "llm_estimate"
+                price_data["commentary"] = "해당 옵션의 정확한 시장가를 찾지 못했어요."
+
+            recalc_result = DealAIResponse(
+                canonical_name=raw_title,
+                model_name=raw_title,
+                suggested_options=[],
+                price=PriceSuggestion(**price_data),
+            )
+            return recalc_result
 
         result = _run_ai_deal_helper(raw_title, raw_ft)
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { aiDealHelper } from '../api/aiApi';
+import { aiDealHelper, aiRecalcPrice } from '../api/aiApi';
 import { FEATURES } from '../config';
 import { showToast } from '../components/common/Toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -444,6 +444,7 @@ export default function DealCreatePage() {
   const [targetPrice,     setTargetPrice]     = useState('');
   const [quantity,        setQuantity]        = useState(1);
   const [priceCommentary, setPriceCommentary] = useState('');
+  const [recalculating,   setRecalculating]   = useState(false);
 
   // Step 4: 기타 요청사항
   const [freeTextNote,    setFreeTextNote]    = useState('');
@@ -460,6 +461,40 @@ export default function DealCreatePage() {
   useEffect(() => {
     if (!isTypingRef.current) window.scrollTo(0, scrollRef.current);
   }, [optionGroups]);
+
+  // ── Step 3 진입 시 옵션 기반 가격 재계산 ─────────────
+  const prevStepRef = useRef(step);
+  useEffect(() => {
+    if (step === 3 && prevStepRef.current === 2) {
+      // 2단계(제품 정보)에서 3단계(가격)로 올 때 재계산
+      const selectedOptStr = optionGroups
+        .filter(g => g.selectedIndex >= 0 && g.selectedIndex < g.values.length)
+        .map(g => g.values[g.selectedIndex])
+        .join(' ');
+      const searchQuery = [productDetail || productNameConfirmed || productName, selectedOptStr]
+        .filter(Boolean).join(' ');
+      if (searchQuery.trim()) {
+        setRecalculating(true);
+        aiRecalcPrice(searchQuery, selectedOptStr || undefined)
+          .then(result => {
+            if (result?.price) {
+              const p = result.price;
+              if (p.center_price) {
+                setMarketPrice(p.center_price);
+                setPriceCommentary(p.commentary || '');
+                if (p.desired_price_suggestion && !targetPrice) {
+                  setTargetPrice(String(p.desired_price_suggestion));
+                }
+              }
+            }
+          })
+          .catch(() => {})
+          .finally(() => setRecalculating(false));
+      }
+    }
+    prevStepRef.current = step;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   // ── 이동 ─────────────────────────────────────────────
   const goTo = (n: number) => { setDir(n > step ? 1 : -1); setStep(n); };
@@ -1180,10 +1215,13 @@ export default function DealCreatePage() {
                   borderRadius: 16, padding: '18px 18px',
                 }}>
                   <SectionTitle>📊 시장가격 (참고)</SectionTitle>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                     <span style={{ fontSize: 28, fontWeight: 900, color: C.cyan }}>
-                      {marketPrice ? `${marketPrice.toLocaleString()}원` : '정보 없음'}
+                      {recalculating ? '재계산 중...' : marketPrice ? `${marketPrice.toLocaleString()}원` : '정보 없음'}
                     </span>
+                    {recalculating && (
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${C.border}`, borderTopColor: C.cyan, animation: 'spin 0.8s linear infinite' }} />
+                    )}
                   </div>
                   {priceCommentary && (
                     <div style={{ fontSize: 12, color: C.textDim, marginTop: 6, lineHeight: 1.5 }}>

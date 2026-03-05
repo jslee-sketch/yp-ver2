@@ -15,6 +15,22 @@ export async function aiDealHelper(productName: string, freeText?: string) {
   }
 }
 
+export async function aiRecalcPrice(searchQuery: string, selectedOptions?: string) {
+  if (!FEATURES.USE_API_AI) return null;
+  try {
+    const body: Record<string, unknown> = {
+      raw_title: searchQuery,
+      recalc_price: true,
+    };
+    if (selectedOptions) body.selected_options = selectedOptions;
+    const res = await apiClient.post(API.AI.DEAL_HELPER, body);
+    return res.data;
+  } catch (err) {
+    console.error('가격 재계산 API 실패:', err);
+    return null;
+  }
+}
+
 export async function aiResolveIntent(text: string) {
   if (!FEATURES.USE_API_AI) return null;
   try {

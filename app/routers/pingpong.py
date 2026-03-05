@@ -346,11 +346,20 @@ def _load_policies_from_md_files(question: str, limit: int = 15) -> List[Any]:
 
     if not _MD_POLICY_LOADED:
         _app_dir = _MdPath(__file__).resolve().parent.parent  # app/routers -> app
-        doc_roots = [
-            _app_dir / "policy" / "docs" / "public",
-            _app_dir / "policy" / "docs" / "admin",
-            _app_dir / "policy" / "docs" / "admin" / "ssot",
+        # 여러 경로 후보 시도 (로컬 + Docker + CWD)
+        _candidate_bases = [
+            _app_dir,                                              # __file__ 기준
+            _MdPath("/app/app"),                                   # Docker /app/ 기준
+            _MdPath(os.getcwd()) / "app",                          # CWD 기준
         ]
+        doc_roots = []
+        for base in _candidate_bases:
+            for sub in ["policy/docs/public", "policy/docs/admin", "policy/docs/admin/ssot", "policy/docs"]:
+                dr = base / sub
+                if dr.exists() and dr not in doc_roots:
+                    doc_roots.append(dr)
+        if not doc_roots:
+            print(f"[pingpong] WARNING: No policy/docs dirs found. Bases tried: {[str(b) for b in _candidate_bases]}", flush=True)
         for dr in doc_roots:
             if not dr.exists():
                 continue
@@ -427,6 +436,68 @@ def _load_policies_from_md_files(question: str, limit: int = 15) -> List[Any]:
         scored.append((s, p))
     scored.sort(key=lambda x: x[0], reverse=True)
     return [p for _, p in scored[:limit]]
+
+
+def _build_policy_fallback_answer(question: str, policies: List[Any]) -> str:
+    """LLM 없이 정책 텍스트에서 직접 관련 내용을 추출하여 답변 생성."""
+    if not policies:
+        return "역핑 관련 정보가 아직 준비되지 않았어요. 곧 업데이트될 예정이에요!"
+
+    ql = (question or "").lower()
+    tokens = re.findall(r"[가-힣]{2,}|[a-z]{2,}", ql)
+
+    # 질문 토큰으로 정책 점수 매기기
+    scored = []
+    for p in policies:
+        s = 0.0
+        text_l = (getattr(p, "description_md", "") or "").lower()
+        title_l = (getattr(p, "title", "") or "").lower()
+        key_l = (getattr(p, "policy_key", "") or "").lower()
+        for t in tokens[:10]:
+            if t in title_l:
+                s += 10
+            if t in key_l:
+                s += 5
+            if t in text_l:
+                s += min(15, text_l.count(t) * 2)
+        scored.append((s, p))
+    scored.sort(key=lambda x: x[0], reverse=True)
+
+    # 상위 3개 정책의 핵심 내용 추출
+    top = [p for _, p in scored[:3]]
+    parts = []
+    for p in top:
+        title = getattr(p, "title", "") or ""
+        desc = (getattr(p, "description_md", "") or "").strip()
+        # 핵심 내용만 추출 (첫 500자)
+        if desc:
+            lines = desc.split("\n")
+            summary_lines = []
+            char_count = 0
+            for line in lines:
+                stripped = line.strip()
+                if not stripped or stripped.startswith("<!--"):
+                    continue
+                summary_lines.append(stripped)
+                char_count += len(stripped)
+                if char_count > 500:
+                    break
+            if summary_lines:
+                parts.append(f"[{title}]\n" + "\n".join(summary_lines))
+
+    if parts:
+        return "관련 정책 정보를 찾았어요!\n\n" + "\n\n".join(parts[:2])
+
+    # 일반적인 역핑 설명 (하드코딩 fallback)
+    return (
+        "역핑은 공동구매 중개 플랫폼이에요.\n\n"
+        "1. 바이어가 딜을 만들어요 (원하는 상품 등록)\n"
+        "2. 셀러가 오퍼를 보내요 (가격/조건 제안)\n"
+        "3. 바이어가 마음에 드는 오퍼에 참여(예약)해요\n"
+        "4. 목표 수량이 모이면 공동구매가 성사돼요\n"
+        "5. 결제 → 배송 → 정산 순서로 진행돼요\n\n"
+        "더 궁금한 점이 있으면 질문해 주세요!"
+    )
 
 
 def _choose_policy_domains(screen: str) -> List[str]:
@@ -827,7 +898,10 @@ def _handle_smalltalk(question: str) -> str:
         )
         return (resp.choices[0].message.content or "").strip()
     except Exception:
-        return "지금은 답변 생성에 문제가 있어요. 잠시 후 다시 시도해 주세요!"
+        return (
+            "역핑은 공동구매 중개 플랫폼이에요! "
+            "딜, 오퍼, 정책 관련 질문을 해주시면 도움을 드릴 수 있어요."
+        )
 
 
 # =========================================================
@@ -863,6 +937,19 @@ async def pingpong_ask_proxy(request: Request):
         body = PingpongAskIn(**body_json)
         result = _pingpong_brain_logic(body, db)
         return jsonable_encoder(result)
+    except Exception as brain_err:
+        print(f"[pingpong /ask] Brain fallback error: {brain_err}", flush=True)
+        traceback.print_exc()
+        # 최후 fallback — 정책 MD 파일에서 직접 답변 생성
+        question = body_json.get("question", "")
+        md_policies = _load_policies_from_md_files(question)
+        fallback_answer = _build_policy_fallback_answer(question, md_policies)
+        return {
+            "answer": fallback_answer,
+            "used_policies": [],
+            "actions": [],
+            "debug": {"brain_error": str(brain_err), "fallback": "md_direct"},
+        }
     finally:
         try:
             next(db_gen)
@@ -1128,13 +1215,11 @@ def _pingpong_brain_logic(
             print("[pingpong_ask] RAW_CONTENT_HEAD:", raw_content[:500])
         traceback.print_exc()
 
-        answer = (
-            "죄송해요, 답변 생성 중 오류가 발생했어요. "
-            "다시 질문해 주시면 도움을 드릴게요!"
-        )
-        used_keys = []
+        # ✅ LLM 실패 시 정책 텍스트를 직접 반환 (LLM 없이)
+        answer = _build_policy_fallback_answer(body.question, policies)
+        used_keys = [p.policy_key for p in policies[:3] if getattr(p, "policy_key", None)]
         actions = []
-        raw_data = {"fallback": True, "error_message": error_message}
+        raw_data = {"fallback": True, "error_message": error_message, "policy_direct": True}
 
     latency_ms = int((time.time() - started) * 1000)
 

@@ -59,6 +59,7 @@ export default function PingpongFloat() {
   const [isSending, setIsSending] = useState(false);
   const [typingId, setTypingId]   = useState<number | null>(null);
   const messagesEndRef            = useRef<HTMLDivElement>(null);
+  const inputRef                  = useRef<HTMLInputElement>(null);
   const location                  = useLocation();
   const { user }                  = useAuth();
 
@@ -82,10 +83,13 @@ export default function PingpongFloat() {
     return () => window.removeEventListener('keydown', handler);
   }, [chatOpen]);
 
-  // 새 메시지 시 스크롤
+  // 새 메시지 시 스크롤 + 채팅 열릴 때 포커스
   useEffect(() => {
     if (chatOpen) {
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        inputRef.current?.focus();
+      }, 100);
     }
   }, [messages, chatOpen]);
 
@@ -106,12 +110,13 @@ export default function PingpongFloat() {
       ? (typeof result === 'string'
           ? result
           : String(result.answer ?? result.message ?? result.text ?? ''))
-      : '해당 내용을 확인 중이에요. 잠시 후 더 정확한 정보를 드릴게요! 🔍';
+      : '네트워크 연결을 확인해 주세요. 다시 질문하시면 도움을 드릴게요!';
 
     const botId = Date.now() + 1;
     setMessages(prev => [...prev, { id: botId, from: 'bot', text: botText }]);
     setTypingId(botId);
     setIsSending(false);
+    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   const hideNav =
@@ -263,11 +268,13 @@ export default function PingpongFloat() {
                 flexShrink: 0,
               }}>
                 <input
+                  ref={inputRef}
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') void sendMessage(input); }}
                   type="text"
                   placeholder="질문 입력..."
+                  autoFocus
                   disabled={isSending}
                   style={{
                     flex: 1, padding: '9px 12px', fontSize: 13,
