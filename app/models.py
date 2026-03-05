@@ -153,6 +153,25 @@ class Actuator(Base):
     name = Column(String(255), nullable=False)
     email = Column(String(255), nullable=True)
     phone = Column(String(50), nullable=True)
+    password_hash = Column(String(255), nullable=True)
+    nickname = Column(String(50), nullable=True)
+
+    # 정산 계좌
+    bank_name = Column(String(100), nullable=True)
+    account_number = Column(String(100), nullable=True)
+    account_holder = Column(String(100), nullable=True)
+    bankbook_image = Column(String(500), nullable=True)
+
+    # 사업자 정보 (is_business=True 일 때만 유효)
+    is_business = Column(Boolean, default=False, nullable=False, server_default="false")
+    business_name = Column(String(255), nullable=True)
+    business_number = Column(String(50), nullable=True)
+    ecommerce_permit_number = Column(String(100), nullable=True)
+    business_address = Column(String(500), nullable=True)
+    business_zip_code = Column(String(20), nullable=True)
+    company_phone = Column(String(50), nullable=True)
+    business_license_image = Column(String(500), nullable=True)
+    ecommerce_permit_image = Column(String(500), nullable=True)
 
     # 이 Actuator가 받은 커미션들
     commissions = relationship("ActuatorCommission", backref="actuator")

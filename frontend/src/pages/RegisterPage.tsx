@@ -325,6 +325,8 @@ function ExtraInfoStep({
   role: string; onNext: () => void;
 }) {
   const isSeller = role === 'seller';
+  const isActuator = role === 'actuator';
+  const hideConsumerFields = isSeller || isActuator;
   const phoneColor = { idle: C.textSec, checking: C.yellow, ok: C.green, taken: C.red, invalid: C.red }[phoneStatus];
 
   const openDaumPost = (target: 'main' | 'shipping') => {
@@ -376,7 +378,7 @@ function ExtraInfoStep({
     <div style={{ padding: '40px 24px' }}>
       <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 6 }}>추가 정보를 입력해요</div>
       <div style={{ fontSize: 13, color: C.textSec, marginBottom: 28 }}>
-        {isSeller ? '판매 활동을 위한 연락처와 주소를 입력해주세요.' : '원활한 거래를 위해 정보를 입력해주세요. (전화번호만 필수)'}
+        {hideConsumerFields ? '활동을 위한 연락처와 주소를 입력해주세요.' : '원활한 거래를 위해 정보를 입력해주세요. (전화번호만 필수)'}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
@@ -436,7 +438,7 @@ function ExtraInfoStep({
         </div>
 
         {/* 구매자 전용: 배송지, 성별, 생년월일, 결제수단 */}
-        {!isSeller && (
+        {!hideConsumerFields && (
           <>
             {/* 배송지 주소 */}
             <div>
@@ -736,6 +738,13 @@ function BizStep({
   bankName, setBankName, accountNum, setAccountNum, accountHolder, setAccountHolder,
   actuatorCode, setActuatorCode, actuatorVerified, setActuatorVerified,
   bizLicenseUrl, setBizLicenseUrl, ecommercePermitUrl, setEcommercePermitUrl, bankbookUrl, setBankbookUrl,
+  // actuator biz fields
+  actIsBusiness, setActIsBusiness,
+  actBizName, setActBizName, actBizNum, setActBizNum, actEcommerceNum, setActEcommerceNum,
+  actBizAddress, setActBizAddress, actBizZipCode, setActBizZipCode,
+  actBizAddressDetail, setActBizAddressDetail,
+  actCompanyPhone, setActCompanyPhone,
+  actBizLicenseUrl, setActBizLicenseUrl, actEcommercePermitUrl, setActEcommercePermitUrl,
   onNext,
 }: {
   role: string;
@@ -750,6 +759,17 @@ function BizStep({
   bizLicenseUrl: string; setBizLicenseUrl: (v: string) => void;
   ecommercePermitUrl: string; setEcommercePermitUrl: (v: string) => void;
   bankbookUrl: string; setBankbookUrl: (v: string) => void;
+  // actuator biz
+  actIsBusiness: boolean; setActIsBusiness: (v: boolean) => void;
+  actBizName: string; setActBizName: (v: string) => void;
+  actBizNum: string; setActBizNum: (v: string) => void;
+  actEcommerceNum: string; setActEcommerceNum: (v: string) => void;
+  actBizAddress: string; setActBizAddress: (v: string) => void;
+  actBizZipCode: string; setActBizZipCode: (v: string) => void;
+  actBizAddressDetail: string; setActBizAddressDetail: (v: string) => void;
+  actCompanyPhone: string; setActCompanyPhone: (v: string) => void;
+  actBizLicenseUrl: string; setActBizLicenseUrl: (v: string) => void;
+  actEcommercePermitUrl: string; setActEcommercePermitUrl: (v: string) => void;
   onNext: () => void;
 }) {
   const [bizVerify, setBizVerify] = useState<'idle' | 'checking' | 'ok'>('idle');
@@ -757,12 +777,11 @@ function BizStep({
   const [actuatorError, setActuatorError] = useState('');
   const [uploadingField, setUploadingField] = useState('');
 
-  // actuator local state for non-seller
-  const [manager, setManager] = useState('');
-  const [contact, setContact] = useState('');
+  const isSeller = role === 'seller';
+  const isActuator = role === 'actuator';
+
+  // actuator: region (kept as local state since not submitted)
   const [region, setRegion] = useState('');
-  const [skills, setSkills] = useState<string[]>([]);
-  const SKILL_OPTIONS = ['물류', '검수', '통관', 'QC', '계약', '컨설팅'];
 
   const doVerifyBiz = () => {
     if (!bizNum || bizVerify === 'ok') return;
@@ -784,24 +803,34 @@ function BizStep({
     }
   };
 
-  const uploadFile = async (file: File, field: 'bizLicense' | 'ecommercePermit' | 'bankbook') => {
-    setUploadingField(field);
+  const uploadFileGeneric = async (file: File, fieldKey: string, setter: (url: string) => void) => {
+    setUploadingField(fieldKey);
     try {
       const formData = new FormData();
       formData.append('file', file);
       const res = await apiClient.post(API.UPLOADS.IMAGE, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       const data = res.data as { url: string };
-      if (field === 'bizLicense') setBizLicenseUrl(data.url);
-      else if (field === 'ecommercePermit') setEcommercePermitUrl(data.url);
-      else setBankbookUrl(data.url);
+      setter(data.url);
     } catch {
       showToast('파일 업로드에 실패했어요', 'error');
     }
     setUploadingField('');
   };
 
+  // seller용 shortcut
+  const fieldSetters: Record<string, (url: string) => void> = {
+    bizLicense: setBizLicenseUrl,
+    ecommercePermit: setEcommercePermitUrl,
+    bankbook: setBankbookUrl,
+  };
+  if (isActuator) {
+    fieldSetters.bizLicense = setActBizLicenseUrl;
+    fieldSetters.ecommercePermit = setActEcommercePermitUrl;
+    // bankbook remains same
+  }
+
   const FileUploadRow = ({ label, url, field, required }: {
-    label: string; url: string; field: 'bizLicense' | 'ecommercePermit' | 'bankbook'; required?: boolean;
+    label: string; url: string; field: string; required?: boolean;
   }) => (
     <div>
       <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 6 }}>
@@ -818,7 +847,10 @@ function BizStep({
         }}>
           {uploadingField === field ? '업로드 중...' : url ? '변경' : '파일 선택'}
           <input type="file" accept="image/*,.pdf" style={{ display: 'none' }}
-            onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(f, field); }}
+            onChange={e => {
+              const f = e.target.files?.[0];
+              if (f) uploadFileGeneric(f, field, fieldSetters[field] || (() => {}));
+            }}
           />
         </label>
         <span style={{ fontSize: 12, color: url ? C.green : C.textDim, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -828,11 +860,13 @@ function BizStep({
     </div>
   );
 
-  const isSeller = role === 'seller';
   const canNext = isSeller
     ? !!bizName && !!ceoName && bizVerify === 'ok' && !!bankName && !!accountNum && !!accountHolder
       && !!bizLicenseUrl && !!ecommercePermitUrl && !!bankbookUrl
-    : !!manager && !!contact;
+    : isActuator
+      ? !!bankName && !!accountNum && !!accountHolder && !!bankbookUrl
+        && (!actIsBusiness || (!!actBizName && !!actBizNum && !!actBizLicenseUrl))
+      : false;
 
   return (
     <div style={{ padding: '40px 24px', paddingBottom: 60 }}>
@@ -937,32 +971,98 @@ function BizStep({
           </>
         ) : (
           <>
-            <InputField label="담당자 이름" value={manager} onChange={setManager} placeholder="담당자 성함" />
-            <InputField label="연락처" value={contact} onChange={setContact} placeholder="010-0000-0000" type="tel" />
-            <InputField label="주요 운영 지역" value={region} onChange={setRegion} placeholder="예: 서울·경기" />
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8 }}>역량 태그 (선택)</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {SKILL_OPTIONS.map(s => {
-                  const active = skills.includes(s);
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => setSkills(prev => active ? prev.filter(x => x !== s) : [...prev, s])}
-                      style={{
-                        padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-                        background: active ? `${C.yellow}20` : C.bgInput,
-                        border: `1px solid ${active ? C.yellow : C.border}`,
-                        color: active ? C.yellow : C.textSec,
-                        cursor: 'pointer', transition: 'all 0.15s',
-                      }}
-                    >
-                      {s}
-                    </button>
-                  );
-                })}
+            {/* 주요 운영 지역 (선택) */}
+            <InputField label="주요 운영 지역 (선택)" value={region} onChange={setRegion} placeholder="예: 서울·경기" />
+
+            {/* 정산 계좌 */}
+            <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 12 }}>정산 계좌</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <InputField label="은행명 *" value={bankName} onChange={setBankName} placeholder="예: 국민은행" />
+                <InputField label="계좌번호 *" value={accountNum} onChange={setAccountNum} placeholder="- 없이 숫자만" type="tel" />
+                <InputField label="예금주 *" value={accountHolder} onChange={setAccountHolder} placeholder="예금주명" />
+                <FileUploadRow label="통장사본" url={bankbookUrl} field="bankbook" required />
               </div>
             </div>
+
+            {/* 사업자 체크박스 */}
+            <label style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+              background: actIsBusiness ? `${C.yellow}08` : 'transparent',
+              border: `1px solid ${actIsBusiness ? C.yellow : C.border}`,
+              borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s',
+            }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: actIsBusiness ? C.yellow : 'transparent',
+                border: `2px solid ${actIsBusiness ? C.yellow : C.border}`,
+                color: '#0a0a0f', fontSize: 14, fontWeight: 900, transition: 'all 0.15s',
+              }}>
+                {actIsBusiness && '✓'}
+              </div>
+              <input type="checkbox" checked={actIsBusiness} onChange={e => setActIsBusiness(e.target.checked)} style={{ display: 'none' }} />
+              <span style={{ fontSize: 13, color: actIsBusiness ? C.yellow : C.text, fontWeight: 600 }}>사업자입니다</span>
+            </label>
+
+            {/* 사업자 정보 (체크 시) */}
+            {actIsBusiness && (
+              <>
+                <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 12 }}>회사 정보</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <InputField label="상호명 (사업자명) *" value={actBizName} onChange={setActBizName} placeholder="상호명 입력" />
+                    <InputField label="사업자등록번호 *" value={actBizNum} onChange={setActBizNum} placeholder="000-00-00000" />
+                    <InputField label="통신판매업신고번호 (선택)" value={actEcommerceNum} onChange={setActEcommerceNum} placeholder="신고번호" />
+                    {/* 주소 (카카오 주소 API) */}
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 6 }}>주소</div>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                        <input
+                          readOnly value={actBizZipCode ? `[${actBizZipCode}] ${actBizAddress}` : actBizAddress}
+                          placeholder="주소 검색을 눌러주세요"
+                          style={{
+                            flex: 1, padding: '13px 14px', fontSize: 14, borderRadius: 12,
+                            background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+                          }}
+                        />
+                        <button
+                          onClick={() => {
+                            if (!window.daum?.Postcode) { showToast('주소 검색 서비스를 불러오는 중이에요.', 'info'); return; }
+                            new window.daum.Postcode({
+                              oncomplete: (data) => { setActBizAddress(data.address); setActBizZipCode(data.zonecode); },
+                            }).open();
+                          }}
+                          style={{
+                            padding: '13px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                            background: C.bgInput, border: `1px solid ${C.border}`, color: C.cyan,
+                            cursor: 'pointer', whiteSpace: 'nowrap',
+                          }}
+                        >주소 검색</button>
+                      </div>
+                      <input
+                        value={actBizAddressDetail}
+                        onChange={e => setActBizAddressDetail(e.target.value)}
+                        placeholder="상세주소 입력"
+                        style={{
+                          width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
+                          background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+                        }}
+                      />
+                    </div>
+                    <InputField label="전화번호 (회사)" value={actCompanyPhone} onChange={setActCompanyPhone} placeholder="02-0000-0000" type="tel" />
+                  </div>
+                </div>
+
+                <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 12 }}>서류 첨부</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <FileUploadRow label="사업자등록증" url={actBizLicenseUrl} field="bizLicense" required />
+                    <FileUploadRow label="통신판매업신고증 (선택)" url={actEcommercePermitUrl} field="ecommercePermit" />
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
@@ -981,6 +1081,8 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
   navigate: (path: string) => void;
 }) {
   const isSeller = role === 'seller';
+  const isActuator = role === 'actuator';
+  const needsApproval = isSeller || isActuator;
 
   return (
     <div style={{
@@ -1020,8 +1122,8 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
         ))}
       </div>
 
-      {isSeller ? (
-        /* 판매자: 승인 대기 안내 */
+      {needsApproval ? (
+        /* 판매자/액츄에이터: 승인 대기 안내 */
         <div style={{
           width: '100%', maxWidth: 320,
           background: 'rgba(0,229,255,0.06)',
@@ -1030,8 +1132,8 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
         }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: C.cyan, marginBottom: 8 }}>관리자 승인 대기 중</div>
           <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.7 }}>
-            제출하신 서류를 검토 중이에요.<br />
-            관리자 승인 후 판매를 시작할 수 있어요.<br />
+            제출하신 정보를 검토 중이에요.<br />
+            관리자 승인 후 {isSeller ? '판매를' : '활동을'} 시작할 수 있어요.<br />
             승인이 완료되면 알림을 보내드릴게요.
           </div>
         </div>
@@ -1068,14 +1170,14 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
       )}
 
       <button
-        onClick={isSeller ? () => navigate('/login') : onFinish}
+        onClick={needsApproval ? () => navigate('/login') : onFinish}
         style={{
           width: '100%', maxWidth: 320, padding: '15px',
           borderRadius: 14, fontSize: 15, fontWeight: 800,
           background: `linear-gradient(135deg, ${C.green}, ${C.cyan})`,
           color: '#0a0a0f', cursor: 'pointer',
         }}
-      >{isSeller ? '로그인하기' : '역핑 시작하기 →'}</button>
+      >{needsApproval ? '로그인하기' : '역핑 시작하기 →'}</button>
     </div>
   );
 }
@@ -1147,6 +1249,18 @@ export default function RegisterPage() {
   const [bizLicenseUrl,       setBizLicenseUrl]       = useState('');
   const [ecommercePermitUrl,  setEcommercePermitUrl]  = useState('');
   const [bankbookUrl,         setBankbookUrl]         = useState('');
+
+  // step 5 — actuator biz (사업자 체크 시)
+  const [actIsBusiness, setActIsBusiness] = useState(false);
+  const [actBizName, setActBizName] = useState('');
+  const [actBizNum, setActBizNum] = useState('');
+  const [actEcommerceNum, setActEcommerceNum] = useState('');
+  const [actBizAddress, setActBizAddress] = useState('');
+  const [actBizZipCode, setActBizZipCode] = useState('');
+  const [actBizAddressDetail, setActBizAddressDetail] = useState('');
+  const [actCompanyPhone, setActCompanyPhone] = useState('');
+  const [actBizLicenseUrl, setActBizLicenseUrl] = useState('');
+  const [actEcommercePermitUrl, setActEcommercePermitUrl] = useState('');
 
   // ── Debounce timers ─────────────────────────────────────
   const nickTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -1353,38 +1467,68 @@ export default function RegisterPage() {
       return;
     }
     if (step === 5) {
-      // 판매자: seller API 호출
-      if (role === 'seller' && FEATURES.USE_API_AUTH && method === 'email') {
+      if (FEATURES.USE_API_AUTH && method === 'email') {
         setRegistering(true);
         setApiError('');
 
         const fullAddress = address ? (addressDetail ? `${address} ${addressDetail}` : address) : undefined;
 
         try {
-          await apiClient.post(API.SELLERS.LIST, {
-            email: email.trim(), password,
-            business_name: bizName,
-            nickname,
-            business_number: bizNum.replace(/\D/g, ''),
-            phone: phone.replace(/\D/g, '') || undefined,
-            company_phone: companyPhone.replace(/\D/g, '') || undefined,
-            address: fullAddress || '',
-            zip_code: zipCode || '',
-            established_date: new Date().toISOString(),
-            bank_name: bankName || undefined,
-            account_number: accountNum || undefined,
-            account_holder: accountHolder || undefined,
-            actuator_id: actuatorVerified && actuatorCode ? Number(actuatorCode) : undefined,
-            business_license_image: bizLicenseUrl || undefined,
-            ecommerce_permit_image: ecommercePermitUrl || undefined,
-            bankbook_image: bankbookUrl || undefined,
-          });
-          // 판매자는 verified_at=null → 자동 로그인 스킵
+          if (role === 'seller') {
+            // 판매자 API 호출
+            await apiClient.post(API.SELLERS.LIST, {
+              email: email.trim(), password,
+              business_name: bizName,
+              nickname,
+              business_number: bizNum.replace(/\D/g, ''),
+              phone: phone.replace(/\D/g, '') || undefined,
+              company_phone: companyPhone.replace(/\D/g, '') || undefined,
+              address: fullAddress || '',
+              zip_code: zipCode || '',
+              established_date: new Date().toISOString(),
+              bank_name: bankName || undefined,
+              account_number: accountNum || undefined,
+              account_holder: accountHolder || undefined,
+              actuator_id: actuatorVerified && actuatorCode ? Number(actuatorCode) : undefined,
+              business_license_image: bizLicenseUrl || undefined,
+              ecommerce_permit_image: ecommercePermitUrl || undefined,
+              bankbook_image: bankbookUrl || undefined,
+            });
+          } else if (role === 'actuator') {
+            // 액추에이터 API 호출
+            const actFullBizAddr = actBizAddress
+              ? (actBizAddressDetail ? `${actBizAddress} ${actBizAddressDetail}` : actBizAddress)
+              : undefined;
+            await apiClient.post(API.ACTUATORS.CREATE, {
+              name: nickname,
+              email: email.trim(),
+              phone: phone.replace(/\D/g, '') || undefined,
+              password,
+              nickname,
+              bank_name: bankName || undefined,
+              account_number: accountNum || undefined,
+              account_holder: accountHolder || undefined,
+              bankbook_image: bankbookUrl || undefined,
+              is_business: actIsBusiness,
+              ...(actIsBusiness ? {
+                business_name: actBizName || undefined,
+                business_number: actBizNum || undefined,
+                ecommerce_permit_number: actEcommerceNum || undefined,
+                business_address: actFullBizAddr || undefined,
+                business_zip_code: actBizZipCode || undefined,
+                company_phone: actCompanyPhone || undefined,
+                business_license_image: actBizLicenseUrl || undefined,
+                ecommerce_permit_image: actEcommercePermitUrl || undefined,
+              } : {}),
+            });
+          }
+          // 자동 로그인 스킵 → CompleteStep
           goTo(6);
         } catch (err: unknown) {
           const e = err as { response?: { data?: { detail?: unknown } } };
           const detail = e.response?.data?.detail;
-          setApiError(typeof detail === 'string' ? detail : '판매자 가입에 실패했어요.');
+          setApiError(typeof detail === 'string' ? detail
+            : role === 'seller' ? '판매자 가입에 실패했어요.' : '액추에이터 가입에 실패했어요.');
         } finally {
           setRegistering(false);
         }
@@ -1536,6 +1680,16 @@ export default function RegisterPage() {
                   bizLicenseUrl={bizLicenseUrl} setBizLicenseUrl={setBizLicenseUrl}
                   ecommercePermitUrl={ecommercePermitUrl} setEcommercePermitUrl={setEcommercePermitUrl}
                   bankbookUrl={bankbookUrl} setBankbookUrl={setBankbookUrl}
+                  actIsBusiness={actIsBusiness} setActIsBusiness={setActIsBusiness}
+                  actBizName={actBizName} setActBizName={setActBizName}
+                  actBizNum={actBizNum} setActBizNum={setActBizNum}
+                  actEcommerceNum={actEcommerceNum} setActEcommerceNum={setActEcommerceNum}
+                  actBizAddress={actBizAddress} setActBizAddress={setActBizAddress}
+                  actBizZipCode={actBizZipCode} setActBizZipCode={setActBizZipCode}
+                  actBizAddressDetail={actBizAddressDetail} setActBizAddressDetail={setActBizAddressDetail}
+                  actCompanyPhone={actCompanyPhone} setActCompanyPhone={setActCompanyPhone}
+                  actBizLicenseUrl={actBizLicenseUrl} setActBizLicenseUrl={setActBizLicenseUrl}
+                  actEcommercePermitUrl={actEcommercePermitUrl} setActEcommercePermitUrl={setActEcommercePermitUrl}
                   onNext={() => { void goNext(); }}
                 />
                 {apiError && (

@@ -242,6 +242,8 @@ export const API = {
 
   // ── 액추에이터 ─────────────────────────────────────────────
   ACTUATORS: {
+    LIST:              '/actuators/',
+    CREATE:            '/actuators/',
     DETAIL:            (id: number) => `/actuators/${id}`,
   },
 

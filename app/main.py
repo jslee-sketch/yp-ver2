@@ -98,6 +98,22 @@ _alter_cols = [
     ("sellers", "business_license_image", "VARCHAR(500)"),
     ("sellers", "ecommerce_permit_image", "VARCHAR(500)"),
     ("sellers", "bankbook_image", "VARCHAR(500)"),
+    # actuator 신규 컬럼
+    ("actuators", "password_hash", "VARCHAR(255)"),
+    ("actuators", "nickname", "VARCHAR(50)"),
+    ("actuators", "bank_name", "VARCHAR(100)"),
+    ("actuators", "account_number", "VARCHAR(100)"),
+    ("actuators", "account_holder", "VARCHAR(100)"),
+    ("actuators", "bankbook_image", "VARCHAR(500)"),
+    ("actuators", "is_business", "BOOLEAN DEFAULT FALSE"),
+    ("actuators", "business_name", "VARCHAR(255)"),
+    ("actuators", "business_number", "VARCHAR(50)"),
+    ("actuators", "ecommerce_permit_number", "VARCHAR(100)"),
+    ("actuators", "business_address", "VARCHAR(500)"),
+    ("actuators", "business_zip_code", "VARCHAR(20)"),
+    ("actuators", "company_phone", "VARCHAR(50)"),
+    ("actuators", "business_license_image", "VARCHAR(500)"),
+    ("actuators", "ecommerce_permit_image", "VARCHAR(500)"),
 ]
 try:
     _insp = _sa.inspect(engine)

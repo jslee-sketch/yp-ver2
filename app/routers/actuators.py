@@ -29,12 +29,35 @@ def create_actuator(
     """
     Actuator 신규 등록 (DEV용: 바로 ACTIVE 상태)
     """
+    # 비밀번호 해시
+    pw_hash = None
+    if getattr(body, 'password', None):
+        from app.crud import bcrypt_hash_password
+        pw_hash = bcrypt_hash_password(body.password)
+
     act = models.Actuator(
         name=body.name,
         email=body.email,
         phone=body.phone,
+        password_hash=pw_hash,
+        nickname=getattr(body, 'nickname', None),
         settlement_info=body.settlement_info,
-        status="ACTIVE",  # 초기엔 바로 ACTIVE, 나중에 심사 플로우 넣을 수 있음
+        status="ACTIVE",
+        # 정산 계좌
+        bank_name=getattr(body, 'bank_name', None),
+        account_number=getattr(body, 'account_number', None),
+        account_holder=getattr(body, 'account_holder', None),
+        bankbook_image=getattr(body, 'bankbook_image', None),
+        # 사업자 정보
+        is_business=getattr(body, 'is_business', False),
+        business_name=getattr(body, 'business_name', None),
+        business_number=getattr(body, 'business_number', None),
+        ecommerce_permit_number=getattr(body, 'ecommerce_permit_number', None),
+        business_address=getattr(body, 'business_address', None),
+        business_zip_code=getattr(body, 'business_zip_code', None),
+        company_phone=getattr(body, 'company_phone', None),
+        business_license_image=getattr(body, 'business_license_image', None),
+        ecommerce_permit_image=getattr(body, 'ecommerce_permit_image', None),
     )
     db.add(act)
     db.commit()
