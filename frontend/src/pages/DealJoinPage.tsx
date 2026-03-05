@@ -1,41 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { addParticipant } from '../api/dealApi';
-import { FEATURES } from '../config';
-
-// ── Mock 딜 정보 ────────────────────────────────────────
-
-const MOCK_DEALS: Record<number, {
-  product_name: string; brand: string; target_price: number;
-  participant_count: number; target_participants: number; days_left: number;
-  options: { title: string; value: string }[];
-  ship_fee: string; warranty: string;
-}> = {
-  15: {
-    product_name: '에어팟 프로 2세대 (USB-C)',
-    brand: 'Apple',
-    target_price: 279000,
-    participant_count: 32,
-    target_participants: 100,
-    days_left: 2,
-    options: [{ title: '색상', value: '블랙' }, { title: '타입', value: 'USB-C' }],
-    ship_fee: '무료',
-    warranty: '6개월',
-  },
-  16: {
-    product_name: '종가집 포기김치 5kg',
-    brand: '종가집',
-    target_price: 28000,
-    participant_count: 15,
-    target_participants: 50,
-    days_left: 5,
-    options: [{ title: '중량', value: '5kg' }],
-    ship_fee: '무료',
-    warranty: '없음',
-  },
-};
+import { fetchDeal, addParticipant } from '../api/dealApi';
 
 // ── 색상 ─────────────────────────────────────────────
 
@@ -66,6 +33,54 @@ function ReadonlyRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+interface DealInfo {
+  product_name: string;
+  brand: string;
+  target_price: number;
+  market_price: number | null;
+  participant_count: number;
+  desired_qty: number;
+  options: string | null;
+  category: string | null;
+  condition: string | null;
+  free_text: string | null;
+  created_at: string | null;
+}
+
+function parseDealFromApi(raw: Record<string, unknown>): DealInfo {
+  // Parse options: could be JSON array of {title,values} or simple string
+  let optStr: string | null = null;
+  if (raw.options && typeof raw.options === 'string') {
+    try {
+      const parsed = JSON.parse(raw.options as string);
+      if (Array.isArray(parsed)) {
+        optStr = parsed.map((g: { title?: string; values?: string[] }) =>
+          `${g.title || ''}: ${(g.values || []).join(', ')}`
+        ).join(' / ');
+      } else {
+        optStr = raw.options as string;
+      }
+    } catch {
+      optStr = raw.options as string;
+    }
+  }
+
+  // days left from created_at (rough: 7 days default deal duration)
+  return {
+    product_name: (raw.product_name as string) || '상품명 없음',
+    brand: (raw.brand as string) || '',
+    target_price: (raw.target_price as number) || (raw.market_price as number) || 0,
+    market_price: (raw.market_price as number) ?? null,
+    participant_count: (raw.participant_count as number) || 0,
+    desired_qty: (raw.desired_qty as number) || 1,
+    options: optStr,
+    category: (raw.category as string) ?? null,
+    condition: (raw.condition as string) ?? null,
+    free_text: (raw.free_text as string) ?? null,
+    created_at: (raw.created_at as string) ?? null,
+  };
+}
+
 // ── 메인 ─────────────────────────────────────────────
 
 export default function DealJoinPage() {
@@ -73,17 +88,35 @@ export default function DealJoinPage() {
   const navigate       = useNavigate();
   const { user }       = useAuth();
 
-  const deal = MOCK_DEALS[Number(dealId)];
-
+  const [deal, setDeal]       = useState<DealInfo | null>(null);
+  const [loadErr, setLoadErr] = useState(false);
   const [step, setStep] = useState(1);
   const [dir,  setDir]  = useState(1);
   const [qty,  setQty]  = useState(1);
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (!dealId) { setLoadErr(true); return; }
+    (async () => {
+      const raw = await fetchDeal(Number(dealId));
+      if (!raw) { setLoadErr(true); return; }
+      setDeal(parseDealFromApi(raw as Record<string, unknown>));
+    })();
+  }, [dealId]);
+
   const goTo = (n: number) => { setDir(n > step ? 1 : -1); setStep(n); };
 
-  if (!deal) {
+  // 로딩 중
+  if (!deal && !loadErr) {
+    return (
+      <div style={{ minHeight: '100dvh', background: C.bgDeep, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontSize: 14, color: C.textSec }}>딜 정보 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  if (loadErr || !deal) {
     return (
       <div style={{ minHeight: '100dvh', background: C.bgDeep, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
         <div style={{ fontSize: 40 }}>🔍</div>
@@ -130,24 +163,17 @@ export default function DealJoinPage() {
   }
 
   const handleJoin = async () => {
-    if (FEATURES.USE_API_DEALS) {
-      if (!user) { navigate('/login'); return; }
-      setLoading(true);
-      try {
-        await addParticipant(Number(dealId), user.id, qty);
-        setDone(true);
-      } catch (err: unknown) {
-        const e = err as { response?: { data?: { detail?: unknown } } };
-        const detail = e.response?.data?.detail;
-        alert(typeof detail === 'string' ? detail : '딜 참여에 실패했어요. 다시 시도해주세요.');
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setLoading(true);
-      await new Promise(r => setTimeout(r, 1000));
-      setLoading(false);
+    if (!user) { navigate('/login'); return; }
+    setLoading(true);
+    try {
+      await addParticipant(Number(dealId), user.id, qty);
       setDone(true);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { detail?: unknown } } };
+      const detail = e.response?.data?.detail;
+      alert(typeof detail === 'string' ? detail : '딜 참여에 실패했어요. 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -197,15 +223,17 @@ export default function DealJoinPage() {
                   <div style={{ fontSize: 17, fontWeight: 800, color: C.textPri, marginBottom: 4 }}>
                     📦 {deal.product_name}
                   </div>
-                  <div style={{ fontSize: 12, color: C.textSec }}>{deal.brand} · {deal.options.map(o => `${o.title}: ${o.value}`).join(' · ')}</div>
+                  <div style={{ fontSize: 12, color: C.textSec }}>
+                    {[deal.brand, deal.category, deal.options].filter(Boolean).join(' · ')}
+                  </div>
                 </div>
 
                 {/* 요약 통계 */}
                 <div style={{ display: 'flex', gap: 8 }}>
                   {[
-                    { label: '목표가', value: `₩${deal.target_price.toLocaleString()}`, color: C.green },
-                    { label: '현재 참여', value: `${deal.participant_count}/${deal.target_participants}명`, color: C.yellow },
-                    { label: '남은 기간', value: `${deal.days_left}일`, color: C.orange },
+                    { label: '목표가', value: deal.target_price ? `₩${deal.target_price.toLocaleString()}` : '-', color: C.green },
+                    { label: '현재 참여', value: `${deal.participant_count}명`, color: C.yellow },
+                    { label: '상태', value: deal.condition === 'new' ? '신품' : deal.condition || '신품', color: C.orange },
                   ].map(item => (
                     <div key={item.label} style={{ flex: 1, textAlign: 'center', padding: '10px 4px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 10 }}>
                       <div style={{ fontSize: 10, color: C.textDim, marginBottom: 4 }}>{item.label}</div>
@@ -218,16 +246,19 @@ export default function DealJoinPage() {
                 <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 12 }}>딜 정보 (변경 불가)</div>
                   <ReadonlyRow label="상품" value={deal.product_name} />
-                  <ReadonlyRow label="목표가" value={`₩${deal.target_price.toLocaleString()}`} />
-                  {deal.options.map(o => <ReadonlyRow key={o.title} label={o.title} value={o.value} />)}
-                  <ReadonlyRow label="배송비" value={deal.ship_fee} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
-                    <span style={{ fontSize: 13, color: C.textSec }}>보증</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{deal.warranty}</span>
-                      <span style={{ fontSize: 11, color: C.textDim }}>🔒</span>
+                  {deal.target_price > 0 && <ReadonlyRow label="목표가" value={`₩${deal.target_price.toLocaleString()}`} />}
+                  {deal.market_price && <ReadonlyRow label="시장가" value={`₩${deal.market_price.toLocaleString()}`} />}
+                  {deal.brand && <ReadonlyRow label="브랜드" value={deal.brand} />}
+                  {deal.options && <ReadonlyRow label="옵션" value={deal.options} />}
+                  {deal.condition && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
+                      <span style={{ fontSize: 13, color: C.textSec }}>상태</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{deal.condition === 'new' ? '신품' : deal.condition}</span>
+                        <span style={{ fontSize: 11, color: C.textDim }}>🔒</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* 참여 수량 */}
@@ -269,9 +300,9 @@ export default function DealJoinPage() {
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 14 }}>참여 요약</div>
                   {[
                     { icon: '📦', label: '상품',    value: deal.product_name },
-                    { icon: '🎯', label: '목표가',  value: `₩${deal.target_price.toLocaleString()}` },
+                    ...(deal.target_price > 0 ? [{ icon: '🎯', label: '목표가',  value: `₩${deal.target_price.toLocaleString()}` }] : []),
                     { icon: '📊', label: '참여 수량', value: `${qty}개` },
-                    { icon: '💰', label: '예상 금액', value: `₩${(deal.target_price * qty).toLocaleString()}` },
+                    ...(deal.target_price > 0 ? [{ icon: '💰', label: '예상 금액', value: `₩${(deal.target_price * qty).toLocaleString()}` }] : []),
                   ].map(row => (
                     <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid ${C.border}` }}>
                       <span style={{ fontSize: 16, flexShrink: 0 }}>{row.icon}</span>
@@ -283,6 +314,14 @@ export default function DealJoinPage() {
                     ⚠️ 실제 결제 금액은 오퍼 확정 후 결정됩니다.
                   </div>
                 </div>
+
+                {/* 기타 요청사항 */}
+                {deal.free_text && (
+                  <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 8 }}>기타 요청사항</div>
+                    <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>{deal.free_text}</div>
+                  </div>
+                )}
 
                 {/* 핑퐁이 안내 */}
                 <div style={{ background: 'rgba(0,240,255,0.04)', border: `1px solid rgba(0,240,255,0.2)`, borderRadius: 14, padding: '14px 16px' }}>
