@@ -445,6 +445,7 @@ export default function DealCreatePage() {
   const [quantity,        setQuantity]        = useState(1);
   const [priceCommentary, setPriceCommentary] = useState('');
   const [recalculating,   setRecalculating]   = useState(false);
+  const [isFirstCalc,     setIsFirstCalc]     = useState(true);
 
   // Step 4: 기타 요청사항
   const [freeTextNote,    setFreeTextNote]    = useState('');
@@ -482,14 +483,11 @@ export default function DealCreatePage() {
               if (p.center_price) {
                 setMarketPrice(p.center_price);
                 setPriceCommentary(p.commentary || '');
-                if (p.desired_price_suggestion && !targetPrice) {
-                  setTargetPrice(String(p.desired_price_suggestion));
-                }
               }
             }
           })
           .catch(() => {})
-          .finally(() => setRecalculating(false));
+          .finally(() => { setRecalculating(false); setIsFirstCalc(false); });
       }
     }
     prevStepRef.current = step;
@@ -629,7 +627,7 @@ export default function DealCreatePage() {
 
     // Step 3 가격 자동 채움
     setMarketPrice(result.price?.center_price || null);
-    setTargetPrice(result.price?.desired_price_suggestion ? String(result.price.desired_price_suggestion) : '');
+    setTargetPrice(''); // 빈칸 — 사용자가 직접 입력
     setPriceCommentary(result.price?.commentary || '');
     setQuantity(1);
 
@@ -1217,7 +1215,7 @@ export default function DealCreatePage() {
                   <SectionTitle>📊 시장가격 (참고)</SectionTitle>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                     <span style={{ fontSize: 28, fontWeight: 900, color: C.cyan }}>
-                      {recalculating ? '재계산 중...' : marketPrice ? `${marketPrice.toLocaleString()}원` : '정보 없음'}
+                      {recalculating ? (isFirstCalc ? '가격 조회중...' : '재계산중...') : marketPrice ? `${marketPrice.toLocaleString()}원` : '정보 없음'}
                     </span>
                     {recalculating && (
                       <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${C.border}`, borderTopColor: C.cyan, animation: 'spin 0.8s linear infinite' }} />
@@ -1238,12 +1236,12 @@ export default function DealCreatePage() {
                       <input
                         type="text"
                         inputMode="numeric"
-                        value={targetPrice}
+                        value={targetPrice ? Number(targetPrice.replace(/,/g, '')).toLocaleString() : ''}
                         onChange={e => {
-                          const v = e.target.value.replace(/[^0-9]/g, '');
-                          setTargetPrice(v);
+                          const num = e.target.value.replace(/[^0-9]/g, '');
+                          setTargetPrice(num);
                         }}
-                        placeholder="원하는 가격 입력"
+                        placeholder={marketPrice ? `시장가의 85% 기준: ${Math.round(marketPrice * 0.85).toLocaleString()}원` : '원하는 가격 입력'}
                         className="dc-input"
                         style={{
                           padding: '13px 40px 13px 14px', fontSize: 16, fontWeight: 700, borderRadius: 12,

@@ -196,7 +196,7 @@ export default function PriceJourneyPage() {
       if (!d) return;
       const raw = d as Record<string, unknown>;
       setApiDeal(raw);
-      const anchor = (raw.anchor_price as number) ?? 0;
+      const anchor = (raw.market_price as number) ?? (raw.anchor_price as number) ?? 0;
       const target = (raw.target_price as number) ?? (raw.max_budget as number) ?? 0;
       setPAnchor(anchor);
       setPTarget(target);
@@ -248,6 +248,8 @@ export default function PriceJourneyPage() {
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatExpanded, setChatExpanded] = useState(false);
+  const [chatSearch, setChatSearch] = useState('');
+  const [chatSearchOpen, setChatSearchOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const nextChatId = useRef(1);
 
@@ -573,8 +575,14 @@ export default function PriceJourneyPage() {
               핑퐁이 인사이트
             </div>
             <div style={{ fontSize: 13, color: T.text, lineHeight: 1.55 }}>
-              목표가보다 <span style={{ color: T.green, fontWeight: 700 }}>6,000원 더 저렴한 오퍼</span>가 있어요! 🎉
-              <br />PREMIUM 오퍼가 2개나 경쟁 중이에요. 마감 전 참여하면 좋을 것 같아요.
+              {offers.length === 0 ? (
+                <>아직 오퍼가 없어요. 판매자의 제안을 기다려주세요! ⏳</>
+              ) : lowestOffer && pTarget > 0 && lowestOffer.rawPrice <= pTarget ? (
+                <>목표가보다 <span style={{ color: T.green, fontWeight: 700 }}>{(pTarget - lowestOffer.rawPrice).toLocaleString()}원 더 저렴한 오퍼</span>가 있어요! 🎉
+                <br />{offers.filter(o => o.rawPrice <= pTarget).length > 1 ? `PREMIUM 오퍼가 ${offers.filter(o => o.rawPrice <= pTarget).length}개나 경쟁 중이에요. ` : ''}마감 전 참여하면 좋을 것 같아요.</>
+              ) : lowestOffer ? (
+                <>아직 목표가에 도달한 오퍼가 없어요. 가장 가까운 오퍼는 <span style={{ color: '#ff8c42', fontWeight: 700 }}>{lowestOffer.rawPrice.toLocaleString()}원</span>이에요.</>
+              ) : null}
             </div>
           </div>
         </div>
@@ -601,18 +609,48 @@ export default function PriceJourneyPage() {
                 background: 'rgba(0,229,255,0.12)', color: '#00e5ff',
               }}>{chatMessages.length}</span>
             </div>
-            <span style={{ fontSize: 12, color: T.textSec, transition: 'transform 0.2s', display: 'inline-block', transform: chatExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {chatExpanded && (
+                <button onClick={e => { e.stopPropagation(); setChatSearchOpen(v => !v); if (chatSearchOpen) setChatSearch(''); }} style={{ width: 24, height: 24, borderRadius: 6, background: chatSearchOpen ? 'rgba(0,229,255,0.15)' : 'transparent', border: 'none', color: chatSearchOpen ? '#00e5ff' : T.textSec, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🔍</button>
+              )}
+              <span style={{ fontSize: 12, color: T.textSec, transition: 'transform 0.2s', display: 'inline-block', transform: chatExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+            </div>
           </div>
+
+          {/* 검색바 */}
+          {chatSearchOpen && (
+            <div style={{ padding: '8px 12px', borderBottom: `1px solid ${T.border}`, display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span style={{ fontSize: 13, color: T.textSec }}>🔍</span>
+              <input
+                value={chatSearch}
+                onChange={e => setChatSearch(e.target.value)}
+                placeholder="채팅 검색..."
+                autoFocus
+                style={{
+                  flex: 1, padding: '6px 10px', borderRadius: 8, fontSize: 12,
+                  background: 'rgba(255,255,255,0.05)', border: `1px solid ${T.border}`,
+                  color: T.text, outline: 'none',
+                }}
+              />
+              {chatSearch && (
+                <button onClick={() => setChatSearch('')} style={{
+                  width: 22, height: 22, borderRadius: 6, background: 'rgba(255,255,255,0.08)',
+                  border: 'none', color: T.textSec, fontSize: 11, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>✕</button>
+              )}
+            </div>
+          )}
 
           {/* 메시지 영역 */}
           {chatExpanded ? (
             <div>
               {/* 전체 메시지 스크롤 */}
-              <div style={{
+              <div className="chat-scroll" style={{
                 maxHeight: 260, overflowY: 'auto', padding: '0 16px 12px',
                 display: 'flex', flexDirection: 'column', gap: 10,
               }}>
-                {chatMessages.map(m => (
+                {(chatSearch ? chatMessages.filter(m => m.msg.toLowerCase().includes(chatSearch.toLowerCase())) : chatMessages).map(m => (
                   <div key={m.id} style={{
                     display: 'flex', flexDirection: m.isMe ? 'row-reverse' : 'row',
                     alignItems: 'flex-start', gap: 8,
@@ -635,12 +673,14 @@ export default function PriceJourneyPage() {
                       )}
                       <div style={{
                         padding: '8px 11px', borderRadius: 10, fontSize: 13,
-                        background: m.isMe
+                        background: chatSearch && m.msg.toLowerCase().includes(chatSearch.toLowerCase())
+                          ? 'rgba(255,235,59,0.18)'
+                          : m.isMe
                           ? 'rgba(0,230,118,0.12)'
                           : m.user === '핑퐁이'
                           ? 'rgba(0,229,255,0.08)'
                           : 'rgba(255,255,255,0.06)',
-                        border: `1px solid ${m.isMe ? 'rgba(0,230,118,0.25)' : m.user === '핑퐁이' ? 'rgba(0,229,255,0.2)' : T.border}`,
+                        border: `1px solid ${chatSearch && m.msg.toLowerCase().includes(chatSearch.toLowerCase()) ? 'rgba(255,235,59,0.4)' : m.isMe ? 'rgba(0,230,118,0.25)' : m.user === '핑퐁이' ? 'rgba(0,229,255,0.2)' : T.border}`,
                         color: T.text, lineHeight: 1.5,
                       }}>
                         {m.msg}

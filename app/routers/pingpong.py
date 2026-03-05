@@ -463,30 +463,33 @@ def _build_policy_fallback_answer(question: str, policies: List[Any]) -> str:
         scored.append((s, p))
     scored.sort(key=lambda x: x[0], reverse=True)
 
-    # 상위 3개 정책의 핵심 내용 추출
-    top = [p for _, p in scored[:3]]
-    parts = []
-    for p in top:
-        title = getattr(p, "title", "") or ""
-        desc = (getattr(p, "description_md", "") or "").strip()
-        # 핵심 내용만 추출 (첫 500자)
+    # 상위 정책의 핵심 내용 요약 (최대 300자)
+    best = scored[0][1] if scored else None
+    if best:
+        title = getattr(best, "title", "") or ""
+        desc = (getattr(best, "description_md", "") or "").strip()
         if desc:
             lines = desc.split("\n")
             summary_lines = []
             char_count = 0
             for line in lines:
                 stripped = line.strip()
-                if not stripped or stripped.startswith("<!--"):
+                if not stripped or stripped.startswith("<!--") or stripped.startswith("#"):
+                    if stripped.startswith("# ") and not summary_lines:
+                        continue  # 제목 건너뛰기
+                    continue
+                # 불필요한 메타 텍스트 건너뛰기
+                if any(skip in stripped.lower() for skip in ["admin only", "ssot", "---"]):
                     continue
                 summary_lines.append(stripped)
                 char_count += len(stripped)
-                if char_count > 500:
+                if char_count > 250:
                     break
             if summary_lines:
-                parts.append(f"[{title}]\n" + "\n".join(summary_lines))
-
-    if parts:
-        return "관련 정책 정보를 찾았어요!\n\n" + "\n\n".join(parts[:2])
+                summary = "\n".join(summary_lines)
+                if len(summary) > 300:
+                    summary = summary[:297] + "..."
+                return f"{title} 관련 안내드려요.\n\n{summary}"
 
     # 일반적인 역핑 설명 (하드코딩 fallback)
     return (

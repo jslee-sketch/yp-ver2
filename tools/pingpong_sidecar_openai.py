@@ -108,7 +108,7 @@ def load_kb() -> None:
 
     KB = kb
     _KB_LOADED = True
-    print(f"✅ KB 로드 완료: {len(KB)}개 파일/문서 인덱싱됨")
+    print(f"[OK] KB loaded: {len(KB)} files indexed", flush=True)
 
 def retrieve_kb_snippets(query: str) -> str:
     ql = (query or "").lower().strip()

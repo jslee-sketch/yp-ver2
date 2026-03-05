@@ -58,6 +58,8 @@ export default function PingpongFloat() {
   const [input, setInput]         = useState('');
   const [isSending, setIsSending] = useState(false);
   const [typingId, setTypingId]   = useState<number | null>(null);
+  const [ppSearchOpen, setPpSearchOpen] = useState(false);
+  const [ppSearch, setPpSearch]   = useState('');
   const messagesEndRef            = useRef<HTMLDivElement>(null);
   const inputRef                  = useRef<HTMLInputElement>(null);
   const location                  = useLocation();
@@ -206,29 +208,70 @@ export default function PingpongFloat() {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setChatOpen(false)}
-                  style={{
-                    width: 26, height: 26, borderRadius: '50%',
-                    background: 'var(--bg-elevated)',
-                    color: 'var(--text-muted)', fontSize: 12,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer',
-                  }}
-                >✕</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button
+                    onClick={() => { setPpSearchOpen(v => !v); if (ppSearchOpen) setPpSearch(''); }}
+                    style={{
+                      width: 26, height: 26, borderRadius: '50%',
+                      background: ppSearchOpen ? 'rgba(0,230,118,0.15)' : 'var(--bg-elevated)',
+                      color: ppSearchOpen ? 'var(--accent-green)' : 'var(--text-muted)', fontSize: 12,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', border: 'none',
+                    }}
+                  >🔍</button>
+                  <button
+                    onClick={() => setChatOpen(false)}
+                    style={{
+                      width: 26, height: 26, borderRadius: '50%',
+                      background: 'var(--bg-elevated)',
+                      color: 'var(--text-muted)', fontSize: 12,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', border: 'none',
+                    }}
+                  >✕</button>
+                </div>
               </div>
 
+              {/* 검색바 */}
+              {ppSearchOpen && (
+                <div style={{ padding: '6px 12px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>🔍</span>
+                  <input
+                    value={ppSearch}
+                    onChange={e => setPpSearch(e.target.value)}
+                    placeholder="대화 검색..."
+                    autoFocus
+                    style={{
+                      flex: 1, padding: '5px 10px', borderRadius: 8, fontSize: 12,
+                      background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+                      color: 'var(--text-primary)', outline: 'none',
+                    }}
+                  />
+                  {ppSearch && (
+                    <button onClick={() => setPpSearch('')} style={{
+                      width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.08)',
+                      border: 'none', color: 'var(--text-muted)', fontSize: 10, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>✕</button>
+                  )}
+                </div>
+              )}
+
               {/* 메시지 영역 */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {messages.map(msg => (
+              <div className="chat-scroll" style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {(ppSearch ? messages.filter(m => m.text.toLowerCase().includes(ppSearch.toLowerCase())) : messages).map(msg => (
                   <div key={msg.id} style={{ display: 'flex', justifyContent: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
                     <div style={{
                       maxWidth: '80%',
                       padding: '9px 12px',
                       borderRadius: msg.from === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                      background: msg.from === 'user' ? 'var(--accent-green)' : 'var(--bg-elevated)',
+                      background: ppSearch && msg.text.toLowerCase().includes(ppSearch.toLowerCase())
+                        ? 'rgba(255,235,59,0.18)'
+                        : msg.from === 'user' ? 'var(--accent-green)' : 'var(--bg-elevated)',
                       color: msg.from === 'user' ? '#0a0a0f' : 'var(--text-secondary)',
                       fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap',
+                      border: ppSearch && msg.text.toLowerCase().includes(ppSearch.toLowerCase())
+                        ? '1px solid rgba(255,235,59,0.4)' : 'none',
                     }}>
                       {msg.from === 'bot' && msg.id === typingId
                         ? <TypingText text={msg.text} onDone={() => setTypingId(null)} />

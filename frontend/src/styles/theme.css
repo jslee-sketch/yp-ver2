@@ -131,6 +131,13 @@ body {
 ::-webkit-scrollbar { display: none; }
 * { scrollbar-width: none; }
 
+/* 채팅 영역 스크롤바 표시 */
+.chat-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent; }
+.chat-scroll::-webkit-scrollbar { display: block; width: 5px; }
+.chat-scroll::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+.chat-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.35); }
+
 /* 링크 기본 */
 a {
   color: inherit;
