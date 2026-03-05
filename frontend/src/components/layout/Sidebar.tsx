@@ -132,6 +132,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
   const [unreadCount, setUnreadCount] = useState(0);
 
   const isSeller = user?.role === 'seller' || user?.role === 'both';
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     if (!user) return;
@@ -271,6 +272,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="📦" label="배송 관리"  onClick={() => go('/seller/shipping')} />
                     <MenuItem icon="💵" label="정산 관리"  onClick={() => go('/settlements')} />
                     <MenuItem icon="📊" label="판매 통계"  onClick={() => go('/seller/stats')} />
+                  </>
+                )}
+
+                {isAdmin && (
+                  <>
+                    <SectionTitle>관리자</SectionTitle>
+                    <MenuItem icon="📊" label="대시보드"       onClick={() => go('/admin')} />
+                    <MenuItem icon="👥" label="판매자 관리"    onClick={() => go('/admin/sellers')} />
+                    <MenuItem icon="👤" label="구매자 관리"    onClick={() => go('/admin/buyers')} />
+                    <MenuItem icon="🔧" label="액츄에이터 관리" onClick={() => go('/admin/actuators')} />
                   </>
                 )}
               </div>

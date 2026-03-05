@@ -30,6 +30,10 @@ import TermsPage from './pages/TermsPage';
 import SupportPage from './pages/SupportPage';
 import NotFoundPage from './pages/NotFoundPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminSellersPage from './pages/AdminSellersPage';
+import AdminBuyersPage from './pages/AdminBuyersPage';
+import AdminActuatorsPage from './pages/AdminActuatorsPage';
 
 function App() {
   return (
@@ -70,6 +74,12 @@ function App() {
           <Route path="/seller/offers" element={<ProtectedRoute><SellerOffersPage /></ProtectedRoute>} />
           <Route path="/seller/reviews" element={<ProtectedRoute><SellerReviewsPage /></ProtectedRoute>} />
           <Route path="/settings"    element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+
+          {/* 관리자 */}
+          <Route path="/admin"           element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
+          <Route path="/admin/sellers"   element={<ProtectedRoute><AdminSellersPage /></ProtectedRoute>} />
+          <Route path="/admin/buyers"    element={<ProtectedRoute><AdminBuyersPage /></ProtectedRoute>} />
+          <Route path="/admin/actuators" element={<ProtectedRoute><AdminActuatorsPage /></ProtectedRoute>} />
 
           {/* 404 catch-all */}
           <Route path="*" element={<NotFoundPage />} />

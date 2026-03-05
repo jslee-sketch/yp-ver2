@@ -44,7 +44,7 @@ export const API = {
     UPDATE:          (id: number) => `/sellers/${id}`,
     PROFILE:         '/sellers/me',
     ONBOARDING:      '/sellers/onboarding',
-    VERIFY:          (id: number) => `/sellers/${id}/verify`,
+    VERIFY:          (id: number) => `/sellers/${id}/approve`,
     RATING:          (id: number) => `/sellers/${id}/rating`,
   },
 

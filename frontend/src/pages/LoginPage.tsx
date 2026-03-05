@@ -48,6 +48,25 @@ export default function LoginPage() {
 
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
 
+        // JWT payload에서 role 확인
+        let jwtRole = '';
+        try {
+          const payload = JSON.parse(atob(access_token.split('.')[1]));
+          jwtRole = payload.role || '';
+        } catch { /* ignore */ }
+
+        // 관리자 로그인
+        if (jwtRole === 'admin') {
+          login(access_token, {
+            id: 0, email: email.trim(),
+            name: '관리자',
+            role: 'admin', level: 99, points: 0,
+          });
+          navigate('/admin');
+          setLoading(false);
+          return;
+        }
+
         // 구매자 프로필 시도
         try {
           const buyerRes = await apiClient.get(API.BUYERS.PROFILE);

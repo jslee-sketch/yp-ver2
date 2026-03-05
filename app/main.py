@@ -397,7 +397,7 @@ async def lifespan(app: FastAPI):
                 _pwd2 = _Ctx2(schemes=["bcrypt"], deprecated="auto")
                 _admin = models.User(
                     email="admin@yeokping.com",
-                    password_hash=_pwd2.hash("admin1234!"),
+                    hashed_password=_pwd2.hash("admin1234!"),
                     name="관리자",
                     role="admin",
                     is_active=True,
