@@ -50,6 +50,55 @@ except Exception as _imp_err:
     traceback.print_exc()
 
 
+def _direct_brain_call(
+    *,
+    screen: str,
+    role: str,
+    question: str,
+    mode: str = "read_only",
+    max_chat_messages: int = 10,
+    context: dict | None = None,
+    timeout: float | None = None,
+) -> dict:
+    """
+    Monkey-patch replacement for sidecar's call_pingpong_ask().
+    Calls _pingpong_brain_logic() directly in-process — no HTTP, no circular call.
+    """
+    from app.database import get_db as _get_db
+    db_gen = _get_db()
+    db = next(db_gen)
+    try:
+        body = PingpongAskIn(
+            question=question,
+            screen=screen or "DEAL_ROOM",
+            role=role or "BUYER",
+            mode=mode or "read_only",
+            max_chat_messages=max_chat_messages or 10,
+            context=PingpongContextIn(**(context or {})),
+        )
+        result = _pingpong_brain_logic(body, db)
+        out = {}
+        if hasattr(result, "model_dump"):
+            out = result.model_dump()
+        elif hasattr(result, "dict"):
+            out = result.dict()
+        elif isinstance(result, dict):
+            out = result
+        else:
+            out = {"answer": str(result)}
+        out["_http_status"] = 200
+        return out
+    except Exception as e:
+        print(f"[pingpong] direct brain call error: {e}", flush=True)
+        traceback.print_exc()
+        return {"answer": "", "_http_status": 500, "error": str(e)}
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
+
+
 def _ensure_sidecar() -> bool:
     """Lazy-init sidecar: load KB + create OpenAI client on first call."""
     global _sidecar_client
@@ -62,12 +111,10 @@ def _ensure_sidecar() -> bool:
         _sidecar_client = _OAI()
         _sidecar.load_kb()
         _sidecar.load_time_values_from_defaults()
-        # Monkey-patch brain call to use /brain/ask (avoid circular proxy)
-        _orig_server_url = _sidecar.YP_SERVER_URL
-        if os.environ.get("PORT"):
-            _sidecar.YP_SERVER_URL = f"http://localhost:{os.environ['PORT']}"
+        # Monkey-patch: replace HTTP call with direct brain invocation
+        _sidecar.call_pingpong_ask = _direct_brain_call
         print(f"[pingpong] sidecar initialized: KB={len(_sidecar.KB)}, "
-              f"URL={_sidecar.YP_SERVER_URL}", flush=True)
+              f"brain=direct (no HTTP)", flush=True)
         return True
     except Exception as e:
         print(f"[pingpong] sidecar init failed: {e}", flush=True)
