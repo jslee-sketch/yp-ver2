@@ -134,9 +134,9 @@ class Seller(Base):
     bank_name               = Column(String(50), nullable=True)
     account_number          = Column(String(50), nullable=True)
     account_holder          = Column(String(50), nullable=True)
-    business_license_image  = Column(String(500), nullable=True)
-    ecommerce_permit_image  = Column(String(500), nullable=True)
-    bankbook_image          = Column(String(500), nullable=True)
+    business_license_image  = Column(Text, nullable=True)
+    ecommerce_permit_image  = Column(Text, nullable=True)
+    bankbook_image          = Column(Text, nullable=True)
 
     # 외부 평점 (JSON 문자열)
     external_ratings = Column(Text, nullable=True)
@@ -164,7 +164,7 @@ class Actuator(Base):
     bank_name = Column(String(100), nullable=True)
     account_number = Column(String(100), nullable=True)
     account_holder = Column(String(100), nullable=True)
-    bankbook_image = Column(String(500), nullable=True)
+    bankbook_image = Column(Text, nullable=True)
 
     # 사업자 정보 (is_business=True 일 때만 유효)
     is_business = Column(Boolean, default=False, nullable=False, server_default="false")
@@ -174,8 +174,8 @@ class Actuator(Base):
     business_address = Column(String(500), nullable=True)
     business_zip_code = Column(String(20), nullable=True)
     company_phone = Column(String(50), nullable=True)
-    business_license_image = Column(String(500), nullable=True)
-    ecommerce_permit_image = Column(String(500), nullable=True)
+    business_license_image = Column(Text, nullable=True)
+    ecommerce_permit_image = Column(Text, nullable=True)
 
     # 이 Actuator가 받은 커미션들
     commissions = relationship("ActuatorCommission", backref="actuator")

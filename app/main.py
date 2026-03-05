@@ -138,6 +138,28 @@ try:
 except Exception as _ae:
     print(f"[DB_INIT] ALTER TABLE error: {_ae}", flush=True)
 
+# ── ALTER COLUMN TYPE: VARCHAR→TEXT for base64 image columns ──
+_alter_type_sqls = [
+    "ALTER TABLE sellers ALTER COLUMN business_license_image TYPE TEXT",
+    "ALTER TABLE sellers ALTER COLUMN ecommerce_permit_image TYPE TEXT",
+    "ALTER TABLE sellers ALTER COLUMN bankbook_image TYPE TEXT",
+    "ALTER TABLE sellers ALTER COLUMN external_ratings TYPE TEXT",
+    "ALTER TABLE actuators ALTER COLUMN bankbook_image TYPE TEXT",
+    "ALTER TABLE actuators ALTER COLUMN business_license_image TYPE TEXT",
+    "ALTER TABLE actuators ALTER COLUMN ecommerce_permit_image TYPE TEXT",
+]
+if "postgres" in _DATABASE_URL_RAW:
+    try:
+        with engine.begin() as _conn:
+            for _sql in _alter_type_sqls:
+                try:
+                    _conn.execute(_sa.text(_sql))
+                except Exception:
+                    pass
+        print("[DB_INIT] Image columns → TEXT OK", flush=True)
+    except Exception as _te:
+        print(f"[DB_INIT] Image columns error: {_te}", flush=True)
+
 # ── Method 2: Raw psycopg fallback (PostgreSQL only) ──
 if "postgres" in _DATABASE_URL_RAW:
     try:
