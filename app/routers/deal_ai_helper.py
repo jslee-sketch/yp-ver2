@@ -214,6 +214,57 @@ def _fetch_naver_items(query: str, display: int = 10) -> list:
 
 
 # ─────────────────────────────────────────────
+# 가격 필터링 (부품/액세서리 제외)
+# ─────────────────────────────────────────────
+
+def _get_reliable_market_price(
+    naver_items: list,
+    expected_price_range: list | None = None,
+) -> Optional[dict]:
+    """
+    네이버 검색 결과에서 부품/액세서리를 제외한 신뢰할 수 있는 시장가 추출.
+    중앙값 기반 이상치 제거.
+    """
+    priced = [it for it in naver_items if int(it.get("lprice", 0)) > 0]
+    if not priced:
+        return None
+
+    prices = sorted([int(it["lprice"]) for it in priced])
+
+    # expected_price_range가 있으면 그 범위의 30% 미만 제거
+    if expected_price_range and len(expected_price_range) == 2:
+        ep_min = float(expected_price_range[0])
+        threshold = ep_min * 0.3
+        filtered_items = [it for it in priced if int(it["lprice"]) >= threshold]
+        if filtered_items:
+            priced = filtered_items
+            prices = sorted([int(it["lprice"]) for it in priced])
+
+    # 중앙값의 30% 미만인 이상치(부품/액세서리) 제거
+    if len(prices) >= 3:
+        median = prices[len(prices) // 2]
+        filtered = [(it, int(it["lprice"])) for it in priced if int(it["lprice"]) >= median * 0.3]
+        if filtered:
+            priced = [f[0] for f in filtered]
+            prices = sorted([f[1] for f in filtered])
+
+    # 중앙값 위치의 상품 선택 (최저가가 아닌 중앙값 → 부품 가격 회피)
+    median_idx = len(prices) // 2
+    median_price = prices[median_idx]
+
+    # 중앙값 가격에 가장 가까운 상품 찾기
+    best = min(priced, key=lambda it: abs(int(it["lprice"]) - median_price))
+    return {
+        "product_name": re.sub(r"<[^>]+>", "", best.get("title", "")),
+        "lowest_price": int(best["lprice"]),
+        "highest_price": int(best.get("hprice", 0) or 0),
+        "mall_name": best.get("mallName", ""),
+        "link": best.get("link", ""),
+        "brand": re.sub(r"<[^>]+>", "", best.get("brand", "")),
+    }
+
+
+# ─────────────────────────────────────────────
 # 3단계: LLM 본품 선별
 # ─────────────────────────────────────────────
 
@@ -241,11 +292,15 @@ def _select_best_product(query_info: dict, naver_items: list) -> Optional[dict]:
     system_prompt = """너는 쇼핑 검색 결과에서 사용자가 원하는 본품을 골라내는 전문가다.
 
 주어진 검색 결과 목록에서, 사용자가 찾는 제품의 **본품**(정품, 새 제품)에 해당하는 것만 골라라.
-아래에 해당하는 것은 제외하라:
-- 액세서리 (케이스, 이어팁, 충전기, 필름, 거치대 등)
+아래에 해당하는 것은 반드시 제외하라:
+- 액세서리 (케이스, 이어팁, 충전기, 필름, 거치대, 리모컨, 부품 등)
 - 호환품 / 비정품 / 서드파티
 - 중고 / 리퍼 / B급
 - 전혀 다른 제품
+- 예상 가격대보다 지나치게 싼 제품 (부품/액세서리일 가능성 높음)
+
+**가격 판단 기준**: 예상 가격대가 주어진 경우, 그 범위의 30% 미만인 상품은 부품/액세서리로 간주하라.
+예: 예상 가격대 [800000, 1500000]인데 가격이 100000원이면 부품이다.
 
 반드시 아래 JSON 형식으로만 응답하라. 다른 텍스트 없이 JSON만:
 {"selected_index": 0}
@@ -256,16 +311,21 @@ def _select_best_product(query_info: dict, naver_items: list) -> Optional[dict]:
 여러 개의 본품이 있으면 그 중 최저가의 index를 반환하라."""
 
     ep_range = query_info.get("expected_price_range", [])
+    ep_hint = ""
+    if ep_range and len(ep_range) == 2:
+        ep_hint = f"\n- 예상 가격대: {int(ep_range[0]):,}원 ~ {int(ep_range[1]):,}원 (이 범위의 30% 미만 가격은 부품/액세서리)"
+    else:
+        ep_hint = f"\n- 예상 가격대: {ep_range}" if ep_range else ""
+
     user_prompt = f"""사용자가 찾는 제품:
 - 제품명: {query_info.get('canonical_name', '')}
 - 브랜드: {query_info.get('brand', '')}
-- 카테고리: {query_info.get('category', '')}
-- 예상 가격대: {ep_range}
+- 카테고리: {query_info.get('category', '')}{ep_hint}
 
 네이버 쇼핑 검색 결과:
 {json.dumps(candidates, ensure_ascii=False, indent=2)}
 
-위 검색 결과 중 사용자가 찾는 본품의 index를 골라라."""
+위 검색 결과 중 사용자가 찾는 본품의 index를 골라라. 부품/액세서리 가격을 본품으로 고르지 마라."""
 
     try:
         client = get_client()
@@ -286,9 +346,23 @@ def _select_best_product(query_info: dict, naver_items: list) -> Optional[dict]:
         idx = result.get("selected_index", -1)
         if isinstance(idx, int) and 0 <= idx < len(naver_items):
             selected = naver_items[idx]
+            sel_price = int(selected.get("lprice", 0))
+
+            # 가격 sanity check: expected_price_range의 30% 미만이면 부품/액세서리
+            if sel_price > 0 and ep_range and len(ep_range) == 2:
+                ep_min = float(ep_range[0])
+                if sel_price < ep_min * 0.3:
+                    print(f"[deal_ai_helper] LLM selected idx={idx} price={sel_price} "
+                          f"< expected_min*0.3={ep_min*0.3:.0f}, rejected as accessory")
+                    # fallback: 중앙값 기반 가격
+                    fallback = _get_reliable_market_price(naver_items, ep_range)
+                    if fallback:
+                        return fallback
+                    return None
+
             return {
                 "product_name": re.sub(r"<[^>]+>", "", selected.get("title", "")),
-                "lowest_price": int(selected.get("lprice", 0)),
+                "lowest_price": sel_price,
                 "highest_price": int(selected.get("hprice", 0) or 0),
                 "mall_name": selected.get("mallName", ""),
                 "link": selected.get("link", ""),
@@ -297,6 +371,10 @@ def _select_best_product(query_info: dict, naver_items: list) -> Optional[dict]:
     except Exception as e:
         print(f"[deal_ai_helper] 본품 선별 LLM 에러: {e}")
 
+    # LLM 실패 시에도 중앙값 fallback 시도
+    fallback = _get_reliable_market_price(naver_items, ep_range)
+    if fallback:
+        return fallback
     return None
 
 
@@ -420,7 +498,7 @@ def ai_deal_helper(
             search_q = raw_title
             if body.selected_options:
                 search_q = f"{raw_title} {body.selected_options}"
-            naver_items = _fetch_naver_items(search_q, display=5)
+            naver_items = _fetch_naver_items(search_q, display=10)
             naver = None
             if naver_items:
                 naver = _select_best_product(
