@@ -736,6 +736,11 @@ export default function OfferCreatePage() {
                         }}>+</div>
                         <input
                           type="file" accept="image/*" multiple
+                          onClick={() => {
+                            const sy = window.scrollY;
+                            const restore = () => { window.scrollTo(0, sy); window.removeEventListener('focus', restore); };
+                            window.addEventListener('focus', restore);
+                          }}
                           onChange={e => handleImageAdd(e)}
                           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
                         />

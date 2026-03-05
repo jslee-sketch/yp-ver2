@@ -1,12 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-
-const NAV_ITEMS = [
-  { icon: '🏠', label: '홈',      path: '/' },
-  { icon: '🔍', label: '검색',    path: '/search' },
-  { icon: '➕', label: '딜만들기', path: '/deal/create', special: true },
-  { icon: '📋', label: '마이',    path: '/mypage' },
-  { icon: '☰', label: '메뉴',    action: 'menu' as const },
-] as const;
+import { useAuth } from '../../contexts/AuthContext';
 
 interface BottomNavProps {
   onMenuClick?: () => void;
@@ -15,6 +8,26 @@ interface BottomNavProps {
 export default function BottomNav({ onMenuClick }: BottomNavProps) {
   const navigate  = useNavigate();
   const location  = useLocation();
+  const { user }  = useAuth();
+
+  const role = (user?.role ?? '').toLowerCase();
+  const isSeller = role === 'seller' || role === 'both';
+  const isAdmin  = role === 'admin';
+
+  // 역할별 중앙 버튼
+  const centerItem = isAdmin
+    ? { icon: '📊', label: '대시보드', path: '/admin' }
+    : isSeller
+      ? { icon: '🔍', label: '딜 탐색',  path: '/deals' }
+      : { icon: '➕', label: '딜만들기', path: '/deal/create' };
+
+  const NAV_ITEMS = [
+    { icon: '🏠', label: '홈',   path: '/' },
+    { icon: '🔍', label: '검색', path: '/search' },
+    { ...centerItem, special: true },
+    { icon: '📋', label: '마이', path: '/mypage' },
+    { icon: '☰', label: '메뉴', action: 'menu' as const },
+  ];
 
   return (
     <nav style={{

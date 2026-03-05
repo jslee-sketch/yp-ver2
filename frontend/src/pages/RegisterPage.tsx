@@ -871,6 +871,11 @@ function BizStep({
               type="file" accept=".jpg,.jpeg,.png,.pdf"
               disabled={busy || rowDisabled}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: busy ? 'not-allowed' : 'pointer' }}
+              onClick={() => {
+                const sy = window.scrollY;
+                const restore = () => { window.scrollTo(0, sy); window.removeEventListener('focus', restore); };
+                window.addEventListener('focus', restore);
+              }}
               onChange={e => {
                 const f = e.target.files?.[0];
                 if (f) {

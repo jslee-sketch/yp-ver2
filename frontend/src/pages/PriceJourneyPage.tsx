@@ -842,6 +842,11 @@ export default function PriceJourneyPage() {
                     <input
                       type="file" accept="image/*" multiple
                       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                      onClick={() => {
+                        const sy = window.scrollY;
+                        const restore = () => { window.scrollTo(0, sy); window.removeEventListener('focus', restore); };
+                        window.addEventListener('focus', restore);
+                      }}
                       onChange={e => {
                         const files = e.target.files;
                         if (!files) return;
@@ -897,36 +902,46 @@ export default function PriceJourneyPage() {
       )}
 
       {/* ── 하단 고정 CTA (판매자용) ── */}
-      <div style={{
-        position: 'sticky', bottom: 70, left: 0, right: 0, zIndex: 996,
-        padding: '12px 20px',
-        paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
-        background: `linear-gradient(to bottom, transparent 0%, ${T.bgDeep} 35%)`,
-      }}>
-        <button
-          onClick={() => {
-            const role = (user?.role ?? '').toLowerCase();
-            if (role !== 'seller' && role !== 'both') {
-              showToast('판매자만 오퍼 제출이 가능합니다.', 'error');
-              return;
-            }
-            navigate(`/deal/${dealId ?? ''}/offer/create`);
-          }}
-          style={{
-            width: '100%', padding: '16px',
-            background: `linear-gradient(135deg, #00f0ff, #39ff14)`,
-            color: '#0a0e1a', fontWeight: 800, fontSize: 16,
-            border: 'none', borderRadius: 14,
-            cursor: 'pointer',
-            boxShadow: '0 4px 24px rgba(0,240,255,0.25)',
-            transition: 'opacity 0.15s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.opacity = '0.88'; }}
-          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-        >
-          🏷️ 이 딜에 오퍼 제출하기
-        </button>
-      </div>
+      {(() => {
+        const role = (user?.role ?? '').toLowerCase();
+        const isSeller = role === 'seller' || role === 'both';
+        const isApproved = user?.verified !== false;
+        if (!isSeller) return null;
+        return (
+          <div style={{
+            position: 'sticky', bottom: 70, left: 0, right: 0, zIndex: 996,
+            padding: '12px 20px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
+            background: `linear-gradient(to bottom, transparent 0%, ${T.bgDeep} 35%)`,
+          }}>
+            {!isApproved && (
+              <div style={{ textAlign: 'center', marginBottom: 8, fontSize: 12, color: '#ff9100', fontWeight: 600 }}>
+                관리자 승인 후 오퍼 제출이 가능해요
+              </div>
+            )}
+            <button
+              disabled={!isApproved}
+              onClick={() => {
+                navigate(`/deal/${dealId ?? ''}/offer/create`);
+              }}
+              style={{
+                width: '100%', padding: '16px',
+                background: isApproved ? `linear-gradient(135deg, #00f0ff, #39ff14)` : 'rgba(255,255,255,0.08)',
+                color: isApproved ? '#0a0e1a' : 'rgba(255,255,255,0.3)',
+                fontWeight: 800, fontSize: 16,
+                border: 'none', borderRadius: 14,
+                cursor: isApproved ? 'pointer' : 'not-allowed',
+                boxShadow: isApproved ? '0 4px 24px rgba(0,240,255,0.25)' : 'none',
+                transition: 'opacity 0.15s',
+              }}
+              onMouseEnter={e => { if (isApproved) e.currentTarget.style.opacity = '0.88'; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+            >
+              🏷️ 이 딜에 오퍼 제출하기
+            </button>
+          </div>
+        );
+      })()}
 
       {/* ── 예측 모달 ── */}
       {showPredModal && (
