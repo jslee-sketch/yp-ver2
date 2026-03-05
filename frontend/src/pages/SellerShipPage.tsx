@@ -15,10 +15,11 @@ const C = {
 function fmtPrice(n: number) { return '₩' + n.toLocaleString('ko-KR'); }
 function fmtDate(s: string) { return (s ?? '').split('T')[0].replace(/-/g, '.'); }
 
-type ShipStatus = 'PENDING_SHIP' | 'SHIPPED' | 'DELIVERED';
+type ShipStatus = 'PENDING_SHIP' | 'SHIPPED' | 'DELIVERED' | 'CONFIRMED';
 
 interface SellerOrder {
   id: number;
+  offer_id: number;
   product_name: string;
   buyer_name: string;
   qty: number;
@@ -37,7 +38,7 @@ export default function SellerShipPage() {
   const [orders, setOrders] = useState<SellerOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [carriers, setCarriers] = useState(DEFAULT_CARRIERS);
-  const [filter, setFilter] = useState<'전체' | '발송대기' | '배송중' | '배송완료'>('전체');
+  const [filter, setFilter] = useState<'전체' | '발송대기' | '배송중' | '배송완료' | '구매확정'>('전체');
 
   // Ship modal
   const [shipTarget, setShipTarget] = useState<SellerOrder | null>(null);
@@ -67,10 +68,12 @@ export default function SellerShipPage() {
             const deal = r.deal as Record<string, unknown> | undefined;
             const buyer = r.buyer as Record<string, unknown> | undefined;
             let status: ShipStatus = 'PENDING_SHIP';
-            if (r.arrival_confirmed_at || r.delivered_at) status = 'DELIVERED';
+            if (r.arrival_confirmed_at) status = 'CONFIRMED';
+            else if (r.delivered_at) status = 'DELIVERED';
             else if (r.shipped_at) status = 'SHIPPED';
             return {
               id: r.id as number,
+              offer_id: (r.offer_id as number) || 0,
               product_name: String(deal?.product_name ?? `예약 #${r.id}`),
               buyer_name: String(buyer?.nickname ?? buyer?.name ?? `구매자#${r.buyer_id}`),
               qty: (r.qty as number) || 1,
@@ -114,12 +117,14 @@ export default function SellerShipPage() {
     PENDING_SHIP: { label: '발송대기', color: '#ff9100' },
     SHIPPED:      { label: '배송중',   color: '#448aff' },
     DELIVERED:    { label: '배송완료', color: '#00e676' },
+    CONFIRMED:    { label: '구매확정', color: '#78909c' },
   };
 
   const filtered = filter === '전체' ? orders : orders.filter(o => {
     if (filter === '발송대기') return o.status === 'PENDING_SHIP';
     if (filter === '배송중') return o.status === 'SHIPPED';
     if (filter === '배송완료') return o.status === 'DELIVERED';
+    if (filter === '구매확정') return o.status === 'CONFIRMED';
     return true;
   });
 
@@ -138,7 +143,7 @@ export default function SellerShipPage() {
       <div style={{ padding: '14px 16px 0' }}>
         {/* 상태 필터 */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-          {(['전체', '발송대기', '배송중', '배송완료'] as const).map(s => (
+          {(['전체', '발송대기', '배송중', '배송완료', '구매확정'] as const).map(s => (
             <button key={s} onClick={() => setFilter(s)} style={{
               padding: '6px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
               background: filter === s ? `${C.green}22` : C.bgEl,
@@ -169,7 +174,8 @@ export default function SellerShipPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>📦 {order.product_name}</div>
-                  <div style={{ fontSize: 11, color: C.textSec }}>{order.buyer_name} · {order.qty}개 · {fmtPrice(order.amount_total)}</div>
+                  <div style={{ fontSize: 11, color: C.textSec }}>오퍼 #{order.offer_id} · 예약 #{order.id} · {order.buyer_name}</div>
+                  <div style={{ fontSize: 11, color: C.textSec }}>{order.qty}개 · {fmtPrice(order.amount_total)}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: `${meta.color}22`, color: meta.color }}>{meta.label}</span>
@@ -187,6 +193,12 @@ export default function SellerShipPage() {
               {order.tracking_number && (
                 <div style={{ marginTop: 6, fontSize: 11, color: C.orange }}>
                   🚚 {order.shipping_carrier ? `${order.shipping_carrier} ` : ''}{order.tracking_number}
+                </div>
+              )}
+
+              {order.status === 'CONFIRMED' && (
+                <div style={{ marginTop: 6, fontSize: 11, color: '#78909c', fontWeight: 700 }}>
+                  ✓ 구매확정 완료
                 </div>
               )}
             </div>

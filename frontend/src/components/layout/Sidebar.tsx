@@ -259,33 +259,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
 
               {/* 메뉴 섹션 */}
               <div style={{ flex: 1, paddingBottom: 8 }}>
-                <SectionTitle>메인</SectionTitle>
-                <MenuItem icon="🏠" label="홈"          onClick={() => go('/')} />
-                <MenuItem icon="🔍" label="검색"        onClick={() => go('/search')} />
-                <MenuItem icon="➕" label="딜 만들기"    onClick={() => go('/deal/create')} />
-
-                <SectionTitle>내 활동</SectionTitle>
-                <MenuItem icon="👤" label="마이페이지"      onClick={() => go('/mypage')} />
-                <MenuItem icon="🔥" label="내딜 현황"       onClick={() => go('/my-deals')} />
-                <MenuItem icon="💰" label="포인트 내역"     onClick={() => go('/points')} />
-                <MenuItem icon="📦" label="참여/결제/배송"   onClick={() => go('/my-orders')} />
-                <MenuItem icon="👀" label="관전 모드"       onClick={() => go('/spectating')} />
-
-                <SectionTitle>탐색</SectionTitle>
-                <MenuItem icon="📊" label="지난딜 가격조회" onClick={() => go('/completed-deals')} />
-
-                {isSeller && (
+                {isSeller ? (
                   <>
                     <SectionTitle>판매자</SectionTitle>
-                    <MenuItem icon="🔍" label="딜 탐색"    onClick={() => go('/deals')} />
-                    <MenuItem icon="📝" label="내 오퍼 현황" onClick={() => go('/seller/offers')} />
+                    <MenuItem icon="🏠" label="홈"        onClick={() => go('/')} />
+                    <MenuItem icon="🔍" label="검색"      onClick={() => go('/deals')} />
+                    <MenuItem icon="📝" label="오퍼 관리"  onClick={() => go('/seller/offers')} />
                     <MenuItem icon="📦" label="배송 관리"  onClick={() => go('/seller/delivery')} />
-                    <MenuItem icon="💵" label="정산 관리"  onClick={() => go('/settlements')} />
+                    <MenuItem icon="💰" label="정산 관리"  onClick={() => go('/seller/settlements')} />
+                    <MenuItem icon="⭐" label="리뷰 관리"  onClick={() => go('/seller/reviews')} />
+                    <MenuItem icon="↩️" label="환불 관리"  onClick={() => go('/seller/refunds')} />
                     <MenuItem icon="📊" label="판매 통계"  onClick={() => go('/seller/stats')} />
+                    <MenuItem icon="👤" label="마이페이지" onClick={() => go('/mypage')} />
                   </>
-                )}
-
-                {isActuator && (
+                ) : isActuator ? (
                   <>
                     <SectionTitle>액추에이터</SectionTitle>
                     <MenuItem icon="🏠" label="홈"            onClick={() => go('/')} />
@@ -296,9 +283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="📢" label="판매자 초대"   onClick={() => go('/actuator/invite')} />
                     <MenuItem icon="👤" label="마이페이지"    onClick={() => go('/mypage')} />
                   </>
-                )}
-
-                {isAdmin && (
+                ) : isAdmin ? (
                   <>
                     <SectionTitle>관리자</SectionTitle>
                     <MenuItem icon="📊" label="대시보드"       onClick={() => go('/admin')} />
@@ -307,6 +292,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="🔧" label="액츄에이터 관리" onClick={() => go('/admin/actuators')} />
                     <MenuItem icon="⚠️" label="분쟁 관리"       onClick={() => go('/admin/disputes')} />
                     <MenuItem icon="💵" label="정산 관리"       onClick={() => go('/admin/settlements')} />
+                  </>
+                ) : (
+                  <>
+                    <SectionTitle>메인</SectionTitle>
+                    <MenuItem icon="🏠" label="홈"          onClick={() => go('/')} />
+                    <MenuItem icon="🔍" label="검색"        onClick={() => go('/search')} />
+                    <MenuItem icon="➕" label="딜 만들기"    onClick={() => go('/deal/create')} />
+
+                    <SectionTitle>내 활동</SectionTitle>
+                    <MenuItem icon="👤" label="마이페이지"      onClick={() => go('/mypage')} />
+                    <MenuItem icon="🔥" label="내딜 현황"       onClick={() => go('/my-deals')} />
+                    <MenuItem icon="💰" label="포인트 내역"     onClick={() => go('/points')} />
+                    <MenuItem icon="📦" label="참여/결제/배송"   onClick={() => go('/my-orders')} />
+                    <MenuItem icon="👀" label="관전 모드"       onClick={() => go('/spectating')} />
+
+                    <SectionTitle>탐색</SectionTitle>
+                    <MenuItem icon="📊" label="지난딜 가격조회" onClick={() => go('/completed-deals')} />
                   </>
                 )}
               </div>

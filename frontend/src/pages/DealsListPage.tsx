@@ -10,6 +10,13 @@ import ErrorMessage from '../components/common/ErrorMessage';
 import EmptyState from '../components/common/EmptyState';
 
 const CATEGORIES = ['전체', '전자기기', '패션', '식품', '생활용품', '뷰티', '스포츠', '가전'];
+const STATUS_FILTERS = [
+  { key: 'all', label: '전체' },
+  { key: 'open', label: '모집중' },
+  { key: 'offer', label: '오퍼경쟁' },
+  { key: 'closed', label: '마감' },
+  { key: 'completed', label: '완료' },
+];
 const SORT_OPTIONS = [
   { key: 'latest', label: '최신순' },
   { key: 'popular', label: '인기순' },
@@ -20,6 +27,7 @@ const SORT_OPTIONS = [
 export default function DealsListPage() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('전체');
+  const [activeStatus, setActiveStatus] = useState('all');
   const [activeSort, setActiveSort] = useState('latest');
 
   const { data: deals, loading, error, refetch } = useApiData<Deal[]>(async () => {
@@ -30,9 +38,19 @@ export default function DealsListPage() {
 
   const allDeals = deals ?? [];
 
+  // Status filter
+  const statusFiltered = activeStatus === 'all' ? allDeals : allDeals.filter(d => {
+    const s = (d.status ?? '').toLowerCase();
+    if (activeStatus === 'open') return s === 'open' && (d.participants_count ?? 0) === 0;
+    if (activeStatus === 'offer') return s === 'open' && (d.participants_count ?? 0) > 0;
+    if (activeStatus === 'closed') return s === 'closed';
+    if (activeStatus === 'completed') return s === 'completed' || s === 'archived';
+    return true;
+  });
+
   const filteredDeals = activeCategory === '전체'
-    ? allDeals
-    : allDeals.filter(d => d.category === activeCategory);
+    ? statusFiltered
+    : statusFiltered.filter(d => d.category === activeCategory);
 
   const sortedDeals = [...filteredDeals].sort((a, b) => {
     if (activeSort === 'popular') return (b.participants_count ?? 0) - (a.participants_count ?? 0);
@@ -59,20 +77,41 @@ export default function DealsListPage() {
           ←
         </button>
         <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
-          라이브 딜
+          딜 목록
         </span>
         <span style={{
           fontSize: 11, fontWeight: 700, padding: '3px 8px',
           background: 'rgba(0,230,118,0.12)', color: 'var(--accent-green)',
           borderRadius: 20, border: '1px solid rgba(0,230,118,0.2)',
         }}>
-          {allDeals.length}개 진행 중
+          {sortedDeals.length}개
         </span>
       </div>
 
       <div className="page-enter">
+        {/* 상태 필터 */}
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '12px 16px 0' }}>
+          {STATUS_FILTERS.map(sf => (
+            <button
+              key={sf.key}
+              onClick={() => setActiveStatus(sf.key)}
+              style={{
+                flexShrink: 0, padding: '6px 14px',
+                borderRadius: 'var(--radius-full)',
+                border: `1px solid ${activeStatus === sf.key ? 'var(--accent-green)' : 'var(--border-subtle)'}`,
+                background: activeStatus === sf.key ? 'var(--accent-green-bg)' : 'var(--bg-tertiary)',
+                color: activeStatus === sf.key ? 'var(--accent-green)' : 'var(--text-muted)',
+                fontSize: 13, fontWeight: activeStatus === sf.key ? 700 : 400,
+                cursor: 'pointer',
+              }}
+            >
+              {sf.label}
+            </button>
+          ))}
+        </div>
+
         {/* 카테고리 필터 */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '12px 16px 0' }}>
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '8px 16px 0' }}>
           {CATEGORIES.map(cat => (
             <button
               key={cat}

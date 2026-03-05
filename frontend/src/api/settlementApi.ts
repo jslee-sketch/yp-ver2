@@ -4,8 +4,11 @@ import type { Settlement } from './types';
 
 export async function fetchMySettlements(sellerId?: number): Promise<Settlement[]> {
   try {
-    const params = sellerId ? { seller_id: sellerId } : {};
-    const res = await apiClient.get(API.SETTLEMENTS.LIST, { params });
+    if (sellerId) {
+      const res = await apiClient.get(`/settlements/seller/${sellerId}`);
+      return (res.data ?? []) as Settlement[];
+    }
+    const res = await apiClient.get(API.SETTLEMENTS.LIST);
     return (res.data ?? []) as Settlement[];
   } catch (err) {
     console.error('정산 목록 API 실패:', err);

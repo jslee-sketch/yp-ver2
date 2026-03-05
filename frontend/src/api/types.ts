@@ -182,12 +182,22 @@ export interface UploadedFile {
 export interface Settlement {
   id: number;
   reservation_id: number;
+  deal_id?: number;
+  offer_id?: number;
   seller_id: number;
+  buyer_id?: number;
+  // Backend may return either naming convention
   gross_amount: number;
   platform_fee: number;
   net_amount: number;
-  status: 'HOLD' | 'READY' | 'APPROVED' | 'PAID';
+  buyer_paid_amount?: number;
+  pg_fee_amount?: number;
+  platform_commission_amount?: number;
+  seller_payout_amount?: number;
+  status: 'PENDING' | 'HOLD' | 'READY' | 'APPROVED' | 'PAID';
+  currency?: string;
   created_at: string;
+  updated_at?: string;
   approved_at?: string;
   paid_at?: string;
 }

@@ -42,6 +42,9 @@ import ActuatorOffersPage from './pages/ActuatorOffersPage';
 import ActuatorStatsPage from './pages/ActuatorStatsPage';
 import ActuatorCommissionsPage from './pages/ActuatorCommissionsPage';
 import ActuatorInvitePage from './pages/ActuatorInvitePage';
+import SellerSettlementsPage from './pages/SellerSettlementsPage';
+import SellerRefundsPage from './pages/SellerRefundsPage';
+import SellerStatsPage from './pages/SellerStatsPage';
 
 function App() {
   return (
@@ -80,8 +83,11 @@ function App() {
           <Route path="/seller/ship/:reservationId"  element={<ProtectedRoute><SellerShipPage /></ProtectedRoute>} />
           <Route path="/seller/delivery"               element={<ProtectedRoute><SellerShipPage /></ProtectedRoute>} />
           <Route path="/settlements" element={<ProtectedRoute><SettlementsPage /></ProtectedRoute>} />
-          <Route path="/seller/offers" element={<ProtectedRoute><SellerOffersPage /></ProtectedRoute>} />
-          <Route path="/seller/reviews" element={<ProtectedRoute><SellerReviewsPage /></ProtectedRoute>} />
+          <Route path="/seller/offers"       element={<ProtectedRoute><SellerOffersPage /></ProtectedRoute>} />
+          <Route path="/seller/reviews"      element={<ProtectedRoute><SellerReviewsPage /></ProtectedRoute>} />
+          <Route path="/seller/settlements"  element={<ProtectedRoute><SellerSettlementsPage /></ProtectedRoute>} />
+          <Route path="/seller/refunds"      element={<ProtectedRoute><SellerRefundsPage /></ProtectedRoute>} />
+          <Route path="/seller/stats"        element={<ProtectedRoute><SellerStatsPage /></ProtectedRoute>} />
           <Route path="/settings"    element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 
           {/* 액추에이터 */}
