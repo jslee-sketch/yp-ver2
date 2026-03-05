@@ -196,8 +196,10 @@ export default function PriceJourneyPage() {
       if (!d) return;
       const raw = d as Record<string, unknown>;
       setApiDeal(raw);
-      const anchor = (raw.market_price as number) ?? (raw.anchor_price as number) ?? 0;
+      let anchor = (raw.market_price as number) ?? (raw.anchor_price as number) ?? 0;
       const target = (raw.target_price as number) ?? (raw.max_budget as number) ?? 0;
+      // fallback: 시장가 없으면 목표가의 120%를 임시 시장가로 사용
+      if (!anchor && target > 0) anchor = Math.round(target * 1.2);
       setPAnchor(anchor);
       setPTarget(target);
       setCurrentDisplayPrice(target);

@@ -1,6 +1,16 @@
 # app/main.py
 from __future__ import annotations
 
+import sys as _sys
+import io as _io
+# Force UTF-8 stdout/stderr on Windows (cp949 crashes on emoji)
+if _sys.stdout and hasattr(_sys.stdout, 'buffer'):
+    try:
+        _sys.stdout = _io.TextIOWrapper(_sys.stdout.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+        _sys.stderr = _io.TextIOWrapper(_sys.stderr.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+    except Exception:
+        pass
+
 import builtins
 import traceback
 import os
