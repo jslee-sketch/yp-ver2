@@ -288,9 +288,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                 {isActuator && (
                   <>
                     <SectionTitle>액추에이터</SectionTitle>
-                    <MenuItem icon="📊" label="대시보드"     onClick={() => go('/')} />
-                    <MenuItem icon="👥" label="담당 셀러"    onClick={() => go('/deals')} />
-                    <MenuItem icon="💵" label="정산/수수료"  onClick={() => go('/settlements')} />
+                    <MenuItem icon="🏠" label="홈"            onClick={() => go('/')} />
+                    <MenuItem icon="👥" label="내 판매자 관리" onClick={() => go('/actuator/sellers')} />
+                    <MenuItem icon="📋" label="오퍼 현황"     onClick={() => go('/actuator/offers')} />
+                    <MenuItem icon="📊" label="활동 현황"     onClick={() => go('/actuator/stats')} />
+                    <MenuItem icon="💰" label="커미션 관리"   onClick={() => go('/actuator/commissions')} />
+                    <MenuItem icon="📢" label="판매자 초대"   onClick={() => go('/actuator/invite')} />
+                    <MenuItem icon="👤" label="마이페이지"    onClick={() => go('/mypage')} />
                   </>
                 )}
 

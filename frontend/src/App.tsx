@@ -36,6 +36,12 @@ import AdminBuyersPage from './pages/AdminBuyersPage';
 import AdminActuatorsPage from './pages/AdminActuatorsPage';
 import AdminDisputePage from './pages/AdminDisputePage';
 import AdminSettlementsPage from './pages/AdminSettlementsPage';
+import ActuatorSellersPage from './pages/ActuatorSellersPage';
+import ActuatorSellerOffersPage from './pages/ActuatorSellerOffersPage';
+import ActuatorOffersPage from './pages/ActuatorOffersPage';
+import ActuatorStatsPage from './pages/ActuatorStatsPage';
+import ActuatorCommissionsPage from './pages/ActuatorCommissionsPage';
+import ActuatorInvitePage from './pages/ActuatorInvitePage';
 
 function App() {
   return (
@@ -77,6 +83,14 @@ function App() {
           <Route path="/seller/offers" element={<ProtectedRoute><SellerOffersPage /></ProtectedRoute>} />
           <Route path="/seller/reviews" element={<ProtectedRoute><SellerReviewsPage /></ProtectedRoute>} />
           <Route path="/settings"    element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+
+          {/* 액추에이터 */}
+          <Route path="/actuator/sellers"                    element={<ProtectedRoute><ActuatorSellersPage /></ProtectedRoute>} />
+          <Route path="/actuator/sellers/:sellerId/offers"   element={<ProtectedRoute><ActuatorSellerOffersPage /></ProtectedRoute>} />
+          <Route path="/actuator/offers"                     element={<ProtectedRoute><ActuatorOffersPage /></ProtectedRoute>} />
+          <Route path="/actuator/stats"                      element={<ProtectedRoute><ActuatorStatsPage /></ProtectedRoute>} />
+          <Route path="/actuator/commissions"                element={<ProtectedRoute><ActuatorCommissionsPage /></ProtectedRoute>} />
+          <Route path="/actuator/invite"                     element={<ProtectedRoute><ActuatorInvitePage /></ProtectedRoute>} />
 
           {/* 관리자 */}
           <Route path="/admin"           element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />

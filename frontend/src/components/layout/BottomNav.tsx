@@ -11,15 +11,18 @@ export default function BottomNav({ onMenuClick }: BottomNavProps) {
   const { user }  = useAuth();
 
   const role = (user?.role ?? '').toLowerCase();
-  const isSeller = role === 'seller' || role === 'both';
-  const isAdmin  = role === 'admin';
+  const isSeller   = role === 'seller' || role === 'both';
+  const isAdmin    = role === 'admin';
+  const isActuator = role === 'actuator';
 
   // 역할별 중앙 버튼
   const centerItem = isAdmin
     ? { icon: '📊', label: '대시보드', path: '/admin' }
-    : isSeller
-      ? { icon: '🔍', label: '딜 탐색',  path: '/deals' }
-      : { icon: '➕', label: '딜만들기', path: '/deal/create' };
+    : isActuator
+      ? { icon: '📢', label: '판매자 초대', path: '/actuator/invite' }
+      : isSeller
+        ? { icon: '🔍', label: '딜 탐색',  path: '/deals' }
+        : { icon: '➕', label: '딜만들기', path: '/deal/create' };
 
   const NAV_ITEMS = [
     { icon: '🏠', label: '홈',   path: '/' },
