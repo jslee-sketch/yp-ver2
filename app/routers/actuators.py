@@ -40,6 +40,22 @@ def create_actuator(
     """
     Actuator 신규 등록 (DEV용: 바로 ACTIVE 상태)
     """
+    # 이메일 중복 체크
+    if body.email:
+        existing = db.query(models.Actuator).filter(
+            func.lower(models.Actuator.email) == body.email.strip().lower()
+        ).first()
+        if existing:
+            raise HTTPException(status_code=409, detail="이미 등록된 이메일입니다.")
+
+    # 닉네임 중복 체크
+    if getattr(body, 'nickname', None):
+        existing_nick = db.query(models.Actuator).filter(
+            models.Actuator.nickname == body.nickname.strip()
+        ).first()
+        if existing_nick:
+            raise HTTPException(status_code=409, detail="이미 사용 중인 닉네임입니다.")
+
     # 비밀번호 해시
     pw_hash = None
     if getattr(body, 'password', None):
@@ -70,9 +86,14 @@ def create_actuator(
         business_license_image=getattr(body, 'business_license_image', None),
         ecommerce_permit_image=getattr(body, 'ecommerce_permit_image', None),
     )
-    db.add(act)
-    db.commit()
-    db.refresh(act)
+    try:
+        db.add(act)
+        db.commit()
+        db.refresh(act)
+    except Exception as exc:
+        db.rollback()
+        logging.error("Actuator 생성 실패: %s", exc)
+        raise HTTPException(status_code=400, detail=f"등록 실패: {exc}")
 
     # ---------------------------------------------------------
     # ✅ Evidence Pack (actuator_create_v1)

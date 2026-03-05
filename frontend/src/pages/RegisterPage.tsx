@@ -1603,9 +1603,23 @@ export default function RegisterPage() {
             });
             goTo(6);
           } catch (err: unknown) {
-            const e = err as { response?: { data?: { detail?: unknown } } };
+            const e = err as { response?: { data?: { detail?: unknown }; status?: number } };
             const detail = e.response?.data?.detail;
-            setApiError(typeof detail === 'string' ? detail : '가입에 실패했어요. 이미 사용된 이메일일 수 있어요.');
+            const status = e.response?.status;
+            let msg: string;
+            if (typeof detail === 'string') {
+              msg = detail;
+            } else if (Array.isArray(detail)) {
+              msg = detail.map((d: Record<string, unknown>) => {
+                const field = Array.isArray(d.loc) ? (d.loc as string[]).slice(-1)[0] : '';
+                return field ? `${field}: ${d.msg}` : String(d.msg || '');
+              }).join(' / ');
+            } else if (status) {
+              msg = `서버 오류 (${status}): 가입에 실패했어요.`;
+            } else {
+              msg = '네트워크 오류: 서버에 연결할 수 없어요.';
+            }
+            setApiError(msg);
           } finally {
             setRegistering(false);
           }
@@ -1678,10 +1692,23 @@ export default function RegisterPage() {
           // 자동 로그인 스킵 → CompleteStep
           goTo(6);
         } catch (err: unknown) {
-          const e = err as { response?: { data?: { detail?: unknown } } };
+          const e = err as { response?: { data?: { detail?: unknown }; status?: number } };
           const detail = e.response?.data?.detail;
-          setApiError(typeof detail === 'string' ? detail
-            : role === 'seller' ? '판매자 가입에 실패했어요.' : '액추에이터 가입에 실패했어요.');
+          const status = e.response?.status;
+          let msg: string;
+          if (typeof detail === 'string') {
+            msg = detail;
+          } else if (Array.isArray(detail)) {
+            msg = detail.map((d: Record<string, unknown>) => {
+              const field = Array.isArray(d.loc) ? (d.loc as string[]).slice(-1)[0] : '';
+              return field ? `${field}: ${d.msg}` : String(d.msg || '');
+            }).join(' / ');
+          } else if (status) {
+            msg = `서버 오류 (${status}): ${role === 'seller' ? '판매자' : '액추에이터'} 가입에 실패했어요.`;
+          } else {
+            msg = '네트워크 오류: 서버에 연결할 수 없어요.';
+          }
+          setApiError(msg);
         } finally {
           setRegistering(false);
         }
