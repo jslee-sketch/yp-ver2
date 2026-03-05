@@ -11,6 +11,8 @@ from app import models, schemas, crud
 
 from datetime import datetime, timezone
 from app.routers.notifications import create_notification
+from app.security import SECRET_KEY, ALGORITHM, oauth2_scheme
+from jose import jwt as jose_jwt, JWTError
 
 import logging
 
@@ -130,6 +132,27 @@ def create_actuator(
     except Exception:
         pass
 
+    return act
+
+
+@router.get("/me", response_model=schemas.ActuatorOut, summary="내 액추에이터 프로필")
+def get_actuator_me(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    """JWT 토큰에서 actuator_id를 읽어 내 프로필 반환"""
+    try:
+        payload = jose_jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    if payload.get("role") != "actuator":
+        raise HTTPException(status_code=403, detail="액추에이터 전용 API입니다.")
+
+    act_id = payload.get("actuator_id") or payload.get("sub")
+    act = db.query(models.Actuator).filter(models.Actuator.id == int(act_id)).first()
+    if not act:
+        raise HTTPException(status_code=404, detail="액추에이터를 찾을 수 없습니다.")
     return act
 
 

@@ -32,6 +32,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotMsg, setForgotMsg] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   const handleEmailLogin = async () => {
     if (!email.trim() || !password) {
@@ -67,21 +71,8 @@ export default function LoginPage() {
           return;
         }
 
-        // 구매자 프로필 시도
-        try {
-          const buyerRes = await apiClient.get(API.BUYERS.PROFILE);
-          const b = buyerRes.data;
-          login(access_token, {
-            id: b.id, email: b.email,
-            name: b.name || b.nickname || email.split('@')[0],
-            nickname: b.nickname,
-            role: 'buyer',
-            level: b.level ?? 1,
-            points: b.points ?? 0,
-            trust_tier: b.trust_tier,
-          });
-        } catch {
-          // 판매자 프로필 시도
+        // JWT role에 따라 프로필 fetch
+        if (jwtRole === 'seller') {
           try {
             const sellerRes = await apiClient.get(API.SELLERS.PROFILE);
             const s = sellerRes.data;
@@ -95,11 +86,38 @@ export default function LoginPage() {
               seller: { id: s.id, business_name: s.business_name || '', level: s.level ?? 1, points: s.points ?? 0 },
             });
           } catch {
+            login(access_token, { id: 0, email: email.trim(), name: email.split('@')[0], role: 'seller', level: 1, points: 0 });
+          }
+        } else if (jwtRole === 'actuator') {
+          try {
+            const actRes = await apiClient.get(API.ACTUATORS.PROFILE);
+            const a = actRes.data as Record<string, unknown>;
             login(access_token, {
-              id: 0, email: email.trim(),
-              name: email.split('@')[0],
-              role: 'buyer', level: 1, points: 0,
+              id: a.id as number, email: (a.email as string) || email,
+              name: (a.nickname as string) || (a.name as string) || email.split('@')[0],
+              nickname: a.nickname as string,
+              role: 'actuator',
+              level: 1, points: 0,
             });
+          } catch {
+            login(access_token, { id: 0, email: email.trim(), name: email.split('@')[0], role: 'actuator' as 'buyer', level: 1, points: 0 });
+          }
+        } else {
+          // 기본: 구매자 프로필 시도
+          try {
+            const buyerRes = await apiClient.get(API.BUYERS.PROFILE);
+            const b = buyerRes.data;
+            login(access_token, {
+              id: b.id, email: b.email,
+              name: b.name || b.nickname || email.split('@')[0],
+              nickname: b.nickname,
+              role: 'buyer',
+              level: b.level ?? 1,
+              points: b.points ?? 0,
+              trust_tier: b.trust_tier,
+            });
+          } catch {
+            login(access_token, { id: 0, email: email.trim(), name: email.split('@')[0], role: 'buyer', level: 1, points: 0 });
           }
         }
         navigate('/');
@@ -205,6 +223,11 @@ export default function LoginPage() {
           >
             {loading ? '로그인 중...' : '로그인하기'}
           </button>
+          <div style={{ textAlign: 'right', marginTop: 6 }}>
+            <button onClick={() => { setShowForgot(true); setForgotEmail(email); setForgotMsg(''); }} style={{ fontSize: 12, color: C.textSec, cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}>
+              비밀번호를 잊으셨나요?
+            </button>
+          </div>
         </div>
 
         {/* 구분선 */}
@@ -294,6 +317,64 @@ export default function LoginPage() {
           에 동의합니다.
         </div>
       </div>
+
+      {/* 비밀번호 찾기 모달 */}
+      {showForgot && (
+        <>
+          <div onClick={() => setShowForgot(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 3000 }} />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+            width: '90%', maxWidth: 360, background: '#1a1a2e', border: `1px solid ${C.border}`,
+            borderRadius: 20, padding: '28px 24px', zIndex: 3001,
+          }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 6 }}>비밀번호 찾기</div>
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 20 }}>가입한 이메일을 입력하면 재설정 안내를 보내드려요.</div>
+            <input
+              type="email"
+              value={forgotEmail}
+              onChange={e => setForgotEmail(e.target.value)}
+              placeholder="가입한 이메일 주소"
+              style={{
+                width: '100%', boxSizing: 'border-box', padding: '13px 14px', borderRadius: 12, marginBottom: 12,
+                background: C.bgInput, border: `1px solid ${C.border}`, color: C.text, fontSize: 14,
+              }}
+            />
+            {forgotMsg && (
+              <div style={{ fontSize: 12, color: forgotMsg.includes('실패') || forgotMsg.includes('없') ? '#ff5252' : C.green, marginBottom: 12, paddingLeft: 2 }}>
+                {forgotMsg}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setShowForgot(false)} style={{
+                flex: 1, padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                background: C.bgInput, border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer',
+              }}>닫기</button>
+              <button
+                disabled={forgotLoading || !forgotEmail.includes('@')}
+                onClick={async () => {
+                  setForgotLoading(true);
+                  setForgotMsg('');
+                  try {
+                    await apiClient.post('/auth/reset-password', { email: forgotEmail.trim() });
+                    setForgotMsg('비밀번호 재설정 안내가 발송되었습니다.');
+                  } catch (err: unknown) {
+                    const e = err as { response?: { data?: { detail?: string } } };
+                    setForgotMsg(e.response?.data?.detail || '이메일을 찾을 수 없습니다.');
+                  }
+                  setForgotLoading(false);
+                }}
+                style={{
+                  flex: 1, padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                  background: forgotLoading ? `${C.green}55` : C.green, border: 'none', color: '#0a0a0f',
+                  cursor: forgotLoading || !forgotEmail.includes('@') ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {forgotLoading ? '처리 중...' : '재설정 요청'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -205,9 +205,16 @@ class ActuatorOut(ActuatorBase):
     bank_name: Optional[str] = None
     account_number: Optional[str] = None
     account_holder: Optional[str] = None
+    bankbook_image: Optional[str] = None
     is_business: bool = False
     business_name: Optional[str] = None
     business_number: Optional[str] = None
+    ecommerce_permit_number: Optional[str] = None
+    business_address: Optional[str] = None
+    business_zip_code: Optional[str] = None
+    company_phone: Optional[str] = None
+    business_license_image: Optional[str] = None
+    ecommerce_permit_image: Optional[str] = None
 
     class Config:
         from_attributes = True  # orm_mode 대신

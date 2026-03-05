@@ -25,7 +25,7 @@ def check_email(
     email: str = Query(..., description="확인할 이메일"),
     db: Session = Depends(database.get_db),
 ):
-    """Buyer + Seller 테이블에서 이메일 중복 여부를 확인합니다."""
+    """Buyer + Seller + Actuator 테이블에서 이메일 중복 여부를 확인합니다."""
     email_lower = email.strip().lower()
     buyer = db.query(models.Buyer).filter(models.Buyer.email == email_lower).first()
     if buyer:
@@ -33,35 +33,60 @@ def check_email(
     seller = db.query(models.Seller).filter(models.Seller.email == email_lower).first()
     if seller:
         return {"available": False}
+    actuator = db.query(models.Actuator).filter(models.Actuator.email == email_lower).first()
+    if actuator:
+        return {"available": False}
     return {"available": True}
 
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
     """
-    이메일 + 비밀번호로 로그인하고 JWT 토큰 발급
-    (admin은 User 테이블, 일반 구매자는 Buyer 테이블에서 조회)
+    통합 로그인 — User(admin) → Buyer → Seller → Actuator 순서로 조회
     """
-    # 1 우선 User(관리자) 테이블에서 찾기
-    user = db.query(models.User).filter(models.User.email == form_data.username).first()
-    if user and verify_password(form_data.password, user.hashed_password):
-        role = getattr(user, "role", "admin")
-    else:
-        # 2 Buyer(일반 사용자) 테이블에서 찾기
-        buyer = db.query(models.Buyer).filter(models.Buyer.email == form_data.username).first()
-        if buyer and verify_password(form_data.password, buyer.password_hash):
-            user = buyer
-            role = "buyer"
-        else:
-            raise HTTPException(status_code=401, detail="Invalid email or password")
+    email = form_data.username.strip().lower()
+    pw = form_data.password
+    user = None
+    role = ""
+    extra_claims: dict = {}
 
-    # 3 JWT 토큰 발급
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # 1. User(관리자) 테이블
+    u = db.query(models.User).filter(models.User.email == email).first()
+    if u and verify_password(pw, u.hashed_password):
+        user, role = u, getattr(u, "role", "admin")
+
+    # 2. Buyer
+    if not user:
+        b = db.query(models.Buyer).filter(models.Buyer.email == email).first()
+        if b and verify_password(pw, b.password_hash):
+            user, role = b, "buyer"
+
+    # 3. Seller
+    if not user:
+        s = db.query(models.Seller).filter(models.Seller.email == email).first()
+        if s and verify_password(pw, s.password_hash):
+            if not s.verified_at:
+                raise HTTPException(status_code=403, detail="승인 대기 중입니다. 관리자 승인 후 로그인 가능합니다.")
+            user, role = s, "seller"
+            extra_claims["seller_id"] = s.id
+
+    # 4. Actuator
+    if not user:
+        a = db.query(models.Actuator).filter(
+            models.Actuator.email == email
+        ).first()
+        if a and verify_password(pw, a.password_hash):
+            user, role = a, "actuator"
+            extra_claims["actuator_id"] = a.id
+
+    if not user:
+        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다.")
+
+    # JWT 토큰 발급
     access_token = create_access_token(
-        data={"sub": str(user.id), "role": role},
-        expires_delta=access_token_expires
+        data={"sub": str(user.id), "role": role, **extra_claims},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
-
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -135,13 +160,15 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(database.ge
     """
     email = body.email.strip().lower()
 
-    # 1. Buyer / Seller 에서 이메일 조회
+    # 1. Buyer / Seller / Actuator 에서 이메일 조회
     user = db.query(models.Buyer).filter(models.Buyer.email == email).first()
     if not user:
         user = db.query(models.Seller).filter(models.Seller.email == email).first()
+    if not user:
+        user = db.query(models.Actuator).filter(models.Actuator.email == email).first()
 
     if not user:
-        raise HTTPException(status_code=404, detail="email_not_found")
+        raise HTTPException(status_code=404, detail="등록된 이메일을 찾을 수 없습니다.")
 
     # 2. 임시 토큰 생성
     token = f"RESET_{user.id}_{int(time.time())}"

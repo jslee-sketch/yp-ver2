@@ -13,7 +13,7 @@ export interface AuthUser {
   email: string;
   name: string;
   nickname?: string;
-  role: 'buyer' | 'seller' | 'both' | 'admin';
+  role: 'buyer' | 'seller' | 'both' | 'admin' | 'actuator';
   level: number;
   points: number;
   trust_tier?: string;

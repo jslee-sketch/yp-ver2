@@ -132,6 +132,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
   const [unreadCount, setUnreadCount] = useState(0);
 
   const isSeller = user?.role === 'seller' || user?.role === 'both';
+  const isActuator = user?.role === 'actuator';
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
@@ -225,10 +226,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                   <span style={{ fontSize: 15, fontWeight: 800, color: '#e8eaed' }}>{displayName}</span>
                   <span style={{
                     padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                    background: isAdmin ? 'rgba(224,64,251,0.12)' : isSeller ? 'rgba(255,145,0,0.12)' : 'rgba(0,230,118,0.12)',
-                    color: isAdmin ? '#e040fb' : isSeller ? '#ff9100' : '#00e676',
+                    background: isAdmin ? 'rgba(224,64,251,0.12)' : isActuator ? 'rgba(0,229,255,0.12)' : isSeller ? 'rgba(255,145,0,0.12)' : 'rgba(0,230,118,0.12)',
+                    color: isAdmin ? '#e040fb' : isActuator ? '#00e5ff' : isSeller ? '#ff9100' : '#00e676',
                   }}>
-                    {isAdmin ? '관리자' : isSeller ? '판매자' : '구매자'}
+                    {isAdmin ? '관리자' : isActuator ? '액추에이터' : isSeller ? '판매자' : '구매자'}
                   </span>
                 </div>
                 <div style={{ fontSize: 12, color: '#78909c', marginBottom: 10 }}>
@@ -281,6 +282,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="📦" label="배송 관리"  onClick={() => go('/seller/shipping')} />
                     <MenuItem icon="💵" label="정산 관리"  onClick={() => go('/settlements')} />
                     <MenuItem icon="📊" label="판매 통계"  onClick={() => go('/seller/stats')} />
+                  </>
+                )}
+
+                {isActuator && (
+                  <>
+                    <SectionTitle>액추에이터</SectionTitle>
+                    <MenuItem icon="📊" label="대시보드"     onClick={() => go('/')} />
+                    <MenuItem icon="👥" label="담당 셀러"    onClick={() => go('/deals')} />
+                    <MenuItem icon="💵" label="정산/수수료"  onClick={() => go('/settlements')} />
                   </>
                 )}
 
