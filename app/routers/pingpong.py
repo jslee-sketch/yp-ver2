@@ -4,16 +4,18 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
+import io
 import time
+import threading
 import traceback
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-
-import httpx
 
 from app.database import get_db
 from app import models, crud
@@ -28,9 +30,88 @@ router = APIRouter(
 )
 
 # =========================================================
-# Sidecar proxy config
+# Embedded sidecar (direct import, no separate process)
 # =========================================================
-SIDECAR_URL = os.getenv("SIDECAR_URL", "http://localhost:9100")
+_sidecar = None
+_sidecar_ok = False
+_sidecar_client = None
+_sidecar_lock = threading.Lock()
+_sidecar_sessions: Dict[str, Any] = {}
+
+try:
+    _tools_dir = Path(__file__).resolve().parent.parent.parent / "tools"
+    if str(_tools_dir) not in sys.path:
+        sys.path.insert(0, str(_tools_dir))
+    import pingpong_sidecar_openai as _sidecar
+    _sidecar_ok = True
+    print("[pingpong] sidecar module imported OK", flush=True)
+except Exception as _imp_err:
+    print(f"[pingpong] sidecar import failed: {_imp_err}", flush=True)
+    traceback.print_exc()
+
+
+def _ensure_sidecar() -> bool:
+    """Lazy-init sidecar: load KB + create OpenAI client on first call."""
+    global _sidecar_client
+    if not _sidecar_ok or not _sidecar:
+        return False
+    if _sidecar_client is not None:
+        return True
+    try:
+        from openai import OpenAI as _OAI
+        _sidecar_client = _OAI()
+        _sidecar.load_kb()
+        _sidecar.load_time_values_from_defaults()
+        # Monkey-patch brain call to use /brain/ask (avoid circular proxy)
+        _orig_server_url = _sidecar.YP_SERVER_URL
+        if os.environ.get("PORT"):
+            _sidecar.YP_SERVER_URL = f"http://localhost:{os.environ['PORT']}"
+        print(f"[pingpong] sidecar initialized: KB={len(_sidecar.KB)}, "
+              f"URL={_sidecar.YP_SERVER_URL}", flush=True)
+        return True
+    except Exception as e:
+        print(f"[pingpong] sidecar init failed: {e}", flush=True)
+        traceback.print_exc()
+        return False
+
+
+def _sidecar_ask(question: str, user_id: int = 1, role: str = "BUYER",
+                 context: dict | None = None) -> str | None:
+    """Call step_once() directly in-process."""
+    if not _ensure_sidecar() or not _sidecar or not _sidecar_client:
+        return None
+
+    session_id = f"u{user_id}_{role}"
+    ctx = context or {}
+
+    with _sidecar_lock:
+        # Evict old sessions
+        if len(_sidecar_sessions) > 200:
+            for k in list(_sidecar_sessions.keys())[:50]:
+                _sidecar_sessions.pop(k, None)
+
+        if session_id not in _sidecar_sessions:
+            state = _sidecar.ConversationState(role=role, user_id=user_id)
+            _sidecar_sessions[session_id] = state
+        else:
+            state = _sidecar_sessions[session_id]
+
+        state.role = role
+        state.user_id = user_id
+        if isinstance(ctx, dict):
+            for key in ("deal_id", "offer_id", "reservation_id"):
+                v = ctx.get(key)
+                if v is not None:
+                    try:
+                        state.last_ids[key] = int(v)
+                    except (ValueError, TypeError):
+                        pass
+
+        _sidecar.S = state
+        answer = _sidecar.step_once(question, _sidecar_client)
+        _sidecar_sessions[session_id] = _sidecar.S
+
+    return answer
 
 # =========================================================
 # Pydantic Schemas
@@ -911,47 +992,61 @@ def _handle_smalltalk(question: str) -> str:
 # Sidecar proxy endpoint (replaces direct brain call)
 # =========================================================
 @router.post("/ask", response_model=None)
-async def pingpong_ask_proxy(request: Request):
+async def pingpong_ask(request: Request):
     """
-    Proxy to sidecar server for full AI agent capabilities.
-    Falls back to brain endpoint if sidecar is unreachable.
+    Embedded sidecar call → brain fallback → MD fallback.
+    No separate sidecar process needed.
     """
     try:
         body_json = await request.json()
     except Exception:
         raise HTTPException(status_code=400, detail="invalid JSON body")
 
-    if not (body_json.get("question") or "").strip():
+    question = (body_json.get("question") or "").strip()
+    if not question:
         raise HTTPException(status_code=400, detail="question is required")
 
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(f"{SIDECAR_URL}/ask", json=body_json)
-            return resp.json()
-    except Exception:
-        # Sidecar unreachable → fall back to brain
-        pass
+    user_id = body_json.get("user_id") or 1
+    role = (body_json.get("role") or "BUYER").upper()
+    context = body_json.get("context") or {}
 
-    # Fallback: call brain directly
+    # 1st: embedded sidecar (step_once direct call)
+    if _sidecar_ok:
+        try:
+            answer = _sidecar_ask(question, user_id=user_id, role=role, context=context)
+            if answer:
+                return {
+                    "answer": answer,
+                    "used_policies": [],
+                    "actions": [],
+                    "engine": "sidecar",
+                }
+        except Exception as sc_err:
+            print(f"[pingpong /ask] sidecar error: {sc_err}", flush=True)
+            traceback.print_exc()
+
+    # 2nd: brain (policy LLM)
     from app.database import get_db as _get_db
     db_gen = _get_db()
     db = next(db_gen)
     try:
         body = PingpongAskIn(**body_json)
         result = _pingpong_brain_logic(body, db)
-        return jsonable_encoder(result)
+        out = jsonable_encoder(result)
+        out["engine"] = "brain"
+        return out
     except Exception as brain_err:
-        print(f"[pingpong /ask] Brain fallback error: {brain_err}", flush=True)
+        print(f"[pingpong /ask] brain error: {brain_err}", flush=True)
         traceback.print_exc()
-        # 최후 fallback — 정책 MD 파일에서 직접 답변 생성
-        question = body_json.get("question", "")
+        # 3rd: MD fallback
         md_policies = _load_policies_from_md_files(question)
         fallback_answer = _build_policy_fallback_answer(question, md_policies)
         return {
             "answer": fallback_answer,
             "used_policies": [],
             "actions": [],
-            "debug": {"brain_error": str(brain_err), "fallback": "md_direct"},
+            "engine": "md_fallback",
+            "debug": {"brain_error": str(brain_err)},
         }
     finally:
         try:

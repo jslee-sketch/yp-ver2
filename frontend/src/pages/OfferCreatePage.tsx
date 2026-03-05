@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { createOffer } from '../api/offerApi';
+import { createOffer, fetchOffersByDeal } from '../api/offerApi';
+import { fetchDeal } from '../api/dealApi';
 import { showToast } from '../components/common/Toast';
 
 // ── 디자인 토큰 ──────────────────────────────────────────
@@ -22,23 +23,20 @@ const C = {
   border:   'rgba(0,240,255,0.12)',
 };
 
-// ── Mock 딜 정보 ─────────────────────────────────────────
-const MOCK_DEAL = {
-  id: 15,
-  product_name: '에어팟 프로 2세대 (USB-C)',
-  brand: 'Apple',
-  target_price: 279000,
-  anchor_price: 349000,
-  current_orders: 32,
-  target_orders: 100,
-  deadline_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-  options: [
-    { title: '색상', value: '블랙' },
-    { title: '용량', value: '256GB' },
-  ],
-  lowest_offer: 275000,
-  offer_count: 12,
-};
+// ── 딜 정보 타입 ─────────────────────────────────────────
+interface DealInfo {
+  id: number;
+  product_name: string;
+  brand?: string;
+  target_price: number;
+  anchor_price: number;
+  current_orders: number;
+  target_orders: number;
+  deadline_at?: string;
+  options: { title: string; value: string }[];
+  lowest_offer: number;
+  offer_count: number;
+}
 
 // ── 타입 ────────────────────────────────────────────────
 type CancelRule = 'A1' | 'A2' | 'A3' | 'A4';
@@ -63,26 +61,26 @@ const DELIVERY_CHIPS = [1, 2, 3] as const;
 const fmtPrice  = (n: number) => n > 0 ? n.toLocaleString('ko-KR') : '';
 const parseNum  = (s: string) => parseInt(s.replace(/[^\d]/g, ''), 10) || 0;
 
-const getTier = (p: number): 'PREMIUM' | 'MATCHING' | 'BELOW' => {
-  if (p < MOCK_DEAL.target_price)  return 'PREMIUM';
-  if (p === MOCK_DEAL.target_price) return 'MATCHING';
+const _getTier = (p: number, targetPrice: number): 'PREMIUM' | 'MATCHING' | 'BELOW' => {
+  if (p < targetPrice)  return 'PREMIUM';
+  if (p === targetPrice) return 'MATCHING';
   return 'BELOW';
 };
 
-const getSavingsPct = (p: number): string => {
-  if (p <= 0) return '';
-  const diff = MOCK_DEAL.target_price - p;
-  const pct  = Math.abs((diff / MOCK_DEAL.target_price) * 100).toFixed(1);
+const _getSavingsPct = (p: number, targetPrice: number): string => {
+  if (p <= 0 || targetPrice <= 0) return '';
+  const diff = targetPrice - p;
+  const pct  = Math.abs((diff / targetPrice) * 100).toFixed(1);
   return diff > 0 ? `-${pct}%` : `+${pct}%`;
 };
 
-const getRank = (p: number): number => {
+const _getRank = (p: number, lowestOffer: number): number => {
   if (p <= 0) return 0;
-  if (p <= MOCK_DEAL.lowest_offer) return 1;
-  return Math.min(13, Math.floor((p - MOCK_DEAL.lowest_offer) / 5000) + 2);
+  if (lowestOffer <= 0 || p <= lowestOffer) return 1;
+  return Math.min(13, Math.floor((p - lowestOffer) / 5000) + 2);
 };
 
-const tierBadge = (tier: ReturnType<typeof getTier>) => {
+const tierBadge = (tier: 'PREMIUM' | 'MATCHING' | 'BELOW') => {
   const map = {
     PREMIUM:  { bg: 'rgba(57,255,20,0.15)',  border: 'rgba(57,255,20,0.4)',  color: '#39ff14', label: 'PREMIUM' },
     MATCHING: { bg: 'rgba(255,225,86,0.15)', border: 'rgba(255,225,86,0.4)', color: '#ffe156', label: 'MATCHING' },
@@ -138,6 +136,9 @@ export default function OfferCreatePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const [deal, setDeal] = useState<DealInfo | null>(null);
+  const [dealLoading, setDealLoading] = useState(true);
+
   const [step, setStep] = useState(1);
   const [dir,  setDir]  = useState(1);
 
@@ -164,11 +165,67 @@ export default function OfferCreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted,  setSubmitted]  = useState(false);
 
+  // ── 딜 데이터 로드 ──────────────────────────────────────
+  useEffect(() => {
+    if (!dealId) return;
+    const numId = Number(dealId);
+    if (!numId) return;
+    const load = async () => {
+      setDealLoading(true);
+      try {
+        const [dealData, offersData] = await Promise.all([
+          fetchDeal(numId),
+          fetchOffersByDeal(numId),
+        ]);
+        if (dealData) {
+          const offers = Array.isArray(offersData) ? offersData : [];
+          const prices = offers.map((o: Record<string, unknown>) => Number(o.price) || 0).filter((p: number) => p > 0);
+          const lowestOffer = prices.length > 0 ? Math.min(...prices) : 0;
+
+          let parsedOptions: { title: string; value: string }[] = [];
+          try {
+            const raw = dealData.options;
+            if (typeof raw === 'string') {
+              const arr = JSON.parse(raw);
+              if (Array.isArray(arr)) {
+                parsedOptions = arr.flatMap((g: Record<string, unknown>) => {
+                  const title = String(g.title ?? g.name ?? '');
+                  const vals = Array.isArray(g.values) ? g.values : [g.value];
+                  return vals.map((v: unknown) => ({ title, value: String(v ?? '') }));
+                });
+              }
+            }
+          } catch { /* ignore */ }
+
+          setDeal({
+            id: dealData.id,
+            product_name: dealData.product_name ?? `Deal #${dealData.id}`,
+            brand: dealData.brand ?? '',
+            target_price: Number(dealData.target_price) || 0,
+            anchor_price: Number(dealData.anchor_price) || Number(dealData.market_price) || 0,
+            current_orders: Number(dealData.current_orders) || Number(dealData.desired_qty) || 0,
+            target_orders: Number(dealData.target_orders) || Number(dealData.desired_qty) || 0,
+            deadline_at: dealData.deadline_at,
+            options: parsedOptions,
+            lowest_offer: lowestOffer,
+            offer_count: offers.length,
+          });
+        }
+      } catch (err) {
+        console.error('딜 로드 실패:', err);
+      } finally {
+        setDealLoading(false);
+      }
+    };
+    void load();
+  }, [dealId]);
+
   // ── 파생 값 ──────────────────────────────────────────
   const price       = parseNum(priceStr);
-  const tier        = price > 0 ? getTier(price) : null;
-  const rank        = getRank(price);
+  const tier        = price > 0 && deal ? _getTier(price, deal.target_price) : null;
+  const rank        = deal ? _getRank(price, deal.lowest_offer) : 0;
   const badge       = tier ? tierBadge(tier) : null;
+  const getSavingsPct = (p: number) => _getSavingsPct(p, deal?.target_price ?? 0);
 
   // ── 이동 ─────────────────────────────────────────────
   const goTo  = (n: number) => { setDir(n > step ? 1 : -1); setStep(n); };
@@ -205,7 +262,7 @@ export default function OfferCreatePage() {
     if (warrantyMonths >= 12) parts.push('12개월 보증으로 신뢰도 최고!');
     else if (warrantyMonths >= 6) parts.push('6개월 보증이면 충분히 경쟁력 있어요.');
     if (cancelRule === 'A1') parts.push('환불 정책이 구매자 친화적이에요.');
-    if (rank > 0) parts.push(`현재 ${MOCK_DEAL.offer_count}건의 오퍼 중 ${rank}위 가격!`);
+    if (rank > 0 && deal) parts.push(`현재 ${deal.offer_count}건의 오퍼 중 ${rank}위 가격!`);
 
     return parts.join(' ');
   };
@@ -271,6 +328,26 @@ export default function OfferCreatePage() {
     setSubmitted(true);
     window.history.replaceState({ submitted: true }, '');
   };
+
+  // ── 로딩 / 에러 ────────────────────────────────────────
+  if (dealLoading) {
+    return (
+      <div style={{ minHeight: '100dvh', background: C.bgDeep, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: C.textSec, fontSize: 14 }}>딜 정보를 불러오는 중...</div>
+      </div>
+    );
+  }
+  if (!deal) {
+    return (
+      <div style={{ minHeight: '100dvh', background: C.bgDeep, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>😥</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: C.textPri, marginBottom: 8 }}>딜을 찾을 수 없어요</div>
+          <button onClick={() => navigate('/deals')} style={{ padding: '10px 24px', borderRadius: 12, fontSize: 14, fontWeight: 700, background: `${C.cyan}22`, border: `1px solid ${C.cyan}55`, color: C.cyan, cursor: 'pointer' }}>딜 목록으로</button>
+        </div>
+      </div>
+    );
+  }
 
   // ── 성공 화면 ────────────────────────────────────────
   if (submitted) {
@@ -439,11 +516,11 @@ export default function OfferCreatePage() {
                 <div>
                   <div style={{ fontSize: 13, color: C.textSec, marginBottom: 4 }}>오퍼 제출 대상 딜</div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: C.textPri, marginBottom: 4 }}>
-                    📦 {MOCK_DEAL.product_name}
+                    📦 {(deal?.product_name ?? '')}
                   </div>
                   <div style={{ fontSize: 12, color: C.textSec }}>
-                    {MOCK_DEAL.brand}
-                    {MOCK_DEAL.options.map(o => ` · ${o.title}: ${o.value}`).join('')}
+                    {(deal?.brand ?? '')}
+                    {(deal?.options ?? []).map(o => ` · ${o.title}: ${o.value}`).join('')}
                   </div>
                 </div>
 
@@ -451,11 +528,11 @@ export default function OfferCreatePage() {
                 <div style={{ ...cardStyle }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {[
-                      { icon: '🎯', label: '목표가',    value: `₩${fmtPrice(MOCK_DEAL.target_price)}`, color: C.green },
-                      { icon: '📊', label: '시장가',    value: `₩${fmtPrice(MOCK_DEAL.anchor_price)}`, color: C.yellow },
-                      { icon: '⚡', label: '현재 최저',  value: `₩${fmtPrice(MOCK_DEAL.lowest_offer)}`, color: C.cyan },
-                      { icon: '📦', label: '현재 오퍼',  value: `${MOCK_DEAL.offer_count}건`, color: C.textSec },
-                      { icon: '👥', label: '참여수',    value: `${MOCK_DEAL.current_orders}/${MOCK_DEAL.target_orders}명`, color: C.textSec },
+                      { icon: '🎯', label: '목표가',    value: `₩${fmtPrice((deal?.target_price ?? 0))}`, color: C.green },
+                      { icon: '📊', label: '시장가',    value: `₩${fmtPrice((deal?.anchor_price ?? 0))}`, color: C.yellow },
+                      { icon: '⚡', label: '현재 최저',  value: `₩${fmtPrice((deal?.lowest_offer ?? 0))}`, color: C.cyan },
+                      { icon: '📦', label: '현재 오퍼',  value: `${(deal?.offer_count ?? 0)}건`, color: C.textSec },
+                      { icon: '👥', label: '참여수',    value: `${(deal?.current_orders ?? 0)}/${(deal?.target_orders ?? 0)}명`, color: C.textSec },
                     ].map(({ icon, label, value, color }) => (
                       <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 13, color: C.textSec }}>{icon} {label}</span>
@@ -515,7 +592,7 @@ export default function OfferCreatePage() {
                   {tier && (
                     <div style={{ fontSize: 12, marginTop: 6, paddingLeft: 2 }}>
                       {rank === 1 && <span style={{ color: C.green, fontWeight: 700 }}>🔥 1위 오퍼가 됩니다!</span>}
-                      {rank > 1 && <span style={{ color: C.textSec }}>현재 {MOCK_DEAL.offer_count}건 중 {rank}위 가격 · 목표가 대비 {getSavingsPct(price)}</span>}
+                      {rank > 1 && <span style={{ color: C.textSec }}>현재 {(deal?.offer_count ?? 0)}건 중 {rank}위 가격 · 목표가 대비 {getSavingsPct(price)}</span>}
                     </div>
                   )}
                 </div>
@@ -525,9 +602,9 @@ export default function OfferCreatePage() {
                   <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan, marginBottom: 10 }}>💡 핑퐁이 가격 가이드</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                     {[
-                      { cond: '미만',   label: `₩${fmtPrice(MOCK_DEAL.target_price)} 미만`, tier: 'PREMIUM' as const, badge: tierBadge('PREMIUM') },
-                      { cond: '동일',   label: `₩${fmtPrice(MOCK_DEAL.target_price)} 동일`, tier: 'MATCHING' as const, badge: tierBadge('MATCHING') },
-                      { cond: '초과',   label: `₩${fmtPrice(MOCK_DEAL.target_price)} 초과`, tier: 'BELOW' as const, badge: tierBadge('BELOW') },
+                      { cond: '미만',   label: `₩${fmtPrice((deal?.target_price ?? 0))} 미만`, tier: 'PREMIUM' as const, badge: tierBadge('PREMIUM') },
+                      { cond: '동일',   label: `₩${fmtPrice((deal?.target_price ?? 0))} 동일`, tier: 'MATCHING' as const, badge: tierBadge('MATCHING') },
+                      { cond: '초과',   label: `₩${fmtPrice((deal?.target_price ?? 0))} 초과`, tier: 'BELOW' as const, badge: tierBadge('BELOW') },
                     ].map(row => {
                       const active = tier === row.tier;
                       return (
@@ -549,9 +626,9 @@ export default function OfferCreatePage() {
                       );
                     })}
                   </div>
-                  {price > 0 && price < MOCK_DEAL.lowest_offer && (
+                  {price > 0 && price < (deal?.lowest_offer ?? 0) && (
                     <div style={{ marginTop: 10, fontSize: 12, color: C.green, fontWeight: 700 }}>
-                      🔥 현재 최저가 ₩{fmtPrice(MOCK_DEAL.lowest_offer)}보다 낮게 설정하면 1위 오퍼!
+                      🔥 현재 최저가 ₩{fmtPrice((deal?.lowest_offer ?? 0))}보다 낮게 설정하면 1위 오퍼!
                     </div>
                   )}
                 </div>
@@ -886,7 +963,7 @@ export default function OfferCreatePage() {
 
                 {/* 딜 명 */}
                 <div style={{ fontSize: 14, fontWeight: 600, color: C.textSec }}>
-                  📦 {MOCK_DEAL.product_name}
+                  📦 {(deal?.product_name ?? '')}
                 </div>
 
                 {/* 오퍼 요약 카드 */}
@@ -905,7 +982,7 @@ export default function OfferCreatePage() {
                       )}
                     </div>
                     <div style={{ fontSize: 12, color: C.textSec }}>
-                      목표가 대비 {getSavingsPct(price)} · {MOCK_DEAL.offer_count}건 중 {rank}위
+                      목표가 대비 {getSavingsPct(price)} · {(deal?.offer_count ?? 0)}건 중 {rank}위
                     </div>
                   </div>
 

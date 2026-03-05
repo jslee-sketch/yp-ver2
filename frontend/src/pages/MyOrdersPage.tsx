@@ -22,20 +22,13 @@ interface MyDealActivity {
   tracking_number?: string;
 }
 
-const MOCK_ALL_ACTIVITIES: MyDealActivity[] = [
-  { id: 201, product_name: '에어팟 프로 2세대 (USB-C)',    seller_name: '스마트딜',     price: 275000,  qty: 2, role: 'creator',     status: 'SHIPPED',      created_at: '2026-02-28', tracking_number: '1234567890' },
-  { id: 202, product_name: '갤럭시 S25 울트라 256GB',      seller_name: '가전천국',     price: 1350000, qty: 1, role: 'participant', status: 'PAID',         created_at: '2026-02-27' },
-  { id: 203, product_name: '다이슨 에어랩 멀티 스타일러',  seller_name: '디지털플러스', price: 520000,  qty: 1, role: 'participant', status: 'DELIVERED',    created_at: '2026-02-20' },
-  { id: 204, product_name: '나이키 에어포스 1 화이트',      qty: 2,                      role: 'participant', status: 'RECRUITING',   created_at: '2026-03-01' },
-  { id: 205, product_name: '아이패드 에어 M3 11인치',       qty: 1,                      role: 'participant', status: 'OFFER_PHASE',  created_at: '2026-03-02' },
-  { id: 206, product_name: 'PS5 슬림 디지털 에디션',        seller_name: '게임존',       price: 420000,  qty: 1, role: 'creator',     status: 'PENDING_PAY',  created_at: '2026-02-25' },
-  { id: 207, product_name: '맥북 에어 M3 15인치',           seller_name: '애플리셀러',   price: 1690000, qty: 1, role: 'participant', status: 'SHIPPED',      created_at: '2026-02-22', tracking_number: '9876543210' },
-  { id: 208, product_name: '종가집 포기김치 5kg',            seller_name: '식품왕',       price: 28000,   qty: 3, role: 'creator',     status: 'DELIVERED',    created_at: '2026-02-10' },
-  { id: 209, product_name: '삼성 QLED 65인치 TV',           qty: 1,                      role: 'participant', status: 'CANCELLED',    created_at: '2026-03-01' },
-  { id: 210, product_name: 'LG 그램 17인치',                seller_name: '테크마트',     price: 1890000, qty: 1, role: 'participant', status: 'PAID',         created_at: '2026-02-18' },
-  { id: 211, product_name: '다이슨 V15 무선청소기',         seller_name: '디지털플러스', price: 750000,  qty: 1, role: 'participant', status: 'DELIVERED',    created_at: '2026-01-20' },
-  { id: 212, product_name: '애플워치 울트라 2',              seller_name: '스마트딜',     price: 890000,  qty: 1, role: 'creator',     status: 'SHIPPED',      created_at: '2026-02-14', tracking_number: '5555555555' },
-];
+// Dynamic date helpers
+const _today = () => new Date().toISOString().split('T')[0];
+const _monthsAgo = (n: number) => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - n);
+  return d.toISOString().split('T')[0];
+};
 
 const STATUS_MAP: Record<ActivityStatus, { color: string; label: string; emoji: string }> = {
   RECRUITING:  { color: '#ffd600', label: '모집중',  emoji: '🟡' },
@@ -87,40 +80,48 @@ export default function MyOrdersPage() {
   const navigate = useNavigate();
   const { user }  = useAuth();
 
-  const [activities, setActivities] = useState<MyDealActivity[]>(MOCK_ALL_ACTIVITIES);
+  const [activities, setActivities] = useState<MyDealActivity[]>([]);
+  const [loading, setLoading]             = useState(true);
   const [statusFilter, setStatusFilter] = useState('전체');
-  const [dateFrom, setDateFrom]         = useState('2026-01-01');
-  const [dateTo, setDateTo]             = useState('2026-03-02');
+  const [dateFrom, setDateFrom]         = useState(_monthsAgo(3));
+  const [dateTo, setDateTo]             = useState(_today());
   const [keyword, setKeyword]           = useState('');
-  const [applied, setApplied]           = useState({ status: '전체', from: '2026-01-01', to: '2026-03-02', kw: '' });
+  const [applied, setApplied]           = useState({ status: '전체', from: _monthsAgo(3), to: _today(), kw: '' });
   const [page, setPage]                 = useState(1);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     const load = async () => {
-      const apiData = await fetchMyReservations();
-      if (apiData && Array.isArray(apiData) && apiData.length > 0) {
-        const mapped: MyDealActivity[] = (apiData as Record<string, unknown>[]).map(r => {
-          const deal   = r.deal   as Record<string, unknown> | undefined;
-          const offer  = r.offer  as Record<string, unknown> | undefined;
-          const seller = offer?.seller as Record<string, unknown> | undefined;
-          return {
-            id:             typeof r.id === 'number' ? r.id : 0,
-            product_name:   String(deal?.product_name ?? offer?.comment ?? `예약 #${r.id}`),
-            seller_name:    typeof seller?.nickname === 'string' ? seller.nickname
-                          : typeof seller?.business_name === 'string' ? seller.business_name
-                          : undefined,
-            price:          typeof r.amount_total === 'number' ? r.amount_total
-                          : typeof r.amount_goods === 'number' ? r.amount_goods
-                          : undefined,
-            qty:            typeof r.qty === 'number' ? r.qty : 1,
-            role:           deal?.creator_id === user.id ? 'creator' : 'participant',
-            status:         mapReservationStatus(String(r.status ?? ''), r),
-            created_at:     typeof r.created_at === 'string' ? r.created_at.split('T')[0] : '',
-            tracking_number: typeof r.tracking_number === 'string' ? r.tracking_number : undefined,
-          };
-        });
-        setActivities(mapped);
+      setLoading(true);
+      try {
+        const apiData = await fetchMyReservations();
+        if (apiData && Array.isArray(apiData)) {
+          const mapped: MyDealActivity[] = (apiData as Record<string, unknown>[]).map(r => {
+            const deal   = r.deal   as Record<string, unknown> | undefined;
+            const offer  = r.offer  as Record<string, unknown> | undefined;
+            const seller = offer?.seller as Record<string, unknown> | undefined;
+            return {
+              id:             typeof r.id === 'number' ? r.id : 0,
+              product_name:   String(deal?.product_name ?? offer?.comment ?? `예약 #${r.id}`),
+              seller_name:    typeof seller?.nickname === 'string' ? seller.nickname
+                            : typeof seller?.business_name === 'string' ? seller.business_name
+                            : undefined,
+              price:          typeof r.amount_total === 'number' ? r.amount_total
+                            : typeof r.amount_goods === 'number' ? r.amount_goods
+                            : undefined,
+              qty:            typeof r.qty === 'number' ? r.qty : 1,
+              role:           deal?.creator_id === user.id ? 'creator' : 'participant',
+              status:         mapReservationStatus(String(r.status ?? ''), r),
+              created_at:     typeof r.created_at === 'string' ? r.created_at.split('T')[0] : '',
+              tracking_number: typeof r.tracking_number === 'string' ? r.tracking_number : undefined,
+            };
+          });
+          setActivities(mapped);
+        }
+      } catch (err) {
+        console.error('예약 목록 로드 실패:', err);
+      } finally {
+        setLoading(false);
       }
     };
     void load();
@@ -201,8 +202,8 @@ export default function MyOrdersPage() {
 
   const doSearch = () => { setApplied({ status: statusFilter, from: dateFrom, to: dateTo, kw: keyword }); setPage(1); };
   const doReset  = () => {
-    setStatusFilter('전체'); setDateFrom('2026-01-01'); setDateTo('2026-03-02'); setKeyword('');
-    setApplied({ status: '전체', from: '2026-01-01', to: '2026-03-02', kw: '' }); setPage(1);
+    setStatusFilter('전체'); setDateFrom(_monthsAgo(3)); setDateTo(_today()); setKeyword('');
+    setApplied({ status: '전체', from: _monthsAgo(3), to: _today(), kw: '' }); setPage(1);
   };
 
   const inputSt: React.CSSProperties = {
@@ -262,7 +263,9 @@ export default function MyOrdersPage() {
 
         <div style={{ fontSize: 12, color: C.textDim, marginBottom: 10 }}>결과 {filtered.length}건</div>
 
-        {paged.length === 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: C.textDim, fontSize: 13 }}>불러오는 중...</div>
+        ) : paged.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 0', color: C.textDim, fontSize: 13 }}>조건에 맞는 내역이 없어요</div>
         ) : paged.map(item => {
           const st = STATUS_MAP[item.status];
