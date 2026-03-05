@@ -300,7 +300,13 @@ export default function OfferCreatePage() {
   };
 
   // ── 제출 ─────────────────────────────────────────────
+  const isUnverifiedSeller = user?.role === 'seller' && user?.verified === false;
+
   const handleSubmit = async () => {
+    if (isUnverifiedSeller) {
+      showToast('관리자 승인 후 오퍼를 제출할 수 있습니다.', 'error');
+      return;
+    }
     setSubmitting(true);
     const numPrice = parseInt(priceStr.replace(/[^\d]/g, ''), 10) || 0;
     try {

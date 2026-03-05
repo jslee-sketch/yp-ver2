@@ -61,14 +61,13 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         if b and verify_password(pw, b.password_hash):
             user, role = b, "buyer"
 
-    # 3. Seller
+    # 3. Seller (승인 여부와 무관하게 로그인 허용, 오퍼 제출만 제한)
     if not user:
         s = db.query(models.Seller).filter(models.Seller.email == email).first()
         if s and verify_password(pw, s.password_hash):
-            if not s.verified_at:
-                raise HTTPException(status_code=403, detail="승인 대기 중입니다. 관리자 승인 후 로그인 가능합니다.")
             user, role = s, "seller"
             extra_claims["seller_id"] = s.id
+            extra_claims["verified"] = bool(s.verified_at)
 
     # 4. Actuator
     if not user:
@@ -198,12 +197,8 @@ def seller_login(
     if not seller or not verify_password(form_data.password, seller.password_hash):
         raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다.")
 
-    if not seller.verified_at:
-        raise HTTPException(status_code=403,
-            detail="승인 대기 중입니다. 관리자 승인 후 로그인 가능합니다.")
-
     access_token = create_access_token(
-        data={"sub": str(seller.id), "role": "seller", "seller_id": seller.id},
+        data={"sub": str(seller.id), "role": "seller", "seller_id": seller.id, "verified": bool(seller.verified_at)},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     return {"access_token": access_token, "token_type": "bearer"}

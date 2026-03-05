@@ -17,6 +17,7 @@ export interface AuthUser {
   level: number;
   points: number;
   trust_tier?: string;
+  verified?: boolean;
   seller?: SellerInfo;
 }
 

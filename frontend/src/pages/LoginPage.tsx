@@ -60,11 +60,13 @@ export default function LoginPage() {
 
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
 
-        // JWT payload에서 role 확인
+        // JWT payload에서 role, verified 확인
         let jwtRole = '';
+        let jwtVerified = true;
         try {
           const payload = JSON.parse(atob(access_token.split('.')[1]));
           jwtRole = payload.role || '';
+          jwtVerified = payload.verified !== false;
         } catch { /* ignore */ }
 
         // 관리자 로그인
@@ -91,10 +93,11 @@ export default function LoginPage() {
               role: 'seller',
               level: s.level ?? 1,
               points: s.points ?? 0,
+              verified: jwtVerified,
               seller: { id: s.id, business_name: s.business_name || '', level: s.level ?? 1, points: s.points ?? 0 },
             });
           } catch {
-            login(access_token, { id: 0, email: email.trim(), name: email.split('@')[0], role: 'seller', level: 1, points: 0 });
+            login(access_token, { id: 0, email: email.trim(), name: email.split('@')[0], role: 'seller', level: 1, points: 0, verified: jwtVerified });
           }
         } else if (jwtRole === 'actuator') {
           try {
