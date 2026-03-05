@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { AuthUser } from '../contexts/AuthContext';
 import { FEATURES } from '../config';
@@ -26,10 +26,18 @@ const MOCK_USER: AuthUser = {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
+
+  // 회원가입 완료 후 넘어온 경우 이메일/비밀번호 자동 채움
+  useEffect(() => {
+    const st = location.state as { email?: string; password?: string } | null;
+    if (st?.email) setEmail(st.email);
+    if (st?.password) setPassword(st.password);
+  }, [location.state]);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
   const [showForgot, setShowForgot] = useState(false);

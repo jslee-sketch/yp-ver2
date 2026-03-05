@@ -1220,9 +1220,10 @@ function BizStep({
 const METHOD_LABELS: Record<string, string> = { kakao: '카카오', naver: '네이버', google: 'Google', phone: '전화번호', email: '이메일' };
 const ROLE_LABELS: Record<string, string> = { buyer: '구매자', seller: '판매자', actuator: '액추에이터' };
 
-function CompleteStep({ method, role, nickname, onFinish, navigate }: {
+function CompleteStep({ method, role, nickname, onFinish, navigate, email, password }: {
   method: string; role: string; nickname: string; onFinish: () => void;
-  navigate: (path: string) => void;
+  navigate: (path: string, opts?: { state?: Record<string, string> }) => void;
+  email?: string; password?: string;
 }) {
   const isSeller = role === 'seller';
   const isActuator = role === 'actuator';
@@ -1314,7 +1315,7 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
       )}
 
       <button
-        onClick={needsApproval ? () => navigate('/login') : onFinish}
+        onClick={needsApproval ? () => navigate('/login', { state: { email: email || '', password: password || '' } }) : onFinish}
         style={{
           width: '100%', maxWidth: 320, padding: '15px',
           borderRadius: 14, fontSize: 15, fontWeight: 800,
@@ -1890,6 +1891,8 @@ export default function RegisterPage() {
                 method={method}
                 role={role}
                 nickname={nickname}
+                email={email}
+                password={password}
                 onFinish={() => navigate('/')}
                 navigate={navigate}
               />
