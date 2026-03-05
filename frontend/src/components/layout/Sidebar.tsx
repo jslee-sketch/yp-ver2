@@ -221,7 +221,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                 }}>
                   {displayName.charAt(0)}
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#e8eaed', marginBottom: 2 }}>{displayName}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: '#e8eaed' }}>{displayName}</span>
+                  <span style={{
+                    padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+                    background: isAdmin ? 'rgba(224,64,251,0.12)' : isSeller ? 'rgba(255,145,0,0.12)' : 'rgba(0,230,118,0.12)',
+                    color: isAdmin ? '#e040fb' : isSeller ? '#ff9100' : '#00e676',
+                  }}>
+                    {isAdmin ? '관리자' : isSeller ? '판매자' : '구매자'}
+                  </span>
+                </div>
                 <div style={{ fontSize: 12, color: '#78909c', marginBottom: 10 }}>
                   {displayNickname ? `@${displayNickname} · ` : ''}{displayEmail}
                 </div>

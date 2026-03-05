@@ -154,6 +154,12 @@ class SellerOut(BaseModel):
     # (NEW)
     actuator_id: Optional[int] = None
     external_ratings: Optional[str] = None
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    account_holder: Optional[str] = None
+    business_license_image: Optional[str] = None
+    ecommerce_permit_image: Optional[str] = None
+    bankbook_image: Optional[str] = None
 
     class Config:
         from_attributes = True  # orm_mode 대신

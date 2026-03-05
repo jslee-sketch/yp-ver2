@@ -386,7 +386,20 @@ export default function MyPage() {
               {(u.nickname || u.name)[0]}
             </div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{u.nickname || u.name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{u.nickname || u.name}</span>
+                <span style={{
+                  padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+                  background: authUser?.role === 'admin' ? 'rgba(224,64,251,0.12)'
+                    : (authUser?.role === 'seller' || authUser?.role === 'both') ? 'rgba(255,145,0,0.12)'
+                    : 'rgba(0,230,118,0.12)',
+                  color: authUser?.role === 'admin' ? '#e040fb'
+                    : (authUser?.role === 'seller' || authUser?.role === 'both') ? '#ff9100'
+                    : '#00e676',
+                }}>
+                  {authUser?.role === 'admin' ? '관리자' : (authUser?.role === 'seller' || authUser?.role === 'both') ? '판매자' : '구매자'}
+                </span>
+              </div>
               <div style={{ fontSize: 12, color: C.textSec }}>{u.email} | {u.phone || '전화번호 미등록'}</div>
             </div>
           </div>
