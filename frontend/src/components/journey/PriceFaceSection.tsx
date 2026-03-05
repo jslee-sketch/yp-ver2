@@ -13,8 +13,19 @@ interface Props {
 export function PriceFaceSection({ anchor, target, lowestPrice, lowestSeller, lowestQty, onEditTarget }: Props) {
   const [rate, setRate]   = useState(0);
   const rafRef            = useRef<number | null>(null);
-  const targetRate        = Math.max(0, Math.min(100, Math.round(((anchor - lowestPrice) / (anchor - target)) * 100)));
-  const diff              = lowestPrice - target;
+
+  // 목표가 대비 최저오퍼 도달률
+  // 오퍼 없으면 0%, 오퍼가 목표가 이하면 100%, 그 사이면 비례
+  const targetRate = (() => {
+    if (!lowestPrice || lowestPrice <= 0 || !target || target <= 0) return 0;
+    if (lowestPrice <= target) return 100;
+    // anchor(시장가)가 있으면 그것을 상한으로, 없으면 lowestPrice * 1.3
+    const ceiling = anchor > target ? anchor : lowestPrice * 1.3;
+    if (ceiling <= target) return 100;
+    return Math.max(0, Math.min(100, Math.round(((ceiling - lowestPrice) / (ceiling - target)) * 100)));
+  })();
+
+  const diff = lowestPrice - target;
 
   useEffect(() => {
     let start: number | null = null;
@@ -74,25 +85,26 @@ export function PriceFaceSection({ anchor, target, lowestPrice, lowestSeller, lo
             🏁 목표가
           </div>
           <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: 24, fontWeight: 800, color: T.cyan, lineHeight: 1 }}>
-            {target.toLocaleString('ko-KR')}
+            {target > 0 ? target.toLocaleString('ko-KR') : '-'}
           </div>
           <div style={{ fontSize: 10, marginTop: 6, color: 'rgba(0,240,255,0.6)' }}>
-            100개 · 무료배송 기준
+            구매자 희망가
           </div>
         </div>
 
         <div style={{
           flex: 1, borderRadius: 14, padding: '16px 14px', textAlign: 'center',
-          background: 'rgba(57,255,20,0.06)', border: '1px solid rgba(57,255,20,0.2)',
+          background: lowestPrice > 0 ? 'rgba(57,255,20,0.06)' : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${lowestPrice > 0 ? 'rgba(57,255,20,0.2)' : T.border}`,
         }}>
-          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 1, color: T.green, marginBottom: 8, fontFamily: "'Space Mono', monospace", textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 1, color: lowestPrice > 0 ? T.green : T.textDim, marginBottom: 8, fontFamily: "'Space Mono', monospace", textTransform: 'uppercase' }}>
             ⛵ 최저 오퍼
           </div>
-          <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: 24, fontWeight: 800, color: T.green, lineHeight: 1 }}>
-            {lowestPrice.toLocaleString('ko-KR')}
+          <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: 24, fontWeight: 800, color: lowestPrice > 0 ? T.green : T.textDim, lineHeight: 1 }}>
+            {lowestPrice > 0 ? lowestPrice.toLocaleString('ko-KR') : '대기 중'}
           </div>
-          <div style={{ fontSize: 10, marginTop: 6, color: 'rgba(57,255,20,0.6)' }}>
-            {lowestSeller} · {lowestQty}개 기준
+          <div style={{ fontSize: 10, marginTop: 6, color: lowestPrice > 0 ? 'rgba(57,255,20,0.6)' : T.textDim }}>
+            {lowestPrice > 0 ? `${lowestSeller} · ${lowestQty}개 기준` : '오퍼를 기다리고 있어요'}
           </div>
         </div>
       </div>
@@ -105,7 +117,9 @@ export function PriceFaceSection({ anchor, target, lowestPrice, lowestSeller, lo
           borderRadius: 20, padding: '6px 14px',
           fontSize: 12, fontWeight: 600, color: T.yellow, whiteSpace: 'nowrap',
         }}>
-          {diff > 0
+          {lowestPrice <= 0
+            ? '오퍼 대기 중'
+            : diff > 0
             ? `차이 ${diff.toLocaleString('ko-KR')}원`
             : `목표가 달성! −${Math.abs(diff).toLocaleString('ko-KR')}원 저렴`}
         </div>
@@ -115,7 +129,7 @@ export function PriceFaceSection({ anchor, target, lowestPrice, lowestSeller, lo
       {/* ── Journey track ── */}
       <div style={{ position: 'relative', height: 52, margin: '0 4px' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between', fontSize: 10, color: T.textSec }}>
-          <span>시장가</span>
+          <span>최저 오퍼</span>
           <span style={{ color: T.cyan }}>목표가</span>
         </div>
         <div style={{
@@ -140,8 +154,8 @@ export function PriceFaceSection({ anchor, target, lowestPrice, lowestSeller, lo
           {rate}%
         </div>
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
-          <span style={{ color: T.textDim }}>₩{anchor.toLocaleString('ko-KR')}</span>
-          <span style={{ color: T.cyan }}>₩{target.toLocaleString('ko-KR')}</span>
+          <span style={{ color: T.textDim }}>{lowestPrice > 0 ? `₩${lowestPrice.toLocaleString('ko-KR')}` : '-'}</span>
+          <span style={{ color: T.cyan }}>{target > 0 ? `₩${target.toLocaleString('ko-KR')}` : '-'}</span>
         </div>
       </div>
 
@@ -160,8 +174,12 @@ export function PriceFaceSection({ anchor, target, lowestPrice, lowestSeller, lo
           {rate}%
         </div>
         <div style={{ fontSize: 12, color: T.textSec, lineHeight: 1.7 }}>
-          시장가에서 목표가까지<br />
-          <strong style={{ color: T.text }}>{targetRate}% 지점</strong>에 와 있어요
+          {lowestPrice <= 0
+            ? <>아직 오퍼가 없어요<br /><strong style={{ color: T.text }}>판매자의 제안을 기다려주세요</strong></>
+            : lowestPrice <= target
+            ? <>목표가에 도달했어요!<br /><strong style={{ color: T.green }}>지금 참여하면 목표가 이하로 구매 가능</strong></>
+            : <>목표가까지<br /><strong style={{ color: T.text }}>{targetRate}% 도달</strong> — 차이 {diff.toLocaleString('ko-KR')}원</>
+          }
         </div>
       </div>
     </div>

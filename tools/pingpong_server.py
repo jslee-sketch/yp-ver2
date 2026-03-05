@@ -14,30 +14,60 @@ from __future__ import annotations
 
 import os
 import sys
+import io
 import threading
 import time
+import traceback
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
+
+# ── UTF-8 강제 (Windows cp949 / Railway 호환) ──
+os.environ["PYTHONIOENCODING"] = "utf-8"
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+elif hasattr(sys.stdout, "buffer"):
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True)
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True)
+    except Exception:
+        pass
+
+print("[pingpong_server] Starting...", flush=True)
 
 # Ensure sibling import works regardless of cwd
 _here = Path(__file__).resolve().parent
 if str(_here) not in sys.path:
     sys.path.insert(0, str(_here))
 
-from fastapi import FastAPI
-from pydantic import BaseModel, Field
-import uvicorn
-from openai import OpenAI
-
-# Import sidecar module (__main__ guard prevents CLI from starting)
-import pingpong_sidecar_openai as sidecar
+# ── Import sidecar with error handling ──
+_import_ok = False
+sidecar = None
+try:
+    from fastapi import FastAPI
+    from pydantic import BaseModel, Field
+    import uvicorn
+    from openai import OpenAI
+    import pingpong_sidecar_openai as sidecar
+    _import_ok = True
+    print("[pingpong_server] All imports OK", flush=True)
+except Exception as e:
+    print(f"[pingpong_server] IMPORT FAILED: {e}", flush=True)
+    traceback.print_exc()
+    # Minimal imports for a stub server
+    try:
+        from fastapi import FastAPI
+        from pydantic import BaseModel, Field
+        import uvicorn
+    except Exception:
+        print("[pingpong_server] FATAL: cannot import FastAPI/uvicorn", flush=True)
+        sys.exit(1)
 
 # ──────────────────────────────────────────────────────────
 # Monkey-patch: redirect brain calls to /brain/ask
-#   Prevents circular proxy loop:
-#     /ask (proxy) → sidecar → call_pingpong_ask → /ask (proxy) → ∞
-#   With patch:
-#     /ask (proxy) → sidecar → call_pingpong_ask → /brain/ask (direct) ✓
 # ──────────────────────────────────────────────────────────
 
 def _brain_ask(
@@ -81,27 +111,32 @@ def _brain_ask(
         return {"error": "OFFLINE", "detail": repr(e), "_http_status": 0}
 
 
-sidecar.call_pingpong_ask = _brain_ask
+if _import_ok and sidecar:
+    sidecar.call_pingpong_ask = _brain_ask
 
 # ──────────────────────────────────────────────────────────
 # Session management
 # ──────────────────────────────────────────────────────────
 
-_client: Optional[OpenAI] = None
+_client = None
 _lock = threading.Lock()
-_sessions: Dict[str, sidecar.ConversationState] = {}
+_sessions: Dict[str, Any] = {}
 _MAX_SESSIONS = 200
 
 
-def _get_client() -> OpenAI:
+def _get_client():
     global _client
     if _client is None:
-        _client = OpenAI()
+        try:
+            _client = OpenAI()
+            print("[pingpong_server] OpenAI client created", flush=True)
+        except Exception as e:
+            print(f"[pingpong_server] OpenAI client FAILED: {e}", flush=True)
+            raise
     return _client
 
 
 def _evict_oldest_sessions() -> None:
-    """Simple eviction: drop oldest sessions when over limit."""
     if len(_sessions) <= _MAX_SESSIONS:
         return
     keys = list(_sessions.keys())
@@ -113,13 +148,7 @@ def _evict_oldest_sessions() -> None:
 # FastAPI app
 # ──────────────────────────────────────────────────────────
 
-app = FastAPI(title="Pingpong Sidecar Server", version="1.0")
-
-
-class ContextIn(BaseModel):
-    deal_id: Optional[int] = None
-    reservation_id: Optional[int] = None
-    offer_id: Optional[int] = None
+app = FastAPI(title="Pingpong Sidecar Server", version="1.1")
 
 
 class AskRequest(BaseModel):
@@ -136,15 +165,32 @@ class AskRequest(BaseModel):
 
 @app.on_event("startup")
 def startup():
+    print("[pingpong_server] startup event", flush=True)
+
+    if not _import_ok or not sidecar:
+        print("[pingpong_server] WARN: sidecar not imported, running stub mode", flush=True)
+        return
+
     # Auto-detect main app URL on Railway (PORT env is set by platform)
     if not os.environ.get("YP_SERVER_URL") and os.environ.get("PORT"):
         sidecar.YP_SERVER_URL = f"http://localhost:{os.environ['PORT']}"
+        print(f"[pingpong_server] YP_SERVER_URL set to {sidecar.YP_SERVER_URL}", flush=True)
 
-    sidecar.load_kb()
-    sidecar.load_time_values_from_defaults()
-    print(f"[sidecar-server] KB={len(sidecar.KB)} files, "
-          f"SSOT_TIME={len(sidecar.SSOT_TIME)} keys, "
-          f"YP_SERVER_URL={sidecar.YP_SERVER_URL}")
+    try:
+        sidecar.load_kb()
+        print(f"[pingpong_server] KB loaded: {len(sidecar.KB)} files", flush=True)
+    except Exception as e:
+        print(f"[pingpong_server] KB load FAILED: {e}", flush=True)
+        traceback.print_exc()
+
+    try:
+        sidecar.load_time_values_from_defaults()
+        print(f"[pingpong_server] SSOT_TIME loaded: {len(sidecar.SSOT_TIME)} keys", flush=True)
+    except Exception as e:
+        print(f"[pingpong_server] SSOT_TIME load FAILED: {e}", flush=True)
+
+    print(f"[pingpong_server] READY — KB={len(sidecar.KB)}, "
+          f"YP_SERVER_URL={sidecar.YP_SERVER_URL}", flush=True)
 
 
 @app.post("/ask")
@@ -153,8 +199,21 @@ def ask(req: AskRequest):
     Main endpoint — wraps sidecar step_once().
     Sync handler so FastAPI runs it in thread pool automatically.
     """
+    if not _import_ok or not sidecar:
+        return {
+            "answer": "AI agent is initializing, please try again shortly.",
+            "used_policies": [],
+            "actions": [],
+            "debug": {"engine": "sidecar_stub"},
+        }
+
     started = time.time()
-    answer = _process(req)
+    try:
+        answer = _process(req)
+    except Exception as e:
+        print(f"[pingpong_server] step_once ERROR: {e}", flush=True)
+        traceback.print_exc()
+        answer = "잠시 문제가 생겼어요. 다시 질문해주세요!"
     latency_ms = int((time.time() - started) * 1000)
     return {
         "answer": answer or "",
@@ -220,15 +279,18 @@ def _process(req: AskRequest) -> str:
 
 @app.get("/health")
 def health():
+    kb_count = len(sidecar.KB) if _import_ok and sidecar else 0
+    kb_loaded = (sidecar._KB_LOADED if _import_ok and sidecar else False)
     return {
-        "status": "ok",
-        "kb_loaded": sidecar._KB_LOADED,
-        "kb_count": len(sidecar.KB),
+        "status": "ok" if _import_ok else "degraded",
+        "import_ok": _import_ok,
+        "kb_loaded": kb_loaded,
+        "kb_count": kb_count,
         "sessions": len(_sessions),
     }
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("SIDECAR_PORT", "9100"))
-    print(f"[sidecar-server] Starting on port {port}")
+    print(f"[pingpong_server] Starting uvicorn on port {port}", flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, workers=1)
