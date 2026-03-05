@@ -745,6 +745,7 @@ function BizStep({
   actBizAddressDetail, setActBizAddressDetail,
   actCompanyPhone, setActCompanyPhone,
   actBizLicenseUrl, setActBizLicenseUrl, actEcommercePermitUrl, setActEcommercePermitUrl,
+  externalRatings, setExternalRatings,
   onNext,
 }: {
   role: string;
@@ -770,6 +771,8 @@ function BizStep({
   actCompanyPhone: string; setActCompanyPhone: (v: string) => void;
   actBizLicenseUrl: string; setActBizLicenseUrl: (v: string) => void;
   actEcommercePermitUrl: string; setActEcommercePermitUrl: (v: string) => void;
+  externalRatings: { platform: string; score: string; maxScore: string; evidenceType: 'file' | 'url'; evidenceFile: string; evidenceUrl: string }[];
+  setExternalRatings: (v: { platform: string; score: string; maxScore: string; evidenceType: 'file' | 'url'; evidenceFile: string; evidenceUrl: string }[]) => void;
   onNext: () => void;
 }) {
   const [bizVerify, setBizVerify] = useState<'idle' | 'checking' | 'ok'>('idle');
@@ -792,8 +795,13 @@ function BizStep({
   const doVerifyActuator = async () => {
     if (!actuatorCode) return;
     setActuatorError('');
+    const codeNum = Number(actuatorCode);
+    if (!codeNum || codeNum <= 0) {
+      setActuatorError('숫자로 된 코드를 입력해주세요');
+      return;
+    }
     try {
-      const res = await apiClient.get(API.ACTUATORS.DETAIL(Number(actuatorCode)));
+      const res = await apiClient.get(API.ACTUATORS.DETAIL(codeNum));
       const data = res.data as { name?: string; nickname?: string };
       setActuatorName(data.nickname || data.name || `액추에이터 #${actuatorCode}`);
       setActuatorVerified(true);
@@ -803,18 +811,22 @@ function BizStep({
     }
   };
 
-  const uploadFileGeneric = async (file: File, fieldKey: string, setter: (url: string) => void) => {
-    setUploadingField(fieldKey);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await apiClient.post(API.UPLOADS.IMAGE, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      const data = res.data as { url: string };
-      setter(data.url);
-    } catch {
-      showToast('파일 업로드에 실패했어요', 'error');
+  const uploadFileGeneric = (file: File, fieldKey: string, setter: (url: string) => void) => {
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('파일 크기는 5MB 이하여야 해요.', 'error');
+      return;
     }
-    setUploadingField('');
+    setUploadingField(fieldKey);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setter(reader.result as string);
+      setUploadingField('');
+    };
+    reader.onerror = () => {
+      showToast('파일 읽기에 실패했어요', 'error');
+      setUploadingField('');
+    };
+    reader.readAsDataURL(file);
   };
 
   // seller용 shortcut
@@ -829,36 +841,49 @@ function BizStep({
     // bankbook remains same
   }
 
+  const [fileNames, setFileNames] = useState<Record<string, string>>({});
   const FileUploadRow = ({ label, url, field, required }: {
     label: string; url: string; field: string; required?: boolean;
-  }) => (
-    <div>
-      <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 6 }}>
-        {label} {required && <span style={{ color: C.red }}>*</span>}
+  }) => {
+    const isImage = url && url.startsWith('data:image/');
+    return (
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 6 }}>
+          {label} {required && <span style={{ color: C.red }}>*</span>}
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <label style={{
+            flex: 0, padding: '10px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+            background: url ? `${C.green}20` : C.bgInput,
+            border: `1px solid ${url ? C.green : C.border}`,
+            color: url ? C.green : C.textSec,
+            cursor: uploadingField === field ? 'not-allowed' : 'pointer',
+            whiteSpace: 'nowrap', transition: 'all 0.15s',
+          }}>
+            {uploadingField === field ? '읽는 중...' : url ? '변경' : '파일 선택'}
+            <input type="file" accept=".jpg,.jpeg,.png,.pdf" style={{ display: 'none' }}
+              onChange={e => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  setFileNames(prev => ({ ...prev, [field]: f.name }));
+                  uploadFileGeneric(f, field, fieldSetters[field] || (() => {}));
+                }
+              }}
+            />
+          </label>
+          <span style={{ fontSize: 12, color: url ? C.green : C.textDim, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {url ? (fileNames[field] || '첨부 완료 ✓') : '미첨부'}
+          </span>
+        </div>
+        {isImage && (
+          <img src={url} alt={label} style={{ marginTop: 8, maxWidth: 120, maxHeight: 80, borderRadius: 8, border: `1px solid ${C.border}` }} />
+        )}
+        {url && !isImage && (
+          <div style={{ marginTop: 6, fontSize: 11, color: C.textSec }}>📄 PDF 파일 첨부됨</div>
+        )}
       </div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <label style={{
-          flex: 0, padding: '10px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
-          background: url ? `${C.green}20` : C.bgInput,
-          border: `1px solid ${url ? C.green : C.border}`,
-          color: url ? C.green : C.textSec,
-          cursor: uploadingField === field ? 'not-allowed' : 'pointer',
-          whiteSpace: 'nowrap', transition: 'all 0.15s',
-        }}>
-          {uploadingField === field ? '업로드 중...' : url ? '변경' : '파일 선택'}
-          <input type="file" accept="image/*,.pdf" style={{ display: 'none' }}
-            onChange={e => {
-              const f = e.target.files?.[0];
-              if (f) uploadFileGeneric(f, field, fieldSetters[field] || (() => {}));
-            }}
-          />
-        </label>
-        <span style={{ fontSize: 12, color: url ? C.green : C.textDim, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {url ? '업로드 완료 ✓' : '미첨부'}
-        </span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const canNext = isSeller
     ? !!bizName && !!ceoName && bizVerify === 'ok' && !!bankName && !!accountNum && !!accountHolder
@@ -937,8 +962,8 @@ function BizStep({
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   value={actuatorCode}
-                  onChange={e => { setActuatorCode(e.target.value.replace(/\D/g, '')); setActuatorVerified(false); setActuatorError(''); }}
-                  placeholder="추천 코드 입력"
+                  onChange={e => { setActuatorCode(e.target.value.trim()); setActuatorVerified(false); setActuatorError(''); }}
+                  placeholder="추천 코드 입력 (액추에이터 ID)"
                   disabled={actuatorVerified}
                   style={{
                     flex: 1, padding: '13px 14px', fontSize: 14, borderRadius: 12,
@@ -967,6 +992,80 @@ function BizStep({
               {actuatorError && (
                 <div style={{ fontSize: 11, color: C.red, marginTop: 4, paddingLeft: 2 }}>{actuatorError}</div>
               )}
+            </div>
+
+            {/* ── 외부 평점 (선택) ── */}
+            <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 4 }}>외부 평점 (선택)</div>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 14 }}>타 플랫폼에서의 판매 평점을 입력하면 신뢰도가 올라갑니다.</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {externalRatings.map((r, idx) => {
+                  const update = (field: string, val: string) => {
+                    const next = [...externalRatings];
+                    (next[idx] as Record<string, string>)[field] = val;
+                    setExternalRatings(next);
+                  };
+                  const isCustom = idx >= 2; // 카카오, 네이버 이외
+                  return (
+                    <div key={idx} style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                        {isCustom ? (
+                          <input
+                            value={r.platform} onChange={e => update('platform', e.target.value)}
+                            placeholder="플랫폼명"
+                            style={{ fontSize: 13, fontWeight: 700, color: C.text, background: C.bgInput, border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 10px', width: 140 }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{r.platform}</span>
+                        )}
+                        {isCustom && (
+                          <button onClick={() => { const next = externalRatings.filter((_, i) => i !== idx); setExternalRatings(next); }}
+                            style={{ fontSize: 11, color: C.red, cursor: 'pointer', background: 'none', padding: '4px 8px' }}>삭제</button>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 10 }}>
+                        <input value={r.score} onChange={e => update('score', e.target.value.replace(/[^\d.]/g, ''))}
+                          placeholder="평점" style={{ width: 60, padding: '8px 10px', fontSize: 13, borderRadius: 8, background: C.bgInput, border: `1px solid ${C.border}`, color: C.text, textAlign: 'center' }} />
+                        <span style={{ fontSize: 13, color: C.textSec }}>/</span>
+                        <input value={r.maxScore} onChange={e => update('maxScore', e.target.value.replace(/[^\d.]/g, ''))}
+                          placeholder="만점" style={{ width: 60, padding: '8px 10px', fontSize: 13, borderRadius: 8, background: C.bgInput, border: `1px solid ${C.border}`, color: C.text, textAlign: 'center' }} />
+                        <span style={{ fontSize: 11, color: C.textDim, marginLeft: 4 }}>근거:</span>
+                        <select value={r.evidenceType} onChange={e => update('evidenceType', e.target.value)}
+                          style={{ fontSize: 12, padding: '6px 8px', borderRadius: 8, background: C.bgInput, border: `1px solid ${C.border}`, color: C.text, cursor: 'pointer' }}>
+                          <option value="file">파일</option>
+                          <option value="url">URL</option>
+                        </select>
+                      </div>
+                      {r.evidenceType === 'url' ? (
+                        <input value={r.evidenceUrl} onChange={e => update('evidenceUrl', e.target.value)}
+                          placeholder="https://..." style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', fontSize: 13, borderRadius: 8, background: C.bgInput, border: `1px solid ${C.border}`, color: C.text }} />
+                      ) : (
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <label style={{ padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, background: r.evidenceFile ? `${C.green}20` : C.bgInput, border: `1px solid ${r.evidenceFile ? C.green : C.border}`, color: r.evidenceFile ? C.green : C.textSec, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            {r.evidenceFile ? '변경' : '파일 선택'}
+                            <input type="file" accept=".jpg,.jpeg,.png,.pdf" style={{ display: 'none' }} onChange={e => {
+                              const f = e.target.files?.[0];
+                              if (f) {
+                                if (f.size > 5 * 1024 * 1024) { showToast('파일 크기는 5MB 이하여야 해요.', 'error'); return; }
+                                const reader = new FileReader();
+                                reader.onload = () => update('evidenceFile', reader.result as string);
+                                reader.readAsDataURL(f);
+                              }
+                            }} />
+                          </label>
+                          <span style={{ fontSize: 11, color: r.evidenceFile ? C.green : C.textDim }}>{r.evidenceFile ? '첨부됨 ✓' : '미첨부'}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {externalRatings.length < 7 && (
+                  <button onClick={() => setExternalRatings([...externalRatings, { platform: '', score: '', maxScore: '', evidenceType: 'file', evidenceFile: '', evidenceUrl: '' }])}
+                    style={{ fontSize: 13, fontWeight: 700, color: C.cyan, background: 'none', cursor: 'pointer', padding: '8px 0', textAlign: 'left' }}>
+                    + 플랫폼 추가
+                  </button>
+                )}
+              </div>
             </div>
           </>
         ) : (
@@ -1262,6 +1361,13 @@ export default function RegisterPage() {
   const [actBizLicenseUrl, setActBizLicenseUrl] = useState('');
   const [actEcommercePermitUrl, setActEcommercePermitUrl] = useState('');
 
+  // step 5 — external ratings (seller only)
+  interface ExtRating { platform: string; score: string; maxScore: string; evidenceType: 'file' | 'url'; evidenceFile: string; evidenceUrl: string }
+  const [externalRatings, setExternalRatings] = useState<ExtRating[]>([
+    { platform: '카카오 스토어', score: '', maxScore: '', evidenceType: 'file', evidenceFile: '', evidenceUrl: '' },
+    { platform: '네이버 스마트스토어', score: '', maxScore: '', evidenceType: 'file', evidenceFile: '', evidenceUrl: '' },
+  ]);
+
   // ── Debounce timers ─────────────────────────────────────
   const nickTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const emailTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -1493,6 +1599,7 @@ export default function RegisterPage() {
               business_license_image: bizLicenseUrl || undefined,
               ecommerce_permit_image: ecommercePermitUrl || undefined,
               bankbook_image: bankbookUrl || undefined,
+              external_ratings: externalRatings.some(r => r.score) ? JSON.stringify(externalRatings.filter(r => r.score)) : undefined,
             });
           } else if (role === 'actuator') {
             // 액추에이터 API 호출
@@ -1690,6 +1797,7 @@ export default function RegisterPage() {
                   actCompanyPhone={actCompanyPhone} setActCompanyPhone={setActCompanyPhone}
                   actBizLicenseUrl={actBizLicenseUrl} setActBizLicenseUrl={setActBizLicenseUrl}
                   actEcommercePermitUrl={actEcommercePermitUrl} setActEcommercePermitUrl={setActEcommercePermitUrl}
+                  externalRatings={externalRatings} setExternalRatings={setExternalRatings}
                   onNext={() => { void goNext(); }}
                 />
                 {apiError && (

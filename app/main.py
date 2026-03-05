@@ -98,6 +98,7 @@ _alter_cols = [
     ("sellers", "business_license_image", "VARCHAR(500)"),
     ("sellers", "ecommerce_permit_image", "VARCHAR(500)"),
     ("sellers", "bankbook_image", "VARCHAR(500)"),
+    ("sellers", "external_ratings", "TEXT"),
     # actuator 신규 컬럼
     ("actuators", "password_hash", "VARCHAR(255)"),
     ("actuators", "nickname", "VARCHAR(50)"),

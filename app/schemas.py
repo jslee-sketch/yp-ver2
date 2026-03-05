@@ -131,6 +131,9 @@ class SellerCreate(BaseModel):
     ecommerce_permit_image: Optional[str] = None
     bankbook_image: Optional[str] = None
 
+    # 외부 평점 (JSON 문자열)
+    external_ratings: Optional[str] = None
+
 
 class SellerOut(BaseModel):
     id: int
@@ -150,10 +153,11 @@ class SellerOut(BaseModel):
 
     # (NEW)
     actuator_id: Optional[int] = None
+    external_ratings: Optional[str] = None
 
     class Config:
         from_attributes = True  # orm_mode 대신
-    
+
 
 #-------------Actuator -----------------------
 class ActuatorBase(BaseModel):

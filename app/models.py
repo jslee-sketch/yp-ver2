@@ -137,8 +137,11 @@ class Seller(Base):
     ecommerce_permit_image  = Column(String(500), nullable=True)
     bankbook_image          = Column(String(500), nullable=True)
 
+    # 외부 평점 (JSON 문자열)
+    external_ratings = Column(Text, nullable=True)
+
     actuator = relationship("Actuator", back_populates="sellers")
-    
+
     # (NEW) 이 Seller 거래로 발생한 Actuator 커미션들
     actuator_commissions = relationship("ActuatorCommission", backref="seller")
 
