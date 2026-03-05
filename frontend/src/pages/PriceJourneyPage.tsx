@@ -117,7 +117,6 @@ export default function PriceJourneyPage() {
   const [targetImages, setTargetImages]               = useState<string[]>([]);
   const [targetSubmitting, setTargetSubmitting]       = useState(false);
   const [currentDisplayPrice, setCurrentDisplayPrice] = useState(0);
-  const targetImgRef = useRef<HTMLInputElement>(null);
 
   // ── 예측 모달 ──
   const [showPredModal, setShowPredModal] = useState(false);
@@ -835,10 +834,27 @@ export default function PriceJourneyPage() {
               <div style={{ fontSize: 12, fontWeight: 700, color: T.textSec, marginBottom: 8 }}>증빙 이미지 (최대 2장)</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {targetImages.length < 2 && (
-                  <button onClick={() => { setTimeout(() => targetImgRef.current?.click(), 0); }} style={{ width: 64, height: 64, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: `1px dashed ${T.border}`, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                    <span style={{ fontSize: 20 }}>📷</span>
-                    <span style={{ fontSize: 9, color: T.textSec }}>추가</span>
-                  </button>
+                  <div style={{ position: 'relative', width: 64, height: 64 }}>
+                    <div style={{ width: 64, height: 64, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: `1px dashed ${T.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, pointerEvents: 'none' }}>
+                      <span style={{ fontSize: 20 }}>📷</span>
+                      <span style={{ fontSize: 9, color: T.textSec }}>추가</span>
+                    </div>
+                    <input
+                      type="file" accept="image/*" multiple
+                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                      onChange={e => {
+                        const files = e.target.files;
+                        if (!files) return;
+                        const next = [...targetImages];
+                        for (let i = 0; i < files.length; i++) {
+                          if (next.length >= 2) break;
+                          next.push(URL.createObjectURL(files[i]));
+                        }
+                        setTargetImages(next);
+                        e.target.value = '';
+                      }}
+                    />
+                  </div>
                 )}
                 {targetImages.map((src, i) => (
                   <div key={i} style={{ position: 'relative', width: 64, height: 64 }}>
@@ -847,23 +863,6 @@ export default function PriceJourneyPage() {
                   </div>
                 ))}
               </div>
-              <input
-                ref={targetImgRef}
-                type="file" accept="image/*" multiple
-                style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
-                onChange={e => {
-                  window.focus();
-                  const files = e.target.files;
-                  if (!files) return;
-                  const next = [...targetImages];
-                  for (let i = 0; i < files.length; i++) {
-                    if (next.length >= 2) break;
-                    next.push(URL.createObjectURL(files[i]));
-                  }
-                  setTargetImages(next);
-                  e.target.value = '';
-                }}
-              />
             </div>
 
             <div style={{ padding: '10px 12px', background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.2)', borderRadius: 10, marginBottom: 16 }}>

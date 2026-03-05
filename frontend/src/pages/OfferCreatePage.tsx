@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -149,7 +149,6 @@ export default function OfferCreatePage() {
   const [comment,   setComment]   = useState('');
   const [detail,    setDetail]    = useState('');
   const [images,    setImages]    = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Step 2: 배송 & 정책
   const [shippingMode,      setShippingMode]      = useState<'INCLUDED' | 'PER_RESERVATION' | 'PER_QTY'>('INCLUDED');
@@ -703,14 +702,6 @@ export default function OfferCreatePage() {
                 {/* 제품 이미지 */}
                 <div>
                   <Label>📸 제품 이미지 (최대 10장, 선택)</Label>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={e => { window.focus(); handleImageAdd(e); }}
-                    style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
-                  />
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {images.map((src, idx) => (
                       <div key={idx} style={{ position: 'relative', width: 72, height: 72, borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.border}`, flexShrink: 0 }}>
@@ -729,15 +720,20 @@ export default function OfferCreatePage() {
                       </div>
                     ))}
                     {images.length < 10 && (
-                      <button
-                        onClick={() => { setTimeout(() => fileInputRef.current?.click(), 0); }}
-                        style={{
-                          width: 72, height: 72, borderRadius: 10, flexShrink: 0,
+                      <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0 }}>
+                        <div style={{
+                          width: 72, height: 72, borderRadius: 10,
                           background: C.bgSurface, border: `1.5px dashed ${C.border}`,
-                          color: C.textSec, fontSize: 22, cursor: 'pointer',
+                          color: C.textSec, fontSize: 22,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}
-                      >+</button>
+                          pointerEvents: 'none',
+                        }}>+</div>
+                        <input
+                          type="file" accept="image/*" multiple
+                          onChange={e => handleImageAdd(e)}
+                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                        />
+                      </div>
                     )}
                   </div>
                   <div style={{ fontSize: 11, color: C.textDim, marginTop: 6 }}>
