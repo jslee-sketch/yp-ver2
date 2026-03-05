@@ -53,6 +53,7 @@ const WARRANTY_OPTIONS = [
   { months: 3,  label: '3개월' },
   { months: 6,  label: '6개월' },
   { months: 12, label: '12개월' },
+  { months: -1, label: '12개월+' },  // custom: triggers input
 ];
 
 const DELIVERY_CHIPS = [1, 2, 3] as const;
@@ -157,6 +158,7 @@ export default function OfferCreatePage() {
   const [deliveryDays,      setDeliveryDays]      = useState(2);
   const [showCustomDel,     setShowCustomDel]     = useState(false);
   const [warrantyMonths,    setWarrantyMonths]    = useState(0);
+  const [showCustomWarranty, setShowCustomWarranty] = useState(false);
   const [cancelRule,        setCancelRule]        = useState<CancelRule>('A1');
   const [cancelWithinDays,  setCancelWithinDays]  = useState(7);
   const [extraText,         setExtraText]         = useState('');
@@ -249,6 +251,7 @@ export default function OfferCreatePage() {
   // ── 핑퐁이 메시지 생성 ───────────────────────────────
   const generatePingpongMessage = (): string => {
     const parts: string[] = [];
+    if (!deal) return '';
     if (!tier) return '';
 
     if (tier === 'PREMIUM') {
@@ -259,10 +262,17 @@ export default function OfferCreatePage() {
       parts.push('목표가보다 높지만, 좋은 조건이면 선택될 수 있어요.');
     }
     if (shippingMode === 'INCLUDED') parts.push('무료배송으로 구매자 선택 확률이 높아요!');
-    if (warrantyMonths >= 12) parts.push('12개월 보증으로 신뢰도 최고!');
+    if (warrantyMonths >= 12) parts.push('12개월 이상 보증으로 신뢰도 최고!');
     else if (warrantyMonths >= 6) parts.push('6개월 보증이면 충분히 경쟁력 있어요.');
     if (cancelRule === 'A1') parts.push('환불 정책이 구매자 친화적이에요.');
-    if (rank > 0 && deal) parts.push(`현재 ${deal.offer_count}건의 오퍼 중 ${rank}위 가격!`);
+
+    if (deal.offer_count === 0) {
+      parts.push('아직 이 딜에 오퍼가 없어요. 첫 번째 오퍼를 제출해보세요!');
+    } else if (deal.lowest_offer > 0 && price <= deal.lowest_offer) {
+      parts.push('현재 최저가보다 낮은 가격이에요! 🎉');
+    } else if (rank > 0) {
+      parts.push(`현재 ${deal.offer_count}건의 오퍼 중 ${rank}위 가격!`);
+    }
 
     return parts.join(' ');
   };
@@ -735,7 +745,13 @@ export default function OfferCreatePage() {
                   </div>
                 </div>
 
-                {ctaBtn('다음 →', () => goTo(2), price <= 0)}
+                {ctaBtn('다음 →', () => {
+                  if (price <= 0 || totalQty <= 0) {
+                    showToast("'내 오퍼 가격'과 '수량'을 기입해주세요.", 'error');
+                    return;
+                  }
+                  goTo(2);
+                })}
               </div>
             )}
 
@@ -854,7 +870,7 @@ export default function OfferCreatePage() {
                         {d}일
                       </Chip>
                     ))}
-                    <Chip active={showCustomDel} onClick={() => { setShowCustomDel(true); if (!showCustomDel && deliveryDays < 5) setDeliveryDays(5); }}>
+                    <Chip active={showCustomDel} onClick={() => { setShowCustomDel(true); if (!showCustomDel || deliveryDays < 6) setDeliveryDays(6); }}>
                       5일+
                     </Chip>
                   </div>
@@ -862,13 +878,20 @@ export default function OfferCreatePage() {
                     <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                       <input
                         type="number"
-                        min={5} max={14}
+                        min={6} max={14}
                         value={deliveryDays}
-                        onChange={e => setDeliveryDays(Math.max(5, Math.min(14, parseInt(e.target.value) || 5)))}
+                        autoFocus
+                        onChange={e => {
+                          const v = parseInt(e.target.value) || 6;
+                          setDeliveryDays(Math.max(6, Math.min(14, v)));
+                        }}
+                        onBlur={() => {
+                          if (deliveryDays < 6) { setDeliveryDays(6); showToast('6~14일까지 선택 기입해주세요.', 'error'); }
+                        }}
                         className="oc-input"
                         style={{ ...inputStyle, width: 90, textAlign: 'center' }}
                       />
-                      <span style={{ fontSize: 13, color: C.textSec }}>일 이내 (최대 14일)</span>
+                      <span style={{ fontSize: 13, color: C.textSec }}>일 이내 (6~14일)</span>
                     </div>
                   )}
                 </div>
@@ -878,11 +901,37 @@ export default function OfferCreatePage() {
                   <Label>보증 기간</Label>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {WARRANTY_OPTIONS.map(opt => (
-                      <Chip key={opt.months} active={warrantyMonths === opt.months} onClick={() => setWarrantyMonths(opt.months)}>
+                      <Chip
+                        key={opt.months}
+                        active={opt.months === -1 ? showCustomWarranty : (!showCustomWarranty && warrantyMonths === opt.months)}
+                        onClick={() => {
+                          if (opt.months === -1) {
+                            setShowCustomWarranty(true);
+                            if (warrantyMonths < 13) setWarrantyMonths(13);
+                          } else {
+                            setShowCustomWarranty(false);
+                            setWarrantyMonths(opt.months);
+                          }
+                        }}
+                      >
                         {opt.label}
                       </Chip>
                     ))}
                   </div>
+                  {showCustomWarranty && (
+                    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <input
+                        type="number"
+                        min={13} max={60}
+                        value={warrantyMonths}
+                        autoFocus
+                        onChange={e => setWarrantyMonths(Math.max(13, Math.min(60, parseInt(e.target.value) || 13)))}
+                        className="oc-input"
+                        style={{ ...inputStyle, width: 90, textAlign: 'center' }}
+                      />
+                      <span style={{ fontSize: 13, color: C.textSec }}>개월 (13~60개월)</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* 환불/취소 정책 */}
@@ -921,13 +970,14 @@ export default function OfferCreatePage() {
                           <div style={{ marginTop: 8, marginLeft: 30, display: 'flex', alignItems: 'center', gap: 10 }}>
                             <input
                               type="number"
-                              min={1} max={30}
+                              min={1} max={365}
                               value={cancelWithinDays}
-                              onChange={e => setCancelWithinDays(Math.max(1, Math.min(30, parseInt(e.target.value) || 7)))}
+                              autoFocus
+                              onChange={e => setCancelWithinDays(Math.max(1, Math.min(365, parseInt(e.target.value) || 7)))}
                               className="oc-input"
                               style={{ ...inputStyle, width: 80, textAlign: 'center' }}
                             />
-                            <span style={{ fontSize: 13, color: C.textSec }}>일 이내 (1~30일)</span>
+                            <span style={{ fontSize: 13, color: C.textSec }}>일 이내 (최대 365일)</span>
                           </div>
                         )}
                       </div>

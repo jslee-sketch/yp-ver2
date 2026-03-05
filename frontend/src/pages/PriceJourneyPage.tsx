@@ -904,7 +904,14 @@ export default function PriceJourneyPage() {
         background: `linear-gradient(to bottom, transparent 0%, ${T.bgDeep} 35%)`,
       }}>
         <button
-          onClick={() => navigate(`/deal/${dealId ?? ''}/offer/create`)}
+          onClick={() => {
+            const role = (user?.role ?? '').toLowerCase();
+            if (role !== 'seller' && role !== 'both') {
+              showToast('판매자만 오퍼 제출이 가능합니다.', 'error');
+              return;
+            }
+            navigate(`/deal/${dealId ?? ''}/offer/create`);
+          }}
           style={{
             width: '100%', padding: '16px',
             background: `linear-gradient(135deg, #00f0ff, #39ff14)`,

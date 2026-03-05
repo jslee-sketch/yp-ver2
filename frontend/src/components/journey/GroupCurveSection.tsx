@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { T } from './journeyTokens';
 
-const ALPHA_G = 0.10;
-
-function groupPrice(q: number, anchor: number, qTarget: number): number {
-  const g     = Math.log(1 + q);
-  const g1    = Math.log(2);
-  const gt    = Math.log(1 + qTarget);
-  const gNorm = Math.max(0, Math.min(1, (g - g1) / (gt - g1)));
-  return anchor * (1 - ALPHA_G * gNorm);
+/**
+ * 공동구매 기대가격 곡선
+ * P(n) = marketPrice - (marketPrice - targetPrice) * (n / qTarget)^0.7
+ * n=0 → 시장가, n=qTarget → 목표가
+ */
+function groupPrice(q: number, anchor: number, qTarget: number, target?: number): number {
+  if (qTarget <= 0) return anchor;
+  const t = target ?? anchor * 0.9;   // fallback: target not passed → 90% of anchor
+  const ratio = Math.min(1, Math.max(0, q / qTarget));
+  return anchor - (anchor - t) * Math.pow(ratio, 0.7);
 }
 
 interface Props {
@@ -95,7 +97,7 @@ export function GroupCurveSection({ anchor, target, currentQ, qTarget, lowestOff
       ctx.lineWidth = 10;
       ctx.lineJoin = 'round';
       for (let q = 1; q <= MAX_Q; q++) {
-        const p = groupPrice(q, anchor, qTarget);
+        const p = groupPrice(q, anchor, qTarget, target);
         q === 1 ? ctx.moveTo(qToX(q), pToY(p)) : ctx.lineTo(qToX(q), pToY(p));
       }
       ctx.stroke();
@@ -106,14 +108,14 @@ export function GroupCurveSection({ anchor, target, currentQ, qTarget, lowestOff
       ctx.lineWidth = 2;
       ctx.lineJoin = 'round';
       for (let q = 1; q <= MAX_Q; q++) {
-        const p = groupPrice(q, anchor, qTarget);
+        const p = groupPrice(q, anchor, qTarget, target);
         q === 1 ? ctx.moveTo(qToX(q), pToY(p)) : ctx.lineTo(qToX(q), pToY(p));
       }
       ctx.stroke();
 
       // Original position marker (shown when dragging away from currentQ)
       if (hQ !== currentQ) {
-        const origP = groupPrice(currentQ, anchor, qTarget);
+        const origP = groupPrice(currentQ, anchor, qTarget, target);
         const ox = qToX(currentQ), oy = pToY(origP);
         ctx.beginPath();
         ctx.arc(ox, oy, 5, 0, Math.PI * 2);
@@ -126,13 +128,13 @@ export function GroupCurveSection({ anchor, target, currentQ, qTarget, lowestOff
       }
 
       // qTarget projection
-      const tgtP = groupPrice(qTarget, anchor, qTarget);
+      const tgtP = groupPrice(qTarget, anchor, qTarget, target);
       const tgtX = qToX(qTarget);
       ctx.setLineDash([2, 3]);
       ctx.strokeStyle = 'rgba(255,140,66,0.2)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(qToX(currentQ), pToY(groupPrice(currentQ, anchor, qTarget)));
+      ctx.moveTo(qToX(currentQ), pToY(groupPrice(currentQ, anchor, qTarget, target)));
       ctx.lineTo(tgtX, pToY(tgtP));
       ctx.stroke();
       ctx.setLineDash([]);
@@ -146,7 +148,7 @@ export function GroupCurveSection({ anchor, target, currentQ, qTarget, lowestOff
       ctx.fillText(`${qTarget}개→${Math.round(tgtP / 1000)}K`, tgtX, pToY(tgtP) + 15);
 
       // Draggable dot
-      const hP = groupPrice(hQ, anchor, qTarget);
+      const hP = groupPrice(hQ, anchor, qTarget, target);
       const hX = qToX(hQ), hY = pToY(hP);
       // outer ring
       ctx.beginPath();
@@ -224,9 +226,9 @@ export function GroupCurveSection({ anchor, target, currentQ, qTarget, lowestOff
     };
   }, [anchor, target, currentQ, qTarget, lowestOfferPrice]);
 
-  const dragP          = Math.round(groupPrice(readoutQ, anchor, qTarget));
+  const dragP          = Math.round(groupPrice(readoutQ, anchor, qTarget, target));
   const diffFromTarget = dragP - target;
-  const currentGP      = Math.round(groupPrice(currentQ, anchor, qTarget));
+  const currentGP      = Math.round(groupPrice(currentQ, anchor, qTarget, target));
   const savingVsCurrent = currentGP - dragP;
 
   return (

@@ -76,23 +76,23 @@ export const API = {
 
   // ── 오퍼 (v3.5) ─────────────────────────────────────────────
   OFFERS: {
-    LIST:              '/offers/',
-    CREATE:            '/offers/',
+    LIST:              '/offers',
+    CREATE:            '/offers',
     DETAIL:            (id: number)       => `/offers/${id}`,
     UPDATE:            (id: number)       => `/offers/${id}`,
     DEACTIVATE:        (id: number)       => `/offers/${id}/deactivate`,
-    BY_DEAL:           (dealId: number)   => `/offers/?deal_id=${dealId}`,
+    BY_DEAL:           (dealId: number)   => `/offers?deal_id=${dealId}`,
     PREVIEW_PRICING:   (id: number)       => `/offers/${id}/preview_pricing`,
     PREVIEW_PACK:      '/offers/preview_pack',
   },
 
   // ── 오퍼+예약 통합 (v3.6) ────────────────────────────────────
   OFFERS_V36: {
-    LIST:              '/v3_6/offers/',
-    CREATE:            '/v3_6/offers/',
+    LIST:              '/v3_6/offers',
+    CREATE:            '/v3_6/offers',
     DETAIL:            (id: number)       => `/v3_6/offers/${id}`,
     UPDATE:            (id: number)       => `/v3_6/offers/${id}`,
-    BY_DEAL:           (dealId: number)   => `/v3_6/offers/?deal_id=${dealId}`,
+    BY_DEAL:           (dealId: number)   => `/v3_6/offers?deal_id=${dealId}`,
     PREVIEW_PRICING:   (id: number)       => `/v3_6/offers/${id}/preview_pricing`,
   },
 
