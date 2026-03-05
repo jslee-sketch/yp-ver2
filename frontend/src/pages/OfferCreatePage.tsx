@@ -708,8 +708,8 @@ export default function OfferCreatePage() {
                     type="file"
                     accept="image/*"
                     multiple
-                    onChange={handleImageAdd}
-                    style={{ display: 'none' }}
+                    onChange={e => { window.focus(); handleImageAdd(e); }}
+                    style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
                   />
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {images.map((src, idx) => (
@@ -730,7 +730,7 @@ export default function OfferCreatePage() {
                     ))}
                     {images.length < 10 && (
                       <button
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => { setTimeout(() => fileInputRef.current?.click(), 0); }}
                         style={{
                           width: 72, height: 72, borderRadius: 10, flexShrink: 0,
                           background: C.bgSurface, border: `1.5px dashed ${C.border}`,

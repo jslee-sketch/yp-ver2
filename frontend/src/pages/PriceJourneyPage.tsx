@@ -835,7 +835,7 @@ export default function PriceJourneyPage() {
               <div style={{ fontSize: 12, fontWeight: 700, color: T.textSec, marginBottom: 8 }}>증빙 이미지 (최대 2장)</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {targetImages.length < 2 && (
-                  <button onClick={() => targetImgRef.current?.click()} style={{ width: 64, height: 64, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: `1px dashed ${T.border}`, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                  <button onClick={() => { setTimeout(() => targetImgRef.current?.click(), 0); }} style={{ width: 64, height: 64, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: `1px dashed ${T.border}`, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                     <span style={{ fontSize: 20 }}>📷</span>
                     <span style={{ fontSize: 9, color: T.textSec }}>추가</span>
                   </button>
@@ -850,8 +850,9 @@ export default function PriceJourneyPage() {
               <input
                 ref={targetImgRef}
                 type="file" accept="image/*" multiple
-                style={{ display: 'none' }}
+                style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
                 onChange={e => {
+                  window.focus();
                   const files = e.target.files;
                   if (!files) return;
                   const next = [...targetImages];

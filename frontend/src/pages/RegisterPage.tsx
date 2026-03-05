@@ -845,17 +845,37 @@ function BizStep({
   }
 
   const [fileNames, setFileNames] = useState<Record<string, string>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const FileUploadRow = ({ label, url, field, required }: {
     label: string; url: string; field: string; required?: boolean;
   }) => {
     const isImage = url && url.startsWith('data:image/');
+    const openPicker = () => {
+      if (uploadingField === field) return;
+      // setTimeout keeps Chrome focused on Windows
+      setTimeout(() => { fileInputRefs.current[field]?.click(); }, 0);
+    };
     return (
       <div>
         <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 6 }}>
           {label} {required && <span style={{ color: C.red }}>*</span>}
         </div>
+        <input
+          ref={el => { fileInputRefs.current[field] = el; }}
+          type="file" accept=".jpg,.jpeg,.png,.pdf"
+          style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+          onChange={e => {
+            window.focus();
+            const f = e.target.files?.[0];
+            if (f) {
+              setFileNames(prev => ({ ...prev, [field]: f.name }));
+              uploadFileGeneric(f, field, fieldSetters[field] || (() => {}));
+            }
+            e.target.value = '';
+          }}
+        />
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <label style={{
+          <button type="button" onClick={openPicker} style={{
             flex: 0, padding: '10px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
             background: url ? `${C.green}20` : C.bgInput,
             border: `1px solid ${url ? C.green : C.border}`,
@@ -864,16 +884,7 @@ function BizStep({
             whiteSpace: 'nowrap', transition: 'all 0.15s',
           }}>
             {uploadingField === field ? '읽는 중...' : url ? '변경' : '파일 선택'}
-            <input type="file" accept=".jpg,.jpeg,.png,.pdf" style={{ display: 'none' }}
-              onChange={e => {
-                const f = e.target.files?.[0];
-                if (f) {
-                  setFileNames(prev => ({ ...prev, [field]: f.name }));
-                  uploadFileGeneric(f, field, fieldSetters[field] || (() => {}));
-                }
-              }}
-            />
-          </label>
+          </button>
           <span style={{ fontSize: 12, color: url ? C.green : C.textDim, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {url ? (fileNames[field] || '첨부 완료 ✓') : '미첨부'}
           </span>
@@ -1044,9 +1055,12 @@ function BizStep({
                           placeholder="https://..." style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', fontSize: 13, borderRadius: 8, background: C.bgInput, border: `1px solid ${C.border}`, color: C.text }} />
                       ) : (
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <label style={{ padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, background: r.evidenceFile ? `${C.green}20` : C.bgInput, border: `1px solid ${r.evidenceFile ? C.green : C.border}`, color: r.evidenceFile ? C.green : C.textSec, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                            {r.evidenceFile ? '변경' : '파일 선택'}
-                            <input type="file" accept=".jpg,.jpeg,.png,.pdf" style={{ display: 'none' }} onChange={e => {
+                          <input
+                            ref={el => { fileInputRefs.current[`evidence_${idx}`] = el; }}
+                            type="file" accept=".jpg,.jpeg,.png,.pdf"
+                            style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+                            onChange={e => {
+                              window.focus();
                               const f = e.target.files?.[0];
                               if (f) {
                                 if (f.size > 5 * 1024 * 1024) { showToast('파일 크기는 5MB 이하여야 해요.', 'error'); return; }
@@ -1054,8 +1068,13 @@ function BizStep({
                                 reader.onload = () => update('evidenceFile', reader.result as string);
                                 reader.readAsDataURL(f);
                               }
-                            }} />
-                          </label>
+                              e.target.value = '';
+                            }}
+                          />
+                          <button type="button" onClick={() => { setTimeout(() => { fileInputRefs.current[`evidence_${idx}`]?.click(); }, 0); }}
+                            style={{ padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, background: r.evidenceFile ? `${C.green}20` : C.bgInput, border: `1px solid ${r.evidenceFile ? C.green : C.border}`, color: r.evidenceFile ? C.green : C.textSec, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            {r.evidenceFile ? '변경' : '파일 선택'}
+                          </button>
                           <span style={{ fontSize: 11, color: r.evidenceFile ? C.green : C.textDim }}>{r.evidenceFile ? '첨부됨 ✓' : '미첨부'}</span>
                         </div>
                       )}
