@@ -266,9 +266,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                 {isSeller && (
                   <>
                     <SectionTitle>판매자</SectionTitle>
-                    <MenuItem icon="💵" label="정산내역" onClick={() => go('/settlements')} />
-                    <MenuItem icon="📝" label="오퍼관리" onClick={() => go('/seller/offers')} />
-                    <MenuItem icon="⭐" label="리뷰관리" onClick={() => go('/seller/reviews')} />
+                    <MenuItem icon="🔍" label="딜 탐색"    onClick={() => go('/deals')} />
+                    <MenuItem icon="📝" label="내 오퍼 현황" onClick={() => go('/seller/offers')} />
+                    <MenuItem icon="📦" label="배송 관리"  onClick={() => go('/seller/shipping')} />
+                    <MenuItem icon="💵" label="정산 관리"  onClick={() => go('/settlements')} />
+                    <MenuItem icon="📊" label="판매 통계"  onClick={() => go('/seller/stats')} />
                   </>
                 )}
               </div>

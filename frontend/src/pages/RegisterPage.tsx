@@ -296,17 +296,19 @@ function isUnder14(year: number, month: number, day: number): boolean {
 
 function ExtraInfoStep({
   phone, setPhone, phoneStatus, phoneMsg,
+  companyPhone, setCompanyPhone,
   address, setAddress, zipCode, setZipCode, addressDetail, setAddressDetail,
   shippingAddr, setShippingAddr, shippingZip, setShippingZip, shippingDetail, setShippingDetail,
   sameAsAddr, setSameAsAddr,
   gender, setGender,
   birthYear, setBirthYear, birthMonth, setBirthMonth, birthDay, setBirthDay, birthError,
   paymentMethod, setPaymentMethod,
-  onNext,
+  role, onNext,
 }: {
   phone: string; setPhone: (v: string) => void;
   phoneStatus: 'idle' | 'checking' | 'ok' | 'taken' | 'invalid';
   phoneMsg: string;
+  companyPhone: string; setCompanyPhone: (v: string) => void;
   address: string; setAddress: (v: string) => void;
   zipCode: string; setZipCode: (v: string) => void;
   addressDetail: string; setAddressDetail: (v: string) => void;
@@ -320,8 +322,9 @@ function ExtraInfoStep({
   birthDay: string; setBirthDay: (v: string) => void;
   birthError: string;
   paymentMethod: string; setPaymentMethod: (v: string) => void;
-  onNext: () => void;
+  role: string; onNext: () => void;
 }) {
+  const isSeller = role === 'seller';
   const phoneColor = { idle: C.textSec, checking: C.yellow, ok: C.green, taken: C.red, invalid: C.red }[phoneStatus];
 
   const openDaumPost = (target: 'main' | 'shipping') => {
@@ -356,16 +359,31 @@ function ExtraInfoStep({
     background: '#1a1a2e', border: `1px solid ${C.border}`, color: '#ffffff',
   };
 
+  // 회사전화 포맷 (010 강제 아님, 일반전화 허용)
+  const formatGeneralPhone = (raw: string): string => {
+    const digits = raw.replace(/\D/g, '').slice(0, 12);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    if (digits.startsWith('02')) {
+      if (digits.length <= 6) return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+      if (digits.length <= 10) return `${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6)}`;
+      return `${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6, 10)}`;
+    }
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  };
+
   return (
     <div style={{ padding: '40px 24px' }}>
       <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 6 }}>추가 정보를 입력해요</div>
-      <div style={{ fontSize: 13, color: C.textSec, marginBottom: 28 }}>원활한 거래를 위해 정보를 입력해주세요. (전화번호만 필수)</div>
+      <div style={{ fontSize: 13, color: C.textSec, marginBottom: 28 }}>
+        {isSeller ? '판매 활동을 위한 연락처와 주소를 입력해주세요.' : '원활한 거래를 위해 정보를 입력해주세요. (전화번호만 필수)'}
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
-        {/* 전화번호 */}
+        {/* 전화번호 (핸드폰) */}
         <div>
           <InputField
-            label="전화번호 *" value={phone} onChange={setPhone}
+            label="전화번호 (핸드폰) *" value={phone} onChange={setPhone}
             placeholder="010-0000-0000" type="tel"
             error={phoneMsg && phoneStatus !== 'ok' && phoneStatus !== 'idle' && phoneStatus !== 'checking' ? phoneMsg : undefined}
           />
@@ -373,6 +391,17 @@ function ExtraInfoStep({
             <div style={{ fontSize: 11, color: phoneColor, marginTop: 4, paddingLeft: 2 }}>{phoneMsg}</div>
           )}
         </div>
+
+        {/* 판매자: 회사 전화번호 */}
+        {isSeller && (
+          <InputField
+            label="회사 전화번호"
+            value={companyPhone}
+            onChange={v => setCompanyPhone(formatGeneralPhone(v))}
+            placeholder="02-0000-0000 또는 070-0000-0000"
+            type="tel"
+          />
+        )}
 
         {/* 주소 (Daum Postcode) */}
         <div>
@@ -406,139 +435,144 @@ function ExtraInfoStep({
           />
         </div>
 
-        {/* 배송지 주소 */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>배송지 주소</label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: C.textSec, cursor: 'pointer' }}>
-              <input
-                type="checkbox" checked={sameAsAddr}
-                onChange={e => {
-                  setSameAsAddr(e.target.checked);
-                  if (e.target.checked) {
-                    setShippingAddr(address);
-                    setShippingZip(zipCode);
-                    setShippingDetail(addressDetail);
-                  }
-                }}
-              />
-              위와 동일
-            </label>
-          </div>
-          {sameAsAddr ? (
-            <input
-              readOnly
-              value={zipCode ? `[${zipCode}] ${address} ${addressDetail}` : `${address} ${addressDetail}`}
-              style={{
-                width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
-                background: C.bgInput, border: `1px solid ${C.border}`, color: C.text, opacity: 0.5,
-              }}
-            />
-          ) : (
-            <>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+        {/* 구매자 전용: 배송지, 성별, 생년월일, 결제수단 */}
+        {!isSeller && (
+          <>
+            {/* 배송지 주소 */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>배송지 주소</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: C.textSec, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox" checked={sameAsAddr}
+                    onChange={e => {
+                      setSameAsAddr(e.target.checked);
+                      if (e.target.checked) {
+                        setShippingAddr(address);
+                        setShippingZip(zipCode);
+                        setShippingDetail(addressDetail);
+                      }
+                    }}
+                  />
+                  위와 동일
+                </label>
+              </div>
+              {sameAsAddr ? (
                 <input
-                  readOnly value={shippingZip ? `[${shippingZip}] ${shippingAddr}` : shippingAddr}
-                  placeholder="주소 검색을 눌러주세요"
+                  readOnly
+                  value={zipCode ? `[${zipCode}] ${address} ${addressDetail}` : `${address} ${addressDetail}`}
                   style={{
-                    flex: 1, padding: '13px 14px', fontSize: 14, borderRadius: 12,
-                    background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+                    width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
+                    background: C.bgInput, border: `1px solid ${C.border}`, color: C.text, opacity: 0.5,
                   }}
                 />
-                <button
-                  onClick={() => openDaumPost('shipping')}
-                  style={{
-                    padding: '13px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
-                    background: C.bgInput, border: `1px solid ${C.border}`, color: C.cyan,
-                    cursor: 'pointer', whiteSpace: 'nowrap',
-                  }}
-                >주소 검색</button>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <input
+                      readOnly value={shippingZip ? `[${shippingZip}] ${shippingAddr}` : shippingAddr}
+                      placeholder="주소 검색을 눌러주세요"
+                      style={{
+                        flex: 1, padding: '13px 14px', fontSize: 14, borderRadius: 12,
+                        background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+                      }}
+                    />
+                    <button
+                      onClick={() => openDaumPost('shipping')}
+                      style={{
+                        padding: '13px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                        background: C.bgInput, border: `1px solid ${C.border}`, color: C.cyan,
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}
+                    >주소 검색</button>
+                  </div>
+                  <input
+                    value={shippingDetail}
+                    onChange={e => setShippingDetail(e.target.value)}
+                    placeholder="상세주소 입력 (동/호수 등)"
+                    style={{
+                      width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
+                      background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+                    }}
+                  />
+                </>
+              )}
+            </div>
+
+            {/* 성별 */}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8 }}>성별</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[{ key: 'male', label: '남성' }, { key: 'female', label: '여성' }, { key: 'other', label: '기타' }].map(g => {
+                  const active = gender === g.key;
+                  return (
+                    <button
+                      key={g.key}
+                      onClick={() => setGender(active ? '' : g.key)}
+                      style={{
+                        flex: 1, padding: '10px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+                        background: active ? `${C.green}20` : C.bgInput,
+                        border: `1px solid ${active ? C.green : C.border}`,
+                        color: active ? C.green : C.textSec,
+                        cursor: 'pointer', transition: 'all 0.15s',
+                      }}
+                    >
+                      {g.label}
+                    </button>
+                  );
+                })}
               </div>
-              <input
-                value={shippingDetail}
-                onChange={e => setShippingDetail(e.target.value)}
-                placeholder="상세주소 입력 (동/호수 등)"
-                style={{
-                  width: '100%', boxSizing: 'border-box', padding: '13px 14px', fontSize: 14, borderRadius: 12,
-                  background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
-                }}
-              />
-            </>
-          )}
-        </div>
+            </div>
 
-        {/* 성별 */}
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8 }}>성별</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {[{ key: 'male', label: '남성' }, { key: 'female', label: '여성' }, { key: 'other', label: '기타' }].map(g => {
-              const active = gender === g.key;
-              return (
-                <button
-                  key={g.key}
-                  onClick={() => setGender(active ? '' : g.key)}
-                  style={{
-                    flex: 1, padding: '10px', borderRadius: 12, fontSize: 13, fontWeight: 600,
-                    background: active ? `${C.green}20` : C.bgInput,
-                    border: `1px solid ${active ? C.green : C.border}`,
-                    color: active ? C.green : C.textSec,
-                    cursor: 'pointer', transition: 'all 0.15s',
-                  }}
-                >
-                  {g.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+            {/* 생년월일 — 3 selects */}
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>생년월일</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <select value={birthYear} onChange={e => setBirthYear(e.target.value)} style={selectStyle}>
+                  <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>년도</option>
+                  {years.map(y => <option key={y} value={y} style={{ background: '#1a1a2e', color: '#ffffff' }}>{y}년</option>)}
+                </select>
+                <select value={birthMonth} onChange={e => setBirthMonth(e.target.value)} style={selectStyle}>
+                  <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>월</option>
+                  {months.map(m => <option key={m} value={m} style={{ background: '#1a1a2e', color: '#ffffff' }}>{m}월</option>)}
+                </select>
+                <select value={birthDay} onChange={e => setBirthDay(e.target.value)} style={selectStyle}>
+                  <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>일</option>
+                  {days.map(d => <option key={d} value={d} style={{ background: '#1a1a2e', color: '#ffffff' }}>{d}일</option>)}
+                </select>
+              </div>
+              {birthError && <div style={{ fontSize: 11, color: C.red, marginTop: 6 }}>{birthError}</div>}
+            </div>
 
-        {/* 생년월일 — 3 selects */}
-        <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>생년월일</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <select value={birthYear} onChange={e => setBirthYear(e.target.value)} style={selectStyle}>
-              <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>년도</option>
-              {years.map(y => <option key={y} value={y} style={{ background: '#1a1a2e', color: '#ffffff' }}>{y}년</option>)}
-            </select>
-            <select value={birthMonth} onChange={e => setBirthMonth(e.target.value)} style={selectStyle}>
-              <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>월</option>
-              {months.map(m => <option key={m} value={m} style={{ background: '#1a1a2e', color: '#ffffff' }}>{m}월</option>)}
-            </select>
-            <select value={birthDay} onChange={e => setBirthDay(e.target.value)} style={selectStyle}>
-              <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>일</option>
-              {days.map(d => <option key={d} value={d} style={{ background: '#1a1a2e', color: '#ffffff' }}>{d}일</option>)}
-            </select>
-          </div>
-          {birthError && <div style={{ fontSize: 11, color: C.red, marginTop: 6 }}>{birthError}</div>}
-        </div>
-
-        {/* 결제수단 */}
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8 }}>선호 결제수단</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {REG_PAYMENT_OPTIONS.map(opt => {
-              const active = paymentMethod === opt.key;
-              return (
-                <button
-                  key={opt.key}
-                  onClick={() => setPaymentMethod(active ? '' : opt.key)}
-                  style={{
-                    padding: '8px 14px', borderRadius: 12, fontSize: 12, fontWeight: 600,
-                    background: active ? `${C.green}20` : C.bgInput,
-                    border: `1px solid ${active ? C.green : C.border}`,
-                    color: active ? C.green : C.textSec,
-                    cursor: 'pointer', transition: 'all 0.15s',
-                  }}
-                >
-                  {opt.icon} {opt.label}
-                </button>
-              );
-            })}
-          </div>
-          <div style={{ fontSize: 12, color: C.orange, marginTop: 8, padding: '8px 12px', background: 'rgba(255,152,0,0.06)', borderRadius: 8, lineHeight: 1.6 }}>
-            선호 결제수단입니다. 실제 결제 시 PG사를 통해 안전하게 처리됩니다.
-          </div>
-        </div>
+            {/* 결제수단 */}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8 }}>선호 결제수단</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {REG_PAYMENT_OPTIONS.map(opt => {
+                  const active = paymentMethod === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      onClick={() => setPaymentMethod(active ? '' : opt.key)}
+                      style={{
+                        padding: '8px 14px', borderRadius: 12, fontSize: 12, fontWeight: 600,
+                        background: active ? `${C.green}20` : C.bgInput,
+                        border: `1px solid ${active ? C.green : C.border}`,
+                        color: active ? C.green : C.textSec,
+                        cursor: 'pointer', transition: 'all 0.15s',
+                      }}
+                    >
+                      {opt.icon} {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: 12, color: C.orange, marginTop: 8, padding: '8px 12px', background: 'rgba(255,152,0,0.06)', borderRadius: 8, lineHeight: 1.6 }}>
+                선호 결제수단입니다. 실제 결제 시 PG사를 통해 안전하게 처리됩니다.
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <PrimaryBtn label="다음" onClick={onNext} disabled={!canNext} />
@@ -548,18 +582,28 @@ function ExtraInfoStep({
 
 // ── Step 4: 약관 동의 ─────────────────────────────────────
 function TermsStep({ termsAgreed, setTermsAgreed, privacyAgreed, setPrivacyAgreed,
-  marketingAgreed, setMarketingAgreed, onNext }: {
+  marketingAgreed, setMarketingAgreed,
+  sellerTermsAgreed, setSellerTermsAgreed,
+  ecommerceTermsAgreed, setEcommerceTermsAgreed,
+  role, onNext,
+}: {
   termsAgreed: boolean; setTermsAgreed: (v: boolean) => void;
   privacyAgreed: boolean; setPrivacyAgreed: (v: boolean) => void;
   marketingAgreed: boolean; setMarketingAgreed: (v: boolean) => void;
-  onNext: () => void;
+  sellerTermsAgreed: boolean; setSellerTermsAgreed: (v: boolean) => void;
+  ecommerceTermsAgreed: boolean; setEcommerceTermsAgreed: (v: boolean) => void;
+  role: string; onNext: () => void;
 }) {
-  const allChecked = termsAgreed && privacyAgreed && marketingAgreed;
+  const isSeller = role === 'seller';
+  const allChecked = termsAgreed && privacyAgreed && marketingAgreed
+    && (!isSeller || (sellerTermsAgreed && ecommerceTermsAgreed));
   const toggleAll = () => {
     const next = !allChecked;
     setTermsAgreed(next); setPrivacyAgreed(next); setMarketingAgreed(next);
+    if (isSeller) { setSellerTermsAgreed(next); setEcommerceTermsAgreed(next); }
   };
-  const canNext = termsAgreed && privacyAgreed;
+  const canNext = termsAgreed && privacyAgreed
+    && (!isSeller || (sellerTermsAgreed && ecommerceTermsAgreed));
 
   const [termModal, setTermModal] = useState<string | null>(null);
 
@@ -567,6 +611,8 @@ function TermsStep({ termsAgreed, setTermsAgreed, privacyAgreed, setPrivacyAgree
     '이용약관': '역핑 서비스 이용약관\n\n제1조 (목적)\n이 약관은 역핑(이하 "회사")이 제공하는 공동구매 중개 서비스(이하 "서비스")의 이용 조건 및 절차에 관한 사항을 규정함을 목적으로 합니다.\n\n제2조 (정의)\n1. "이용자"란 회사의 서비스에 접속하여 이 약관에 따라 회사가 제공하는 서비스를 이용하는 회원을 말합니다.\n2. "딜"이란 이용자가 공동구매를 위해 생성하는 거래 요청을 말합니다.\n3. "오퍼"란 판매자가 딜에 대해 제안하는 가격 및 조건을 말합니다.\n\n제3조 (약관의 효력)\n이 약관은 서비스 화면에 게시하거나 기타의 방법으로 이용자에게 공지함으로써 효력을 발생합니다.',
     '개인정보처리방침': '개인정보처리방침\n\n역핑(이하 "회사")은 이용자의 개인정보를 중요시하며, "개인정보 보호법" 등 관련 법령을 준수합니다.\n\n1. 수집하는 개인정보 항목\n- 필수: 이메일, 비밀번호, 닉네임\n- 선택: 전화번호, 주소, 성별, 생년월일\n\n2. 개인정보의 수집 및 이용 목적\n- 서비스 이용에 따른 본인확인, 회원관리\n- 공동구매 거래 처리 및 정산\n- 서비스 개선 및 마케팅 활용\n\n3. 개인정보의 보유 및 이용 기간\n- 회원 탈퇴 시까지 (법령에 따른 보관 의무가 있는 경우 해당 기간까지)',
     '마케팅 수신': '마케팅 정보 수신 동의\n\n역핑에서 제공하는 이벤트, 할인 정보, 신규 서비스 안내 등의 마케팅 정보를 이메일, SMS, 푸시 알림 등으로 수신하는 것에 동의합니다.\n\n마케팅 수신 동의는 선택사항이며, 동의하지 않아도 서비스 이용에는 제한이 없습니다.\n\n수신 동의 후에도 마이페이지에서 언제든 수신 거부할 수 있습니다.',
+    '판매자 이용약관': '역핑 판매자 이용약관\n\n제1조 (목적)\n이 약관은 역핑 플랫폼에서 판매 활동을 수행하는 판매자의 권리와 의무를 규정합니다.\n\n제2조 (판매자 의무)\n1. 판매자는 정확한 상품 정보를 제공해야 합니다.\n2. 판매자는 약속한 배송 기한 내에 상품을 발송해야 합니다.\n3. 판매자는 오퍼 확정 후 임의로 거래를 취소할 수 없습니다.\n\n제3조 (수수료)\n역핑은 거래 성사 시 정책에 따른 플랫폼 수수료를 정산 시 차감합니다.\n\n제4조 (정산)\n정산은 구매자의 구매확정 후 정산 정책에 따라 진행됩니다.',
+    '전자상거래법 동의': '전자상거래 등에서의 소비자보호에 관한 법률 동의\n\n전자상거래법 제13조에 따라 판매자는 다음 정보를 소비자에게 제공해야 합니다:\n\n1. 상호, 대표자 성명, 주소, 전화번호\n2. 사업자등록번호, 통신판매업 신고번호\n3. 상품의 가격, 배송비, 설치비 등 추가비용\n4. 청약철회 및 교환/반품 조건\n\n판매자는 위 법률을 준수하며 건전한 전자상거래 환경 조성에 동참합니다.',
   };
 
   const CheckRow = ({ checked, onChange, label, required, termKey }: {
@@ -637,6 +683,14 @@ function TermsStep({ termsAgreed, setTermsAgreed, privacyAgreed, setPrivacyAgree
         <CheckRow checked={privacyAgreed} onChange={setPrivacyAgreed} label="개인정보처리방침 동의" required termKey="개인정보처리방침" />
         <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
         <CheckRow checked={marketingAgreed} onChange={setMarketingAgreed} label="마케팅 수신 동의" termKey="마케팅 수신" />
+        {isSeller && (
+          <>
+            <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
+            <CheckRow checked={sellerTermsAgreed} onChange={setSellerTermsAgreed} label="판매자 이용약관 동의" required termKey="판매자 이용약관" />
+            <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
+            <CheckRow checked={ecommerceTermsAgreed} onChange={setEcommerceTermsAgreed} label="전자상거래법 동의" required termKey="전자상거래법 동의" />
+          </>
+        )}
       </div>
 
       <PrimaryBtn label="다음" onClick={onNext} disabled={!canNext} />
@@ -676,18 +730,38 @@ function TermsStep({ termsAgreed, setTermsAgreed, privacyAgreed, setPrivacyAgree
 }
 
 // ── Step 5: 사업자 정보 ───────────────────────────────────
-function BizStep({ role, onNext }: { role: string; onNext: () => void }) {
-  const [bizName,    setBizName]    = useState('');
-  const [bizNum,     setBizNum]     = useState('');
-  const [bizVerify,  setBizVerify]  = useState<'idle' | 'checking' | 'ok'>('idle');
-  const [ceoName,    setCeoName]    = useState('');
-  const [bankName,   setBankName]   = useState('');
-  const [accountNum, setAccountNum] = useState('');
-  const [manager, setManager] = useState('');
-  const [contact,  setContact]  = useState('');
-  const [region,   setRegion]   = useState('');
-  const [skills,   setSkills]   = useState<string[]>([]);
+function BizStep({
+  role,
+  bizName, setBizName, bizNum, setBizNum, ceoName, setCeoName,
+  bankName, setBankName, accountNum, setAccountNum, accountHolder, setAccountHolder,
+  actuatorCode, setActuatorCode, actuatorVerified, setActuatorVerified,
+  bizLicenseUrl, setBizLicenseUrl, ecommercePermitUrl, setEcommercePermitUrl, bankbookUrl, setBankbookUrl,
+  onNext,
+}: {
+  role: string;
+  bizName: string; setBizName: (v: string) => void;
+  bizNum: string; setBizNum: (v: string) => void;
+  ceoName: string; setCeoName: (v: string) => void;
+  bankName: string; setBankName: (v: string) => void;
+  accountNum: string; setAccountNum: (v: string) => void;
+  accountHolder: string; setAccountHolder: (v: string) => void;
+  actuatorCode: string; setActuatorCode: (v: string) => void;
+  actuatorVerified: boolean; setActuatorVerified: (v: boolean) => void;
+  bizLicenseUrl: string; setBizLicenseUrl: (v: string) => void;
+  ecommercePermitUrl: string; setEcommercePermitUrl: (v: string) => void;
+  bankbookUrl: string; setBankbookUrl: (v: string) => void;
+  onNext: () => void;
+}) {
+  const [bizVerify, setBizVerify] = useState<'idle' | 'checking' | 'ok'>('idle');
+  const [actuatorName, setActuatorName] = useState('');
+  const [actuatorError, setActuatorError] = useState('');
+  const [uploadingField, setUploadingField] = useState('');
 
+  // actuator local state for non-seller
+  const [manager, setManager] = useState('');
+  const [contact, setContact] = useState('');
+  const [region, setRegion] = useState('');
+  const [skills, setSkills] = useState<string[]>([]);
   const SKILL_OPTIONS = ['물류', '검수', '통관', 'QC', '계약', '컨설팅'];
 
   const doVerifyBiz = () => {
@@ -696,9 +770,68 @@ function BizStep({ role, onNext }: { role: string; onNext: () => void }) {
     setTimeout(() => setBizVerify('ok'), 1200);
   };
 
+  const doVerifyActuator = async () => {
+    if (!actuatorCode) return;
+    setActuatorError('');
+    try {
+      const res = await apiClient.get(API.ACTUATORS.DETAIL(Number(actuatorCode)));
+      const data = res.data as { name?: string; nickname?: string };
+      setActuatorName(data.nickname || data.name || `액추에이터 #${actuatorCode}`);
+      setActuatorVerified(true);
+    } catch {
+      setActuatorError('유효하지 않은 코드예요');
+      setActuatorVerified(false);
+    }
+  };
+
+  const uploadFile = async (file: File, field: 'bizLicense' | 'ecommercePermit' | 'bankbook') => {
+    setUploadingField(field);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await apiClient.post(API.UPLOADS.IMAGE, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const data = res.data as { url: string };
+      if (field === 'bizLicense') setBizLicenseUrl(data.url);
+      else if (field === 'ecommercePermit') setEcommercePermitUrl(data.url);
+      else setBankbookUrl(data.url);
+    } catch {
+      showToast('파일 업로드에 실패했어요', 'error');
+    }
+    setUploadingField('');
+  };
+
+  const FileUploadRow = ({ label, url, field, required }: {
+    label: string; url: string; field: 'bizLicense' | 'ecommercePermit' | 'bankbook'; required?: boolean;
+  }) => (
+    <div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 6 }}>
+        {label} {required && <span style={{ color: C.red }}>*</span>}
+      </div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <label style={{
+          flex: 0, padding: '10px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+          background: url ? `${C.green}20` : C.bgInput,
+          border: `1px solid ${url ? C.green : C.border}`,
+          color: url ? C.green : C.textSec,
+          cursor: uploadingField === field ? 'not-allowed' : 'pointer',
+          whiteSpace: 'nowrap', transition: 'all 0.15s',
+        }}>
+          {uploadingField === field ? '업로드 중...' : url ? '변경' : '파일 선택'}
+          <input type="file" accept="image/*,.pdf" style={{ display: 'none' }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(f, field); }}
+          />
+        </label>
+        <span style={{ fontSize: 12, color: url ? C.green : C.textDim, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {url ? '업로드 완료 ✓' : '미첨부'}
+        </span>
+      </div>
+    </div>
+  );
+
   const isSeller = role === 'seller';
-  const canNext  = isSeller
-    ? !!bizName && !!ceoName && bizVerify === 'ok' && !!bankName && !!accountNum
+  const canNext = isSeller
+    ? !!bizName && !!ceoName && bizVerify === 'ok' && !!bankName && !!accountNum && !!accountHolder
+      && !!bizLicenseUrl && !!ecommercePermitUrl && !!bankbookUrl
     : !!manager && !!contact;
 
   return (
@@ -713,9 +846,9 @@ function BizStep({ role, onNext }: { role: string; onNext: () => void }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
         {isSeller ? (
           <>
-            <InputField label="사업자명" value={bizName} onChange={setBizName} placeholder="상호명 입력" />
+            <InputField label="사업자명 *" value={bizName} onChange={setBizName} placeholder="상호명 입력" />
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>사업자번호</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>사업자번호 *</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   value={bizNum}
@@ -742,13 +875,64 @@ function BizStep({ role, onNext }: { role: string; onNext: () => void }) {
                 </button>
               </div>
             </div>
-            <InputField label="대표자 이름" value={ceoName} onChange={setCeoName} placeholder="대표자 성함" />
+            <InputField label="대표자 이름 *" value={ceoName} onChange={setCeoName} placeholder="대표자 성함" />
+
+            {/* 서류 첨부 3종 */}
+            <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 12 }}>서류 첨부</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <FileUploadRow label="사업자등록증" url={bizLicenseUrl} field="bizLicense" required />
+                <FileUploadRow label="통신판매업신고증" url={ecommercePermitUrl} field="ecommercePermit" required />
+                <FileUploadRow label="통장사본" url={bankbookUrl} field="bankbook" required />
+              </div>
+            </div>
+
+            {/* 정산 계좌 */}
             <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 12 }}>정산 계좌</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <InputField label="은행명" value={bankName} onChange={setBankName} placeholder="예: 국민은행" />
-                <InputField label="계좌번호" value={accountNum} onChange={setAccountNum} placeholder="- 없이 숫자만" type="tel" />
+                <InputField label="은행명 *" value={bankName} onChange={setBankName} placeholder="예: 국민은행" />
+                <InputField label="계좌번호 *" value={accountNum} onChange={setAccountNum} placeholder="- 없이 숫자만" type="tel" />
+                <InputField label="예금주 *" value={accountHolder} onChange={setAccountHolder} placeholder="예금주명" />
               </div>
+            </div>
+
+            {/* 액추에이터 추천 코드 */}
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>액추에이터 추천 코드 (선택)</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={actuatorCode}
+                  onChange={e => { setActuatorCode(e.target.value.replace(/\D/g, '')); setActuatorVerified(false); setActuatorError(''); }}
+                  placeholder="추천 코드 입력"
+                  disabled={actuatorVerified}
+                  style={{
+                    flex: 1, padding: '13px 14px', fontSize: 14, borderRadius: 12,
+                    background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
+                    opacity: actuatorVerified ? 0.5 : 1,
+                  }}
+                />
+                <button
+                  onClick={doVerifyActuator}
+                  disabled={!actuatorCode || actuatorVerified}
+                  style={{
+                    padding: '13px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                    background: actuatorVerified ? `${C.green}20` : C.bgInput,
+                    border: `1px solid ${actuatorVerified ? C.green : C.border}`,
+                    color: actuatorVerified ? C.green : C.textSec,
+                    cursor: (!actuatorCode || actuatorVerified) ? 'not-allowed' : 'pointer',
+                    whiteSpace: 'nowrap', transition: 'all 0.15s',
+                  }}
+                >
+                  {actuatorVerified ? '확인됨 ✓' : '확인'}
+                </button>
+              </div>
+              {actuatorVerified && actuatorName && (
+                <div style={{ fontSize: 11, color: C.green, marginTop: 4, paddingLeft: 2 }}>담당 액추에이터: {actuatorName}</div>
+              )}
+              {actuatorError && (
+                <div style={{ fontSize: 11, color: C.red, marginTop: 4, paddingLeft: 2 }}>{actuatorError}</div>
+              )}
             </div>
           </>
         ) : (
@@ -796,6 +980,8 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
   method: string; role: string; nickname: string; onFinish: () => void;
   navigate: (path: string) => void;
 }) {
+  const isSeller = role === 'seller';
+
   return (
     <div style={{
       minHeight: '100dvh', display: 'flex', flexDirection: 'column',
@@ -834,44 +1020,62 @@ function CompleteStep({ method, role, nickname, onFinish, navigate }: {
         ))}
       </div>
 
-      <div style={{
-        width: '100%', maxWidth: 320,
-        background: 'rgba(255,152,0,0.06)',
-        border: '1px solid rgba(255,152,0,0.25)',
-        borderRadius: 16, padding: '18px 20px', marginBottom: 20,
-      }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: C.orange, marginBottom: 8 }}>💳 결제수단을 미리 등록하세요!</div>
-        <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.7, marginBottom: 14 }}>
-          역핑에서는 오퍼 확정 후 결제 시간이 단 <strong style={{ color: C.orange }}>5분</strong>입니다.<br />
-          원활한 거래를 위해 결제수단을 먼저 등록해주세요.
+      {isSeller ? (
+        /* 판매자: 승인 대기 안내 */
+        <div style={{
+          width: '100%', maxWidth: 320,
+          background: 'rgba(0,229,255,0.06)',
+          border: '1px solid rgba(0,229,255,0.25)',
+          borderRadius: 16, padding: '18px 20px', marginBottom: 20,
+        }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: C.cyan, marginBottom: 8 }}>관리자 승인 대기 중</div>
+          <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.7 }}>
+            제출하신 서류를 검토 중이에요.<br />
+            관리자 승인 후 판매를 시작할 수 있어요.<br />
+            승인이 완료되면 알림을 보내드릴게요.
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={() => navigate('/mypage')}
-            style={{
-              flex: 1, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-              background: `${C.orange}18`, border: `1px solid ${C.orange}44`, color: C.orange, cursor: 'pointer',
-            }}
-          >지금 등록하기</button>
-          <button
-            onClick={onFinish}
-            style={{
-              flex: 1, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-              background: 'rgba(255,255,255,0.06)', border: `1px solid rgba(255,255,255,0.1)`, color: C.textSec, cursor: 'pointer',
-            }}
-          >나중에 할게요</button>
+      ) : (
+        /* 구매자: 결제수단 CTA */
+        <div style={{
+          width: '100%', maxWidth: 320,
+          background: 'rgba(255,152,0,0.06)',
+          border: '1px solid rgba(255,152,0,0.25)',
+          borderRadius: 16, padding: '18px 20px', marginBottom: 20,
+        }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: C.orange, marginBottom: 8 }}>결제수단을 미리 등록하세요!</div>
+          <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.7, marginBottom: 14 }}>
+            역핑에서는 오퍼 확정 후 결제 시간이 단 <strong style={{ color: C.orange }}>5분</strong>입니다.<br />
+            원활한 거래를 위해 결제수단을 먼저 등록해주세요.
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => navigate('/mypage')}
+              style={{
+                flex: 1, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                background: `${C.orange}18`, border: `1px solid ${C.orange}44`, color: C.orange, cursor: 'pointer',
+              }}
+            >지금 등록하기</button>
+            <button
+              onClick={onFinish}
+              style={{
+                flex: 1, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                background: 'rgba(255,255,255,0.06)', border: `1px solid rgba(255,255,255,0.1)`, color: C.textSec, cursor: 'pointer',
+              }}
+            >나중에 할게요</button>
+          </div>
         </div>
-      </div>
+      )}
 
       <button
-        onClick={onFinish}
+        onClick={isSeller ? () => navigate('/login') : onFinish}
         style={{
           width: '100%', maxWidth: 320, padding: '15px',
           borderRadius: 14, fontSize: 15, fontWeight: 800,
           background: `linear-gradient(135deg, ${C.green}, ${C.cyan})`,
           color: '#0a0a0f', cursor: 'pointer',
         }}
-      >역핑 시작하기 →</button>
+      >{isSeller ? '로그인하기' : '역핑 시작하기 →'}</button>
     </div>
   );
 }
@@ -922,11 +1126,27 @@ export default function RegisterPage() {
   const [birthMonth,    setBirthMonth]   = useState('');
   const [birthDay,      setBirthDay]     = useState('');
   const [paymentMethod, setPaymentMethod]= useState('');
+  const [companyPhone,  setCompanyPhone] = useState('');
 
   // step 4 — terms
   const [termsAgreed,     setTermsAgreed]     = useState(false);
   const [privacyAgreed,   setPrivacyAgreed]   = useState(false);
   const [marketingAgreed, setMarketingAgreed] = useState(false);
+  const [sellerTermsAgreed,    setSellerTermsAgreed]    = useState(false);
+  const [ecommerceTermsAgreed, setEcommerceTermsAgreed] = useState(false);
+
+  // step 5 — biz (lifted from BizStep for seller API call)
+  const [bizName,       setBizName]       = useState('');
+  const [bizNum,        setBizNum]        = useState('');
+  const [ceoName,       setCeoName]       = useState('');
+  const [bankName,      setBankName]      = useState('');
+  const [accountNum,    setAccountNum]    = useState('');
+  const [accountHolder, setAccountHolder] = useState('');
+  const [actuatorCode,     setActuatorCode]     = useState('');
+  const [actuatorVerified, setActuatorVerified] = useState(false);
+  const [bizLicenseUrl,       setBizLicenseUrl]       = useState('');
+  const [ecommercePermitUrl,  setEcommercePermitUrl]  = useState('');
+  const [bankbookUrl,         setBankbookUrl]         = useState('');
 
   // ── Debounce timers ─────────────────────────────────────
   const nickTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -1085,49 +1305,93 @@ export default function RegisterPage() {
     if (step === 2) { goTo(3); return; }
     if (step === 3) { goTo(4); return; }
     if (step === 4) {
-      // 약관 동의 후 → API 가입
-      if (FEATURES.USE_API_AUTH && method === 'email') {
+      // 약관 동의 후 → 구매자면 buyer API, 판매자/액츄에이터는 BizStep
+      if (role === 'buyer') {
+        if (FEATURES.USE_API_AUTH && method === 'email') {
+          setRegistering(true);
+          setApiError('');
+
+          const fullAddress = address ? (addressDetail ? `${address} ${addressDetail}` : address) : undefined;
+          const fullBirthDate = birthYear && birthMonth && birthDay
+            ? `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`
+            : undefined;
+
+          try {
+            await apiClient.post(API.BUYERS.LIST, {
+              email: email.trim(), password,
+              name: nickname, nickname,
+              phone: phone.replace(/\D/g, '') || undefined,
+              address: fullAddress,
+              zip_code: zipCode || undefined,
+              gender: gender || undefined,
+              birth_date: fullBirthDate || undefined,
+              payment_method: paymentMethod || undefined,
+            });
+            const loginRes = await loginApi(email.trim(), password);
+            const { access_token } = loginRes.data as { access_token: string };
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+            login(access_token, {
+              id: 0, email: email.trim(),
+              name: nickname, nickname,
+              role: 'buyer', level: 1, points: 0,
+            });
+            goTo(6);
+          } catch (err: unknown) {
+            const e = err as { response?: { data?: { detail?: unknown } } };
+            const detail = e.response?.data?.detail;
+            setApiError(typeof detail === 'string' ? detail : '가입에 실패했어요. 이미 사용된 이메일일 수 있어요.');
+          } finally {
+            setRegistering(false);
+          }
+          return;
+        }
+        goTo(6);
+      } else {
+        // 판매자/액추에이터 → BizStep
+        goTo(5);
+      }
+      return;
+    }
+    if (step === 5) {
+      // 판매자: seller API 호출
+      if (role === 'seller' && FEATURES.USE_API_AUTH && method === 'email') {
         setRegistering(true);
         setApiError('');
 
         const fullAddress = address ? (addressDetail ? `${address} ${addressDetail}` : address) : undefined;
-        const fullBirthDate = birthYear && birthMonth && birthDay
-          ? `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`
-          : undefined;
 
         try {
-          await apiClient.post(API.BUYERS.LIST, {
+          await apiClient.post(API.SELLERS.LIST, {
             email: email.trim(), password,
-            name: nickname, nickname,
+            business_name: bizName,
+            nickname,
+            business_number: bizNum.replace(/\D/g, ''),
             phone: phone.replace(/\D/g, '') || undefined,
-            address: fullAddress,
-            zip_code: zipCode || undefined,
-            gender: gender || undefined,
-            birth_date: fullBirthDate || undefined,
-            payment_method: paymentMethod || undefined,
+            company_phone: companyPhone.replace(/\D/g, '') || undefined,
+            address: fullAddress || '',
+            zip_code: zipCode || '',
+            established_date: new Date().toISOString(),
+            bank_name: bankName || undefined,
+            account_number: accountNum || undefined,
+            account_holder: accountHolder || undefined,
+            actuator_id: actuatorVerified && actuatorCode ? Number(actuatorCode) : undefined,
+            business_license_image: bizLicenseUrl || undefined,
+            ecommerce_permit_image: ecommercePermitUrl || undefined,
+            bankbook_image: bankbookUrl || undefined,
           });
-          const loginRes = await loginApi(email.trim(), password);
-          const { access_token } = loginRes.data as { access_token: string };
-          apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-          login(access_token, {
-            id: 0, email: email.trim(),
-            name: nickname, nickname,
-            role: 'buyer', level: 1, points: 0,
-          });
-          goTo(role === 'buyer' ? 6 : 5);
+          // 판매자는 verified_at=null → 자동 로그인 스킵
+          goTo(6);
         } catch (err: unknown) {
           const e = err as { response?: { data?: { detail?: unknown } } };
           const detail = e.response?.data?.detail;
-          setApiError(typeof detail === 'string' ? detail : '가입에 실패했어요. 이미 사용된 이메일일 수 있어요.');
+          setApiError(typeof detail === 'string' ? detail : '판매자 가입에 실패했어요.');
         } finally {
           setRegistering(false);
         }
         return;
       }
-      goTo(role === 'buyer' ? 6 : 5);
-      return;
+      goTo(6);
     }
-    if (step === 5) goTo(6);
   };
 
   const goBack = () => {
@@ -1216,6 +1480,7 @@ export default function RegisterPage() {
               <ExtraInfoStep
                 phone={phone} setPhone={setPhone}
                 phoneStatus={phoneStatus} phoneMsg={phoneMsg}
+                companyPhone={companyPhone} setCompanyPhone={setCompanyPhone}
                 address={address} setAddress={setAddress}
                 zipCode={zipCode} setZipCode={setZipCode}
                 addressDetail={addressDetail} setAddressDetail={setAddressDetail}
@@ -1229,6 +1494,7 @@ export default function RegisterPage() {
                 birthDay={birthDay} setBirthDay={setBirthDay}
                 birthError={birthError}
                 paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
+                role={role}
                 onNext={() => { void goNext(); }}
               />
             )}
@@ -1238,6 +1504,9 @@ export default function RegisterPage() {
                   termsAgreed={termsAgreed} setTermsAgreed={setTermsAgreed}
                   privacyAgreed={privacyAgreed} setPrivacyAgreed={setPrivacyAgreed}
                   marketingAgreed={marketingAgreed} setMarketingAgreed={setMarketingAgreed}
+                  sellerTermsAgreed={sellerTermsAgreed} setSellerTermsAgreed={setSellerTermsAgreed}
+                  ecommerceTermsAgreed={ecommerceTermsAgreed} setEcommerceTermsAgreed={setEcommerceTermsAgreed}
+                  role={role}
                   onNext={() => { void goNext(); }}
                 />
                 {apiError && (
@@ -1252,7 +1521,35 @@ export default function RegisterPage() {
                 )}
               </div>
             )}
-            {step === 5 && <BizStep role={role} onNext={() => { void goNext(); }} />}
+            {step === 5 && (
+              <div>
+                <BizStep
+                  role={role}
+                  bizName={bizName} setBizName={setBizName}
+                  bizNum={bizNum} setBizNum={setBizNum}
+                  ceoName={ceoName} setCeoName={setCeoName}
+                  bankName={bankName} setBankName={setBankName}
+                  accountNum={accountNum} setAccountNum={setAccountNum}
+                  accountHolder={accountHolder} setAccountHolder={setAccountHolder}
+                  actuatorCode={actuatorCode} setActuatorCode={setActuatorCode}
+                  actuatorVerified={actuatorVerified} setActuatorVerified={setActuatorVerified}
+                  bizLicenseUrl={bizLicenseUrl} setBizLicenseUrl={setBizLicenseUrl}
+                  ecommercePermitUrl={ecommercePermitUrl} setEcommercePermitUrl={setEcommercePermitUrl}
+                  bankbookUrl={bankbookUrl} setBankbookUrl={setBankbookUrl}
+                  onNext={() => { void goNext(); }}
+                />
+                {apiError && (
+                  <div style={{ padding: '0 24px 20px', marginTop: -16 }}>
+                    <div style={{ fontSize: 12, color: C.red, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.25)' }}>
+                      {apiError}
+                    </div>
+                  </div>
+                )}
+                {registering && (
+                  <div style={{ textAlign: 'center', padding: '0 24px 20px', fontSize: 13, color: C.textSec }}>가입 처리 중...</div>
+                )}
+              </div>
+            )}
             {step === 6 && (
               <CompleteStep
                 method={method}

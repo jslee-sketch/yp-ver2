@@ -240,4 +240,9 @@ export const API = {
     SIMULATE:          '/admin/simulate',
   },
 
+  // ── 액추에이터 ─────────────────────────────────────────────
+  ACTUATORS: {
+    DETAIL:            (id: number) => `/actuators/${id}`,
+  },
+
 } as const;

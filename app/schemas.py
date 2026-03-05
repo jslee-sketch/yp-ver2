@@ -126,6 +126,11 @@ class SellerCreate(BaseModel):
     account_number: Optional[str] = None
     account_holder: Optional[str] = None
 
+    # 서류 이미지 URL (선택)
+    business_license_image: Optional[str] = None
+    ecommerce_permit_image: Optional[str] = None
+    bankbook_image: Optional[str] = None
+
 
 class SellerOut(BaseModel):
     id: int

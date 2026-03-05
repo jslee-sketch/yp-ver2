@@ -88,12 +88,19 @@ export default function MyPage() {
   const navigate = useNavigate();
   const { user: authUser, logout } = useAuth();
   const [apiProfile, setApiProfile] = useState<Record<string, unknown> | null>(null);
+  const [sellerProfile, setSellerProfile] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     if (!authUser) return;
     apiClient.get(API.BUYERS.PROFILE)
       .then(res => { if (res.data) setApiProfile(res.data as Record<string, unknown>); })
       .catch(() => {});
+    // seller profile fetch
+    if (authUser.role === 'seller' || authUser.role === 'both') {
+      apiClient.get(API.SELLERS.PROFILE)
+        .then(res => { if (res.data) setSellerProfile(res.data as Record<string, unknown>); })
+        .catch(() => {});
+    }
   }, [authUser]);
 
   const u = {
@@ -141,6 +148,58 @@ export default function MyPage() {
   const [showEditNewPw, setShowEditNewPw] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState('');
+
+  // ── Seller Edit Modal State ─────────────────────────────
+  const [showSellerEdit, setShowSellerEdit] = useState(false);
+  const [sellerEditPhone, setSellerEditPhone] = useState('');
+  const [sellerEditCompanyPhone, setSellerEditCompanyPhone] = useState('');
+  const [sellerEditAddress, setSellerEditAddress] = useState('');
+  const [sellerEditZipCode, setSellerEditZipCode] = useState('');
+  const [sellerEditBankName, setSellerEditBankName] = useState('');
+  const [sellerEditAccountNum, setSellerEditAccountNum] = useState('');
+  const [sellerEditAccountHolder, setSellerEditAccountHolder] = useState('');
+  const [sellerEditSaving, setSellerEditSaving] = useState(false);
+  const [sellerEditError, setSellerEditError] = useState('');
+
+  const openSellerEditModal = () => {
+    const sp = sellerProfile || {};
+    setSellerEditPhone(String(sp.phone ?? ''));
+    setSellerEditCompanyPhone(String(sp.company_phone ?? ''));
+    setSellerEditAddress(String(sp.address ?? ''));
+    setSellerEditZipCode(String(sp.zip_code ?? ''));
+    setSellerEditBankName(String(sp.bank_name ?? ''));
+    setSellerEditAccountNum(String(sp.account_number ?? ''));
+    setSellerEditAccountHolder(String(sp.account_holder ?? ''));
+    setSellerEditError('');
+    setShowSellerEdit(true);
+  };
+
+  const saveSellerProfile = async () => {
+    if (!sellerProfile) return;
+    setSellerEditSaving(true);
+    setSellerEditError('');
+    try {
+      await apiClient.patch(API.SELLERS.UPDATE(Number(sellerProfile.id)), {
+        phone: sellerEditPhone || undefined,
+        company_phone: sellerEditCompanyPhone || undefined,
+        address: sellerEditAddress || undefined,
+        zip_code: sellerEditZipCode || undefined,
+        bank_name: sellerEditBankName || undefined,
+        account_number: sellerEditAccountNum || undefined,
+        account_holder: sellerEditAccountHolder || undefined,
+      });
+      // refresh
+      const res = await apiClient.get(API.SELLERS.PROFILE);
+      if (res.data) setSellerProfile(res.data as Record<string, unknown>);
+      setShowSellerEdit(false);
+      showToast('판매자 정보가 수정되었어요', 'success');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { detail?: unknown } } };
+      const detail = e.response?.data?.detail;
+      setSellerEditError(typeof detail === 'string' ? detail : '판매자 정보 수정에 실패했어요');
+    }
+    setSellerEditSaving(false);
+  };
 
   // ── Withdraw Modal State ────────────────────────────────
   const [showWithdraw, setShowWithdraw] = useState(false);
@@ -359,38 +418,60 @@ export default function MyPage() {
         </Card>
 
         {/* 판매자 정보 */}
-        {u.isSeller && u.seller && (
-          <Card>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>판매자 정보</div>
-            <InfoRow label="사업자명" value={u.seller.business_name} />
-            <InfoRow label="판매자 레벨" value={`Lv.${u.seller.level}`} valueColor={C.blue} />
-            <InfoRow label="판매자 포인트" value={`${u.seller.points.toLocaleString()}P`} valueColor={C.yellow} />
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 10 }}>빠른 메뉴</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {[
-                  { icon: '💵', label: '정산내역', path: '/settlements' },
-                  { icon: '📝', label: '오퍼관리', path: '/seller/offers' },
-                  { icon: '⭐', label: '리뷰관리', path: '/seller/reviews' },
-                ].map(m => (
-                  <button
-                    key={m.label}
-                    onClick={() => navigate(m.path)}
-                    style={{
-                      flex: 1, padding: '10px 4px', borderRadius: 10, fontSize: 11, fontWeight: 700,
-                      background: C.bgEl, border: `1px solid ${C.border}`,
-                      color: C.textSec, cursor: 'pointer',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                    }}
-                  >
-                    <span style={{ fontSize: 18 }}>{m.icon}</span>
-                    <span>{m.label}</span>
-                  </button>
-                ))}
+        {u.isSeller && (sellerProfile || u.seller) && (() => {
+          const sp = sellerProfile || (u.seller as Record<string, unknown> | undefined) || {};
+          const verifiedAt = String(sp.verified_at ?? '');
+          const isVerified = !!verifiedAt && verifiedAt !== '' && verifiedAt !== 'null' && verifiedAt !== 'None';
+          return (
+            <Card>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>판매자 정보</div>
+              <InfoRow label="사업자명" value={String(sp.business_name ?? '-')} />
+              <InfoRow label="사업자번호" value={String(sp.business_number ?? '-')} />
+              <InfoRow label="회사전화" value={String(sp.company_phone ?? '미등록')} />
+              <InfoRow label="주소" value={String(sp.address ?? '미등록')} />
+              <InfoRow label="정산 은행" value={String(sp.bank_name ?? '미등록')} />
+              <InfoRow label="정산 계좌" value={String(sp.account_number ?? '미등록')} />
+              <InfoRow label="예금주" value={String(sp.account_holder ?? '미등록')} />
+              <InfoRow label="판매자 레벨" value={`Lv.${sp.level ?? 1}`} valueColor={C.blue} />
+              <InfoRow label="판매자 포인트" value={`${Number(sp.points ?? 0).toLocaleString()}P`} valueColor={C.yellow} />
+              <InfoRow label="검증 상태" value={isVerified ? '승인됨' : '승인 대기'} valueColor={isVerified ? C.green : C.orange} />
+
+              <button
+                onClick={openSellerEditModal}
+                style={{
+                  width: '100%', marginTop: 14, padding: '11px 0', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                  background: `${C.blue}22`, border: `1px solid ${C.blue}66`, color: C.blue, cursor: 'pointer',
+                }}
+              >판매자 정보 수정</button>
+
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 10 }}>빠른 메뉴</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[
+                    { icon: '📝', label: '내 오퍼', path: '/seller/offers' },
+                    { icon: '📦', label: '배송관리', path: '/seller/shipping' },
+                    { icon: '💵', label: '정산관리', path: '/settlements' },
+                    { icon: '📊', label: '판매통계', path: '/seller/stats' },
+                  ].map(m => (
+                    <button
+                      key={m.label}
+                      onClick={() => navigate(m.path)}
+                      style={{
+                        flex: 1, padding: '10px 4px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                        background: C.bgEl, border: `1px solid ${C.border}`,
+                        color: C.textSec, cursor: 'pointer',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                      }}
+                    >
+                      <span style={{ fontSize: 18 }}>{m.icon}</span>
+                      <span>{m.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </Card>
-        )}
+            </Card>
+          );
+        })()}
 
         {/* 계정 관리 */}
         <Card>
@@ -615,6 +696,91 @@ export default function MyPage() {
                   color: C.green, cursor: editSaving ? 'not-allowed' : 'pointer',
                 }}
               >{editSaving ? '저장 중...' : '저장'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════
+          판매자 정보 수정 BottomSheet
+         ════════════════════════════════════════════════════ */}
+      {showSellerEdit && (
+        <div
+          onClick={() => setShowSellerEdit(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 2000, display: 'flex', alignItems: 'flex-end' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxHeight: '90dvh', background: C.bgCard,
+              borderRadius: '20px 20px 0 0', padding: '20px 20px 40px', overflowY: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>판매자 정보 수정</span>
+              <button onClick={() => setShowSellerEdit(false)} style={{ fontSize: 18, color: C.textDim, cursor: 'pointer', background: 'none', border: 'none' }}>&#x2715;</button>
+            </div>
+
+            <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, marginBottom: 10, letterSpacing: 1 }}>연락처</div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>전화번호</div>
+              <input type="tel" value={sellerEditPhone} onChange={e => setSellerEditPhone(e.target.value)} style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>회사 전화번호</div>
+              <input type="tel" value={sellerEditCompanyPhone} onChange={e => setSellerEditCompanyPhone(e.target.value)} style={inputStyle} />
+            </div>
+
+            <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, marginTop: 16, marginBottom: 10, letterSpacing: 1 }}>주소</div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                <input readOnly value={sellerEditZipCode ? `[${sellerEditZipCode}] ${sellerEditAddress}` : sellerEditAddress} placeholder="주소 검색" style={{ ...inputStyle, flex: 1 }} />
+                <button onClick={() => {
+                  if (!window.daum?.Postcode) { showToast('주소 검색 서비스를 불러오는 중이에요.', 'info'); return; }
+                  new window.daum.Postcode({
+                    oncomplete: (data) => { setSellerEditAddress(data.address); setSellerEditZipCode(data.zonecode); },
+                  }).open();
+                }} style={{ padding: '10px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, background: C.bgEl, border: `1px solid ${C.border}`, color: C.blue, cursor: 'pointer', whiteSpace: 'nowrap' }}>주소 검색</button>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 11, color: C.textDim, fontWeight: 700, marginTop: 16, marginBottom: 10, letterSpacing: 1 }}>정산 계좌</div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>은행명</div>
+              <input value={sellerEditBankName} onChange={e => setSellerEditBankName(e.target.value)} style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>계좌번호</div>
+              <input value={sellerEditAccountNum} onChange={e => setSellerEditAccountNum(e.target.value)} style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>예금주</div>
+              <input value={sellerEditAccountHolder} onChange={e => setSellerEditAccountHolder(e.target.value)} style={inputStyle} />
+            </div>
+
+            {sellerEditError && (
+              <div style={{ fontSize: 12, color: C.red, marginBottom: 14, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,82,82,0.08)' }}>
+                {sellerEditError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setShowSellerEdit(false)}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                  background: C.bgEl, border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer',
+                }}
+              >취소</button>
+              <button
+                onClick={saveSellerProfile}
+                disabled={sellerEditSaving}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                  background: sellerEditSaving ? `${C.blue}55` : `${C.blue}22`, border: `1px solid ${C.blue}66`,
+                  color: C.blue, cursor: sellerEditSaving ? 'not-allowed' : 'pointer',
+                }}
+              >{sellerEditSaving ? '저장 중...' : '저장'}</button>
             </div>
           </div>
         </div>

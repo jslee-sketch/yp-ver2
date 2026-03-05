@@ -95,6 +95,9 @@ _alter_cols = [
     ("deals", "condition", "VARCHAR"),
     ("deals", "market_price", "FLOAT"),
     ("deal_ai_logs", "note", "TEXT"),
+    ("sellers", "business_license_image", "VARCHAR(500)"),
+    ("sellers", "ecommerce_permit_image", "VARCHAR(500)"),
+    ("sellers", "bankbook_image", "VARCHAR(500)"),
 ]
 try:
     _insp = _sa.inspect(engine)
@@ -370,6 +373,22 @@ async def lifespan(app: FastAPI):
                 _seed_db.add(_demo_deal)
                 _seed_db.commit()
                 print(f"[seed] Created buyer #{_demo_buyer.id}, seller #{_demo_seller.id}, deal #{_demo_deal.id}")
+
+            # admin seed (항상 실행 — 관리자 계정이 없으면 생성)
+            _admin_exists = _seed_db.query(models.User).filter(models.User.email == "admin@yeokping.com").first()
+            if not _admin_exists:
+                from passlib.context import CryptContext as _Ctx2
+                _pwd2 = _Ctx2(schemes=["bcrypt"], deprecated="auto")
+                _admin = models.User(
+                    email="admin@yeokping.com",
+                    password_hash=_pwd2.hash("admin1234!"),
+                    name="관리자",
+                    role="admin",
+                    is_active=True,
+                )
+                _seed_db.add(_admin)
+                _seed_db.commit()
+                print("[seed] Admin account created: admin@yeokping.com / admin1234!", flush=True)
         finally:
             _seed_db.close()
     except Exception as _se:
