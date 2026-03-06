@@ -96,7 +96,7 @@ def read_me(request: _SellerRequest, db: Session = Depends(database.get_db)):
                         "is_active": getattr(seller, "is_active", True),
                         "created_at": str(getattr(seller, "created_at", "")),
                         "shipping_policy": getattr(seller, "shipping_policy", None),
-                        "birth_date": str(getattr(seller, "birth_date", "") or ""),
+                        "birth_date": getattr(seller, "birth_date", None).strftime("%Y-%m-%d") if getattr(seller, "birth_date", None) else "",
                         "gender": getattr(seller, "gender", None),
                         "established_date": str(getattr(seller, "established_date", "") or ""),
                         "business_license_image": getattr(seller, "business_license_image", None),
@@ -340,6 +340,12 @@ def update_seller_fields(
     }
     for k, v in body.items():
         if k in ALLOWED:
+            # birth_date: 문자열 → datetime 변환
+            if k == "birth_date" and isinstance(v, str) and v:
+                try:
+                    v = datetime.fromisoformat(v)
+                except ValueError:
+                    pass
             setattr(seller, k, v)
     db.commit()
     db.refresh(seller)
