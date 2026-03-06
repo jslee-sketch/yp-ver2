@@ -47,12 +47,14 @@ export default function SellerOffersPage() {
   const [editDeliveryDays, setEditDeliveryDays] = useState('');
   const [editSaving, setEditSaving] = useState(false);
 
+  const sellerId = user?.seller?.id ?? user?.id;
   const { data: offers, loading, error, refetch } = useApiData<OfferResponse[]>(async () => {
+    if (!sellerId) return [];
     try {
-      const res = await apiClient.get(API.OFFERS.LIST, { params: { seller_id: user?.seller?.id ?? user?.id } });
+      const res = await apiClient.get(API.OFFERS.LIST, { params: { seller_id: sellerId, limit: 100 } });
       return (res.data ?? []) as OfferResponse[];
     } catch { return []; }
-  }, [user?.id]);
+  }, [sellerId]);
 
   const items = offers ?? [];
   const filtered = filter === '전체' ? items : items.filter(o => getOfferStatus(o) === filter);
@@ -72,7 +74,7 @@ export default function SellerOffersPage() {
     if (!editTarget) return;
     setEditSaving(true);
     try {
-      await apiClient.patch(API.OFFERS_V36.UPDATE(editTarget.id), {
+      await apiClient.patch(API.OFFERS.UPDATE(editTarget.id), {
         price: Number(editPrice),
         shipping_fee_per_reservation: Number(editShipping),
         delivery_days: editDeliveryDays ? Number(editDeliveryDays) : null,

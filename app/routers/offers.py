@@ -2034,6 +2034,9 @@ def list_offers(
     deal_id: Optional[int] = Query(
         None, description="특정 딜에 속한 오퍼만 보고 싶으면 deal_id 입력"
     ),
+    seller_id: Optional[int] = Query(
+        None, description="특정 판매자의 오퍼만 필터"
+    ),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -2041,6 +2044,8 @@ def list_offers(
     q = db.query(models.Offer)
     if deal_id is not None:
         q = q.filter(models.Offer.deal_id == deal_id)
+    if seller_id is not None:
+        q = q.filter(models.Offer.seller_id == seller_id)
 
     offers = (
         q.order_by(models.Offer.id.desc())
