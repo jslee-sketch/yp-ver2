@@ -17,15 +17,31 @@ export default function AdminLayout() {
   if (!user || user.role !== 'admin') return null;
 
   return (
-    <div className="admin-layout" style={{ display: 'flex', width: '100vw', minHeight: '100vh' }}>
+    <div
+      className="admin-layout"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+        backgroundColor: 'var(--bg-primary)',
+        zIndex: 2000,
+      }}
+    >
       <AdminSidebar />
       <main
         style={{
           flex: 1,
-          padding: '24px 32px',
+          height: '100vh',
           overflowY: 'auto',
-          background: 'var(--bg-primary)',
-          minHeight: '100vh',
+          overflowX: 'auto',
+          padding: '24px 32px',
+          minWidth: 0,
         }}
       >
         <Outlet />

@@ -73,14 +73,13 @@ export default function AdminSidebar() {
       style={{
         width: 240,
         minWidth: 240,
-        height: '100vh',
+        height: '100%',
         overflowY: 'auto',
         background: 'var(--bg-secondary)',
         borderRight: '1px solid var(--border-subtle)',
         display: 'flex',
         flexDirection: 'column',
-        position: 'sticky',
-        top: 0,
+        flexShrink: 0,
       }}
     >
       <div
