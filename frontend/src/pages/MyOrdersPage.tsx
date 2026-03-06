@@ -130,7 +130,7 @@ export default function MyOrdersPage() {
   const handleCancel = async (id: number) => {
     if (!window.confirm('정말 취소하시겠어요?')) return;
     try {
-      await cancelReservation(id);
+      await cancelReservation(id, user!.id);
       updateStatus(id, 'CANCELLED');
       showToast('취소되었어요', 'info');
     } catch (err: unknown) {

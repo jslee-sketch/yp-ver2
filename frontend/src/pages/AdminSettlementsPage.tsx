@@ -46,7 +46,9 @@ export default function AdminSettlementsPage() {
     (async () => {
       try {
         const res = await apiClient.get(API.SETTLEMENTS.ADMIN_LIST, { params: { limit: 200 } });
-        setItems((res.data ?? []) as SettlementItem[]);
+        const raw = res.data;
+        const list = Array.isArray(raw) ? raw : (raw?.items ?? raw?.results ?? []);
+        setItems(list as SettlementItem[]);
       } catch (err) {
         console.error('정산 목록 로드 실패:', err);
       } finally {

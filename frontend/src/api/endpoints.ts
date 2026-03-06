@@ -114,13 +114,13 @@ export const API = {
 
   // ── 예약/결제 (v3.6 통합) ────────────────────────────────────
   RESERVATIONS_V36: {
-    LIST:              '/v3_6/reservations/',
-    CREATE:            '/v3_6/reservations/',
-    DETAIL:            (id: number) => `/v3_6/reservations/${id}`,
-    PAY:               (id: number) => `/v3_6/reservations/${id}/pay`,
+    LIST:              '/v3_6/reservations',
+    CREATE:            '/v3_6/reservations',
+    DETAIL:            (id: number) => `/v3_6/by-id/${id}`,
+    PAY:               '/v3_6/reservations/pay',
     SHIP:              (id: number) => `/v3_6/reservations/${id}/ship`,
     CONFIRM_ARRIVAL:   (id: number) => `/v3_6/reservations/${id}/arrival-confirm`,
-    CANCEL:            (id: number) => `/v3_6/reservations/${id}/cancel`,
+    CANCEL:            '/v3_6/reservations/cancel',
     REFUND:            '/v3_6/reservations/refund',
     REFUND_PREVIEW:    '/v3_6/reservations/refund/preview',
     ADMIN_CANCEL:      (id: number) => `/v3_6/reservations/${id}/admin_cancel`,

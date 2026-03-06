@@ -42,7 +42,7 @@ export async function createReservation(data: {
 }
 
 export async function payReservation(reservationId: number, buyerId: number, paidAmount: number) {
-  const res = await apiClient.post(API.RESERVATIONS_V36.PAY(reservationId), {
+  const res = await apiClient.post(API.RESERVATIONS_V36.PAY, {
     reservation_id: reservationId,
     buyer_id: buyerId,
     paid_amount: paidAmount,
@@ -50,8 +50,11 @@ export async function payReservation(reservationId: number, buyerId: number, pai
   return res.data;
 }
 
-export async function cancelReservation(reservationId: number, actor = 'buyer_cancel') {
-  const res = await apiClient.post(API.RESERVATIONS.CANCEL(reservationId), { actor });
+export async function cancelReservation(reservationId: number, buyerId: number) {
+  const res = await apiClient.post(API.RESERVATIONS_V36.CANCEL, {
+    reservation_id: reservationId,
+    buyer_id: buyerId,
+  });
   return res.data;
 }
 
