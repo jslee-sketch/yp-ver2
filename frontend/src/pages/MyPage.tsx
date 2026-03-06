@@ -99,24 +99,27 @@ export default function MyPage() {
     }
   }, [authUser]);
 
+  const isSeller = authUser?.role === 'seller' || authUser?.role === 'both';
+  // 판매자는 sellerProfile 우선, 바이어는 apiProfile 우선
+  const primary = isSeller ? (sellerProfile ?? apiProfile) : apiProfile;
   const u = {
-    id:              Number(apiProfile?.id ?? authUser?.id ?? 0),
-    name:            String(apiProfile?.name ?? authUser?.name ?? '사용자'),
-    nickname:        String(apiProfile?.nickname ?? authUser?.nickname ?? ''),
-    email:           String(apiProfile?.email ?? authUser?.email ?? ''),
+    id:              Number(primary?.id ?? authUser?.id ?? 0),
+    name:            String(primary?.name ?? authUser?.name ?? '사용자'),
+    nickname:        String(primary?.nickname ?? apiProfile?.nickname ?? authUser?.nickname ?? ''),
+    email:           String(primary?.email ?? authUser?.email ?? ''),
     level:           Number(apiProfile?.level ?? authUser?.level ?? 1),
     trust_tier:      String(apiProfile?.trust_tier ?? authUser?.trust_tier ?? 'Bronze'),
     points:          Number(apiProfile?.points ?? authUser?.points ?? 0),
-    phone:           String(apiProfile?.phone ?? ''),
-    address:         String(apiProfile?.address ?? ''),
-    zip_code:        String(apiProfile?.zip_code ?? ''),
+    phone:           String(primary?.phone ?? apiProfile?.phone ?? ''),
+    address:         String(primary?.address ?? apiProfile?.address ?? ''),
+    zip_code:        String(primary?.zip_code ?? apiProfile?.zip_code ?? ''),
     shipping_address:String(apiProfile?.shipping_address ?? ''),
-    gender:          String(apiProfile?.gender ?? ''),
-    birth_date:      String(apiProfile?.birth_date ?? '').split('T')[0] || '',
+    gender:          String(primary?.gender ?? apiProfile?.gender ?? ''),
+    birth_date:      String(primary?.birth_date ?? apiProfile?.birth_date ?? '').split('T')[0] || '',
     payment_method:  String(apiProfile?.payment_method ?? ''),
-    created_at:      String(apiProfile?.created_at ?? ''),
-    is_active:       Boolean(apiProfile?.is_active ?? true),
-    isSeller:        authUser?.role === 'seller' || authUser?.role === 'both',
+    created_at:      String(primary?.created_at ?? ''),
+    is_active:       Boolean(primary?.is_active ?? true),
+    isSeller,
     seller:          authUser?.seller,
   };
 
@@ -259,15 +262,28 @@ export default function MyPage() {
         ? `${editBirthYear}-${String(editBirthMonth).padStart(2, '0')}-${String(editBirthDay).padStart(2, '0')}`
         : undefined;
 
-      await apiClient.patch(API.BUYERS.UPDATE(u.id), {
-        nickname: editNickname || undefined,
-        phone: editPhone || undefined,
-        address: fullAddress,
-        zip_code: editZipCode || undefined,
-        gender: editGender || undefined,
-        birth_date: fullBirthDate || undefined,
-        payment_method: editPaymentMethod || null,
-      });
+      if (u.isSeller) {
+        // 판매자: seller 엔드포인트로 저장
+        await apiClient.patch(API.SELLERS.UPDATE(u.id), {
+          nickname: editNickname || undefined,
+          phone: editPhone || undefined,
+          address: fullAddress,
+          zip_code: editZipCode || undefined,
+          gender: editGender || undefined,
+          birth_date: fullBirthDate || undefined,
+        });
+      } else {
+        // 구매자: buyer 엔드포인트로 저장
+        await apiClient.patch(API.BUYERS.UPDATE(u.id), {
+          nickname: editNickname || undefined,
+          phone: editPhone || undefined,
+          address: fullAddress,
+          zip_code: editZipCode || undefined,
+          gender: editGender || undefined,
+          birth_date: fullBirthDate || undefined,
+          payment_method: editPaymentMethod || null,
+        });
+      }
 
       // password change if filled
       if (editCurPw && editNewPw) {
@@ -290,8 +306,13 @@ export default function MyPage() {
       }
 
       // refresh profile
-      const res = await apiClient.get(API.BUYERS.PROFILE);
-      if (res.data) setApiProfile(res.data as Record<string, unknown>);
+      if (u.isSeller) {
+        const res = await apiClient.get(API.SELLERS.PROFILE);
+        if (res.data) setSellerProfile(res.data as Record<string, unknown>);
+      } else {
+        const res = await apiClient.get(API.BUYERS.PROFILE);
+        if (res.data) setApiProfile(res.data as Record<string, unknown>);
+      }
 
       setShowEditModal(false);
       showToast('회원정보가 수정되었어요', 'success');

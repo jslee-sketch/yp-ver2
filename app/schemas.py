@@ -148,6 +148,7 @@ class SellerOut(BaseModel):
     zip_code: Optional[str] = None
     established_date: Optional[datetime] = None
     verified_at: Optional[datetime] = None
+    birth_date: Optional[datetime] = None
     level: int = 6
     points: int = 0
 

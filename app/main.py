@@ -129,6 +129,8 @@ _alter_cols = [
     ("sellers", "reset_token_expires_at", "TIMESTAMP"),
     ("actuators", "reset_token", "VARCHAR(64)"),
     ("actuators", "reset_token_expires_at", "TIMESTAMP"),
+    # 판매자 생년월일
+    ("sellers", "birth_date", "TIMESTAMP"),
 ]
 try:
     _insp = _sa.inspect(engine)

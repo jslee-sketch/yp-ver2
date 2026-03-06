@@ -329,6 +329,7 @@ def update_seller_fields(
     ALLOWED = {
         "shipping_policy", "phone", "company_phone", "address", "zip_code",
         "bank_name", "account_number", "account_holder", "nickname",
+        "birth_date", "gender",
     }
     for k, v in body.items():
         if k in ALLOWED:
