@@ -17,7 +17,7 @@ export default function AdminLayout() {
   if (!user || user.role !== 'admin') return null;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="admin-layout" style={{ display: 'flex', width: '100vw', minHeight: '100vh' }}>
       <AdminSidebar />
       <main
         style={{

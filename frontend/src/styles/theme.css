@@ -127,6 +127,12 @@ body {
   overflow-x: clip;
 }
 
+/* 관리자 페이지: 모바일 max-width 해제 */
+#root:has(.admin-layout) {
+  max-width: none;
+  overflow-x: visible;
+}
+
 /* 스크롤바 숨김 (모바일) */
 ::-webkit-scrollbar { display: none; }
 * { scrollbar-width: none; }
