@@ -57,10 +57,6 @@ function formatKSTDate(raw: string): string {
   }
 }
 
-function daysInMonth(year: number, month: number): number {
-  return new Date(year, month, 0).getDate();
-}
-
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={{
@@ -340,17 +336,6 @@ export default function MyPage() {
   };
 
   // ── Edit modal helpers ──────────────────────────────────
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - 1920 + 1 }, (_, i) => currentYear - i);
-  const months = Array.from({ length: 12 }, (_, i) => i + 1);
-  const maxDay = editBirthYear && editBirthMonth ? daysInMonth(Number(editBirthYear), Number(editBirthMonth)) : 31;
-  const days = Array.from({ length: maxDay }, (_, i) => i + 1);
-
-  const selectStyle: React.CSSProperties = {
-    flex: 1, padding: '8px 6px', borderRadius: 10, fontSize: 13,
-    background: '#1a1a2e', border: `1px solid ${C.border}`, color: '#ffffff',
-  };
-
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
     background: C.bgEl, border: `1px solid ${C.border}`, color: C.text,
@@ -448,6 +433,7 @@ export default function MyPage() {
               <InfoRow label="판매자 레벨" value={`Lv.${sp.level ?? 1}`} valueColor={C.blue} />
               <InfoRow label="판매자 포인트" value={`${Number(sp.points ?? 0).toLocaleString()}P`} valueColor={C.yellow} />
               <InfoRow label="검증 상태" value={isVerified ? '승인됨' : '승인 대기'} valueColor={isVerified ? C.green : C.orange} />
+              <InfoRow label="담당 액추에이터" value={sp.actuator_id ? `ACT-${String(sp.actuator_id).padStart(5, '0')}` : '없음'} valueColor={sp.actuator_id ? '#00e5ff' : C.textDim} />
 
               <button
                 onClick={openSellerEditModal}
@@ -579,23 +565,25 @@ export default function MyPage() {
               </div>
             </div>
 
-            {/* 생년월일 — 3 selects */}
+            {/* 생년월일 */}
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>생년월일</div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <select value={editBirthYear} onChange={e => setEditBirthYear(e.target.value)} style={selectStyle}>
-                  <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>년도</option>
-                  {years.map(y => <option key={y} value={y} style={{ background: '#1a1a2e', color: '#ffffff' }}>{y}년</option>)}
-                </select>
-                <select value={editBirthMonth} onChange={e => setEditBirthMonth(e.target.value)} style={selectStyle}>
-                  <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>월</option>
-                  {months.map(m => <option key={m} value={m} style={{ background: '#1a1a2e', color: '#ffffff' }}>{m}월</option>)}
-                </select>
-                <select value={editBirthDay} onChange={e => setEditBirthDay(e.target.value)} style={selectStyle}>
-                  <option value="" style={{ background: '#1a1a2e', color: '#ffffff' }}>일</option>
-                  {days.map(d => <option key={d} value={d} style={{ background: '#1a1a2e', color: '#ffffff' }}>{d}일</option>)}
-                </select>
-              </div>
+              <input
+                type="date"
+                value={editBirthYear && editBirthMonth && editBirthDay
+                  ? `${editBirthYear}-${String(editBirthMonth).padStart(2, '0')}-${String(editBirthDay).padStart(2, '0')}`
+                  : ''}
+                onChange={e => {
+                  const v = e.target.value;
+                  if (v) {
+                    const [y, m, d] = v.split('-');
+                    setEditBirthYear(y); setEditBirthMonth(String(Number(m))); setEditBirthDay(String(Number(d)));
+                  } else {
+                    setEditBirthYear(''); setEditBirthMonth(''); setEditBirthDay('');
+                  }
+                }}
+                style={{ ...inputStyle, colorScheme: 'dark' }}
+              />
             </div>
 
             {/* 주소 */}

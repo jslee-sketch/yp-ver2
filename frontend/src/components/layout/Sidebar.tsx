@@ -275,6 +275,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="💎" label="수수료 안내"   onClick={() => go('/seller/fees')} />
                     <MenuItem icon="🔔" label="알림"         onClick={() => go('/seller/notifications')} badge={unreadCount > 0 ? unreadCount : undefined} badgeColor="red" />
                     <MenuItem icon="📢" label="공지/도움말"   onClick={() => go('/seller/announcements')} />
+                    <MenuItem icon="👤" label="마이페이지"   onClick={() => go('/mypage')} />
                   </>
                 ) : isActuator ? (
                   <>
