@@ -139,13 +139,13 @@ try:
         return _cols_cache[tbl]
     _need_alter = [(t, c, typ) for t, c, typ in _alter_cols if c not in _get_existing(t)]
     if _need_alter:
-        with engine.begin() as _conn:
-            for _tbl, _col, _typ in _need_alter:
-                try:
+        for _tbl, _col, _typ in _need_alter:
+            try:
+                with engine.begin() as _conn:
                     _conn.execute(_sa.text(f"ALTER TABLE {_tbl} ADD COLUMN {_col} {_typ}"))
-                    print(f"[DB_INIT] Added column {_tbl}.{_col}", flush=True)
-                except Exception:
-                    pass
+                print(f"[DB_INIT] Added column {_tbl}.{_col}", flush=True)
+            except Exception:
+                pass
     else:
         print("[DB_INIT] ALTER TABLE skipped — all columns exist", flush=True)
 except Exception as _ae:
