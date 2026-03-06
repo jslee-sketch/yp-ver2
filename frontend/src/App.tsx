@@ -30,6 +30,7 @@ import TermsPage from './pages/TermsPage';
 import SupportPage from './pages/SupportPage';
 import NotFoundPage from './pages/NotFoundPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminSellersPage from './pages/AdminSellersPage';
 import AdminBuyersPage from './pages/AdminBuyersPage';
@@ -62,6 +63,7 @@ function App() {
         <Route path="/login"    element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/callback/:provider" element={<OAuthCallbackPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* 레이아웃 공통 적용 */}
         <Route element={<Layout />}>

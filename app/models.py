@@ -72,6 +72,10 @@ class Buyer(Base):
     is_banned = Column(Boolean, default=False, nullable=False, server_default="false")
     banned_until = Column(DateTime, nullable=True)
     ban_reason = Column(Text, nullable=True)
+    # 비밀번호 재설정 토큰
+    reset_token = Column(String(64), nullable=True, index=True)
+    reset_token_expires_at = Column(DateTime, nullable=True)
+
     participants = relationship("DealParticipant", back_populates="buyer")
     deals = relationship("Deal", back_populates="creator")
 
@@ -144,6 +148,10 @@ class Seller(Base):
     # 배송 정책 (JSON)
     shipping_policy = Column(JSON().with_variant(JSONB(), "postgresql"), nullable=True)
 
+    # 비밀번호 재설정 토큰
+    reset_token = Column(String(64), nullable=True, index=True)
+    reset_token_expires_at = Column(DateTime, nullable=True)
+
     actuator = relationship("Actuator", back_populates="sellers")
 
     # (NEW) 이 Seller 거래로 발생한 Actuator 커미션들
@@ -182,6 +190,10 @@ class Actuator(Base):
 
     # 이 Actuator가 받은 커미션들
     commissions = relationship("ActuatorCommission", backref="actuator")
+
+    # 비밀번호 재설정 토큰
+    reset_token = Column(String(64), nullable=True, index=True)
+    reset_token_expires_at = Column(DateTime, nullable=True)
 
     # ACTIVE / SUSPENDED / CLOSED
     status = Column(String(20), nullable=False, default="ACTIVE")

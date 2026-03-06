@@ -366,7 +366,7 @@ export default function LoginPage() {
                   setForgotLoading(true);
                   setForgotMsg('');
                   try {
-                    await apiClient.post('/auth/reset-password', { email: forgotEmail.trim() });
+                    await apiClient.post(API.AUTH.RESET_PASSWORD, { email: forgotEmail.trim() });
                     setForgotMsg('비밀번호 재설정 안내가 발송되었습니다.');
                   } catch (err: unknown) {
                     const e = err as { response?: { data?: { detail?: string } } };

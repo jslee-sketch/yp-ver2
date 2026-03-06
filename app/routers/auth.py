@@ -1,15 +1,19 @@
-import time
+import os
+import secrets
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from .. import database, models
 from ..security import (verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES,
                         get_password_hash, SECRET_KEY, ALGORITHM, oauth2_scheme)
+from ..utils.email_service import send_reset_email
 from jose import jwt as jose_jwt, JWTError
+
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -17,7 +21,6 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # ─────────────────────────────────────────────────────────────
 # GET /auth/check-email
 # ─────────────────────────────────────────────────────────────
-from fastapi import Query
 
 
 @router.get("/check-email", summary="이메일 중복 확인")
@@ -143,42 +146,137 @@ def change_password(body: ChangePasswordRequest, db: Session = Depends(database.
 
 
 # ─────────────────────────────────────────────────────────────
-# POST /auth/reset-password
+# POST /auth/reset-password  — 비밀번호 재설정 요청 (이메일 발송)
 # ─────────────────────────────────────────────────────────────
 class ResetPasswordRequest(BaseModel):
     email: str
+
+
+def _find_user_by_email(db: Session, email: str):
+    """Buyer → Seller → Actuator 순서로 이메일 조회. (user_obj, user_type) 반환."""
+    b = db.query(models.Buyer).filter(models.Buyer.email == email).first()
+    if b:
+        return b, "buyer"
+    s = db.query(models.Seller).filter(models.Seller.email == email).first()
+    if s:
+        return s, "seller"
+    a = db.query(models.Actuator).filter(models.Actuator.email == email).first()
+    if a:
+        return a, "actuator"
+    return None, None
+
+
+def _find_user_by_token(db: Session, token: str):
+    """reset_token으로 사용자 조회. (user_obj, user_type) 반환."""
+    b = db.query(models.Buyer).filter(models.Buyer.reset_token == token).first()
+    if b:
+        return b, "buyer"
+    s = db.query(models.Seller).filter(models.Seller.reset_token == token).first()
+    if s:
+        return s, "seller"
+    a = db.query(models.Actuator).filter(models.Actuator.reset_token == token).first()
+    if a:
+        return a, "actuator"
+    return None, None
 
 
 @router.post(
     "/reset-password",
     summary="비밀번호 재설정 요청",
 )
-def reset_password(body: ResetPasswordRequest, db: Session = Depends(database.get_db)):
+def reset_password(
+    body: ResetPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(database.get_db),
+):
     """
-    이메일로 비밀번호 재설정 토큰을 발급합니다 (개발모드: 콘솔에 출력).
+    이메일로 비밀번호 재설정 링크를 발송합니다.
+    열거 공격 방지: 이메일 존재 여부와 무관하게 동일 응답 반환.
     """
     email = body.email.strip().lower()
 
-    # 1. Buyer / Seller / Actuator 에서 이메일 조회
-    user = db.query(models.Buyer).filter(models.Buyer.email == email).first()
-    if not user:
-        user = db.query(models.Seller).filter(models.Seller.email == email).first()
-    if not user:
-        user = db.query(models.Actuator).filter(models.Actuator.email == email).first()
+    user, _ = _find_user_by_email(db, email)
 
-    if not user:
-        raise HTTPException(status_code=404, detail="등록된 이메일을 찾을 수 없습니다.")
+    if user:
+        token = secrets.token_urlsafe(32)
+        user.reset_token = token
+        user.reset_token_expires_at = datetime.now(timezone.utc) + timedelta(minutes=30)
+        db.add(user)
+        db.commit()
 
-    # 2. 임시 토큰 생성
-    token = f"RESET_{user.id}_{int(time.time())}"
-
-    # 3. 콘솔 출력 (개발 모드)
-    print(f"[PASSWORD_RESET] token={token} email={email}")
+        reset_url = f"{FRONTEND_URL}/reset-password?token={token}"
+        background_tasks.add_task(send_reset_email, email, reset_url)
 
     return {
         "success": True,
-        "message": "비밀번호 재설정 링크가 발송되었습니다 (개발모드: 콘솔 확인)",
+        "message": "비밀번호 재설정 안내가 이메일로 발송되었습니다.",
     }
+
+
+# ─────────────────────────────────────────────────────────────
+# GET /auth/reset-password/verify  — 토큰 사전 검증
+# ─────────────────────────────────────────────────────────────
+@router.get(
+    "/reset-password/verify",
+    summary="재설정 토큰 유효성 확인",
+)
+def verify_reset_token(
+    token: str = Query(..., description="재설정 토큰"),
+    db: Session = Depends(database.get_db),
+):
+    user, _ = _find_user_by_token(db, token)
+    if not user:
+        raise HTTPException(status_code=400, detail="invalid_token")
+    if user.reset_token_expires_at is None:
+        raise HTTPException(status_code=400, detail="invalid_token")
+
+    expires = user.reset_token_expires_at
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > expires:
+        raise HTTPException(status_code=400, detail="token_expired")
+
+    return {"valid": True}
+
+
+# ─────────────────────────────────────────────────────────────
+# POST /auth/reset-password/confirm  — 새 비밀번호 설정
+# ─────────────────────────────────────────────────────────────
+class ResetPasswordConfirm(BaseModel):
+    token: str
+    new_password: str
+
+
+@router.post(
+    "/reset-password/confirm",
+    summary="비밀번호 재설정 확정",
+)
+def confirm_reset_password(
+    body: ResetPasswordConfirm,
+    db: Session = Depends(database.get_db),
+):
+    user, _ = _find_user_by_token(db, body.token)
+    if not user:
+        raise HTTPException(status_code=400, detail="invalid_token")
+    if user.reset_token_expires_at is None:
+        raise HTTPException(status_code=400, detail="invalid_token")
+
+    expires = user.reset_token_expires_at
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > expires:
+        raise HTTPException(status_code=400, detail="token_expired")
+
+    if len(body.new_password) < 8:
+        raise HTTPException(status_code=422, detail="password_too_short")
+
+    user.password_hash = get_password_hash(body.new_password)
+    user.reset_token = None
+    user.reset_token_expires_at = None
+    db.add(user)
+    db.commit()
+
+    return {"success": True, "message": "비밀번호가 성공적으로 변경되었습니다."}
 
 
 # ─────────────────────────────────────────────────────────────

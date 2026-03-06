@@ -122,6 +122,13 @@ _alter_cols = [
     ("reservations", "refund_type", "VARCHAR(20)"),
     ("reviews", "seller_reply", "TEXT"),
     ("reviews", "replied_at", "DATETIME"),
+    # 비밀번호 재설정 토큰
+    ("buyers", "reset_token", "VARCHAR(64)"),
+    ("buyers", "reset_token_expires_at", "TIMESTAMP"),
+    ("sellers", "reset_token", "VARCHAR(64)"),
+    ("sellers", "reset_token_expires_at", "TIMESTAMP"),
+    ("actuators", "reset_token", "VARCHAR(64)"),
+    ("actuators", "reset_token_expires_at", "TIMESTAMP"),
 ]
 try:
     _insp = _sa.inspect(engine)
@@ -403,6 +410,7 @@ async def lifespan(app: FastAPI):
                     email="seller@yeokping.com",
                     password_hash=_pwd.hash("seller1234"),
                     business_name="Demo Seller",
+                    business_number="999-99-99998",
                     nickname="데모셀러",
                     created_at=_now,
                 )
@@ -435,6 +443,30 @@ async def lifespan(app: FastAPI):
                 _seed_db.add(_admin)
                 _seed_db.commit()
                 print("[seed] Admin account created: admin@yeokping.com / admin1234!", flush=True)
+
+            # seller seed (항상 실행 — 테스트 판매자 계정이 없으면 생성)
+            try:
+                _seller_exists = _seed_db.query(models.Seller).filter(models.Seller.email == "seller@yeokping.com").first()
+                if not _seller_exists:
+                    from passlib.context import CryptContext as _Ctx3
+                    _pwd3 = _Ctx3(schemes=["bcrypt"], deprecated="auto")
+                    _seed_seller = models.Seller(
+                        email="seller@yeokping.com",
+                        password_hash=_pwd3.hash("seller1234!"),
+                        business_name="테스트 판매자",
+                        business_number="999-99-99999",
+                        nickname="테스트셀러",
+                        phone="01000000001",
+                        is_active=True,
+                        verified_at=datetime.now(timezone.utc),
+                        level=6,
+                    )
+                    _seed_db.add(_seed_seller)
+                    _seed_db.commit()
+                    print("[seed] Seller created: seller@yeokping.com / seller1234!", flush=True)
+            except Exception as _sse:
+                _seed_db.rollback()
+                print(f"[warn] seller seed failed: {_sse}", flush=True)
         finally:
             _seed_db.close()
     except Exception as _se:
