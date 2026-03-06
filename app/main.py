@@ -755,6 +755,36 @@ def root():
 def health():
     return {"ok": True}
 
+@app.get("/debug/dist")
+def debug_dist():
+    import os as _dos
+    from pathlib import Path as _DP
+    _base = _DP(__file__).parent.parent
+    paths = [
+        str(_base / "frontend" / "dist"),
+        str(_base / "frontend" / "dist" / "assets"),
+        "frontend/dist",
+        "frontend/dist/assets",
+        "/app/frontend/dist",
+        "/app/frontend/dist/assets",
+    ]
+    result = {"cwd": os.getcwd(), "base": str(_base)}
+    for p in paths:
+        if _dos.path.exists(p):
+            try:
+                result[p] = _dos.listdir(p)[:20]
+            except Exception as e:
+                result[p] = f"ERROR: {e}"
+        else:
+            result[p] = "NOT FOUND"
+    # index.html 내용도 확인
+    idx = _base / "frontend" / "dist" / "index.html"
+    if idx.is_file():
+        result["index.html_content"] = idx.read_text()[:500]
+    else:
+        result["index.html_content"] = "NOT FOUND"
+    return result
+
 
 @app.get("/api/env-check")
 def env_check():
