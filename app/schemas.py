@@ -137,19 +137,19 @@ class SellerCreate(BaseModel):
 
 class SellerOut(BaseModel):
     id: int
-    created_at: datetime
+    created_at: Optional[datetime] = None
     email: EmailStr
-    business_name: str
+    business_name: Optional[str] = None
     nickname: Optional[str] = None
-    business_number: str
-    phone: str
+    business_number: Optional[str] = None
+    phone: Optional[str] = None
     company_phone: Optional[str] = None
-    address: str
-    zip_code: str
-    established_date: datetime
+    address: Optional[str] = None
+    zip_code: Optional[str] = None
+    established_date: Optional[datetime] = None
     verified_at: Optional[datetime] = None
-    level: int
-    points: int
+    level: int = 6
+    points: int = 0
 
     # (NEW)
     actuator_id: Optional[int] = None
