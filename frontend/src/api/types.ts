@@ -96,6 +96,10 @@ export interface ReservationResponse {
   cancelled_at?: string;
   tracking_number?: string;
   shipping_carrier?: string;
+  refund_type?: string;
+  refunded_qty?: number;
+  refunded_amount_total?: number;
+  is_disputed?: boolean;
 }
 
 export interface DealParticipantResponse {
@@ -151,6 +155,8 @@ export interface Review {
   seller_id: number;
   rating: number;          // 1~5
   comment?: string;
+  seller_reply?: string;
+  replied_at?: string;
   created_at: string;
 }
 

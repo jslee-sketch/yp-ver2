@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -39,7 +40,7 @@ export default function ActuatorSellersPage() {
     const actuatorId = user.id;
     (async () => {
       try {
-        const res = await apiClient.get(`/actuators/${actuatorId}/sellers`);
+        const res = await apiClient.get(API.ACTUATORS.SELLERS(actuatorId));
         const data = res.data;
         setSellers(Array.isArray(data) ? data : []);
       } catch (err) {

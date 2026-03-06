@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -46,8 +47,8 @@ export default function ActuatorStatsPage() {
     (async () => {
       try {
         const [sellersRes, commRes] = await Promise.all([
-          apiClient.get(`/actuators/${actuatorId}/sellers`),
-          apiClient.get(`/actuators/${actuatorId}/commissions/summary`),
+          apiClient.get(API.ACTUATORS.SELLERS(actuatorId)),
+          apiClient.get(API.ACTUATORS.COMMISSIONS_SUMMARY(actuatorId)),
         ]);
         setSellers(Array.isArray(sellersRes.data) ? sellersRes.data : []);
         setCommSummary(commRes.data ?? null);

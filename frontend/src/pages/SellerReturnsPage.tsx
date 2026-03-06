@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -43,7 +44,7 @@ export default function SellerReturnsPage() {
     if (!sellerId) return;
     (async () => {
       try {
-        const res = await apiClient.get(`/reservations/seller/${sellerId}`);
+        const res = await apiClient.get(API.RESERVATIONS.LIST_SELLER(sellerId));
         const all: ReturnItem[] = Array.isArray(res.data) ? res.data : [];
         const returnItems = all.filter(r =>
           r.refund_type === 'return' || r.refund_type === 'exchange' ||

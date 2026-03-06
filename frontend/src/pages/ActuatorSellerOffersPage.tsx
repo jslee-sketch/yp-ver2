@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -48,8 +49,8 @@ export default function ActuatorSellerOffersPage() {
     (async () => {
       try {
         const [sellerRes, offersRes] = await Promise.all([
-          apiClient.get(`/sellers/${sellerId}`).catch(() => null),
-          apiClient.get('/offers', { params: { seller_id: sellerId } }),
+          apiClient.get(API.SELLERS.DETAIL(Number(sellerId))).catch(() => null),
+          apiClient.get(API.OFFERS.LIST, { params: { seller_id: sellerId } }),
         ]);
         if (sellerRes?.data) setSeller(sellerRes.data);
         const data = offersRes.data;

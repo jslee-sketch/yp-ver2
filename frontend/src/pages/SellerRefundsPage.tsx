@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 import { refundPreview, refundReservation } from '../api/reservationApi';
 import { showToast } from '../components/common/Toast';
 
@@ -57,7 +58,7 @@ export default function SellerRefundsPage() {
     if (!sellerId) return;
     (async () => {
       try {
-        const res = await apiClient.get(`/reservations/seller/${sellerId}`);
+        const res = await apiClient.get(API.RESERVATIONS.LIST_SELLER(sellerId));
         const all: RefundReservation[] = Array.isArray(res.data) ? res.data : [];
         // Filter: cancelled (refunded) OR disputed OR has refunded amounts
         const refundRelated = all.filter(r =>
@@ -112,7 +113,7 @@ export default function SellerRefundsPage() {
     if (!disagreeTarget || !disagreeReason.trim()) return;
     setDisputeLoading(true);
     try {
-      await apiClient.post(`/v3_6/${disagreeTarget.id}/dispute/open`, {
+      await apiClient.post(API.RESERVATIONS_V36.DISPUTE_OPEN(disagreeTarget.id), {
         reason: disagreeReason,
       });
       setItems(prev => prev.map(r => r.id === disagreeTarget.id ? { ...r, is_disputed: true } : r));

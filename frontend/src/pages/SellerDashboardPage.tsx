@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -32,9 +33,9 @@ export default function SellerDashboardPage() {
     (async () => {
       try {
         const [resvRes, reviewRes, offerRes] = await Promise.all([
-          apiClient.get(`/reservations/seller/${sellerId}`).catch(() => ({ data: [] })),
-          apiClient.get(`/reviews/seller/${sellerId}/summary`).catch(() => ({ data: null })),
-          apiClient.get('/offers', { params: { seller_id: sellerId } }).catch(() => ({ data: [] })),
+          apiClient.get(API.RESERVATIONS.LIST_SELLER(sellerId)).catch(() => ({ data: [] })),
+          apiClient.get(API.REVIEWS.SUMMARY(sellerId)).catch(() => ({ data: null })),
+          apiClient.get(API.OFFERS.LIST, { params: { seller_id: sellerId } }).catch(() => ({ data: [] })),
         ]);
         const resvs = Array.isArray(resvRes.data) ? resvRes.data : [];
         const offers = Array.isArray(offerRes.data) ? offerRes.data : [];

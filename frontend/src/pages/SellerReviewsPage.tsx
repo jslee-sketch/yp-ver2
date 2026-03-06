@@ -139,13 +139,13 @@ export default function SellerReviewsPage() {
                 {review.comment && (
                   <div style={{ fontSize: 13, color: C.text, lineHeight: 1.5, marginBottom: 6 }}>{review.comment}</div>
                 )}
-                {(review as unknown as { seller_reply?: string }).seller_reply && (
+                {review.seller_reply && (
                   <div style={{
                     background: `${C.green}08`, border: `1px solid ${C.green}22`, borderRadius: 10,
                     padding: '10px 12px', marginBottom: 6,
                   }}>
                     <div style={{ fontSize: 10, color: C.green, fontWeight: 700, marginBottom: 4 }}>내 답글</div>
-                    <div style={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>{(review as unknown as { seller_reply?: string }).seller_reply}</div>
+                    <div style={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>{review.seller_reply}</div>
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -155,7 +155,7 @@ export default function SellerReviewsPage() {
                   <button
                     onClick={() => { setReplyTarget(review); setReplyText(''); }}
                     style={{ fontSize: 11, fontWeight: 700, color: C.green, cursor: 'pointer', background: 'none', border: 'none', padding: '4px 0' }}>
-                    {(review as unknown as { seller_reply?: string }).seller_reply ? '답글 수정' : '답글'}
+                    {review.seller_reply ? '답글 수정' : '답글'}
                   </button>
                 </div>
               </div>

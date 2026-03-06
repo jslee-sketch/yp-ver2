@@ -29,21 +29,25 @@ export default function ReviewWritePage() {
   const [hover, setHover]     = useState(0);
   const [comment, setComment] = useState('');
 
+  const [submitting, setSubmitting] = useState(false);
+
   const handleSubmit = async () => {
     if (rating === 0) { alert('별점을 선택해주세요!'); return; }
+    if (submitting) return;
+    setSubmitting(true);
     try {
       await apiClient.post(API.REVIEWS.CREATE, {
         reservation_id: Number(reservationId),
         buyer_id: user?.id,
-        seller_id: 0,
         rating,
         comment: comment.trim() || undefined,
       });
       alert('리뷰가 등록되었어요! ⭐');
+      navigate(-1);
     } catch {
-      alert('리뷰가 등록되었어요! ⭐');
+      alert('리뷰 등록에 실패했어요. 다시 시도해주세요.');
+      setSubmitting(false);
     }
-    navigate(-1);
   };
 
   return (

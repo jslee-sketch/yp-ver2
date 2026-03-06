@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 import { showToast } from '../components/common/Toast';
 
 const C = {
@@ -49,7 +50,7 @@ export default function AdminDisputePage() {
   const handleClose = async (id: number) => {
     if (!confirm('이 분쟁을 종료하시겠습니까?')) return;
     try {
-      await apiClient.post(`/v3_6/${id}/dispute/close`);
+      await apiClient.post(API.RESERVATIONS_V36.DISPUTE_CLOSE(id));
       setItems(prev => prev.filter(r => r.id !== id));
       showToast('분쟁 종료 완료', 'success');
     } catch (err: unknown) {

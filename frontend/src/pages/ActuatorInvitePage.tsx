@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 import { showToast } from '../components/common/Toast';
 
 const C = {
@@ -34,7 +35,7 @@ export default function ActuatorInvitePage() {
     if (!actuatorId) return;
     (async () => {
       try {
-        const res = await apiClient.get(`/actuators/${actuatorId}/sellers`);
+        const res = await apiClient.get(API.ACTUATORS.SELLERS(actuatorId));
         const data = res.data;
         setSellers(Array.isArray(data) ? data : []);
       } catch (err) {

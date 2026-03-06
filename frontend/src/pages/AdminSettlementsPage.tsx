@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 import { showToast } from '../components/common/Toast';
 
 const C = {
@@ -44,7 +45,7 @@ export default function AdminSettlementsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await apiClient.get('/settlements/', { params: { limit: 200 } });
+        const res = await apiClient.get(API.SETTLEMENTS.ADMIN_LIST, { params: { limit: 200 } });
         setItems((res.data ?? []) as SettlementItem[]);
       } catch (err) {
         console.error('정산 목록 로드 실패:', err);
@@ -56,7 +57,7 @@ export default function AdminSettlementsPage() {
 
   const handleApprove = async (id: number) => {
     try {
-      await apiClient.post(`/settlements/${id}/approve`);
+      await apiClient.post(API.SETTLEMENTS.APPROVE(id));
       setItems(prev => prev.map(s => s.id === id ? { ...s, status: 'APPROVED', approved_at: new Date().toISOString() } : s));
       showToast('승인 완료', 'success');
     } catch (err: unknown) {

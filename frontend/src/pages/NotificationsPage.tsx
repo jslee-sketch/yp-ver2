@@ -81,7 +81,7 @@ export default function NotificationsPage() {
           body:       String(n.body ?? ''),
           is_read:    Boolean(n.is_read),
           created_at: String(n.created_at ?? new Date().toISOString()),
-          link_to:    typeof n.link_to === 'string' ? n.link_to : undefined,
+          link_to:    typeof n.link === 'string' ? n.link : (typeof n.link_to === 'string' ? n.link_to : undefined),
         })));
       }
     };

@@ -462,8 +462,8 @@ export default function MyPage() {
                 <div style={{ display: 'flex', gap: 8 }}>
                   {[
                     { icon: '📝', label: '내 오퍼', path: '/seller/offers' },
-                    { icon: '📦', label: '배송관리', path: '/seller/shipping' },
-                    { icon: '💵', label: '정산관리', path: '/settlements' },
+                    { icon: '📦', label: '배송관리', path: '/seller/delivery' },
+                    { icon: '💵', label: '정산관리', path: '/seller/settlements' },
                     { icon: '📊', label: '판매통계', path: '/seller/stats' },
                   ].map(m => (
                     <button

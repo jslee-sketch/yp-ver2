@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -44,11 +45,10 @@ export default function ActuatorOffersPage() {
 
   useEffect(() => {
     if (!user) return;
-    const actuatorId = user.id;
     (async () => {
       try {
         // Use /actuators/me/sellers which returns sellers with nested offers
-        const res = await apiClient.get('/actuators/me/sellers', { params: { actuator_id: actuatorId } });
+        const res = await apiClient.get(API.ACTUATORS.ME_SELLERS);
         const data: SellerWithOffers[] = Array.isArray(res.data) ? res.data : [];
         const offers: OfferItem[] = [];
         for (const s of data) {

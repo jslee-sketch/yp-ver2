@@ -5,7 +5,7 @@ import type { Settlement } from './types';
 export async function fetchMySettlements(sellerId?: number): Promise<Settlement[]> {
   try {
     if (sellerId) {
-      const res = await apiClient.get(`/settlements/seller/${sellerId}`);
+      const res = await apiClient.get(API.SETTLEMENTS.BY_SELLER(sellerId));
       return (res.data ?? []) as Settlement[];
     }
     const res = await apiClient.get(API.SETTLEMENTS.LIST);
