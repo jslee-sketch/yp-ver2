@@ -44,7 +44,7 @@ export default function AdminAnnouncementsPage() {
         <button onClick={openNew} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.cyan, color: '#000', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>새 공지</button>
       </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['#', '제목', '카테고리', '대상', '고정', '공개', '작성일', ''].map(h => (

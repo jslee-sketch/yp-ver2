@@ -39,7 +39,7 @@ export default function AdminOffersPage() {
         </select>
       </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['O-#', 'D-#', '상품명', '판매자', '제안가', '배송비', '수량', '상태'].map(h => (
@@ -60,6 +60,7 @@ export default function AdminOffersPage() {
                 <td style={{ padding: '10px 8px' }}><span style={{ color: o.status === 'ACTIVE' ? C.green : C.textSec, fontWeight: 600 }}>{o.status}</span></td>
               </tr>
             ))}
+            {!filtered.length && <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>오퍼 없음</td></tr>}
           </tbody>
         </table>
       </div>

@@ -6,6 +6,7 @@ const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252'
 
 export default function AdminDeliveryPage() {
   const [items, setItems] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,8 +31,11 @@ export default function AdminDeliveryPage() {
   return (
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16 }}>배송 관리</h1>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="R-#/판매자/구매자/운송장 검색" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }} />
+      </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 700 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['R-#', '판매자', '구매자', '택배사', '운송장', '상태', '소요일'].map(h => (
@@ -40,7 +44,7 @@ export default function AdminDeliveryPage() {
             </tr>
           </thead>
           <tbody>
-            {items.map(r => {
+            {items.filter(r => { const q = search.toLowerCase(); return !q || [String(r.id), r.seller_name, r.buyer_name, r.tracking_number, r.carrier].some(v => v && String(v).toLowerCase().includes(q)); }).map(r => {
               const days = daysSince(r.shipped_at);
               const overdue = days !== null && days > 3 && !['ARRIVED', 'CONFIRMED'].includes(r.status);
               return (

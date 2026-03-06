@@ -41,7 +41,7 @@ export default function AdminDealsPage() {
         <button onClick={doSearch} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.cyan, color: '#000', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>검색</button>
       </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 750 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['ID', '상품명', '생성자', '목표가', '오퍼수', '상태', '생성일'].map(h => (
@@ -61,6 +61,7 @@ export default function AdminDealsPage() {
                 <td style={{ padding: '10px 8px', color: C.textSec }}>{d.created_at ? new Date(d.created_at).toLocaleDateString('ko-KR') : '-'}</td>
               </tr>
             ))}
+            {!items.length && <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>딜 없음</td></tr>}
           </tbody>
         </table>
       </div>

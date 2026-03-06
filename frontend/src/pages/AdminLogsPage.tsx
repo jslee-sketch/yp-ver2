@@ -33,7 +33,7 @@ export default function AdminLogsPage() {
       </div>
       {loading ? <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div> : (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 700 }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
                 {['ID', '이벤트', '액터', '대상', '금액', '시간'].map(h => (

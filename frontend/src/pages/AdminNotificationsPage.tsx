@@ -58,7 +58,7 @@ export default function AdminNotificationsPage() {
       <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>전체 알림 목록</h3>
       {loading ? <div style={{ padding: 20, color: C.textSec }}>로딩 중...</div> : (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 650 }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
                 {['ID', '사용자', '유형', '제목', '읽음', '시간'].map(h => (

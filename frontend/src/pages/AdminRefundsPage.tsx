@@ -6,6 +6,7 @@ const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252'
 
 export default function AdminRefundsPage() {
   const [items, setItems] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,8 +25,11 @@ export default function AdminRefundsPage() {
   return (
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16 }}>환불 관리</h1>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="R-#/구매자/판매자 검색" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }} />
+      </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 700 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['R-#', '구매자', '판매자', '원금액', '환불유형', '상태', '환불일'].map(h => (
@@ -34,7 +38,7 @@ export default function AdminRefundsPage() {
             </tr>
           </thead>
           <tbody>
-            {items.map(r => (
+            {items.filter(r => { const q = search.toLowerCase(); return !q || [String(r.id), r.buyer_name, r.seller_name].some(v => v && String(v).toLowerCase().includes(q)); }).map(r => (
               <tr key={r.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                 <td style={{ padding: '10px 8px', color: C.cyan }}>R-{r.id}</td>
                 <td style={{ padding: '10px 8px', color: C.text }}>{r.buyer_name || `B-${r.buyer_id}`}</td>

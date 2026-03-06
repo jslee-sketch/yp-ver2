@@ -38,7 +38,7 @@ export default function AdminBuyersPage() {
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ID/닉네임/이메일/전화 검색" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }} />
       </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['ID', '닉네임', '이메일', '전화', '포인트', '상태', '가입일', ''].map(h => (
@@ -63,6 +63,7 @@ export default function AdminBuyersPage() {
                 </td>
               </tr>
             ))}
+            {!filtered.length && <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>구매자 없음</td></tr>}
           </tbody>
         </table>
       </div>

@@ -97,7 +97,8 @@ export default function AdminDashboardPage() {
 
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>최근 활동</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 500 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               <th style={{ textAlign: 'left', padding: '8px 6px', color: C.textSec }}>이벤트</th>
@@ -116,6 +117,7 @@ export default function AdminDashboardPage() {
             {!recent.length && <tr><td colSpan={3} style={{ padding: 16, textAlign: 'center', color: C.textSec }}>활동 없음</td></tr>}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

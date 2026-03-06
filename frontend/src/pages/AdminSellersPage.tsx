@@ -39,7 +39,7 @@ export default function AdminSellersPage() {
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="상호/이메일/사업자번호 검색" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }} />
       </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 750 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['ID', '상호명', '이메일', '사업자번호', '레벨', '상태', ''].map(h => (
@@ -64,6 +64,7 @@ export default function AdminSellersPage() {
                 </td>
               </tr>
             ))}
+            {!filtered.length && <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>판매자 없음</td></tr>}
           </tbody>
         </table>
       </div>

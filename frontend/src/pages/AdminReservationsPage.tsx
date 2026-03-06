@@ -44,7 +44,7 @@ export default function AdminReservationsPage() {
         </select>
       </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['R-#', 'D-#', 'O-#', '구매자', '판매자', '금액', '상태', '분쟁', ''].map(h => (
@@ -68,6 +68,7 @@ export default function AdminReservationsPage() {
                 </td>
               </tr>
             ))}
+            {!filtered.length && <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>예약 없음</td></tr>}
           </tbody>
         </table>
       </div>

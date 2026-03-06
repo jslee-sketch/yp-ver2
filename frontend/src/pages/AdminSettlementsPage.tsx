@@ -42,7 +42,7 @@ export default function AdminSettlementsPage() {
         </select>
       </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['정산ID', '예약ID', '판매자', '결제금액', 'PG수수료', '플랫폼수수료', '정산금액', '상태', ''].map(h => (
@@ -66,6 +66,7 @@ export default function AdminSettlementsPage() {
                 </td>
               </tr>
             ))}
+            {!filtered.length && <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>정산 없음</td></tr>}
             {filtered.length > 0 && (
               <tr style={{ borderTop: `2px solid ${C.border}`, fontWeight: 700 }}>
                 <td colSpan={6} style={{ padding: '10px 8px', color: C.textSec }}>합계</td>

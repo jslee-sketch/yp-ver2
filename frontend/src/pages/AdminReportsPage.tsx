@@ -44,7 +44,7 @@ export default function AdminReportsPage() {
         </select>
       </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 750 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['#', '신고자', '대상', '카테고리', '설명', '상태', ''].map(h => (

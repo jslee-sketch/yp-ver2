@@ -43,7 +43,7 @@ export default function AdminPolicyProposalsPage() {
         ))}
       </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['#', '제목', '유형', '파라미터', '현재값', '제안값', '상태', ''].map(h => (
