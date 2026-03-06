@@ -389,39 +389,6 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass
 
-    # === 일회성 계정 리셋 (배포 확인 후 즉시 제거) ===
-    try:
-        _rst_db = database.SessionLocal()
-        from sqlalchemy import text as _rst_text
-        _is_pg = "postgres" in _DATABASE_URL_RAW
-        if _is_pg:
-            _rst_db.execute(_rst_text("TRUNCATE TABLE buyers CASCADE"))
-            _rst_db.execute(_rst_text("TRUNCATE TABLE sellers CASCADE"))
-            _rst_db.execute(_rst_text("TRUNCATE TABLE actuators CASCADE"))
-        else:
-            # SQLite: FK 끄고 삭제
-            _rst_db.execute(_rst_text("PRAGMA foreign_keys = OFF"))
-            for _t in ["spectator_predictions", "spectator_monthly_stats", "spectator_badges",
-                        "deal_participants", "deal_chat_messages", "deal_viewers",
-                        "reservation_settlements", "reservation_payments", "reservations",
-                        "offers", "offer_policies", "deals", "deal_ai_logs",
-                        "reviews", "seller_rating_aggregates", "customer_inquiries",
-                        "point_transactions", "actuator_commissions", "actuator_reward_logs",
-                        "event_log", "user_notifications", "activity_log",
-                        "reports", "uploaded_files", "payout_requests",
-                        "pingpong_logs", "pingpong_cases",
-                        "buyers", "sellers", "actuators"]:
-                try:
-                    _rst_db.execute(_rst_text(f"DELETE FROM {_t}"))
-                except Exception:
-                    pass
-            _rst_db.execute(_rst_text("PRAGMA foreign_keys = ON"))
-        _rst_db.commit()
-        _rst_db.close()
-        print("[RESET] All buyers/sellers/actuators + dependent data deleted", flush=True)
-    except Exception as _re:
-        print(f"[RESET] error: {_re}", flush=True)
-
     # ✅ seed: DB가 완전히 비었으면 데모 데이터 삽입 (Railway 초기 배포 대응)
     try:
         _seed_db = database.SessionLocal()
