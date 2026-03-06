@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchMyReservations, cancelReservation, confirmArrival, payReservation, refundPreview, refundReservation } from '../api/reservationApi';
+import apiClient from '../api/client';
+import { API } from '../api/endpoints';
 import { showToast } from '../components/common/Toast';
 
 type ActivityStatus = 'PENDING_PAY' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
@@ -77,6 +79,11 @@ export default function MyOrdersPage() {
   const [refundType, setRefundType] = useState<'refund' | 'return' | 'exchange'>('refund');
   const [refundPreviewData, setRefundPreviewData] = useState<Record<string, unknown> | null>(null);
   const [refundLoading, setRefundLoading] = useState(false);
+
+  // Dispute modal
+  const [disputeTarget, setDisputeTarget] = useState<MyOrder | null>(null);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [disputeLoading, setDisputeLoading] = useState(false);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -185,6 +192,26 @@ export default function MyOrdersPage() {
     setRefundLoading(false);
   };
 
+  const handleDisputeOpen = async () => {
+    if (!disputeTarget || !user) return;
+    if (!disputeReason.trim()) { showToast('분쟁 사유를 입력해주세요', 'error'); return; }
+    setDisputeLoading(true);
+    try {
+      await apiClient.post(API.RESERVATIONS_V36.DISPUTE_OPEN(disputeTarget.id), {
+        buyer_id: user.id,
+        reason: disputeReason.trim(),
+      });
+      setOrders(prev => prev.map(o => o.id === disputeTarget.id ? { ...o, is_disputed: true } : o));
+      setDisputeTarget(null);
+      setDisputeReason('');
+      showToast('분쟁이 접수되었습니다', 'success');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { detail?: unknown } } };
+      showToast(typeof e.response?.data?.detail === 'string' ? e.response.data.detail as string : '분쟁 접수 실패', 'error');
+    }
+    setDisputeLoading(false);
+  };
+
   const filtered = orders.filter(o => {
     const allow = STATUS_FILTER_MAP[statusFilter] ?? [];
     return allow.includes(o.status);
@@ -275,6 +302,11 @@ export default function MyOrdersPage() {
                   <button onClick={() => void openRefundModal(item)} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(255,152,0,0.1)', border: '1px solid rgba(255,152,0,0.3)', color: '#ff9100', cursor: 'pointer' }}>
                     환불요청
                   </button>
+                  {!item.is_disputed && (
+                    <button onClick={() => { setDisputeTarget(item); setDisputeReason(''); }} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(255,82,82,0.1)', border: '1px solid rgba(255,82,82,0.3)', color: '#ff5252', cursor: 'pointer' }}>
+                      ⚠️ 분쟁 신청
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -287,6 +319,11 @@ export default function MyOrdersPage() {
                   <button onClick={() => void openRefundModal(item)} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(255,152,0,0.1)', border: '1px solid rgba(255,152,0,0.3)', color: '#ff9100', cursor: 'pointer' }}>
                     환불요청
                   </button>
+                  {!item.is_disputed && (
+                    <button onClick={() => { setDisputeTarget(item); setDisputeReason(''); }} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(255,82,82,0.1)', border: '1px solid rgba(255,82,82,0.3)', color: '#ff5252', cursor: 'pointer' }}>
+                      ⚠️ 분쟁 신청
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -389,6 +426,50 @@ export default function MyOrdersPage() {
                 onClick={handleRefundSubmit}
                 style={{ flex: 1, padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700, background: refundLoading ? '#ff910055' : '#ff9100', border: 'none', color: '#0a0a0f', cursor: refundLoading ? 'not-allowed' : 'pointer' }}
               >{refundLoading ? '처리 중...' : '환불 요청하기'}</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 분쟁 신청 모달 */}
+      {disputeTarget && (
+        <>
+          <div onClick={() => setDisputeTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 3000 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '92%', maxWidth: 400, background: '#1a1a2e', border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px 20px', zIndex: 3001 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#ff5252', marginBottom: 4 }}>⚠️ 분쟁 신청</div>
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>예약 #{disputeTarget.id} · {disputeTarget.product_name}</div>
+
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 8 }}>분쟁 사유</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+              {['상품 미배송', '상품 불량/하자', '설명과 다른 상품', '오배송', '기타'].map(r => (
+                <button key={r} onClick={() => setDisputeReason(r === '기타' ? '' : r)} style={{
+                  padding: '10px 14px', borderRadius: 10, fontSize: 13, textAlign: 'left', cursor: 'pointer',
+                  background: disputeReason === r ? 'rgba(255,82,82,0.08)' : C.bgEl,
+                  border: `1px solid ${disputeReason === r ? '#ff5252' : C.border}`,
+                  color: disputeReason === r ? '#ff5252' : C.textSec,
+                  fontWeight: disputeReason === r ? 700 : 400,
+                }}>{r}</button>
+              ))}
+            </div>
+
+            <textarea
+              value={disputeReason}
+              onChange={e => setDisputeReason(e.target.value)}
+              placeholder="분쟁 사유를 상세히 입력해주세요"
+              style={{ width: '100%', boxSizing: 'border-box', minHeight: 80, padding: '10px 14px', borderRadius: 10, fontSize: 13, background: C.bgEl, border: `1px solid ${C.border}`, color: C.text, resize: 'vertical', marginBottom: 16 }}
+            />
+
+            <div style={{ fontSize: 11, color: C.textDim, marginBottom: 16, lineHeight: 1.6 }}>
+              분쟁 접수 시 해당 거래의 정산이 자동 보류됩니다. 관리자가 양측 의견을 확인한 후 처리합니다.
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setDisputeTarget(null)} style={{ flex: 1, padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700, background: C.bgEl, border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer' }}>취소</button>
+              <button
+                disabled={disputeLoading || !disputeReason.trim()}
+                onClick={() => void handleDisputeOpen()}
+                style={{ flex: 1, padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700, background: disputeLoading || !disputeReason.trim() ? '#ff525555' : '#ff5252', border: 'none', color: '#fff', cursor: disputeLoading || !disputeReason.trim() ? 'not-allowed' : 'pointer' }}
+              >{disputeLoading ? '처리 중...' : '분쟁 접수하기'}</button>
             </div>
           </div>
         </>

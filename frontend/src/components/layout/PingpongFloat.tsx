@@ -81,6 +81,39 @@ function parseDeeplinks(text: string): { parts: Array<{ type: 'text' | 'link'; v
   return { parts };
 }
 
+// /path 패턴 감지 → 네비게이션 버튼 변환
+const PATH_RE = /(\/[\w-]+(?:\/[\w-]+)*)/g;
+const KNOWN_PATHS = new Set([
+  '/', '/deals', '/search', '/my-deals', '/my-orders', '/completed-deals',
+  '/my', '/mypage', '/spectating', '/notifications', '/points',
+  '/deal/create', '/login', '/register', '/seller/dashboard',
+  '/seller/offers', '/seller/orders', '/seller/reviews', '/seller/refunds',
+  '/seller/settlements',
+]);
+
+function isNavigablePath(p: string): boolean {
+  if (KNOWN_PATHS.has(p)) return true;
+  if (/^\/deal\/\d+/.test(p)) return true;
+  if (/^\/review\/write\/\d+/.test(p)) return true;
+  return false;
+}
+
+function parsePathLinks(text: string): Array<{ type: 'text' | 'route'; value: string }> {
+  const result: Array<{ type: 'text' | 'route'; value: string }> = [];
+  let lastIdx = 0;
+  const re = new RegExp(PATH_RE.source, 'g');
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    if (isNavigablePath(m[1])) {
+      if (m.index > lastIdx) result.push({ type: 'text', value: text.slice(lastIdx, m.index) });
+      result.push({ type: 'route', value: m[1] });
+      lastIdx = m.index + m[0].length;
+    }
+  }
+  if (lastIdx < text.length) result.push({ type: 'text', value: text.slice(lastIdx) });
+  return result;
+}
+
 export default function PingpongFloat() {
   const [chatOpen, setChatOpen]   = useState(false);
   const [messages, setMessages]   = useState<ChatMessage[]>([]);
@@ -308,15 +341,26 @@ export default function PingpongFloat() {
                         : msg.from === 'bot'
                         ? (() => {
                             const { parts } = parseDeeplinks(msg.text);
-                            if (parts.length === 1 && parts[0].type === 'text') return msg.text;
+                            // Render deeplinks + /path route buttons
+                            const renderTextWithPaths = (text: string, keyPrefix: string) => {
+                              const pathParts = parsePathLinks(text);
+                              if (pathParts.length === 1 && pathParts[0].type === 'text') return <span key={keyPrefix}>{text}</span>;
+                              return pathParts.map((pp, j) => pp.type === 'route' ? (
+                                <button key={`${keyPrefix}-p${j}`} onClick={() => { navigate(pp.value); setChatOpen(false); }} style={{
+                                  display: 'inline-block', margin: '2px 4px', padding: '4px 12px', borderRadius: 12,
+                                  background: '#4ade80', color: '#000', fontSize: 13,
+                                  fontWeight: 700, border: 'none', cursor: 'pointer',
+                                }}>📍 {pp.value} 바로가기</button>
+                              ) : <span key={`${keyPrefix}-t${j}`}>{pp.value}</span>);
+                            };
                             return (<>
-                              {parts.map((p, i) => p.type === 'text' ? <span key={i}>{p.value}</span> : (
+                              {parts.map((p, i) => p.type === 'link' ? (
                                 <button key={i} onClick={() => { navigate(p.path!); setChatOpen(false); }} style={{
                                   display: 'inline-block', margin: '2px 0', padding: '3px 8px', borderRadius: 6,
                                   background: 'rgba(0,176,255,0.15)', color: '#00b0ff', fontSize: 12,
                                   fontWeight: 600, border: 'none', cursor: 'pointer', textDecoration: 'none',
                                 }}>{p.label}</button>
-                              ))}
+                              ) : renderTextWithPaths(p.value, `d${i}`))}
                             </>);
                           })()
                         : msg.text}
