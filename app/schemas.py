@@ -788,6 +788,9 @@ class ReservationOut(ORMModel):
     refunded_qty: Optional[int] = None
     refunded_amount_total: Optional[int] = None
 
+    # 🔄 환불 유형
+    refund_type: Optional[str] = None  # refund / return / exchange
+
     class Config:
         orm_mode = True
 
