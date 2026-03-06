@@ -74,6 +74,7 @@ export default function MyOrdersPage() {
   const [refundTarget, setRefundTarget] = useState<MyOrder | null>(null);
   const [refundReason, setRefundReason] = useState(REFUND_REASONS[0]);
   const [refundReasonOther, setRefundReasonOther] = useState('');
+  const [refundType, setRefundType] = useState<'refund' | 'return' | 'exchange'>('refund');
   const [refundPreviewData, setRefundPreviewData] = useState<Record<string, unknown> | null>(null);
   const [refundLoading, setRefundLoading] = useState(false);
 
@@ -155,6 +156,7 @@ export default function MyOrdersPage() {
     setRefundTarget(order);
     setRefundReason(REFUND_REASONS[0]);
     setRefundReasonOther('');
+    setRefundType('refund');
     setRefundPreviewData(null);
     setRefundLoading(true);
     try {
@@ -172,7 +174,7 @@ export default function MyOrdersPage() {
     if (!reason.trim()) { showToast('환불 사유를 입력해주세요', 'error'); return; }
     setRefundLoading(true);
     try {
-      await refundReservation(refundTarget.id, reason);
+      await refundReservation(refundTarget.id, reason, 'BUYER', refundType);
       updateStatus(refundTarget.id, 'CANCELLED');
       setRefundTarget(null);
       showToast('환불이 요청되었습니다', 'success');
@@ -319,6 +321,18 @@ export default function MyOrdersPage() {
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '92%', maxWidth: 400, background: '#1a1a2e', border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px 20px', zIndex: 3001, maxHeight: '80vh', overflowY: 'auto' }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 4 }}>환불 요청</div>
             <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>예약 #{refundTarget.id} · {refundTarget.product_name}</div>
+
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 8 }}>처리 유형</div>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+              {([['refund', '환불'], ['return', '반품'], ['exchange', '교환']] as const).map(([val, label]) => (
+                <button key={val} onClick={() => setRefundType(val)} style={{
+                  flex: 1, padding: '8px 0', borderRadius: 10, fontSize: 12, fontWeight: refundType === val ? 700 : 400, cursor: 'pointer',
+                  background: refundType === val ? 'rgba(0,176,255,0.1)' : C.bgEl,
+                  border: `1px solid ${refundType === val ? '#00b0ff' : C.border}`,
+                  color: refundType === val ? '#00b0ff' : C.textSec,
+                }}>{label}</button>
+              ))}
+            </div>
 
             <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 8 }}>환불 사유</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>

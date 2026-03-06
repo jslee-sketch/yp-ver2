@@ -14,6 +14,54 @@ from pydantic import BaseModel
 from app.database import get_db
 from app import models
 
+import logging
+logger = logging.getLogger(__name__)
+
+
+def _notify_dispute(db: Session, resv: models.Reservation, event: str):
+    """분쟁 알림 (best-effort): event = 'opened' | 'closed'."""
+    try:
+        from app.routers.notifications import create_notification
+    except Exception:
+        return
+
+    rid = resv.id
+    did = getattr(resv, "deal_id", None)
+    oid = getattr(resv, "offer_id", None)
+    buyer_id = getattr(resv, "buyer_id", None)
+
+    if event == "opened":
+        title_buyer = f"예약 #{rid}에 대해 분쟁이 시작되었습니다."
+        msg_buyer = f"딜 #{did} / 오퍼 #{oid} 예약에 대한 분쟁이 접수되었습니다. 처리 결과를 안내해 드리겠습니다."
+        title_seller = f"예약 #{rid}에 대해 분쟁이 시작되었습니다."
+        msg_seller = f"딜 #{did} / 오퍼 #{oid} 예약에 분쟁이 접수되었습니다. 정산이 일시 보류됩니다."
+    else:
+        title_buyer = f"예약 #{rid} 분쟁이 종료되었습니다."
+        msg_buyer = f"딜 #{did} / 오퍼 #{oid} 예약의 분쟁 처리가 완료되었습니다."
+        title_seller = f"예약 #{rid} 분쟁이 종료되었습니다."
+        msg_seller = f"딜 #{did} / 오퍼 #{oid} 예약의 분쟁이 종료되었습니다. 정산 절차가 재개됩니다."
+
+    ntype = f"dispute_{event}"
+    meta = {"deal_id": did, "offer_id": oid, "reservation_id": rid}
+
+    try:
+        if buyer_id:
+            create_notification(db, user_id=buyer_id, type=ntype, title=title_buyer,
+                                message=msg_buyer, meta={**meta, "role": "buyer"})
+    except Exception:
+        logger.exception("dispute notification to buyer failed")
+
+    try:
+        seller_id = None
+        if oid:
+            offer = db.get(models.Offer, oid)
+            seller_id = getattr(offer, "seller_id", None) if offer else None
+        if seller_id:
+            create_notification(db, user_id=seller_id, type=ntype, title=title_seller,
+                                message=msg_seller, meta={**meta, "role": "seller"})
+    except Exception:
+        logger.exception("dispute notification to seller failed")
+
 router = APIRouter(
     prefix="/settlements",
     tags=["settlements"],
@@ -213,6 +261,7 @@ def refresh_settlement_dispute(
     updated_ids = []
 
     for s, r in rows:
+        was_dispute = (getattr(s, "block_reason", None) or "").upper() == "DISPUTE"
         s.dispute_opened_at = getattr(r, "dispute_opened_at", None)
         s.dispute_closed_at = getattr(r, "dispute_closed_at", None)
 
@@ -220,6 +269,13 @@ def refresh_settlement_dispute(
         s.block_reason = "DISPUTE"
 
         updated_ids.append(s.id)
+
+        # 새로 분쟁 진입한 건에 대해서만 알림 발송
+        if not was_dispute:
+            try:
+                _notify_dispute(db, r, "opened")
+            except Exception:
+                pass
 
     if updated_ids:
         db.commit()
@@ -266,6 +322,11 @@ def refresh_settlement_dispute_closed(
         s.block_reason = "DISPUTE_PATH"
         s.status = "HOLD"
         updated_ids.append(s.id)
+
+        try:
+            _notify_dispute(db, r, "closed")
+        except Exception:
+            pass
 
     if updated_ids:
         db.commit()

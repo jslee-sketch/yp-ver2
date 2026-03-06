@@ -3037,6 +3037,9 @@ def refund_paid_reservation(
     quantity_refund: int | None = None,  # 부분환불 수량(옵션)
     shipping_refund_override: int | None = None,  # ✅ 배송비 환불 override(SELLER/ADMIN만)
     shipping_refund_override_reason: str | None = None,
+
+    # ✅ 환불 유형
+    refund_type: str | None = "refund",  # "refund" / "return" / "exchange"
 ) -> Reservation:
     """
     PAID 상태 예약에 대해 실제 환불을 실행하는 함수 (v3.6).
@@ -3198,6 +3201,10 @@ def refund_paid_reservation(
                 resv.phase = ReservationPhase.CANCELLED
             except Exception:
                 resv.phase = "CANCELLED"
+
+    # 3-2b) refund_type 저장
+    if hasattr(resv, "refund_type") and refund_type:
+        resv.refund_type = str(refund_type).strip().lower()
 
     # 3-3) refunded 누적
     prev_qty = int(getattr(resv, "refunded_qty", 0) or 0)
@@ -4414,42 +4421,32 @@ def seller_confirm_offer(
 
 def _get_settlement_state_for_reservation(db: Session, resv: Reservation) -> SettlementState:
     """
-    ✅ v1: 아주 심플한 버전
-    - Settlement 테이블이 있다면 reservation_id 기준으로 찾고 상태를 매핑
-    - 아직 정교하게 안 해도 되고, 일단 NOT_SETTLED / SETTLED_TO_SELLER 만 구분
+    ✅ v2: ReservationSettlement 모델 기준으로 정산 상태 판정.
+    - PAID → SETTLED_TO_SELLER (셀러 지급 완료)
+    - APPROVED → SETTLED_TO_SELLER (승인됨 = 지급 확정)
+    - HOLD/PENDING/READY/CANCELLED → NOT_SETTLED
     """
 
-    # 1) Settlement 모델이 있다면, reservation_id 기반으로 조회
-    #    => 네 스키마에 맞게 필드명/모델명 수정하기!
-    SettlementModel = getattr(models, "Settlement", None)
-    if SettlementModel is None:
-        # 아직 Settlement 모델 안 붙였으면 그냥 NOT_SETTLED 로 가정
-        return SettlementState.NOT_SETTLED
-
     row = (
-        db.query(SettlementModel)
-          .filter(SettlementModel.reservation_id == resv.id)
-          .order_by(SettlementModel.id.desc())
+        db.query(models.ReservationSettlement)
+          .filter(models.ReservationSettlement.reservation_id == resv.id)
+          .order_by(models.ReservationSettlement.id.desc())
           .first()
     )
 
     if row is None:
         return SettlementState.NOT_SETTLED
 
-    # 예시: row.status 가 "PAID_TO_SELLER" 같은 enum/문자라고 가정
     raw_status = getattr(row, "status", None)
     name = getattr(raw_status, "name", None) or str(raw_status)
     name_upper = name.upper()
 
-    # 네가 실제 사용하는 정산 상태 값에 맞춰서 수정하면 됨
-    if name_upper in {"PAID", "PAID_TO_SELLER", "SETTLED"}:
+    if name_upper in {"PAID", "APPROVED"}:
         return SettlementState.SETTLED_TO_SELLER
 
-    # 그 외에는 아직 정산 안 된 걸로 처리
-    if name_upper in {"PENDING", "READY", "REQUESTED"}:
+    if name_upper in {"PENDING", "HOLD", "READY", "CANCELLED"}:
         return SettlementState.NOT_SETTLED
 
-    # 모르는 값이면 방어적으로 UNKNOWN
     return SettlementState.UNKNOWN
 
 

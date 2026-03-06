@@ -648,6 +648,9 @@ class ReservationRefundIn(BaseModel):
     reason: str = Field(..., max_length=200)
     requested_by: Literal["BUYER", "SELLER", "ADMIN"] = "BUYER"
 
+    # 환불 유형: refund(환불) / return(반품+환불) / exchange(교환)
+    refund_type: Literal["refund", "return", "exchange"] = "refund"
+
     # ✅ 추가: 배송비 환불 override (관리자만 허용할 예정)
     shipping_refund_override: Optional[int] = Field(
         None,

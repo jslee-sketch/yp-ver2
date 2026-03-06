@@ -90,11 +90,12 @@ export async function refundPreview(reservationId: number, actor = 'buyer_cancel
   return res.data;
 }
 
-export async function refundReservation(reservationId: number, reason: string, requestedBy = 'BUYER') {
+export async function refundReservation(reservationId: number, reason: string, requestedBy = 'BUYER', refundType = 'refund') {
   const res = await apiClient.post(API.RESERVATIONS_V36.REFUND, {
     reservation_id: reservationId,
     reason,
     requested_by: requestedBy,
+    refund_type: refundType,
   });
   return res.data;
 }

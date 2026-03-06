@@ -674,6 +674,7 @@ def api_refund_reservation(
         quantity_refund = getattr(payload, "quantity_refund", None)
         shipping_refund_override = getattr(payload, "shipping_refund_override", None)
         shipping_refund_override_reason = getattr(payload, "shipping_refund_override_reason", None)
+        refund_type = getattr(payload, "refund_type", "refund") or "refund"
 
         # ✅ 환불 실행
         result = refund_paid_reservation(
@@ -684,6 +685,7 @@ def api_refund_reservation(
             reason=reason,
             shipping_refund_override=shipping_refund_override,
             shipping_refund_override_reason=shipping_refund_override_reason,
+            refund_type=refund_type,
         )
 
         # ✅ 응답용: phase 붙이기 (DB 영향 X)
