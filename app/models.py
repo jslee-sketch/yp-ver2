@@ -677,6 +677,9 @@ class Reservation(Base):
     is_disputed = Column(Boolean, nullable=False, default=False, server_default="false")
     dispute_opened_at = Column(DateTime(timezone=True), nullable=True)
     dispute_closed_at = Column(DateTime(timezone=True), nullable=True)
+    dispute_reason = Column(String(500), nullable=True)
+    dispute_resolution = Column(String(500), nullable=True)
+    dispute_admin_id = Column(Integer, nullable=True)
 
 
     refund_type = Column(String(20), nullable=True)  # refund, return, exchange

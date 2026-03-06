@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { askPingpong } from '../../api/pingpongApi';
@@ -52,6 +52,35 @@ const QUICK_QUESTIONS = [
   '관전자 예측 어떻게 해?',
 ];
 
+// yeokping://preview/{entity}/{id}/{topic} → frontend route
+const DEEPLINK_RE = /yeokping:\/\/preview\/(reservation|offer|dealroom)\/(\d+)(?:\/(refund|payment|shipping|summary))?/g;
+
+function deeplinkToRoute(entity: string, id: string, topic?: string): { path: string; label: string } {
+  if (entity === 'reservation') {
+    const t = topic || 'summary';
+    const labels: Record<string, string> = { refund: '환불 확인', payment: '결제 확인', shipping: '배송 확인', summary: '예약 상세' };
+    return { path: `/my-orders`, label: `R-${id} ${labels[t] || '상세'}` };
+  }
+  if (entity === 'offer') return { path: `/deal/${id}`, label: `오퍼 #${id} 보기` };
+  if (entity === 'dealroom') return { path: `/deal/${id}`, label: `딜 #${id} 보기` };
+  return { path: '/', label: '바로가기' };
+}
+
+function parseDeeplinks(text: string): { parts: Array<{ type: 'text' | 'link'; value: string; path?: string; label?: string }> } {
+  const parts: Array<{ type: 'text' | 'link'; value: string; path?: string; label?: string }> = [];
+  let lastIdx = 0;
+  const re = new RegExp(DEEPLINK_RE.source, 'g');
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > lastIdx) parts.push({ type: 'text', value: text.slice(lastIdx, m.index) });
+    const { path, label } = deeplinkToRoute(m[1], m[2], m[3]);
+    parts.push({ type: 'link', value: m[0], path, label });
+    lastIdx = m.index + m[0].length;
+  }
+  if (lastIdx < text.length) parts.push({ type: 'text', value: text.slice(lastIdx) });
+  return { parts };
+}
+
 export default function PingpongFloat() {
   const [chatOpen, setChatOpen]   = useState(false);
   const [messages, setMessages]   = useState<ChatMessage[]>([]);
@@ -63,6 +92,7 @@ export default function PingpongFloat() {
   const messagesEndRef            = useRef<HTMLDivElement>(null);
   const inputRef                  = useRef<HTMLInputElement>(null);
   const location                  = useLocation();
+  const navigate                  = useNavigate();
   const { user }                  = useAuth();
 
   // 현재 딜 ID 추출 (URL /deal/:id)
@@ -275,6 +305,20 @@ export default function PingpongFloat() {
                     }}>
                       {msg.from === 'bot' && msg.id === typingId
                         ? <TypingText text={msg.text} onDone={() => setTypingId(null)} />
+                        : msg.from === 'bot'
+                        ? (() => {
+                            const { parts } = parseDeeplinks(msg.text);
+                            if (parts.length === 1 && parts[0].type === 'text') return msg.text;
+                            return (<>
+                              {parts.map((p, i) => p.type === 'text' ? <span key={i}>{p.value}</span> : (
+                                <button key={i} onClick={() => { navigate(p.path!); setChatOpen(false); }} style={{
+                                  display: 'inline-block', margin: '2px 0', padding: '3px 8px', borderRadius: 6,
+                                  background: 'rgba(0,176,255,0.15)', color: '#00b0ff', fontSize: 12,
+                                  fontWeight: 600, border: 'none', cursor: 'pointer', textDecoration: 'none',
+                                }}>{p.label}</button>
+                              ))}
+                            </>);
+                          })()
                         : msg.text}
                     </div>
                   </div>
@@ -283,7 +327,10 @@ export default function PingpongFloat() {
                 {/* 빠른 질문 */}
                 {messages.length === 1 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {QUICK_QUESTIONS.map(q => (
+                    {(user?.role === 'seller' || user?.role === 'both'
+                      ? ['오퍼 어떻게 내?', '정산 언제 돼?', '배송 처리 방법', '수수료 얼마야?']
+                      : QUICK_QUESTIONS
+                    ).map(q => (
                       <button
                         key={q}
                         onClick={() => void sendMessage(q)}

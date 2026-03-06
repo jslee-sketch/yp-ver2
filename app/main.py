@@ -139,6 +139,10 @@ _alter_cols = [
     ("announcements", "target_role", "VARCHAR(20) DEFAULT 'all'"),
     ("announcements", "author", "VARCHAR(100)"),
     ("announcements", "updated_at", "DATETIME"),
+    # dispute 확장 컬럼
+    ("reservations", "dispute_reason", "VARCHAR(500)"),
+    ("reservations", "dispute_resolution", "VARCHAR(500)"),
+    ("reservations", "dispute_admin_id", "INTEGER"),
 ]
 try:
     _insp = _sa.inspect(engine)

@@ -791,6 +791,13 @@ class ReservationOut(ORMModel):
     # 🔄 환불 유형
     refund_type: Optional[str] = None  # refund / return / exchange
 
+    # ✅ 분쟁 정보
+    is_disputed: bool = False
+    dispute_opened_at: Optional[datetime] = None
+    dispute_closed_at: Optional[datetime] = None
+    dispute_reason: Optional[str] = None
+    dispute_resolution: Optional[str] = None
+
     class Config:
         orm_mode = True
 

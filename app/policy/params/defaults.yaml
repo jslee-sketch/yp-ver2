@@ -94,6 +94,17 @@ review:
   review_window_days: 30
   verified_purchase_only: true
 
+# ✅ 분쟁(Dispute) 정책 SSOT
+dispute:
+  # 분쟁 제기 가능 기간 (배송완료 후 n일 이내)
+  open_window_days: 7
+  # 관리자 처리 기한 (분쟁 접수 후 n일)
+  resolution_deadline_days: 14
+  # 분쟁 중 정산 자동 보류
+  auto_hold_settlement: true
+  # 분쟁 종료 후 정산 재개 지연일
+  post_resolution_cooling_days: 3
+
 # ✅ 정산 지급 지연일 SSOT (필요하면 운영에서 조정)
 settlement:
   payout_delay_days_default: 30

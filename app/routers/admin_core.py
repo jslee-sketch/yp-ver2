@@ -158,14 +158,21 @@ def admin_list_reservations(
 
     # join maps
     deal_ids = list({getattr(r, "deal_id", None) for r in items if getattr(r, "deal_id", None)})
+    offer_ids = list({getattr(r, "offer_id", None) for r in items if getattr(r, "offer_id", None)})
     buyer_ids = list({r.buyer_id for r in items if r.buyer_id})
-    seller_ids = list({r.seller_id for r in items if r.seller_id})
 
     deal_map: dict = {}
     if deal_ids:
         for d in db.query(models.Deal).filter(models.Deal.id.in_(deal_ids)).all():
             deal_map[d.id] = getattr(d, "product_name", "")
 
+    # offer → seller_id 매핑
+    offer_seller_map: dict = {}
+    if offer_ids:
+        for o in db.query(models.Offer).filter(models.Offer.id.in_(offer_ids)).all():
+            offer_seller_map[o.id] = getattr(o, "seller_id", None)
+
+    seller_ids = list({sid for sid in offer_seller_map.values() if sid})
     buyer_map: dict = {}
     if buyer_ids:
         for b in db.query(models.Buyer).filter(models.Buyer.id.in_(buyer_ids)).all():
@@ -178,6 +185,7 @@ def admin_list_reservations(
 
     result = []
     for r in items:
+        sid = offer_seller_map.get(getattr(r, "offer_id", None))
         result.append({
             "id": r.id,
             "deal_id": getattr(r, "deal_id", None),
@@ -185,16 +193,21 @@ def admin_list_reservations(
             "product_name": deal_map.get(getattr(r, "deal_id", None), ""),
             "buyer_id": r.buyer_id,
             "buyer_name": buyer_map.get(r.buyer_id, ""),
-            "seller_id": r.seller_id,
-            "seller_name": seller_map.get(r.seller_id, ""),
-            "amount": getattr(r, "amount", None),
-            "status": getattr(r, "status", ""),
+            "seller_id": sid,
+            "seller_name": seller_map.get(sid, "") if sid else "",
+            "amount": getattr(r, "amount_total", 0),
+            "status": str(getattr(r, "status", "")),
             "is_disputed": getattr(r, "is_disputed", False),
-            "shipped_at": str(getattr(r, "shipped_at", "")) if getattr(r, "shipped_at", None) else None,
-            "carrier": getattr(r, "carrier", None),
+            "dispute_reason": getattr(r, "dispute_reason", None),
+            "dispute_resolution": getattr(r, "dispute_resolution", None),
+            "dispute_opened_at": str(r.dispute_opened_at) if getattr(r, "dispute_opened_at", None) else None,
+            "dispute_closed_at": str(r.dispute_closed_at) if getattr(r, "dispute_closed_at", None) else None,
+            "shipped_at": str(r.shipped_at) if getattr(r, "shipped_at", None) else None,
+            "carrier": getattr(r, "shipping_carrier", None),
             "tracking_number": getattr(r, "tracking_number", None),
             "refund_type": getattr(r, "refund_type", None),
-            "refunded_at": str(getattr(r, "refunded_at", "")) if getattr(r, "refunded_at", None) else None,
+            "refunded_qty": getattr(r, "refunded_qty", 0),
+            "refunded_amount_total": getattr(r, "refunded_amount_total", 0),
             "created_at": str(getattr(r, "created_at", "")),
         })
     total = db.query(sa_func.count(models.Reservation.id)).scalar() or 0

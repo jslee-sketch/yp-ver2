@@ -368,10 +368,11 @@ def reservations_search_page(
 class DisputeOpenIn(BaseModel):
     admin_id: Optional[int] = None
     reason: Optional[str] = None
+    buyer_id: Optional[int] = None
 
 @router.post(
     "/{reservation_id}/dispute/open",
-    summary="(관리자) 분쟁 오픈",
+    summary="분쟁 오픈 (구매자 or 관리자)",
 )
 def open_dispute(
     reservation_id: int,
@@ -382,21 +383,77 @@ def open_dispute(
     if not resv:
         raise HTTPException(status_code=404, detail="Reservation not found")
 
-    if not getattr(resv, "is_disputed", False):
-        now = datetime.now(timezone.utc)
-        resv.is_disputed = True
-        resv.dispute_opened_at = now
+    if getattr(resv, "is_disputed", False):
+        return {"reservation_id": reservation_id, "is_disputed": True, "message": "이미 분쟁 중입니다"}
 
-        db.add(resv)
-        db.commit()
-        db.refresh(resv)
+    now = datetime.now(timezone.utc)
+    resv.is_disputed = True
+    resv.dispute_opened_at = now
+    if body.reason:
+        resv.dispute_reason = body.reason
+    if body.admin_id:
+        resv.dispute_admin_id = body.admin_id
 
-    return {"reservation_id": reservation_id, "is_disputed": True}
+    # 정산 자동 보류: is_disputed=True인 예약의 정산은 admin_settlements에서 필터링됨
+    # EventLog 기록
+    try:
+        log = models.EventLog(
+            event_type="dispute_opened",
+            actor_type="admin" if body.admin_id else "buyer",
+            actor_id=body.admin_id or body.buyer_id or 0,
+            entity_type="reservation",
+            entity_id=reservation_id,
+            description=body.reason or "분쟁 접수",
+        )
+        db.add(log)
+    except Exception:
+        pass
+
+    # 알림 발송 (판매자)
+    try:
+        offer = resv.offer
+        if offer and getattr(offer, "seller_id", None):
+            from app.routers.notifications import create_notification
+            create_notification(
+                db, user_id=offer.seller_id,
+                type="dispute_opened",
+                title="분쟁이 접수되었습니다",
+                message=f"예약 R-{reservation_id}에 대한 분쟁이 접수되었습니다. 사유: {body.reason or '미기재'}",
+                link_url=f"/seller/settlements",
+            )
+    except Exception:
+        pass
+
+    # 알림 발송 (구매자)
+    try:
+        if resv.buyer_id:
+            from app.routers.notifications import create_notification
+            create_notification(
+                db, user_id=resv.buyer_id,
+                type="dispute_opened",
+                title="분쟁이 접수되었습니다",
+                message=f"예약 R-{reservation_id}에 대한 분쟁이 접수되었습니다.",
+                link_url=f"/my-orders",
+            )
+    except Exception:
+        pass
+
+    db.add(resv)
+    db.commit()
+    db.refresh(resv)
+
+    return {
+        "reservation_id": reservation_id,
+        "is_disputed": True,
+        "dispute_opened_at": resv.dispute_opened_at,
+        "dispute_reason": resv.dispute_reason,
+    }
 
 
 class DisputeCloseIn(BaseModel):
     admin_id: Optional[int] = None
-    note: Optional[str] = None
+    resolution: Optional[str] = None
+    refund_action: Optional[str] = None  # "full_refund" | "partial_refund" | "no_refund" | None
 
 @router.post(
     "/{reservation_id}/dispute/close",
@@ -411,13 +468,61 @@ def close_dispute(
     if not resv:
         raise HTTPException(status_code=404, detail="Reservation not found")
 
-    if getattr(resv, "is_disputed", False):
-        now = datetime.now(timezone.utc)
-        resv.is_disputed = False
-        resv.dispute_closed_at = now
+    if not getattr(resv, "is_disputed", False):
+        return {"reservation_id": reservation_id, "is_disputed": False, "message": "분쟁 상태가 아닙니다"}
 
-        db.add(resv)
-        db.commit()
-        db.refresh(resv)
+    now = datetime.now(timezone.utc)
+    resv.is_disputed = False
+    resv.dispute_closed_at = now
+    if body.resolution:
+        resv.dispute_resolution = body.resolution
+    if body.admin_id:
+        resv.dispute_admin_id = body.admin_id
 
-    return {"reservation_id": reservation_id, "is_disputed": False, "dispute_closed_at": getattr(resv, "dispute_closed_at", None)}
+    # EventLog 기록
+    try:
+        log = models.EventLog(
+            event_type="dispute_closed",
+            actor_type="admin",
+            actor_id=body.admin_id or 0,
+            entity_type="reservation",
+            entity_id=reservation_id,
+            description=body.resolution or "분쟁 종료",
+        )
+        db.add(log)
+    except Exception:
+        pass
+
+    # 알림 발송 (판매자 + 구매자)
+    try:
+        from app.routers.notifications import create_notification
+        offer = resv.offer
+        if offer and getattr(offer, "seller_id", None):
+            create_notification(
+                db, user_id=offer.seller_id,
+                type="dispute_closed",
+                title="분쟁이 종료되었습니다",
+                message=f"예약 R-{reservation_id} 분쟁이 종료되었습니다. 결과: {body.resolution or '처리 완료'}",
+                link_url=f"/seller/settlements",
+            )
+        if resv.buyer_id:
+            create_notification(
+                db, user_id=resv.buyer_id,
+                type="dispute_closed",
+                title="분쟁이 종료되었습니다",
+                message=f"예약 R-{reservation_id} 분쟁이 종료되었습니다. 결과: {body.resolution or '처리 완료'}",
+                link_url=f"/my-orders",
+            )
+    except Exception:
+        pass
+
+    db.add(resv)
+    db.commit()
+    db.refresh(resv)
+
+    return {
+        "reservation_id": reservation_id,
+        "is_disputed": False,
+        "dispute_closed_at": resv.dispute_closed_at,
+        "dispute_resolution": resv.dispute_resolution,
+    }
