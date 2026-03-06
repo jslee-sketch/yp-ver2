@@ -4,103 +4,119 @@ import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 
 const C = {
-  cyan: '#00e5ff', green: '#00e676', magenta: '#e040fb', orange: '#ff9100',
+  cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252',
   card: 'var(--bg-elevated)', border: 'var(--border-subtle)',
   text: 'var(--text-primary)', textSec: 'var(--text-muted)',
 };
 
-interface Stats {
-  buyers: number;
-  sellers: number;
-  deals: number;
-  offers: number;
-  pendingSellers: number;
-}
-
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<Stats>({ buyers: 0, sellers: 0, deals: 0, offers: 0, pendingSellers: 0 });
+  const [stats, setStats] = useState<any>({});
+  const [alerts, setAlerts] = useState<any>({});
+  const [recent, setRecent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      try {
-        const [buyersRes, sellersRes, dealsRes, offersRes] = await Promise.allSettled([
-          apiClient.get(API.BUYERS.LIST),
-          apiClient.get(API.SELLERS.LIST),
-          apiClient.get(API.DEALS.LIST),
-          apiClient.get(API.OFFERS.LIST),
-        ]);
+      const [buyersR, sellersR, dealsR, offersR, settR, anomR, recentR, reportsR] = await Promise.allSettled([
+        apiClient.get(API.BUYERS.LIST),
+        apiClient.get(API.SELLERS.LIST),
+        apiClient.get(API.DEALS.LIST),
+        apiClient.get(API.OFFERS.LIST),
+        apiClient.get(API.SETTLEMENTS.ADMIN_LIST),
+        apiClient.get(API.ADMIN.ANOMALY_DETECT, { params: { lookback_hours: 24 } }),
+        apiClient.get(API.ACTIVITY.LIST, { params: { limit: 10 } }),
+        apiClient.get(API.ADMIN.REPORTS),
+      ]);
 
-        const buyers = buyersRes.status === 'fulfilled' ? buyersRes.value.data : [];
-        const sellers = sellersRes.status === 'fulfilled' ? sellersRes.value.data : [];
-        const deals = dealsRes.status === 'fulfilled' ? dealsRes.value.data : [];
-        const offers = offersRes.status === 'fulfilled' ? offersRes.value.data : [];
+      const arr = (r: any) => (r.status === 'fulfilled' && Array.isArray(r.value.data)) ? r.value.data : (r.status === 'fulfilled' && r.value.data?.items) ? r.value.data.items : [];
+      const buyers = arr(buyersR); const sellers = arr(sellersR);
+      const deals = arr(dealsR); const offers = arr(offersR);
+      const setts = arr(settR); const anoms = arr(anomR);
+      const reps = arr(reportsR);
 
-        const pendingSellers = Array.isArray(sellers)
-          ? sellers.filter((s: { verified_at?: string | null }) => !s.verified_at).length
-          : 0;
+      const pendingSellers = sellers.filter((s: any) => !s.verified_at).length;
+      const pendingSett = setts.filter((s: any) => s.status === 'READY' || s.status === 'HOLD').length;
+      const disputes = setts.filter((s: any) => s.is_disputed).length;
+      const openReports = reps.filter((r: any) => r.status === 'OPEN').length;
 
-        setStats({
-          buyers: Array.isArray(buyers) ? buyers.length : 0,
-          sellers: Array.isArray(sellers) ? sellers.length : 0,
-          deals: Array.isArray(deals) ? deals.length : 0,
-          offers: Array.isArray(offers) ? offers.length : 0,
-          pendingSellers,
-        });
-      } catch {
-        /* ignore */
-      }
+      setStats({ buyers: buyers.length, sellers: sellers.length, deals: deals.length, offers: offers.length, pendingSellers, pendingSett });
+      setAlerts({ pendingSellers, pendingSett, disputes, anomalies: anoms.length, openReports });
+      setRecent(recentR.status === 'fulfilled' ? (Array.isArray(recentR.value.data) ? recentR.value.data.slice(0, 8) : []) : []);
       setLoading(false);
     };
     load();
   }, []);
 
-  const cards = [
-    { label: '총 구매자', value: stats.buyers, color: C.green, icon: '👤' },
-    { label: '총 판매자', value: stats.sellers, color: C.cyan, icon: '👥' },
-    { label: '총 딜', value: stats.deals, color: C.magenta, icon: '🔥' },
-    { label: '총 오퍼', value: stats.offers, color: C.orange, icon: '📝' },
+  const kpi = [
+    { label: '구매자', value: stats.buyers || 0, color: C.green },
+    { label: '판매자', value: stats.sellers || 0, color: C.cyan },
+    { label: '딜', value: stats.deals || 0, color: '#e040fb' },
+    { label: '오퍼', value: stats.offers || 0, color: C.orange },
+    { label: '승인대기', value: stats.pendingSellers || 0, color: C.red },
+    { label: '정산대기', value: stats.pendingSett || 0, color: '#ffab40' },
   ];
 
+  const alertItems = [
+    { label: '승인대기 판매자', count: alerts.pendingSellers, path: '/admin/sellers' },
+    { label: '미처리 분쟁', count: alerts.disputes, path: '/admin/disputes' },
+    { label: '정산 대기', count: alerts.pendingSett, path: '/admin/settlements' },
+    { label: '이상 탐지', count: alerts.anomalies, path: '/admin/anomalies' },
+    { label: '미답변 신고', count: alerts.openReports, path: '/admin/reports' },
+  ];
+
+  if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
+
   return (
-    <div style={{ padding: '24px 16px', maxWidth: 800, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 24 }}>
-        관리자 대시보드
-      </h1>
+    <div>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 20 }}>대시보드</h1>
 
-      {loading ? (
-        <div style={{ textAlign: 'center', color: C.textSec, padding: 40 }}>로딩 중...</div>
-      ) : (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }}>
-            {cards.map(c => (
-              <div key={c.label} style={{
-                background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
-                padding: '20px 16px', textAlign: 'center',
-              }}>
-                <div style={{ fontSize: 28, marginBottom: 6 }}>{c.icon}</div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: c.color }}>{c.value}</div>
-                <div style={{ fontSize: 13, color: C.textSec, marginTop: 4 }}>{c.label}</div>
-              </div>
-            ))}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginBottom: 24 }}>
+        {kpi.map(k => (
+          <div key={k.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '16px 12px', textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: k.color }}>{k.value}</div>
+            <div style={{ fontSize: 12, color: C.textSec, marginTop: 4 }}>{k.label}</div>
           </div>
+        ))}
+      </div>
 
-          {stats.pendingSellers > 0 && (
-            <button
-              onClick={() => navigate('/admin/sellers')}
-              style={{
-                width: '100%', padding: '16px', borderRadius: 14,
-                background: 'rgba(255,145,0,0.1)', border: `1px solid rgba(255,145,0,0.3)`,
-                color: C.orange, fontSize: 15, fontWeight: 700, cursor: 'pointer',
-                textAlign: 'center',
-              }}
-            >
-              승인 대기 판매자: {stats.pendingSellers}명 →
-            </button>
-          )}
-        </>
-      )}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: C.orange, marginBottom: 12 }}>주의 필요</h3>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          {alertItems.filter(a => a.count > 0).map(a => (
+            <div key={a.label} onClick={() => navigate(a.path)} style={{
+              padding: '8px 16px', background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.2)',
+              borderRadius: 8, cursor: 'pointer', fontSize: 13, color: C.orange,
+            }}>
+              {a.label}: <b>{a.count}</b>
+            </div>
+          ))}
+          {alertItems.every(a => !a.count) && <span style={{ color: C.textSec, fontSize: 13 }}>모든 항목 정상</span>}
+        </div>
+      </div>
+
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>최근 활동</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              <th style={{ textAlign: 'left', padding: '8px 6px', color: C.textSec }}>이벤트</th>
+              <th style={{ textAlign: 'left', padding: '8px 6px', color: C.textSec }}>액터</th>
+              <th style={{ textAlign: 'left', padding: '8px 6px', color: C.textSec }}>시간</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recent.map((r: any, i: number) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
+                <td style={{ padding: '8px 6px', color: C.text }}>{r.event_type || r.type || '-'}</td>
+                <td style={{ padding: '8px 6px', color: C.textSec }}>{r.actor_type || '-'} #{r.actor_id || ''}</td>
+                <td style={{ padding: '8px 6px', color: C.textSec }}>{r.created_at ? new Date(r.created_at).toLocaleString('ko-KR') : '-'}</td>
+              </tr>
+            ))}
+            {!recent.length && <tr><td colSpan={3} style={{ padding: 16, textAlign: 'center', color: C.textSec }}>활동 없음</td></tr>}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

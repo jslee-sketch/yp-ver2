@@ -1210,3 +1210,21 @@ class PingpongCase(Base):
 
     stage = Column(String(32), nullable=True, index=True)
     cancel_rule = Column(String(16), nullable=True, index=True)
+
+
+# -------------------------------------------------------
+# Announcement (공지사항)
+# -------------------------------------------------------
+class Announcement(Base):
+    __tablename__ = "announcements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=True)
+    category = Column(String(30), default="general")
+    is_pinned = Column(Boolean, default=False)
+    is_published = Column(Boolean, default=False)
+    target_role = Column(String(20), default="all")
+    author = Column(String(100), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

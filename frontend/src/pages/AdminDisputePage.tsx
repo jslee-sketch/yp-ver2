@@ -1,119 +1,57 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
-import { showToast } from '../components/common/Toast';
 
-const C = {
-  bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
-  text: 'var(--text-primary)', textSec: 'var(--text-secondary)', textDim: 'var(--text-muted)',
-  border: 'var(--border-subtle)', green: 'var(--accent-green)', orange: 'var(--accent-orange)',
-};
-
-interface DisputeReservation {
-  id: number;
-  deal_id: number;
-  buyer_id: number;
-  offer_id: number;
-  qty: number;
-  amount_total: number;
-  status: string;
-  is_disputed: boolean;
-  dispute_reason?: string;
-  created_at: string;
-  deal?: { product_name?: string };
-  buyer?: { nickname?: string; name?: string };
-}
-
-function fmtP(n: number) { return '₩' + (n ?? 0).toLocaleString('ko-KR'); }
-function fmtDate(s?: string) { return (s ?? '').split('T')[0].replace(/-/g, '.'); }
+const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252', card: 'var(--bg-elevated)', border: 'var(--border-subtle)', text: 'var(--text-primary)', textSec: 'var(--text-muted)' };
 
 export default function AdminDisputePage() {
-  const navigate = useNavigate();
-  const [items, setItems] = useState<DisputeReservation[]>([]);
+  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await apiClient.get(API.RESERVATIONS_SEARCH.SEARCH, { params: { is_disputed: true, limit: 200 } });
-        const data = res.data?.items ?? res.data ?? [];
-        setItems(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('분쟁 목록 로드 실패:', err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  const handleClose = async (id: number) => {
-    if (!confirm('이 분쟁을 종료하시겠습니까?')) return;
+  const load = async () => {
     try {
-      await apiClient.post(API.RESERVATIONS_V36.DISPUTE_CLOSE(id));
-      setItems(prev => prev.filter(r => r.id !== id));
-      showToast('분쟁 종료 완료', 'success');
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { detail?: unknown } } };
-      showToast(typeof e.response?.data?.detail === 'string' ? e.response.data.detail as string : '분쟁 종료 실패', 'error');
-    }
+      const r = await apiClient.get(API.ADMIN.RESERVATIONS, { params: { is_disputed: true, limit: 200 } });
+      setItems(r.data?.items || []);
+    } catch {}
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const closeDispute = async (id: number) => {
+    try { await apiClient.post(API.RESERVATIONS_V36.DISPUTE_CLOSE(id)); load(); } catch {}
   };
 
+  if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
+
   return (
-    <div style={{ minHeight: '100dvh', background: C.bg, paddingBottom: 100 }}>
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 100, height: 56,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 16px', background: C.bg, borderBottom: `1px solid ${C.border}`,
-      }}>
-        <button onClick={() => navigate(-1)} style={{ fontSize: 20, color: C.text, cursor: 'pointer' }}>←</button>
-        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>분쟁 관리</span>
-        <div style={{ width: 24 }} />
-      </div>
-
-      <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ fontSize: 12, color: C.textDim, marginBottom: 10 }}>분쟁 중 {items.length}건</div>
-
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: C.textDim }}>불러오는 중...</div>
-        ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: C.textDim }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>✅</div>
-            <div style={{ fontSize: 13 }}>진행 중인 분쟁이 없어요</div>
-          </div>
-        ) : items.map(r => (
-          <div key={r.id} style={{
-            background: C.bgCard, border: `1px solid ${C.border}`,
-            borderLeft: '3px solid #ff5252',
-            borderRadius: 14, padding: 14, marginBottom: 8,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 12, color: C.textSec }}>
-                예약 #{r.id} · 딜 #{r.deal_id}
-              </span>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,82,82,0.15)', color: '#ff5252' }}>
-                분쟁중
-              </span>
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>
-              {r.deal?.product_name ?? `예약 #${r.id}`}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 6 }}>
-              <div><div style={{ fontSize: 10, color: C.textDim }}>결제액</div><div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{fmtP(r.amount_total)}</div></div>
-              <div><div style={{ fontSize: 10, color: C.textDim }}>수량</div><div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{r.qty}개</div></div>
-            </div>
-            <div style={{ fontSize: 10, color: C.textDim, marginBottom: 6 }}>
-              구매자 #{r.buyer_id}{r.buyer?.nickname ? ` (${r.buyer.nickname})` : ''} · {fmtDate(r.created_at)}
-            </div>
-            {r.dispute_reason && (
-              <div style={{ fontSize: 11, color: '#ff9100', marginBottom: 6 }}>사유: {r.dispute_reason}</div>
-            )}
-            <button onClick={() => void handleClose(r.id)}
-              style={{ marginTop: 4, padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(255,82,82,0.12)', border: '1px solid rgba(255,82,82,0.35)', color: '#ff5252', cursor: 'pointer' }}>
-              분쟁 종료
-            </button>
-          </div>
-        ))}
+    <div>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16 }}>분쟁 관리</h1>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              {['예약ID', '딜ID', '구매자', '판매자', '금액', '상태', ''].map(h => (
+                <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {items.map(r => (
+              <tr key={r.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                <td style={{ padding: '10px 8px', color: C.red }}>R-{r.id}</td>
+                <td style={{ padding: '10px 8px', color: C.textSec }}>D-{r.deal_id}</td>
+                <td style={{ padding: '10px 8px', color: C.text }}>{r.buyer_name || `B-${r.buyer_id}`}</td>
+                <td style={{ padding: '10px 8px', color: C.text }}>{r.seller_name || `S-${r.seller_id}`}</td>
+                <td style={{ padding: '10px 8px', color: C.orange }}>{(r.amount || 0).toLocaleString()}</td>
+                <td style={{ padding: '10px 8px', color: C.red, fontWeight: 600 }}>{r.status}</td>
+                <td style={{ padding: '10px 8px' }}>
+                  <button onClick={() => closeDispute(r.id)} style={{ padding: '4px 10px', fontSize: 12, borderRadius: 6, border: 'none', cursor: 'pointer', background: 'rgba(0,230,118,0.15)', color: C.green }}>분쟁종료</button>
+                </td>
+              </tr>
+            ))}
+            {!items.length && <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>분쟁 없음</td></tr>}
+          </tbody>
+        </table>
       </div>
     </div>
   );

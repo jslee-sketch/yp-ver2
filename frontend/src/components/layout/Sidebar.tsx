@@ -291,12 +291,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                 ) : isAdmin ? (
                   <>
                     <SectionTitle>관리자</SectionTitle>
-                    <MenuItem icon="📊" label="대시보드"       onClick={() => go('/admin')} />
-                    <MenuItem icon="👥" label="판매자 관리"    onClick={() => go('/admin/sellers')} />
-                    <MenuItem icon="👤" label="구매자 관리"    onClick={() => go('/admin/buyers')} />
-                    <MenuItem icon="🔧" label="액츄에이터 관리" onClick={() => go('/admin/actuators')} />
-                    <MenuItem icon="⚠️" label="분쟁 관리"       onClick={() => go('/admin/disputes')} />
-                    <MenuItem icon="💵" label="정산 관리"       onClick={() => go('/admin/settlements')} />
+                    <MenuItem icon="🖥️" label="관리자 패널로 이동" onClick={() => go('/admin')} />
                   </>
                 ) : (
                   <>

@@ -55,6 +55,7 @@ from app.models import (  # noqa: F401
     PingpongLog, PingpongCase,
     SpectatorPrediction, SpectatorMonthlyStats, SpectatorBadge,
     Report, UploadedFile, PayoutRequest,
+    Announcement,
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -132,6 +133,12 @@ _alter_cols = [
     # 판매자 생년월일 / 성별
     ("sellers", "birth_date", "TIMESTAMP"),
     ("sellers", "gender", "VARCHAR(10)"),
+    # announcements
+    ("announcements", "is_pinned", "BOOLEAN DEFAULT FALSE"),
+    ("announcements", "is_published", "BOOLEAN DEFAULT FALSE"),
+    ("announcements", "target_role", "VARCHAR(20) DEFAULT 'all'"),
+    ("announcements", "author", "VARCHAR(100)"),
+    ("announcements", "updated_at", "DATETIME"),
 ]
 try:
     _insp = _sa.inspect(engine)
@@ -730,6 +737,14 @@ _include_router_safe("uploads", ("router",), label="uploads")
 _include_router_safe("delivery", ("router",), label="delivery")
 _include_router_safe("admin_anomaly", ("router",), label="admin_anomaly")
 _include_router_safe("admin_policy_proposals", ("router",), label="admin_policy_proposals")
+
+# --------------------------------------------------
+# Admin core / policy yaml / policy docs / announcements
+# --------------------------------------------------
+_include_router_safe("admin_core", ("router",), label="admin_core")
+_include_router_safe("admin_policy_yaml", ("router",), label="admin_policy_yaml")
+_include_router_safe("admin_policy_docs", ("router",), label="admin_policy_docs")
+_include_router_safe("admin_announcements", ("router",), label="admin_announcements")
 
 # 정적 파일 (이미지 업로드)
 try:

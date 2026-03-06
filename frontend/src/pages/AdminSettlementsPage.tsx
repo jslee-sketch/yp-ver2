@@ -1,135 +1,82 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
-import { showToast } from '../components/common/Toast';
 
-const C = {
-  bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
-  text: 'var(--text-primary)', textSec: 'var(--text-secondary)', textDim: 'var(--text-muted)',
-  border: 'var(--border-subtle)', green: 'var(--accent-green)', orange: 'var(--accent-orange)',
-};
-
-const STATUS_META: Record<string, { label: string; color: string }> = {
-  PENDING:  { label: '대기',     color: '#78909c' },
-  HOLD:     { label: '보류',     color: '#ff9100' },
-  READY:    { label: '정산가능', color: '#00b0ff' },
-  APPROVED: { label: '승인',     color: '#00e676' },
-  PAID:     { label: '지급완료', color: '#78909c' },
-};
-
-interface SettlementItem {
-  id: number;
-  reservation_id: number;
-  seller_id: number;
-  buyer_paid_amount: number;
-  platform_commission_amount: number;
-  seller_payout_amount: number;
-  status: string;
-  block_reason?: string;
-  ready_at?: string;
-  approved_at?: string;
-  paid_at?: string;
-  created_at: string;
-}
-
-function fmtP(n: number) { return '₩' + (n ?? 0).toLocaleString('ko-KR'); }
-function fmtDate(s?: string) { return (s ?? '').split('T')[0].replace(/-/g, '.'); }
+const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252', card: 'var(--bg-elevated)', border: 'var(--border-subtle)', text: 'var(--text-primary)', textSec: 'var(--text-muted)' };
 
 export default function AdminSettlementsPage() {
-  const navigate = useNavigate();
-  const [items, setItems] = useState<SettlementItem[]>([]);
+  const [items, setItems] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('전체');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await apiClient.get(API.SETTLEMENTS.ADMIN_LIST, { params: { limit: 200 } });
-        const raw = res.data;
-        const list = Array.isArray(raw) ? raw : (raw?.items ?? raw?.results ?? []);
-        setItems(list as SettlementItem[]);
-      } catch (err) {
-        console.error('정산 목록 로드 실패:', err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  const handleApprove = async (id: number) => {
-    try {
-      await apiClient.post(API.SETTLEMENTS.APPROVE(id));
-      setItems(prev => prev.map(s => s.id === id ? { ...s, status: 'APPROVED', approved_at: new Date().toISOString() } : s));
-      showToast('승인 완료', 'success');
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { detail?: unknown } } };
-      showToast(typeof e.response?.data?.detail === 'string' ? e.response.data.detail as string : '승인 실패', 'error');
-    }
+  const load = async () => {
+    try { const r = await apiClient.get(API.SETTLEMENTS.ADMIN_LIST); setItems(Array.isArray(r.data) ? r.data : r.data?.items || []); } catch {}
+    setLoading(false);
   };
+  useEffect(() => { load(); }, []);
 
-  const filtered = filter === '전체' ? items : items.filter(s => s.status === filter);
+  const filtered = items.filter(s => {
+    const q = search.toLowerCase();
+    const matchQ = !q || [String(s.id), String(s.reservation_id), s.seller_name, s.seller_business_name].some(v => v && String(v).toLowerCase().includes(q));
+    const matchS = !statusFilter || s.status === statusFilter;
+    return matchQ && matchS;
+  });
+
+  const totalAmount = filtered.reduce((a, s) => a + (s.payout_amount || s.settlement_amount || 0), 0);
+
+  const approve = async (id: number) => { try { await apiClient.post(API.SETTLEMENTS.ADMIN_APPROVE(id)); load(); } catch {} };
+
+  const statusColor: Record<string, string> = { HOLD: C.orange, READY: C.cyan, APPROVED: '#4fc3f7', PAID: C.green };
+
+  if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
 
   return (
-    <div style={{ minHeight: '100dvh', background: C.bg, paddingBottom: 100 }}>
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 100, height: 56,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 16px', background: C.bg, borderBottom: `1px solid ${C.border}`,
-      }}>
-        <button onClick={() => navigate(-1)} style={{ fontSize: 20, color: C.text, cursor: 'pointer' }}>←</button>
-        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>정산 관리</span>
-        <div style={{ width: 24 }} />
+    <div>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16 }}>정산 관리</h1>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="정산ID/예약ID/판매자 검색" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }} />
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }}>
+          <option value="">전체 상태</option>
+          {['HOLD', 'READY', 'APPROVED', 'PAID'].map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
       </div>
-
-      <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-          {['전체', 'HOLD', 'READY', 'APPROVED', 'PAID'].map(s => (
-            <button key={s} onClick={() => setFilter(s)} style={{
-              padding: '6px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
-              background: filter === s ? `${C.green}22` : C.bgEl,
-              border: `1px solid ${filter === s ? C.green : C.border}`,
-              color: filter === s ? C.green : C.textSec,
-              fontWeight: filter === s ? 700 : 400,
-            }}>{s === '전체' ? s : (STATUS_META[s]?.label ?? s)}</button>
-          ))}
-        </div>
-
-        <div style={{ fontSize: 12, color: C.textDim, marginBottom: 10 }}>{filtered.length}건</div>
-
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: C.textDim }}>불러오는 중...</div>
-        ) : filtered.map(s => {
-          const meta = STATUS_META[s.status] ?? STATUS_META.HOLD;
-          return (
-            <div key={s.id} style={{
-              background: C.bgCard, border: `1px solid ${C.border}`,
-              borderLeft: `3px solid ${meta.color}`,
-              borderRadius: 14, padding: 14, marginBottom: 8,
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 12, color: C.textSec }}>정산 #{s.id} (예약 #{s.reservation_id})</span>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: `${meta.color}22`, color: meta.color }}>{meta.label}</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 6 }}>
-                <div><div style={{ fontSize: 10, color: C.textDim }}>결제액</div><div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{fmtP(s.buyer_paid_amount)}</div></div>
-                <div><div style={{ fontSize: 10, color: C.textDim }}>수수료</div><div style={{ fontSize: 12, fontWeight: 700, color: C.orange }}>{fmtP(s.platform_commission_amount)}</div></div>
-                <div><div style={{ fontSize: 10, color: C.textDim }}>정산액</div><div style={{ fontSize: 12, fontWeight: 700, color: C.green }}>{fmtP(s.seller_payout_amount)}</div></div>
-              </div>
-              <div style={{ fontSize: 10, color: C.textDim }}>
-                판매자 #{s.seller_id} · 생성 {fmtDate(s.created_at)}
-                {s.block_reason && <span style={{ color: '#ff5252' }}> · 차단: {s.block_reason}</span>}
-              </div>
-              {s.status === 'READY' && (
-                <button onClick={() => void handleApprove(s.id)}
-                  style={{ marginTop: 8, padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(0,230,118,0.12)', border: '1px solid rgba(0,230,118,0.35)', color: '#00e676', cursor: 'pointer' }}>
-                  승인
-                </button>
-              )}
-            </div>
-          );
-        })}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              {['정산ID', '예약ID', '판매자', '결제금액', 'PG수수료', '플랫폼수수료', '정산금액', '상태', ''].map(h => (
+                <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(s => (
+              <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                <td style={{ padding: '10px 8px', color: C.cyan }}>S-{s.id}</td>
+                <td style={{ padding: '10px 8px', color: C.text }}>R-{s.reservation_id}</td>
+                <td style={{ padding: '10px 8px', color: C.text }}>{s.seller_business_name || s.seller_name || `S-${s.seller_id}`}</td>
+                <td style={{ padding: '10px 8px', color: C.text }}>{(s.total_amount || 0).toLocaleString()}</td>
+                <td style={{ padding: '10px 8px', color: C.textSec }}>{(s.pg_fee || 0).toLocaleString()}</td>
+                <td style={{ padding: '10px 8px', color: C.textSec }}>{(s.platform_fee || 0).toLocaleString()}</td>
+                <td style={{ padding: '10px 8px', color: C.green, fontWeight: 600 }}>{(s.payout_amount || s.settlement_amount || 0).toLocaleString()}</td>
+                <td style={{ padding: '10px 8px' }}><span style={{ color: statusColor[s.status] || C.textSec, fontWeight: 600 }}>{s.status}</span></td>
+                <td style={{ padding: '10px 8px' }}>
+                  {(s.status === 'READY' || s.status === 'HOLD') && <button onClick={() => approve(s.id)} style={{ padding: '4px 10px', fontSize: 12, borderRadius: 6, border: 'none', cursor: 'pointer', background: 'rgba(0,229,255,0.15)', color: C.cyan }}>승인</button>}
+                </td>
+              </tr>
+            ))}
+            {filtered.length > 0 && (
+              <tr style={{ borderTop: `2px solid ${C.border}`, fontWeight: 700 }}>
+                <td colSpan={6} style={{ padding: '10px 8px', color: C.textSec }}>합계</td>
+                <td style={{ padding: '10px 8px', color: C.green }}>{totalAmount.toLocaleString()}</td>
+                <td colSpan={2} />
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
+      <div style={{ marginTop: 8, fontSize: 12, color: C.textSec }}>{filtered.length}건</div>
     </div>
   );
 }

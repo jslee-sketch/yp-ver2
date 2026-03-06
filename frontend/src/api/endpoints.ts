@@ -272,4 +272,30 @@ export const API = {
     COMMISSIONS_SUMMARY: (id: number) => `/actuators/${id}/commissions/summary`,
   },
 
+  // ── 관리자 ─────────────────────────────────────────────
+  ADMIN: {
+    DASHBOARD:           '/admin/dashboard/',
+    DEALS:               '/admin/deals',
+    OFFERS:              '/admin/offers',
+    RESERVATIONS:        '/admin/reservations',
+    STATS:               '/admin/stats',
+    POLICY_YAML:         '/admin/policy/yaml',
+    POLICY_YAML_HISTORY: '/admin/policy/yaml/history',
+    POLICY_DOCS:         '/admin/policy/docs',
+    POLICY_DOC:          (path: string) => `/admin/policy/docs/${encodeURIComponent(path)}`,
+    ANOMALY_DETECT:      '/admin/anomaly/detect',
+    REPORTS:             '/admin/reports',
+    REPORT_RESOLVE:      (id: number) => `/admin/reports/${id}/resolve`,
+    USERS_BAN:           '/admin/users/ban',
+    USERS_UNBAN:         '/admin/users/unban',
+    USERS_BANNED:        '/admin/users/banned',
+    ANNOUNCEMENTS:       '/admin/announcements',
+    ANNOUNCEMENT:        (id: number) => `/admin/announcements/${id}`,
+    NOTIFICATIONS_ALL:   '/admin/notifications/all',
+    NOTIFICATIONS_BROADCAST: '/admin/notifications/broadcast',
+    POLICY_STATUS:       '/admin/policy/status',
+    POLICY_PROPOSALS:    '/admin/policy/proposals',
+    POLICY_PROPOSAL:     (id: number) => `/admin/policy/proposals/${id}`,
+  },
+
 } as const;
