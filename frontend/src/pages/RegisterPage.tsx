@@ -737,6 +737,7 @@ function BizStep({
   bizName, setBizName, bizNum, setBizNum, ceoName, setCeoName,
   bankName, setBankName, accountNum, setAccountNum, accountHolder, setAccountHolder,
   actuatorCode, setActuatorCode, actuatorVerified, setActuatorVerified, setActuatorResolvedId,
+  fromRef,
   bizLicenseUrl, setBizLicenseUrl, ecommercePermitUrl, setEcommercePermitUrl, bankbookUrl, setBankbookUrl,
   // actuator biz fields
   actIsBusiness, setActIsBusiness,
@@ -758,6 +759,7 @@ function BizStep({
   actuatorCode: string; setActuatorCode: (v: string) => void;
   actuatorVerified: boolean; setActuatorVerified: (v: boolean) => void;
   setActuatorResolvedId: (v: number | null) => void;
+  fromRef?: boolean;
   bizLicenseUrl: string; setBizLicenseUrl: (v: string) => void;
   ecommercePermitUrl: string; setEcommercePermitUrl: (v: string) => void;
   bankbookUrl: string; setBankbookUrl: (v: string) => void;
@@ -793,22 +795,28 @@ function BizStep({
     setTimeout(() => setBizVerify('ok'), 1200);
   };
 
-  const doVerifyActuator = async () => {
-    const email = actuatorCode.trim();
-    if (!email) return;
-    if (!email.includes('@')) {
-      setActuatorError('이메일 형식으로 입력해주세요');
+  const doVerifyActuator = async (codeOverride?: string) => {
+    const code = (codeOverride || actuatorCode).trim().toUpperCase();
+    if (!code) return;
+    if (!code.startsWith('ACT-')) {
+      setActuatorError('ACT-XXXXX 형식으로 입력해주세요');
       return;
     }
     setActuatorError('');
     try {
-      const res = await apiClient.get(API.ACTUATORS.BY_EMAIL(email));
-      const data = res.data as { id: number; name?: string; nickname?: string };
-      setActuatorName(data.nickname || data.name || `액추에이터 #${data.id}`);
-      setActuatorResolvedId(data.id);
-      setActuatorVerified(true);
+      const res = await apiClient.get(API.ACTUATORS.VERIFY_CODE(code));
+      const data = res.data as { valid: boolean; actuator_id?: number; name?: string; message?: string };
+      if (data.valid) {
+        setActuatorName(data.name || `액추에이터 #${data.actuator_id}`);
+        setActuatorResolvedId(data.actuator_id ?? null);
+        setActuatorVerified(true);
+      } else {
+        setActuatorError(data.message || '해당 추천코드를 찾을 수 없습니다');
+        setActuatorResolvedId(null);
+        setActuatorVerified(false);
+      }
     } catch {
-      setActuatorError('등록된 액추에이터를 찾을 수 없어요');
+      setActuatorError('추천코드 확인에 실패했습니다');
       setActuatorResolvedId(null);
       setActuatorVerified(false);
     }
@@ -974,21 +982,21 @@ function BizStep({
 
             {/* 액추에이터 추천 코드 */}
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>액추에이터 ID (이메일 주소) — 선택</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, display: 'block', marginBottom: 6 }}>추천 액추에이터 코드 — 선택</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   value={actuatorCode}
                   onChange={e => { setActuatorCode(e.target.value); setActuatorVerified(false); setActuatorResolvedId(null); setActuatorError(''); }}
-                  placeholder="액추에이터 이메일 주소"
-                  disabled={actuatorVerified}
+                  placeholder="ACT-XXXXX 형식으로 입력"
+                  disabled={actuatorVerified || fromRef}
                   style={{
                     flex: 1, padding: '13px 14px', fontSize: 14, borderRadius: 12,
                     background: C.bgInput, border: `1px solid ${C.border}`, color: C.text,
-                    opacity: actuatorVerified ? 0.5 : 1,
+                    opacity: (actuatorVerified || fromRef) ? 0.5 : 1,
                   }}
                 />
                 <button
-                  onClick={doVerifyActuator}
+                  onClick={() => void doVerifyActuator()}
                   disabled={!actuatorCode || actuatorVerified}
                   style={{
                     padding: '13px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
@@ -1394,9 +1402,10 @@ export default function RegisterPage() {
   const [bankName,      setBankName]      = useState('');
   const [accountNum,    setAccountNum]    = useState('');
   const [accountHolder, setAccountHolder] = useState('');
-  const [actuatorCode,     setActuatorCode]     = useState('');  // 입력값 (이메일)
+  const [actuatorCode,     setActuatorCode]     = useState('');  // ACT-XXXXX 코드
   const [actuatorVerified, setActuatorVerified] = useState(false);
   const [actuatorResolvedId, setActuatorResolvedId] = useState<number | null>(null);  // 확인된 DB id
+  const [fromRef, setFromRef] = useState(false);  // URL 파라미터로 자동 입력됨
   const [bizLicenseUrl,       setBizLicenseUrl]       = useState('');
   const [ecommercePermitUrl,  setEcommercePermitUrl]  = useState('');
   const [bankbookUrl,         setBankbookUrl]         = useState('');
@@ -1430,6 +1439,31 @@ export default function RegisterPage() {
     clearTimeout(emailTimer.current);
     clearTimeout(phoneTimer.current);
   }, []);
+
+  // ── URL 파라미터 자동 처리 (초대 링크) ──────────────────
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    const roleParam = searchParams.get('role');
+    if (roleParam === 'seller') {
+      setRole('seller');
+    }
+    if (refCode && refCode.toUpperCase().startsWith('ACT-')) {
+      const code = refCode.toUpperCase();
+      setActuatorCode(code);
+      setFromRef(true);
+      // 자동 검증
+      (async () => {
+        try {
+          const res = await apiClient.get(API.ACTUATORS.VERIFY_CODE(code));
+          const data = res.data as { valid: boolean; actuator_id?: number; name?: string };
+          if (data.valid) {
+            setActuatorResolvedId(data.actuator_id ?? null);
+            setActuatorVerified(true);
+          }
+        } catch { /* 자동 검증 실패 시 수동 입력 가능 */ }
+      })();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Nickname handler ────────────────────────────────────
   const setNickname = useCallback((val: string) => {
@@ -1863,6 +1897,7 @@ export default function RegisterPage() {
                   accountHolder={accountHolder} setAccountHolder={setAccountHolder}
                   actuatorCode={actuatorCode} setActuatorCode={setActuatorCode}
                   actuatorVerified={actuatorVerified} setActuatorVerified={setActuatorVerified} setActuatorResolvedId={setActuatorResolvedId}
+                  fromRef={fromRef}
                   bizLicenseUrl={bizLicenseUrl} setBizLicenseUrl={setBizLicenseUrl}
                   ecommercePermitUrl={ecommercePermitUrl} setEcommercePermitUrl={setEcommercePermitUrl}
                   bankbookUrl={bankbookUrl} setBankbookUrl={setBankbookUrl}

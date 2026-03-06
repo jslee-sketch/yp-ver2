@@ -224,7 +224,11 @@ export default function SearchPage() {
   // 초기 URL 파라미터 동기화
   useEffect(() => { if (initialQ) void doSearch(initialQ); }, [allDeals]); // eslint-disable-line
 
-  const hotDeals = [...allDeals].sort((a, b) => b.current_qty - a.current_qty).slice(0, 4);
+  const [showAll, setShowAll] = useState(false);
+  const openDeals = allDeals.filter(d => d.status === 'open');
+  const displayDeals = showAll ? allDeals : openDeals;
+  const hotDeals = [...displayDeals].sort((a, b) => b.current_qty - a.current_qty).slice(0, 4);
+  const displayResults = showAll ? results : results.filter(d => d.status === 'open');
 
   return (
     <div style={{ minHeight: '100dvh', background: C.bg, paddingBottom: 80 }}>
@@ -325,6 +329,20 @@ export default function SearchPage() {
               })}
             </div>
 
+            {/* 상태 필터 */}
+            <div style={{ display: 'flex', gap: 6, marginTop: 18, marginBottom: 4 }}>
+              {[false, true].map(val => (
+                <button key={String(val)} onClick={() => setShowAll(val)} style={{
+                  padding: '6px 14px', borderRadius: 16, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                  background: showAll === val ? `${C.green}22` : C.bgEl,
+                  border: `1px solid ${showAll === val ? C.green : C.border}`,
+                  color: showAll === val ? C.green : C.textSec,
+                }}>
+                  {val ? '전체' : '모집중'}
+                </button>
+              ))}
+            </div>
+
             <SectionHeader>지금 뜨는 딜</SectionHeader>
             {hotDeals.length === 0 && (
               <div style={{ textAlign: 'center', padding: '20px 0', color: C.textDim, fontSize: 13 }}>
@@ -338,10 +356,23 @@ export default function SearchPage() {
         {/* 검색 결과 */}
         {isSearching && (
           <>
-            <div style={{ marginTop: 16, marginBottom: 10, fontSize: 12, color: C.textDim }}>
-              "{query}" 검색 결과 · {results.length}건
+            {/* 상태 필터 */}
+            <div style={{ display: 'flex', gap: 6, marginTop: 16, marginBottom: 8 }}>
+              {[false, true].map(val => (
+                <button key={String(val)} onClick={() => setShowAll(val)} style={{
+                  padding: '6px 14px', borderRadius: 16, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                  background: showAll === val ? `${C.green}22` : C.bgEl,
+                  border: `1px solid ${showAll === val ? C.green : C.border}`,
+                  color: showAll === val ? C.green : C.textSec,
+                }}>
+                  {val ? '전체' : '모집중'}
+                </button>
+              ))}
             </div>
-            {results.length === 0 ? (
+            <div style={{ marginBottom: 10, fontSize: 12, color: C.textDim }}>
+              "{query}" 검색 결과 · {displayResults.length}건
+            </div>
+            {displayResults.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>😅</div>
                 <p style={{ fontSize: 13, color: C.textDim, marginBottom: 16 }}>
@@ -356,7 +387,7 @@ export default function SearchPage() {
                 >딜 만들기 →</button>
               </div>
             ) : (
-              results.map(deal => <DealCard key={deal.id} deal={deal} />)
+              displayResults.map(deal => <DealCard key={deal.id} deal={deal} />)
             )}
           </>
         )}

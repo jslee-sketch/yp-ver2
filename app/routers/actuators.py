@@ -23,6 +23,34 @@ router = APIRouter(
 )
 
 
+@router.get("/verify-code", summary="추천코드로 액추에이터 검증")
+def verify_actuator_code(
+    code: str = Query(..., description="추천코드 (ACT-XXXXX)"),
+    db: Session = Depends(get_db),
+):
+    """ACT-00005 형식의 추천코드로 액추에이터를 검증합니다."""
+    if not code.startswith("ACT-"):
+        return {"valid": False, "message": "올바른 추천코드 형식이 아닙니다"}
+    try:
+        act_id = int(code.replace("ACT-", ""))
+    except ValueError:
+        return {"valid": False, "message": "올바른 추천코드 형식이 아닙니다"}
+
+    actuator = db.query(models.Actuator).filter(
+        models.Actuator.id == act_id,
+        models.Actuator.status == "ACTIVE",
+    ).first()
+    if not actuator:
+        return {"valid": False, "message": "해당 추천코드를 찾을 수 없습니다"}
+
+    return {
+        "valid": True,
+        "actuator_id": actuator.id,
+        "name": actuator.nickname or actuator.name,
+        "message": f"{actuator.nickname or actuator.name} 확인되었습니다",
+    }
+
+
 @router.get("/by-email", response_model=schemas.ActuatorOut, summary="이메일로 액추에이터 조회")
 def get_actuator_by_email(
     email: str = Query(..., description="액추에이터 이메일"),

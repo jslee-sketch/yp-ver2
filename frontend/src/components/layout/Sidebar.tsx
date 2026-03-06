@@ -319,8 +319,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
 
               {/* 하단 */}
               <div style={{ borderTop: '1px solid var(--border-subtle)', paddingBottom: 8 }}>
-                <MenuItem icon="🔔" label="알림"    badge={unreadCount > 0 ? unreadCount : undefined} badgeColor="red"
-                  onClick={() => go('/notifications')} />
+                {!isSeller && (
+                  <MenuItem icon="🔔" label="알림"    badge={unreadCount > 0 ? unreadCount : undefined} badgeColor="red"
+                    onClick={() => go('/notifications')} />
+                )}
                 <MenuItem icon="⚙️" label="설정"    onClick={() => go('/settings')} />
                 <MenuItem icon="📋" label="이용약관" onClick={() => go('/terms')} />
                 <MenuItem icon="💬" label="고객센터" onClick={() => go('/support')} />

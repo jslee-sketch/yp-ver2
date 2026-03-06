@@ -76,7 +76,7 @@ export default function AdminSellersPage() {
   const fetchSellers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get(API.SELLERS.LIST);
+      const res = await apiClient.get(API.SELLERS.LIST, { params: { limit: 1000 } });
       setSellers(Array.isArray(res.data) ? res.data : []);
     } catch {
       showToast('판매자 목록 로드 실패', 'error');

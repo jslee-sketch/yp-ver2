@@ -264,6 +264,7 @@ export const API = {
     DETAIL:            (id: number) => `/actuators/${id}`,
     PROFILE:           '/actuators/me',
     BY_EMAIL:          (email: string) => `/actuators/by-email?email=${encodeURIComponent(email)}`,
+    VERIFY_CODE:       (code: string) => `/actuators/verify-code?code=${encodeURIComponent(code)}`,
     SELLERS:           (id: number) => `/actuators/${id}/sellers`,
     ME_SELLERS:        '/actuators/me/sellers',
     COMMISSIONS:       (id: number) => `/actuators/${id}/commissions`,

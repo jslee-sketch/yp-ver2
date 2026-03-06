@@ -28,8 +28,8 @@ export default function ActuatorInvitePage() {
   const [loading, setLoading] = useState(true);
 
   const actuatorId = user?.id ?? 0;
-  const refCode = `ACT-${actuatorId}`;
-  const inviteLink = `${window.location.origin}/register?ref=${refCode}`;
+  const refCode = `ACT-${String(actuatorId).padStart(5, '0')}`;
+  const inviteLink = `${window.location.origin}/register?ref=${refCode}&role=seller`;
 
   useEffect(() => {
     if (!actuatorId) return;
