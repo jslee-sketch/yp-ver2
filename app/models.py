@@ -141,6 +141,9 @@ class Seller(Base):
     # 외부 평점 (JSON 문자열)
     external_ratings = Column(Text, nullable=True)
 
+    # 배송 정책 (JSON)
+    shipping_policy = Column(JSON().with_variant(JSONB(), "postgresql"), nullable=True)
+
     actuator = relationship("Actuator", back_populates="sellers")
 
     # (NEW) 이 Seller 거래로 발생한 Actuator 커미션들
@@ -660,8 +663,10 @@ class Reservation(Base):
     dispute_closed_at = Column(DateTime(timezone=True), nullable=True)
 
 
+    refund_type = Column(String(20), nullable=True)  # refund, return, exchange
+
     idempotency_key = Column(String, unique=True, index=True, nullable=True)
-    
+
 # 🔹 배송/도착 관련 타임스탬프
 
 
@@ -820,6 +825,24 @@ class SellerReview(Base):
         UniqueConstraint("reservation_id", "buyer_id", name="uq_review_once_per_buyer_reservation"),
         Index("ix_review_seller_created", "seller_id", "created_at"),
     )
+
+
+# -------------------------------------------------------
+# 💬 CustomerInquiry (고객 문의)
+# -------------------------------------------------------
+class CustomerInquiry(Base):
+    __tablename__ = "customer_inquiries"
+    id = Column(Integer, primary_key=True, index=True)
+    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    buyer_id = Column(Integer, ForeignKey("buyers.id"), nullable=False)
+    reservation_id = Column(Integer, ForeignKey("reservations.id"), nullable=True)
+    category = Column(String(50), default="general")  # general, shipping, refund, product
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    status = Column(String(20), default="open")  # open, answered, closed
+    seller_reply = Column(Text, nullable=True)
+    replied_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class SellerRatingAggregate(Base):

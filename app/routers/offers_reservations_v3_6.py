@@ -148,6 +148,39 @@ def api_list_offers(
         _xlate(e)
 
 
+@router.patch("/offers/{offer_id}", summary="오퍼 수정 (셀러)")
+def api_patch_offer(
+    offer_id: int = Path(..., ge=1),
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+):
+    """
+    오퍼 수정 API.
+    - 수정 가능 필드: price, total_available_qty, delivery_days,
+      shipping_mode, shipping_fee_per_reservation, shipping_fee_per_qty, is_active
+    - price 변경은 sold_qty == 0 일 때만 허용
+    """
+    offer = db.query(models.Offer).filter(models.Offer.id == offer_id).first()
+    if not offer:
+        raise HTTPException(status_code=404, detail="offer_not_found")
+
+    ALLOWED = {
+        "price", "total_available_qty", "delivery_days",
+        "shipping_mode", "shipping_fee_per_reservation", "shipping_fee_per_qty", "is_active",
+    }
+    updates = {k: v for k, v in body.items() if k in ALLOWED}
+
+    if "price" in updates and int(getattr(offer, "sold_qty", 0) or 0) > 0:
+        raise HTTPException(status_code=409, detail="cannot change price after sales started")
+
+    for k, v in updates.items():
+        setattr(offer, k, v)
+
+    db.commit()
+    db.refresh(offer)
+    return offer
+
+
 @router.post("/offers/{offer_id}/confirm", response_model=OfferOut, summary="셀러 오퍼 확정")
 def api_confirm_offer(
     offer_id: int = Path(..., ge=1),

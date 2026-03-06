@@ -95,6 +95,7 @@ def read_me(request: _SellerRequest, db: Session = Depends(database.get_db)):
                         "verified_at": str(getattr(seller, "verified_at", "") or ""),
                         "is_active": getattr(seller, "is_active", True),
                         "created_at": str(getattr(seller, "created_at", "")),
+                        "shipping_policy": getattr(seller, "shipping_policy", None),
                     }
         except (JWTError, Exception):
             pass
@@ -310,3 +311,28 @@ async def upload_seller_documents(
         "ecommerce_permit_image": seller.ecommerce_permit_image,
         "bankbook_image": seller.bankbook_image,
     }
+
+
+# -----------------------------------------------------
+# 7️⃣ Seller PATCH (일반 업데이트 — shipping_policy 등)
+# -----------------------------------------------------
+@router.patch("/{seller_id}")
+def update_seller_fields(
+    seller_id: int = Path(..., ge=1),
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+):
+    """판매자 필드 부분 업데이트 (shipping_policy, phone, address 등)."""
+    seller = db.query(models.Seller).filter(models.Seller.id == seller_id).first()
+    if not seller:
+        raise HTTPException(404, "seller not found")
+    ALLOWED = {
+        "shipping_policy", "phone", "company_phone", "address", "zip_code",
+        "bank_name", "account_number", "account_holder", "nickname",
+    }
+    for k, v in body.items():
+        if k in ALLOWED:
+            setattr(seller, k, v)
+    db.commit()
+    db.refresh(seller)
+    return {"id": seller.id, "updated": list(body.keys())}

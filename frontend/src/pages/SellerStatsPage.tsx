@@ -157,7 +157,7 @@ export default function SellerStatsPage() {
             {/* 오퍼 현황 바 */}
             <div style={{
               background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14,
-              padding: 16,
+              padding: 16, marginBottom: 16,
             }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 10 }}>오퍼 상태 분포</div>
               {(() => {
@@ -178,6 +178,46 @@ export default function SellerStatsPage() {
                       <span style={{ color: '#757575' }}>만료 {inactive}</span>
                     </div>
                   </>
+                );
+              })()}
+            </div>
+
+            {/* 월별 매출 테이블 (최근 6개월) */}
+            <div style={{
+              background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14,
+              padding: 16,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 10 }}>월별 매출 현황</div>
+              {(() => {
+                const now = new Date();
+                const months: { key: string; label: string; revenue: number; count: number }[] = [];
+                for (let i = 0; i < 6; i++) {
+                  const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                  const key = d.toISOString().slice(0, 7); // YYYY-MM
+                  const label = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+                  const monthResvs = reservations.filter(r => r.paid_at && r.paid_at.startsWith(key));
+                  const revenue = monthResvs.reduce((a, r) => a + r.amount_total, 0);
+                  months.push({ key, label, revenue, count: monthResvs.length });
+                }
+                return (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+                        <th style={{ padding: '8px 4px', textAlign: 'left', color: C.textDim }}>월</th>
+                        <th style={{ padding: '8px 4px', textAlign: 'right', color: C.textDim }}>거래</th>
+                        <th style={{ padding: '8px 4px', textAlign: 'right', color: C.textDim }}>매출</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {months.map(m => (
+                        <tr key={m.key} style={{ borderBottom: `1px solid ${C.border}` }}>
+                          <td style={{ padding: '8px 4px', color: C.text }}>{m.label}</td>
+                          <td style={{ padding: '8px 4px', textAlign: 'right', color: C.textSec }}>{m.count}건</td>
+                          <td style={{ padding: '8px 4px', textAlign: 'right', fontWeight: 700, color: C.green }}>₩{fmtWon(m.revenue)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 );
               })()}
             </div>

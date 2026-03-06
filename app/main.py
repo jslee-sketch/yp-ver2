@@ -49,6 +49,7 @@ from app.models import (  # noqa: F401
     Offer, OfferPolicy,
     Reservation, ReservationSettlement, ReservationPayment,
     SellerReview, SellerRatingAggregate,
+    CustomerInquiry,
     EventLog,
     PolicyDeclaration, PolicyProposal,
     PingpongLog, PingpongCase,
@@ -116,6 +117,11 @@ _alter_cols = [
     ("actuators", "company_phone", "VARCHAR(50)"),
     ("actuators", "business_license_image", "VARCHAR(500)"),
     ("actuators", "ecommerce_permit_image", "VARCHAR(500)"),
+    # seller ERP 추가 컬럼
+    ("sellers", "shipping_policy", "TEXT"),
+    ("reservations", "refund_type", "VARCHAR(20)"),
+    ("reviews", "seller_reply", "TEXT"),
+    ("reviews", "replied_at", "DATETIME"),
 ]
 try:
     _insp = _sa.inspect(engine)
@@ -667,6 +673,7 @@ _include_router_safe("admin_settlements", ("router",), label="admin_settlements"
 _include_router_safe("notifications", ("router",), label="notifications")
 
 _include_router_safe("admin_refund_preview", ("router",), label="admin_refund_preview")
+_include_router_safe("customer_inquiries", ("router",), label="customer_inquiries")
 
 # --------------------------------------------------
 # Spectator 관전자 시스템

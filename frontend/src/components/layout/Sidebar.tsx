@@ -262,15 +262,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                 {isSeller ? (
                   <>
                     <SectionTitle>판매자</SectionTitle>
-                    <MenuItem icon="🏠" label="홈"        onClick={() => go('/')} />
-                    <MenuItem icon="🔍" label="검색"      onClick={() => go('/deals')} />
-                    <MenuItem icon="📝" label="오퍼 관리"  onClick={() => go('/seller/offers')} />
-                    <MenuItem icon="📦" label="배송 관리"  onClick={() => go('/seller/delivery')} />
-                    <MenuItem icon="💰" label="정산 관리"  onClick={() => go('/seller/settlements')} />
-                    <MenuItem icon="⭐" label="리뷰 관리"  onClick={() => go('/seller/reviews')} />
-                    <MenuItem icon="↩️" label="환불 관리"  onClick={() => go('/seller/refunds')} />
-                    <MenuItem icon="📊" label="판매 통계"  onClick={() => go('/seller/stats')} />
-                    <MenuItem icon="👤" label="마이페이지" onClick={() => go('/mypage')} />
+                    <MenuItem icon="🏠" label="대시보드"     onClick={() => go('/seller')} />
+                    <MenuItem icon="📝" label="오퍼 관리"    onClick={() => go('/seller/offers')} />
+                    <MenuItem icon="📦" label="배송 관리"    onClick={() => go('/seller/delivery')} />
+                    <MenuItem icon="↩️" label="반품/교환"    onClick={() => go('/seller/returns')} />
+                    <MenuItem icon="💰" label="정산 관리"    onClick={() => go('/seller/settlements')} />
+                    <MenuItem icon="💸" label="환불 관리"    onClick={() => go('/seller/refunds')} />
+                    <MenuItem icon="💬" label="고객 문의"    onClick={() => go('/seller/inquiries')} />
+                    <MenuItem icon="⭐" label="리뷰 관리"    onClick={() => go('/seller/reviews')} />
+                    <MenuItem icon="🚚" label="배송 정책"    onClick={() => go('/seller/shipping-policy')} />
+                    <MenuItem icon="📊" label="판매 통계"    onClick={() => go('/seller/stats')} />
+                    <MenuItem icon="💎" label="수수료 안내"   onClick={() => go('/seller/fees')} />
+                    <MenuItem icon="🔔" label="알림"         onClick={() => go('/seller/notifications')} badge={unreadCount > 0 ? unreadCount : undefined} badgeColor="red" />
+                    <MenuItem icon="📢" label="공지/도움말"   onClick={() => go('/seller/announcements')} />
                   </>
                 ) : isActuator ? (
                   <>

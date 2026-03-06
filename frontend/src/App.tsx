@@ -45,6 +45,12 @@ import ActuatorInvitePage from './pages/ActuatorInvitePage';
 import SellerSettlementsPage from './pages/SellerSettlementsPage';
 import SellerRefundsPage from './pages/SellerRefundsPage';
 import SellerStatsPage from './pages/SellerStatsPage';
+import SellerDashboardPage from './pages/SellerDashboardPage';
+import SellerReturnsPage from './pages/SellerReturnsPage';
+import SellerInquiriesPage from './pages/SellerInquiriesPage';
+import SellerShippingPolicyPage from './pages/SellerShippingPolicyPage';
+import SellerFeesPage from './pages/SellerFeesPage';
+import SellerAnnouncementsPage from './pages/SellerAnnouncementsPage';
 
 function App() {
   return (
@@ -83,11 +89,18 @@ function App() {
           <Route path="/seller/ship/:reservationId"  element={<ProtectedRoute><SellerShipPage /></ProtectedRoute>} />
           <Route path="/seller/delivery"               element={<ProtectedRoute><SellerShipPage /></ProtectedRoute>} />
           <Route path="/settlements" element={<ProtectedRoute><SettlementsPage /></ProtectedRoute>} />
-          <Route path="/seller/offers"       element={<ProtectedRoute><SellerOffersPage /></ProtectedRoute>} />
-          <Route path="/seller/reviews"      element={<ProtectedRoute><SellerReviewsPage /></ProtectedRoute>} />
-          <Route path="/seller/settlements"  element={<ProtectedRoute><SellerSettlementsPage /></ProtectedRoute>} />
-          <Route path="/seller/refunds"      element={<ProtectedRoute><SellerRefundsPage /></ProtectedRoute>} />
-          <Route path="/seller/stats"        element={<ProtectedRoute><SellerStatsPage /></ProtectedRoute>} />
+          <Route path="/seller"                 element={<ProtectedRoute><SellerDashboardPage /></ProtectedRoute>} />
+          <Route path="/seller/offers"         element={<ProtectedRoute><SellerOffersPage /></ProtectedRoute>} />
+          <Route path="/seller/reviews"        element={<ProtectedRoute><SellerReviewsPage /></ProtectedRoute>} />
+          <Route path="/seller/settlements"    element={<ProtectedRoute><SellerSettlementsPage /></ProtectedRoute>} />
+          <Route path="/seller/refunds"        element={<ProtectedRoute><SellerRefundsPage /></ProtectedRoute>} />
+          <Route path="/seller/returns"        element={<ProtectedRoute><SellerReturnsPage /></ProtectedRoute>} />
+          <Route path="/seller/inquiries"      element={<ProtectedRoute><SellerInquiriesPage /></ProtectedRoute>} />
+          <Route path="/seller/shipping-policy" element={<ProtectedRoute><SellerShippingPolicyPage /></ProtectedRoute>} />
+          <Route path="/seller/stats"          element={<ProtectedRoute><SellerStatsPage /></ProtectedRoute>} />
+          <Route path="/seller/fees"           element={<ProtectedRoute><SellerFeesPage /></ProtectedRoute>} />
+          <Route path="/seller/notifications"  element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/seller/announcements"  element={<ProtectedRoute><SellerAnnouncementsPage /></ProtectedRoute>} />
           <Route path="/settings"    element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 
           {/* 액추에이터 */}

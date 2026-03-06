@@ -158,6 +158,16 @@ export const API = {
     BY_SELLER:         (sellerId: number)   => `/reviews/seller/${sellerId}`,
     BY_BUYER:          (buyerId: number)    => `/reviews/buyer/${buyerId}`,
     SUMMARY:           (sellerId: number)   => `/reviews/seller/${sellerId}/summary`,
+    REPLY:             (id: number)         => `/reviews/${id}/reply`,
+    LEVEL:             (sellerId: number)   => `/reviews/seller/${sellerId}/level`,
+  },
+
+  // ── 고객 문의 ──────────────────────────────────────────────
+  CUSTOMER_INQUIRIES: {
+    CREATE:            '/customer-inquiries/',
+    LIST_SELLER:       (sellerId: number) => `/customer-inquiries/seller/${sellerId}`,
+    REPLY:             (id: number) => `/customer-inquiries/${id}/reply`,
+    CLOSE:             (id: number) => `/customer-inquiries/${id}/close`,
   },
 
   // ── 관전자(스펙테이터) ────────────────────────────────────────

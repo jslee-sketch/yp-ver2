@@ -42,6 +42,8 @@ class Review(Base):  # type: ignore
     media_count = Column(Integer, default=0)
     comment = Column(Text, nullable=True)
     verified = Column(Boolean, default=False)
+    seller_reply = Column(Text, nullable=True)
+    replied_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 Base.metadata.create_all(bind=engine)
@@ -734,6 +736,27 @@ def _maybe_reward_recommender_after_review(db: Session, review: Review) -> None:
     except Exception:
         # 최상위 방어: 어떤 예외도 리뷰 생성 흐름을 깨면 안 됨
         return
+
+
+class ReviewReplyIn(BaseModel):
+    comment: str
+
+
+@router.post("/{review_id}/reply")
+def reply_to_review(
+    review_id: int = Path(..., ge=1),
+    body: ReviewReplyIn = Body(...),
+    db: Session = Depends(get_db),
+):
+    """판매자가 리뷰에 답글을 다는 API."""
+    r = db.query(Review).filter(Review.id == review_id).first()
+    if not r:
+        raise HTTPException(status_code=404, detail="review not found")
+    r.seller_reply = body.comment
+    r.replied_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(r)
+    return {"id": r.id, "seller_reply": r.seller_reply, "replied_at": str(r.replied_at)}
 
 
 class ReviewPatch(BaseModel):

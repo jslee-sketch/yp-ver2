@@ -72,7 +72,7 @@ export default function SellerOffersPage() {
     if (!editTarget) return;
     setEditSaving(true);
     try {
-      await apiClient.put(API.OFFERS_V36.DETAIL(editTarget.id), {
+      await apiClient.patch(API.OFFERS_V36.UPDATE(editTarget.id), {
         price: Number(editPrice),
         shipping_fee_per_reservation: Number(editShipping),
         delivery_days: editDeliveryDays ? Number(editDeliveryDays) : null,
@@ -148,7 +148,7 @@ export default function SellerOffersPage() {
                   borderRadius: 14, padding: 14, marginBottom: 8,
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>오퍼 #{offer.id} · 딜 #{offer.deal_id}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>O-{String(offer.id).padStart(6,'0')} · D-{String(offer.deal_id).padStart(6,'0')}</span>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
                       background: `${clr}22`, color: clr,
