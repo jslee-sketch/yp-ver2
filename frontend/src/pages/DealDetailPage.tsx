@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DealHeader } from '../components/deal/DealHeader';
 import { DealStageProgress } from '../components/deal/DealStageProgress';
+import DealTimeline, { mapDealToTimelineStage } from '../components/DealTimeline';
 import { PriceDashboard } from '../components/deal/PriceDashboard';
 import { SpectatorPanel } from '../components/deal/SpectatorPanel';
 import { OfferList } from '../components/deal/OfferList';
@@ -137,6 +138,22 @@ export default function DealDetailPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const rawDealRef = useRef<Record<string, unknown>>({});
 
+  // ── 타임라인 배너 tracking ──
+  const timelineStage = mapDealToTimelineStage(rawDealRef.current);
+  const [shownStages, setShownStages] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem(`deal_${dealId}_shown_stages`);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const shouldShowBanner = !shownStages.includes(timelineStage);
+
+  useEffect(() => {
+    if (shouldShowBanner && timelineStage) {
+      const updated = [...shownStages, timelineStage];
+      setShownStages(updated);
+      sessionStorage.setItem(`deal_${dealId}_shown_stages`, JSON.stringify(updated));
+    }
+  }, [timelineStage]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── 딜 + 오퍼 + 채팅 데이터 페칭 ──
   useEffect(() => {
     if (!dealId) return;
@@ -257,7 +274,10 @@ export default function DealDetailPage() {
           <DealHeader deal={deal} />
         </div>
 
-        {/* 딜 단계 프로그레스 + 카운트다운 */}
+        {/* 딜 단계 프로그레스 (4단계 타임라인) */}
+        <div style={{ margin: '0 16px 8px' }}>
+          <DealTimeline currentStage={mapDealToTimelineStage(rawDealRef.current)} showBanner={shouldShowBanner} />
+        </div>
         <DealStageProgress
           stages={deal.stages}
           currentStageKey={deal.current_stage}

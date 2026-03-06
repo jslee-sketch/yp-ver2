@@ -10,6 +10,7 @@ import { showToast } from '../components/common/Toast';
 import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer } from 'recharts';
 import { PriceFaceSection }   from '../components/journey/PriceFaceSection';
 import { OfferListSection }   from '../components/journey/OfferListSection';
+import DealTimeline, { mapDealToTimelineStage } from '../components/DealTimeline';
 import { GroupCurveSection }  from '../components/journey/GroupCurveSection';
 import { OfferDetailSheet }   from '../components/journey/OfferDetailSheet';
 import { T }                  from '../components/journey/journeyTokens';
@@ -67,8 +68,7 @@ function mapApiOfferToJourney(raw: Record<string, unknown>, targetPrice: number,
 
 // (Mock 오퍼 제거 — API 데이터 사용)
 
-// ── 딜 단계 ───────────────────────────────────────────────
-const STAGES = ['딜모집', '오퍼경쟁', '성사', '결제', '배송', '완료'];
+// ── 딜 단계 (DealTimeline 컴포넌트 사용) ──────────────────
 
 function getCountdownColor(diff: number): string {
   if (diff < 10 * 60 * 1000)  return '#ff2d78';
@@ -99,7 +99,9 @@ export default function PriceJourneyPage() {
   const [dealCreatorId, setDealCreatorId] = useState<number | null>(null);
   const [dealPhase, setDealPhase] = useState<'RECRUITING' | 'OFFER_PHASE'>('RECRUITING');
   const [deadlineMs, setDeadlineMs] = useState(Date.now() + 72 * 3600000);
-  const stageCurrent = dealPhase === 'RECRUITING' ? 1 : 2;
+  const timelineStage = apiDeal ? mapDealToTimelineStage(apiDeal) : (dealPhase === 'RECRUITING' ? 'recruiting' as const : 'offer_competition' as const);
+  const [shownStages, setShownStages] = useState<string[]>([]);
+  const shouldShowBanner = !shownStages.includes(timelineStage);
   const [predBuckets, _setPredBuckets] = useState<{range: string; count: number}[]>([]);
   const [avgPrediction, _setAvgPrediction] = useState(0);
   void _setPredBuckets; void _setAvgPrediction; // TODO: wire to spectator API
@@ -272,6 +274,21 @@ export default function PriceJourneyPage() {
     if (chatExpanded) chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages, chatExpanded]);
 
+  // Banner shown tracking (sessionStorage per deal)
+  useEffect(() => {
+    if (shouldShowBanner) {
+      const updated = [...shownStages, timelineStage];
+      setShownStages(updated);
+      sessionStorage.setItem(`deal_${dealId}_shown_stages`, JSON.stringify(updated));
+    }
+  }, [timelineStage]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load shown stages from sessionStorage
+  useEffect(() => {
+    const saved = sessionStorage.getItem(`deal_${dealId}_shown_stages`);
+    if (saved) setShownStages(JSON.parse(saved));
+  }, [dealId]);
+
   const previewMsgs = chatMessages.slice(-3);
 
   return (
@@ -284,6 +301,14 @@ export default function PriceJourneyPage() {
           0%   { box-shadow: 0 0 0 0 rgba(0,230,118,0.5); }
           70%  { box-shadow: 0 0 0 6px rgba(0,230,118,0); }
           100% { box-shadow: 0 0 0 0 rgba(0,230,118,0); }
+        }
+        @keyframes tlPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.5); }
+        }
+        @keyframes tlBannerIn {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
 
@@ -341,74 +366,18 @@ export default function PriceJourneyPage() {
         </div>
       </div>
 
-      {/* ── 딜 단계 진행바 ── */}
+      {/* ── 딜 단계 진행바 (4단계 타임라인) ── */}
       <div style={{ padding: '0 20px 20px' }}>
         <div style={{
           background: T.bgSurface, border: `1px solid ${T.border}`,
-          borderRadius: 14, padding: '14px 16px',
+          borderRadius: 14, padding: '6px 8px 2px',
         }}>
-          {/* 스테이지 트랙 */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-            {STAGES.map((_, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                {/* 연결선 (첫 번째 제외) */}
-                {i > 0 && (
-                  <div style={{
-                    flex: 1, height: 2,
-                    background: i <= stageCurrent
-                      ? `linear-gradient(90deg, ${T.green}, ${i === stageCurrent ? T.green + '88' : T.green})`
-                      : T.border,
-                  }} />
-                )}
-                {/* 원 */}
-                <div style={{
-                  width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 700,
-                  ...(i < stageCurrent
-                    ? { background: T.green, color: T.bgDeep }
-                    : i === stageCurrent
-                    ? { background: T.green, color: T.bgDeep, animation: 'stagePulse 2s infinite' }
-                    : { background: T.bgDeep, border: `1px solid ${T.border}`, color: T.textSec }
-                  ),
-                }}>
-                  {i < stageCurrent ? '✓' : i + 1}
-                </div>
-                {/* 마지막 원 이후 빈 공간 */}
-                {i < STAGES.length - 1 && (
-                  <div style={{
-                    flex: 1, height: 2,
-                    background: i < stageCurrent ? T.green : T.border,
-                  }} />
-                )}
-              </div>
-            ))}
-          </div>
-          {/* 스테이지 레이블 */}
-          <div style={{ display: 'flex' }}>
-            {STAGES.map((s, i) => (
-              <div key={i} style={{
-                flex: 1, textAlign: 'center',
-                fontSize: 10, fontWeight: i === stageCurrent ? 700 : 400,
-                color: i <= stageCurrent ? T.text : T.textSec,
-                letterSpacing: '-0.2px',
-              }}>
-                {s}
-              </div>
-            ))}
-          </div>
-          {/* 현재 단계 설명 */}
+          <DealTimeline currentStage={timelineStage} showBanner={shouldShowBanner} />
           <div style={{
-            marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.border}`,
+            padding: '6px 8px 10px', borderTop: `1px solid ${T.border}`,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <div>
-              <span style={{ fontSize: 12, color: T.green, fontWeight: 700 }}>현재: {STAGES[stageCurrent]}</span>
-              <span style={{ fontSize: 11, color: T.textSec, marginLeft: 6 }}>— 셀러들이 오퍼를 제출 중이에요</span>
-            </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: countdownColor }}>
-              {countdown || '--'}
-            </div>
+            <span style={{ fontSize: 11, color: T.textSec }}>⏰ {countdown || '로딩 중'}</span>
           </div>
         </div>
       </div>
