@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 import { useAuth } from '../contexts/AuthContext';
 
-const MOCK_ORDERS: Record<string, { product_name: string; seller_name: string; price: number; qty: number }> = {
-  '203': { product_name: '다이슨 에어랩 멀티 스타일러', seller_name: '디지털플러스', price: 520000, qty: 1 },
-  '208': { product_name: '종가집 포기김치 5kg',          seller_name: '식품왕',       price: 28000,  qty: 3 },
-  '211': { product_name: '다이슨 V15 무선청소기',         seller_name: '디지털플러스', price: 750000, qty: 1 },
-};
+interface OrderInfo {
+  product_name: string;
+  seller_name: string;
+  price: number;
+  qty: number;
+}
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)',
@@ -23,7 +24,27 @@ export default function ReviewWritePage() {
   const { reservationId } = useParams<{ reservationId: string }>();
   const { user } = useAuth();
 
-  const order = reservationId ? (MOCK_ORDERS[reservationId] ?? null) : null;
+  const [order, setOrder] = useState<OrderInfo | null>(null);
+
+  useEffect(() => {
+    if (!reservationId) return;
+    const load = async () => {
+      try {
+        const res = await apiClient.get(API.RESERVATIONS.DETAIL(Number(reservationId)));
+        const r = res.data as Record<string, unknown>;
+        setOrder({
+          product_name: String(r.product_name ?? r.deal_title ?? `예약 #${reservationId}`),
+          seller_name: String(r.seller_name ?? r.seller_business_name ?? '판매자'),
+          price: Number(r.amount_total ?? r.price ?? 0),
+          qty: Number(r.qty ?? 1),
+        });
+      } catch {
+        // API 실패 시 기본값
+        setOrder(null);
+      }
+    };
+    void load();
+  }, [reservationId]);
 
   const [rating, setRating]   = useState(0);
   const [hover, setHover]     = useState(0);

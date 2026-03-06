@@ -131,6 +131,7 @@ export const API = {
 
   // ── 예약 검색/필터 ───────────────────────────────────────────
   RESERVATIONS_SEARCH: {
+    SEARCH:            '/v3_6/search',
     BY_DEAL:           (dealId: number) => `/reservations/by_deal/${dealId}`,
     FIND_PAID:         '/reservations/find_paid_without_settlement',
     ADMIN_LIST:        '/admin/reservations/',

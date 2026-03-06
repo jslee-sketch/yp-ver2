@@ -5210,6 +5210,7 @@ def search_reservations(
     offer_id: Optional[int] = None,
     buyer_id: Optional[int] = None,
     status: Optional[ReservationStatus] = None,
+    is_disputed: Optional[bool] = None,
     after_id: Optional[int] = None,
     limit: int = 50,
 ) -> List[Reservation]:
@@ -5224,6 +5225,8 @@ def search_reservations(
         q = q.filter(Reservation.buyer_id == buyer_id)
     if status is not None:
         q = q.filter(Reservation.status == status)
+    if is_disputed is not None:
+        q = q.filter(Reservation.is_disputed == is_disputed)
     if after_id is not None:
         q = q.filter(Reservation.id < after_id)
 

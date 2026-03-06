@@ -264,6 +264,7 @@ def reservations_search(
     offer_id: Optional[int] = Query(None, ge=1),
     buyer_id: Optional[int] = Query(None, ge=1),
     status: Optional[str] = Query(None, description="PENDING | PAID | CANCELLED | EXPIRED"),
+    is_disputed: Optional[bool] = Query(None, description="분쟁 중인 예약만 필터"),
     after_id: Optional[int] = Query(None, ge=1),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
@@ -288,6 +289,7 @@ def reservations_search(
             offer_id=offer_id,
             buyer_id=buyer_id,
             status=enum_status,
+            is_disputed=is_disputed,
             after_id=after_id,
             limit=limit,
         )

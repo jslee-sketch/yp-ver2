@@ -42,7 +42,7 @@ export async function createReservation(data: {
 }
 
 export async function payReservation(reservationId: number, buyerId: number, paidAmount: number) {
-  const res = await apiClient.post(API.RESERVATIONS.PAY, {
+  const res = await apiClient.post(API.RESERVATIONS_V36.PAY(reservationId), {
     reservation_id: reservationId,
     buyer_id: buyerId,
     paid_amount: paidAmount,

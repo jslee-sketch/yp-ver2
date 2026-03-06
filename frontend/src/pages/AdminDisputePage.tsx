@@ -36,7 +36,7 @@ export default function AdminDisputePage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await apiClient.get('/v3_6/search', { params: { is_disputed: true, limit: 200 } });
+        const res = await apiClient.get(API.RESERVATIONS_SEARCH.SEARCH, { params: { is_disputed: true, limit: 200 } });
         const data = res.data?.items ?? res.data ?? [];
         setItems(Array.isArray(data) ? data : []);
       } catch (err) {
