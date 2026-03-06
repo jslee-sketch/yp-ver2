@@ -52,11 +52,20 @@ export default function SellerOffersPage() {
     if (!sellerId) return [];
     try {
       const res = await apiClient.get(API.OFFERS.LIST, { params: { seller_id: sellerId, limit: 100 } });
-      return (res.data ?? []) as OfferResponse[];
+      const raw = res.data;
+      // API 응답이 배열이 아닐 수 있음 (paginated object 등)
+      if (Array.isArray(raw)) return raw as OfferResponse[];
+      if (raw && typeof raw === 'object') {
+        const arr = (raw as Record<string, unknown>).items
+          ?? (raw as Record<string, unknown>).results
+          ?? (raw as Record<string, unknown>).offers;
+        if (Array.isArray(arr)) return arr as OfferResponse[];
+      }
+      return [];
     } catch { return []; }
   }, [sellerId]);
 
-  const items = offers ?? [];
+  const items = Array.isArray(offers) ? offers : [];
   const filtered = filter === '전체' ? items : items.filter(o => getOfferStatus(o) === filter);
 
   const activeCount = items.filter(o => o.is_active && !o.is_confirmed).length;
