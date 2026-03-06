@@ -386,6 +386,12 @@ def create_seller(db: Session, seller: schemas.SellerCreate):
         # (NEW) Actuator 연결
         actuator_id=actuator_id,
 
+        # 정산 계좌
+        bank_name=getattr(seller, 'bank_name', None),
+        account_number=getattr(seller, 'account_number', None),
+        account_holder=getattr(seller, 'account_holder', None),
+        ecommerce_permit_number=getattr(seller, 'ecommerce_permit_number', None),
+
         # 서류 이미지 URL
         business_license_image=getattr(seller, 'business_license_image', None),
         ecommerce_permit_image=getattr(seller, 'ecommerce_permit_image', None),

@@ -96,6 +96,13 @@ def read_me(request: _SellerRequest, db: Session = Depends(database.get_db)):
                         "is_active": getattr(seller, "is_active", True),
                         "created_at": str(getattr(seller, "created_at", "")),
                         "shipping_policy": getattr(seller, "shipping_policy", None),
+                        "birth_date": str(getattr(seller, "birth_date", "") or ""),
+                        "gender": getattr(seller, "gender", None),
+                        "established_date": str(getattr(seller, "established_date", "") or ""),
+                        "business_license_image": getattr(seller, "business_license_image", None),
+                        "ecommerce_permit_image": getattr(seller, "ecommerce_permit_image", None),
+                        "bankbook_image": getattr(seller, "bankbook_image", None),
+                        "external_ratings": getattr(seller, "external_ratings", None),
                     }
         except (JWTError, Exception):
             pass

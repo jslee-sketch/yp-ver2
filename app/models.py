@@ -130,8 +130,9 @@ class Seller(Base):
     banned_until = Column(DateTime, nullable=True)
     ban_reason = Column(Text, nullable=True)
 
-    # 생년월일
+    # 생년월일 / 성별
     birth_date = Column(DateTime, nullable=True)
+    gender = Column(String, nullable=True)
 
     # (NEW) 나를 데려온 Actuator (없을 수도 있음)
     actuator_id = Column(Integer, ForeignKey("actuators.id"), nullable=True)
