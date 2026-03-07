@@ -245,9 +245,9 @@ export const API = {
 
   // ── 활동 로그 ────────────────────────────────────────────────
   ACTIVITY: {
-    LIST:              '/activity/',
-    BUYER:             (buyerId: number) => `/activity/buyer/${buyerId}`,
-    DEAL:              (dealId: number)  => `/activity/deal/${dealId}`,
+    LIST:              '/activity/recent',
+    BUYER:             (buyerId: number) => `/activity/by-buyer/${buyerId}`,
+    DEAL:              (dealId: number)  => `/activity/by-deal/${dealId}`,
   },
 
   // ── 시스템/정책 ───────────────────────────────────────────────

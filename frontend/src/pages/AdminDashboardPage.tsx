@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
@@ -12,75 +12,98 @@ const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<any>({});
+  const [stats, setStats] = useState<any>(null);
   const [alerts, setAlerts] = useState<any>({});
   const [recent, setRecent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const load = async () => {
-      // Use /admin/stats for accurate DB counts (single query, no pagination issues)
-      const [statsR, anomR, recentR, reportsR] = await Promise.allSettled([
-        apiClient.get(API.ADMIN.STATS),
+  const load = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      // Primary: /admin/stats for accurate DB counts
+      const statsR = await apiClient.get(API.ADMIN.STATS);
+      const sd = statsR.data || {};
+
+      setStats({
+        buyers: sd.buyer_count ?? 0,
+        sellers: sd.seller_count ?? 0,
+        deals: sd.deal_count ?? 0,
+        offers: sd.offer_count ?? 0,
+        reservations: sd.total_reservations ?? 0,
+        actuators: sd.actuator_count ?? 0,
+        pendingSellers: sd.pending_sellers ?? 0,
+        pendingSett: sd.pending_settlement ?? 0,
+        gmv: sd.gmv ?? 0,
+        aov: sd.aov ?? 0,
+        refundRate: sd.refund_rate ?? 0,
+        takeRate: sd.take_rate ?? 0,
+        dealSuccessRate: sd.deal_success_rate ?? 0,
+        settlementSummary: sd.settlement_summary || {},
+        reservationStatus: sd.reservation_status || {},
+        disputed: sd.disputed_count ?? 0,
+      });
+
+      // Secondary calls (non-blocking)
+      const [anomR, recentR, reportsR] = await Promise.allSettled([
         apiClient.get(API.ADMIN.ANOMALY_DETECT, { params: { lookback_hours: 24 } }),
         apiClient.get(API.ACTIVITY.LIST, { params: { limit: 10 } }),
         apiClient.get(API.ADMIN.REPORTS),
       ]);
 
-      const statsData = statsR.status === 'fulfilled' ? statsR.value.data : {};
       const anoms = anomR.status === 'fulfilled' ? (Array.isArray(anomR.value.data) ? anomR.value.data : []) : [];
       const reps = reportsR.status === 'fulfilled' ? (Array.isArray(reportsR.value.data) ? reportsR.value.data : reportsR.value.data?.items || []) : [];
-
       const openReports = reps.filter((r: any) => r.status === 'OPEN').length;
 
-      setStats({
-        buyers: statsData.buyer_count || 0,
-        sellers: statsData.seller_count || 0,
-        deals: statsData.deal_count || 0,
-        offers: statsData.offer_count || 0,
-        reservations: statsData.total_reservations || 0,
-        actuators: statsData.actuator_count || 0,
-        pendingSellers: statsData.pending_sellers || 0,
-        pendingSett: statsData.pending_settlement || 0,
-        gmv: statsData.gmv || 0,
-        aov: statsData.aov || 0,
-        refundRate: statsData.refund_rate || 0,
-        takeRate: statsData.take_rate || 0,
-        dealSuccessRate: statsData.deal_success_rate || 0,
-        settlementSummary: statsData.settlement_summary || {},
-        reservationStatus: statsData.reservation_status || {},
-        disputed: statsData.disputed_count || 0,
-      });
-
       setAlerts({
-        pendingSellers: statsData.pending_sellers || 0,
-        pendingSett: statsData.pending_settlement || 0,
-        disputes: statsData.disputed_count || 0,
+        pendingSellers: sd.pending_sellers ?? 0,
+        pendingSett: sd.pending_settlement ?? 0,
+        disputes: sd.disputed_count ?? 0,
         anomalies: anoms.length,
         openReports,
       });
 
-      setRecent(recentR.status === 'fulfilled' ? (Array.isArray(recentR.value.data) ? recentR.value.data.slice(0, 8) : []) : []);
-      setLoading(false);
-    };
-    load();
+      const recentData = recentR.status === 'fulfilled' ? recentR.value.data : [];
+      setRecent(Array.isArray(recentData) ? recentData.slice(0, 8) : []);
+
+    } catch (e: any) {
+      console.error('Dashboard load error:', e);
+      setError(e?.response?.data?.detail || e?.message || '데이터 로딩 실패');
+    }
+    setLoading(false);
   }, []);
 
+  useEffect(() => { load(); }, [load]);
+
+  if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
+
+  if (error) return (
+    <div style={{ padding: 40 }}>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16 }}>대시보드</h1>
+      <div style={{ padding: 16, background: 'rgba(255,82,82,0.1)', border: '1px solid rgba(255,82,82,0.3)', borderRadius: 8, color: C.red, fontSize: 14, marginBottom: 16 }}>
+        {error}
+      </div>
+      <button onClick={load} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: C.cyan, color: '#000', fontWeight: 600, cursor: 'pointer' }}>다시 시도</button>
+    </div>
+  );
+
+  if (!stats) return <div style={{ padding: 40, color: C.textSec }}>데이터 없음</div>;
+
   const kpi = [
-    { label: '구매자', value: stats.buyers || 0, color: C.green, path: '/admin/buyers' },
-    { label: '판매자', value: stats.sellers || 0, color: C.cyan, path: '/admin/sellers' },
-    { label: '딜', value: stats.deals || 0, color: '#e040fb', path: '/admin/deals' },
-    { label: '오퍼', value: stats.offers || 0, color: C.orange, path: '/admin/offers' },
-    { label: '예약/주문', value: stats.reservations || 0, color: '#4fc3f7', path: '/admin/reservations' },
-    { label: '승인대기', value: stats.pendingSellers || 0, color: C.red, path: '/admin/sellers' },
-    { label: '정산대기', value: stats.pendingSett || 0, color: '#ffab40', path: '/admin/settlements' },
-    { label: '분쟁', value: stats.disputed || 0, color: C.red, path: '/admin/disputes' },
+    { label: '구매자', value: stats.buyers, color: C.green, path: '/admin/buyers' },
+    { label: '판매자', value: stats.sellers, color: C.cyan, path: '/admin/sellers' },
+    { label: '딜', value: stats.deals, color: '#e040fb', path: '/admin/deals' },
+    { label: '오퍼', value: stats.offers, color: C.orange, path: '/admin/offers' },
+    { label: '예약/주문', value: stats.reservations, color: '#4fc3f7', path: '/admin/reservations' },
+    { label: '승인대기', value: stats.pendingSellers, color: C.red, path: '/admin/sellers' },
+    { label: '정산대기', value: stats.pendingSett, color: '#ffab40', path: '/admin/settlements' },
+    { label: '분쟁', value: stats.disputed, color: C.red, path: '/admin/disputes' },
   ];
 
   const statCards = [
     { label: 'GMV', value: `${(stats.gmv || 0).toLocaleString()}원`, color: C.green },
     { label: 'AOV', value: `${(stats.aov || 0).toLocaleString()}원`, color: C.cyan },
-    { label: '환불률', value: `${stats.refundRate || 0}%`, color: stats.refundRate > 10 ? C.red : C.green },
+    { label: '환불률', value: `${stats.refundRate || 0}%`, color: (stats.refundRate || 0) > 10 ? C.red : C.green },
     { label: 'Take Rate', value: `${stats.takeRate || 0}%`, color: C.cyan },
     { label: '딜 성사율', value: `${stats.dealSuccessRate || 0}%`, color: C.green },
   ];
@@ -93,11 +116,12 @@ export default function AdminDashboardPage() {
     { label: '미답변 신고', count: alerts.openReports, path: '/admin/reports' },
   ];
 
-  if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
-
   return (
     <div>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 20 }}>대시보드</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text }}>대시보드</h1>
+        <button onClick={load} style={{ padding: '6px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.cyan, cursor: 'pointer', fontSize: 12 }}>새로고침</button>
+      </div>
 
       {/* KPI Cards - clickable */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
