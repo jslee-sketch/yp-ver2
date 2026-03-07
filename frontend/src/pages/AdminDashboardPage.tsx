@@ -19,30 +19,47 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     const load = async () => {
-      const [buyersR, sellersR, dealsR, offersR, settR, anomR, recentR, reportsR] = await Promise.allSettled([
-        apiClient.get(API.BUYERS.LIST),
-        apiClient.get(API.SELLERS.LIST),
-        apiClient.get(API.DEALS.LIST),
-        apiClient.get(API.OFFERS.LIST),
-        apiClient.get(API.SETTLEMENTS.ADMIN_LIST),
+      // Use /admin/stats for accurate DB counts (single query, no pagination issues)
+      const [statsR, anomR, recentR, reportsR] = await Promise.allSettled([
+        apiClient.get(API.ADMIN.STATS),
         apiClient.get(API.ADMIN.ANOMALY_DETECT, { params: { lookback_hours: 24 } }),
         apiClient.get(API.ACTIVITY.LIST, { params: { limit: 10 } }),
         apiClient.get(API.ADMIN.REPORTS),
       ]);
 
-      const arr = (r: any) => (r.status === 'fulfilled' && Array.isArray(r.value.data)) ? r.value.data : (r.status === 'fulfilled' && r.value.data?.items) ? r.value.data.items : [];
-      const buyers = arr(buyersR); const sellers = arr(sellersR);
-      const deals = arr(dealsR); const offers = arr(offersR);
-      const setts = arr(settR); const anoms = arr(anomR);
-      const reps = arr(reportsR);
+      const statsData = statsR.status === 'fulfilled' ? statsR.value.data : {};
+      const anoms = anomR.status === 'fulfilled' ? (Array.isArray(anomR.value.data) ? anomR.value.data : []) : [];
+      const reps = reportsR.status === 'fulfilled' ? (Array.isArray(reportsR.value.data) ? reportsR.value.data : reportsR.value.data?.items || []) : [];
 
-      const pendingSellers = sellers.filter((s: any) => !s.verified_at).length;
-      const pendingSett = setts.filter((s: any) => s.status === 'READY' || s.status === 'HOLD').length;
-      const disputes = setts.filter((s: any) => s.is_disputed).length;
       const openReports = reps.filter((r: any) => r.status === 'OPEN').length;
 
-      setStats({ buyers: buyers.length, sellers: sellers.length, deals: deals.length, offers: offers.length, pendingSellers, pendingSett });
-      setAlerts({ pendingSellers, pendingSett, disputes, anomalies: anoms.length, openReports });
+      setStats({
+        buyers: statsData.buyer_count || 0,
+        sellers: statsData.seller_count || 0,
+        deals: statsData.deal_count || 0,
+        offers: statsData.offer_count || 0,
+        reservations: statsData.total_reservations || 0,
+        actuators: statsData.actuator_count || 0,
+        pendingSellers: statsData.pending_sellers || 0,
+        pendingSett: statsData.pending_settlement || 0,
+        gmv: statsData.gmv || 0,
+        aov: statsData.aov || 0,
+        refundRate: statsData.refund_rate || 0,
+        takeRate: statsData.take_rate || 0,
+        dealSuccessRate: statsData.deal_success_rate || 0,
+        settlementSummary: statsData.settlement_summary || {},
+        reservationStatus: statsData.reservation_status || {},
+        disputed: statsData.disputed_count || 0,
+      });
+
+      setAlerts({
+        pendingSellers: statsData.pending_sellers || 0,
+        pendingSett: statsData.pending_settlement || 0,
+        disputes: statsData.disputed_count || 0,
+        anomalies: anoms.length,
+        openReports,
+      });
+
       setRecent(recentR.status === 'fulfilled' ? (Array.isArray(recentR.value.data) ? recentR.value.data.slice(0, 8) : []) : []);
       setLoading(false);
     };
@@ -50,12 +67,22 @@ export default function AdminDashboardPage() {
   }, []);
 
   const kpi = [
-    { label: '구매자', value: stats.buyers || 0, color: C.green },
-    { label: '판매자', value: stats.sellers || 0, color: C.cyan },
-    { label: '딜', value: stats.deals || 0, color: '#e040fb' },
-    { label: '오퍼', value: stats.offers || 0, color: C.orange },
-    { label: '승인대기', value: stats.pendingSellers || 0, color: C.red },
-    { label: '정산대기', value: stats.pendingSett || 0, color: '#ffab40' },
+    { label: '구매자', value: stats.buyers || 0, color: C.green, path: '/admin/buyers' },
+    { label: '판매자', value: stats.sellers || 0, color: C.cyan, path: '/admin/sellers' },
+    { label: '딜', value: stats.deals || 0, color: '#e040fb', path: '/admin/deals' },
+    { label: '오퍼', value: stats.offers || 0, color: C.orange, path: '/admin/offers' },
+    { label: '예약/주문', value: stats.reservations || 0, color: '#4fc3f7', path: '/admin/reservations' },
+    { label: '승인대기', value: stats.pendingSellers || 0, color: C.red, path: '/admin/sellers' },
+    { label: '정산대기', value: stats.pendingSett || 0, color: '#ffab40', path: '/admin/settlements' },
+    { label: '분쟁', value: stats.disputed || 0, color: C.red, path: '/admin/disputes' },
+  ];
+
+  const statCards = [
+    { label: 'GMV', value: `${(stats.gmv || 0).toLocaleString()}원`, color: C.green },
+    { label: 'AOV', value: `${(stats.aov || 0).toLocaleString()}원`, color: C.cyan },
+    { label: '환불률', value: `${stats.refundRate || 0}%`, color: stats.refundRate > 10 ? C.red : C.green },
+    { label: 'Take Rate', value: `${stats.takeRate || 0}%`, color: C.cyan },
+    { label: '딜 성사율', value: `${stats.dealSuccessRate || 0}%`, color: C.green },
   ];
 
   const alertItems = [
@@ -72,15 +99,51 @@ export default function AdminDashboardPage() {
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 20 }}>대시보드</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginBottom: 24 }}>
+      {/* KPI Cards - clickable */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
         {kpi.map(k => (
-          <div key={k.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '16px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: 24, fontWeight: 800, color: k.color }}>{k.value}</div>
+          <div key={k.label} onClick={() => navigate(k.path)} style={{
+            background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
+            padding: '16px 12px', textAlign: 'center', cursor: 'pointer',
+            transition: 'border-color 0.15s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = k.color)}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = '')}
+          >
+            <div style={{ fontSize: 28, fontWeight: 800, color: k.color }}>{typeof k.value === 'number' ? k.value.toLocaleString() : k.value}</div>
             <div style={{ fontSize: 12, color: C.textSec, marginTop: 4 }}>{k.label}</div>
           </div>
         ))}
       </div>
 
+      {/* Stat summary row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>
+        {statCards.map(s => (
+          <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 11, color: C.textSec, marginTop: 4 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Settlement status summary */}
+      {stats.settlementSummary && Object.keys(stats.settlementSummary).length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+          {['HOLD', 'READY', 'APPROVED', 'PAID'].map(s => (
+            <div key={s} onClick={() => navigate('/admin/settlements')} style={{
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
+              padding: '12px', textAlign: 'center', cursor: 'pointer',
+            }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: s === 'HOLD' ? C.orange : s === 'READY' ? C.cyan : s === 'APPROVED' ? '#4fc3f7' : C.green }}>
+                {(stats.settlementSummary[s] || 0).toLocaleString()}
+              </div>
+              <div style={{ fontSize: 11, color: C.textSec, marginTop: 2 }}>정산 {s}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Alert panel */}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, marginBottom: 24 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: C.orange, marginBottom: 12 }}>주의 필요</h3>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -96,6 +159,24 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
+      {/* Reservation status breakdown */}
+      {stats.reservationStatus && Object.keys(stats.reservationStatus).length > 0 && (
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, marginBottom: 24 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>예약 상태 분포</h3>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {Object.entries(stats.reservationStatus).map(([status, count]: [string, any]) => (
+              <div key={status} onClick={() => navigate('/admin/reservations')} style={{
+                padding: '8px 16px', background: 'rgba(0,229,255,0.06)', border: `1px solid ${C.border}`,
+                borderRadius: 8, cursor: 'pointer', fontSize: 13, color: C.text,
+              }}>
+                {status}: <b style={{ color: C.cyan }}>{count}</b>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent activity */}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>최근 활동</h3>
         <div style={{ maxHeight: '50vh', overflowY: 'auto', overflowX: 'auto' }}>

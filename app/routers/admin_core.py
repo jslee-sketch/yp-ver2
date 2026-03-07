@@ -281,6 +281,48 @@ def admin_stats(
         pass
     take_rate = round(total_platform_fee / gmv * 100, 2) if gmv > 0 else 0
 
+    # entity counts (for dashboard KPI)
+    buyer_count = 0
+    seller_count = 0
+    offer_count = 0
+    actuator_count = 0
+    pending_sellers = 0
+    pending_settlement = 0
+    disputed_count = 0
+    try:
+        buyer_count = db.query(sa_func.count(models.Buyer.id)).scalar() or 0
+    except Exception:
+        pass
+    try:
+        seller_count = db.query(sa_func.count(models.Seller.id)).scalar() or 0
+        pending_sellers = db.query(sa_func.count(models.Seller.id)).filter(models.Seller.verified_at.is_(None)).scalar() or 0
+    except Exception:
+        pass
+    try:
+        offer_count = db.query(sa_func.count(models.Offer.id)).scalar() or 0
+    except Exception:
+        pass
+    try:
+        actuator_count = db.query(sa_func.count(models.Actuator.id)).scalar() or 0
+    except Exception:
+        pass
+    try:
+        pending_settlement = (
+            db.query(sa_func.count(models.ReservationSettlement.id))
+            .filter(models.ReservationSettlement.status.in_(["HOLD", "READY"]))
+            .scalar() or 0
+        )
+    except Exception:
+        pass
+    try:
+        disputed_count = (
+            db.query(sa_func.count(models.Reservation.id))
+            .filter(models.Reservation.is_disputed == True)
+            .scalar() or 0
+        )
+    except Exception:
+        pass
+
     return {
         "gmv": gmv,
         "total_reservations": total_reservations,
@@ -291,6 +333,13 @@ def admin_stats(
         "take_rate": take_rate,
         "settlement_summary": settlement_summary,
         "reservation_status": status_counts,
+        "buyer_count": buyer_count,
+        "seller_count": seller_count,
+        "offer_count": offer_count,
+        "actuator_count": actuator_count,
+        "pending_sellers": pending_sellers,
+        "pending_settlement": pending_settlement,
+        "disputed_count": disputed_count,
     }
 
 
