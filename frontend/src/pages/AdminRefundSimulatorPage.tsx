@@ -50,7 +50,8 @@ export default function AdminRefundSimulatorPage() {
   const [refundQty, setRefundQty] = useState(1);
   const [refundError, setRefundError] = useState('');
   const [shippingMode, setShippingMode] = useState('FREE');
-  const [shippingUnit, setShippingUnit] = useState(3000);
+  const [shippingBase, setShippingBase] = useState(3000);
+  const [shippingPerItem, setShippingPerItem] = useState(1000);
   const [coolingState, setCoolingState] = useState('BEFORE_SHIPPING');
   const [refundReason, setRefundReason] = useState('BUYER');
   const [reasonDetail, setReasonDetail] = useState('');
@@ -61,7 +62,7 @@ export default function AdminRefundSimulatorPage() {
   const [reservationId, setReservationId] = useState('');
   const [resvReason, setResvReason] = useState('BUYER');
 
-  const totalShipping = shippingMode === 'FREE' ? 0 : shippingMode === 'PER_RESERVATION' ? shippingUnit : shippingUnit * quantity;
+  const totalShipping = shippingMode === 'FREE' ? 0 : shippingMode === 'PER_RESERVATION' ? shippingBase : shippingBase + shippingPerItem * quantity;
   const mapped = reasonMap[refundReason];
 
   const simulate = async () => {
@@ -145,21 +146,37 @@ export default function AdminRefundSimulatorPage() {
                 <label style={labelStyle}>배송비 유형</label>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
                   {([['FREE', '무료배송'], ['PER_RESERVATION', '건당 배송비'], ['PER_ITEM', '수량당 배송비']] as const).map(([k, l]) => (
-                    <button key={k} onClick={() => { setShippingMode(k); if (k === 'FREE') setShippingUnit(0); }}
+                    <button key={k} onClick={() => setShippingMode(k)}
                       style={btnStyle(shippingMode === k)}>{l}</button>
                   ))}
                 </div>
-                {shippingMode !== 'FREE' && (
+                {shippingMode === 'PER_RESERVATION' && (
                   <>
-                    <label style={labelStyle}>{shippingMode === 'PER_RESERVATION' ? '배송비 (건당, 원)' : '배송비 (개당, 원)'}</label>
-                    <input type="text" value={fmtNum(shippingUnit)}
-                      onChange={e => setShippingUnit(parseNum(e.target.value))}
+                    <label style={labelStyle}>배송비 (건당, 원)</label>
+                    <input type="text" value={fmtNum(shippingBase)}
+                      onChange={e => setShippingBase(parseNum(e.target.value))}
                       onFocus={e => e.target.select()} placeholder="0" style={numInput} />
-                    {shippingMode === 'PER_ITEM' && quantity > 1 && (
-                      <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
-                        총 배송비: {(shippingUnit * quantity).toLocaleString()}원 ({shippingUnit.toLocaleString()} x {quantity})
+                  </>
+                )}
+                {shippingMode === 'PER_ITEM' && (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 4 }}>
+                      <div>
+                        <label style={labelStyle}>배송비 (기본, 원)</label>
+                        <input type="text" value={fmtNum(shippingBase)}
+                          onChange={e => setShippingBase(parseNum(e.target.value))}
+                          onFocus={e => e.target.select()} placeholder="0" style={numInput} />
                       </div>
-                    )}
+                      <div>
+                        <label style={labelStyle}>배송비 (개당, 원)</label>
+                        <input type="text" value={fmtNum(shippingPerItem)}
+                          onChange={e => setShippingPerItem(parseNum(e.target.value))}
+                          onFocus={e => e.target.select()} placeholder="0" style={numInput} />
+                      </div>
+                    </div>
+                    <div style={{ color: '#888', fontSize: 12, marginTop: 6 }}>
+                      총 배송비: {totalShipping.toLocaleString()}원 = 기본 {shippingBase.toLocaleString()} + 개당 {shippingPerItem.toLocaleString()} × {quantity}개
+                    </div>
                   </>
                 )}
               </div>
@@ -248,6 +265,17 @@ export default function AdminRefundSimulatorPage() {
 
           {result && !result.error && result.breakdown && (
             <>
+              {/* Reason summary */}
+              <div style={{ marginBottom: 16, padding: 12, background: 'rgba(0,229,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan, marginBottom: 8 }}>환불 사유</div>
+                <Row label="사유 주체" value={reasonMap[mode === 'manual' ? refundReason : resvReason]?.label || '-'} color={C.text} />
+                <Row label="귀책" value={result.breakdown.fault_party || reasonMap[mode === 'manual' ? refundReason : resvReason]?.fault || '-'} color={C.textSec} />
+                <Row label="트리거" value={result.breakdown.trigger || reasonMap[mode === 'manual' ? refundReason : resvReason]?.trigger || '-'} color={C.textSec} />
+                {(reasonDetail || customReason) && mode === 'manual' && (
+                  <Row label="상세 사유" value={reasonDetail === '직접 입력' ? customReason : reasonDetail} color="#4ade80" />
+                )}
+              </div>
+
               {/* Breakdown */}
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan, marginBottom: 8 }}>환불 금액 분석</div>
