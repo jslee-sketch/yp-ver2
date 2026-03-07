@@ -661,7 +661,7 @@ def mark_actuator_commissions_ready_for_reservation(
 # 🏢 Seller Approval
 # =========================================================
 
-APPROVAL_WINDOW_HOURS = 12
+APPROVAL_WINDOW_HOURS = 24
 
 
 def seller_approval_status(seller: models.Seller) -> str:
@@ -712,7 +712,7 @@ def approve_seller(db: Session, seller_id: int) -> models.Seller:
     if status == "REJECTED":
         raise HTTPException(
             status_code=400,
-            detail="Seller is automatically rejected after 12 hours and cannot be approved.",
+            detail="Seller is automatically rejected after 24 hours and cannot be approved.",
         )
 
     if status == "APPROVED":
