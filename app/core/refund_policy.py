@@ -130,13 +130,17 @@ def decide_shipping_refund_cap(
         return auto_max
 
     # 2) SHIPPED_NOT_DELIVERED / 3) WITHIN_COOLING
+    # 분쟁 조정 결과는 배송 상태 무관 배송비 환불
+    if trigger == RefundTrigger.DISPUTE_RESOLVE:
+        return auto_max
+
     if fault_party == FaultParty.BUYER and trigger == RefundTrigger.BUYER_CANCEL:
         return 0
 
     if fault_party in (FaultParty.SELLER, FaultParty.SYSTEM):
         return auto_max
 
-    # DISPUTE/UNKNOWN은 보수적으로 0
+    # UNKNOWN은 보수적으로 0
     return 0
 
 

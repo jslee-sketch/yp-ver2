@@ -554,10 +554,14 @@ def refund_simulate(body: dict, db: Session = Depends(get_db)):
         offer = db.query(models.Offer).filter(models.Offer.id == resv.offer_id).first()
         try:
             from app.crud import preview_refund_for_reservation
+            # actor 매핑: fault_party → crud actor 문자열
+            fp = body.get("fault_party", "BUYER").upper()
+            actor_map = {"BUYER": "buyer_cancel", "SELLER": "seller_fault", "SYSTEM": "system_error", "DISPUTE": "dispute_resolve"}
+            actor = actor_map.get(fp, "buyer_cancel")
             result = preview_refund_for_reservation(
                 db, reservation_id=resv.id,
-                fault_party=body.get("fault_party", "BUYER"),
-                trigger=body.get("trigger", "BUYER_CANCEL"),
+                actor=actor,
+                quantity_refund=body.get("refund_quantity") or body.get("quantity_refund"),
             )
             return {
                 "mode": "by_reservation",
