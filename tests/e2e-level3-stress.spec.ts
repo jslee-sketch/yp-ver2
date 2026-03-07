@@ -482,10 +482,9 @@ test.describe.serial('Phase 5: 전체 거래 흐름', () => {
     const sellerAuth = await login(page, 'e2e_seller@test.com', 'Test1234!')
     if (!sellerAuth) { log('❌ 판매자 로그인 실패'); return }
 
-    // 판매자 예약 목록 (PAID) — admin endpoint has seller_id filter
+    // 판매자 예약 목록 (PAID) — Reservation has no seller_id column, get all PAID+unshipped
     const adminAuth = await login(page, 'admin@yeokping.com', 'admin1234!')
-    const sellerId = sellerAuth.data?.seller_id || sellerAuth.data?.id
-    const resResp = await api(page, 'GET', `/admin/reservations?seller_id=${sellerId}&status=PAID&shipped=false&limit=200`, null, adminAuth?.h)
+    const resResp = await api(page, 'GET', '/admin/reservations?status=PAID&shipped=false&limit=200', null, adminAuth?.h)
     const reservations = Array.isArray(resResp.data) ? resResp.data : resResp.data?.items || []
     const paidList = reservations.filter((r: any) => String(r.status).includes('PAID') && !r.shipped_at)
     log(`배송 대상: ${paidList.length}건`)
