@@ -62,7 +62,7 @@ export default function AdminRefundSimulatorPage() {
   const [reservationId, setReservationId] = useState('');
   const [resvReason, setResvReason] = useState('BUYER');
 
-  const totalShipping = shippingMode === 'FREE' ? 0 : shippingMode === 'PER_RESERVATION' ? shippingBase : shippingBase + shippingPerItem * quantity;
+  const totalShipping = shippingMode === 'FREE' ? 0 : shippingMode === 'PER_RESERVATION' ? shippingBase : shippingBase + shippingPerItem * refundQty;
   const mapped = reasonMap[refundReason];
 
   const simulate = async () => {
@@ -175,7 +175,7 @@ export default function AdminRefundSimulatorPage() {
                       </div>
                     </div>
                     <div style={{ color: '#888', fontSize: 12, marginTop: 6 }}>
-                      총 배송비: {totalShipping.toLocaleString()}원 = 기본 {shippingBase.toLocaleString()} + 개당 {shippingPerItem.toLocaleString()} × {quantity}개
+                      총 배송비: {totalShipping.toLocaleString()}원 = 기본 {shippingBase.toLocaleString()} + 개당 {shippingPerItem.toLocaleString()} × 환불 {refundQty}개
                     </div>
                   </>
                 )}
