@@ -8,6 +8,7 @@ const C = {
   card: 'var(--bg-elevated)', border: 'var(--border-subtle)',
   text: 'var(--text-primary)', textSec: 'var(--text-muted)',
 };
+const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' };
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -97,9 +98,9 @@ export default function AdminDashboardPage() {
 
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>최근 활동</h3>
-        <div style={{ overflowX: 'auto' }}>
+        <div style={{ maxHeight: '50vh', overflowY: 'auto', overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 500 }}>
-          <thead>
+          <thead style={stickyHead}>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               <th style={{ textAlign: 'left', padding: '8px 6px', color: C.textSec }}>이벤트</th>
               <th style={{ textAlign: 'left', padding: '8px 6px', color: C.textSec }}>액터</th>

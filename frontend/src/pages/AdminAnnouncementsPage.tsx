@@ -3,6 +3,7 @@ import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 
 const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252', card: 'var(--bg-elevated)', border: 'var(--border-subtle)', text: 'var(--text-primary)', textSec: 'var(--text-muted)' };
+const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' };
 
 export default function AdminAnnouncementsPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -43,9 +44,10 @@ export default function AdminAnnouncementsPage() {
         <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text }}>공지사항</h1>
         <button onClick={openNew} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.cyan, color: '#000', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>새 공지</button>
       </div>
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
-          <thead>
+          <thead style={stickyHead}>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['#', '제목', '카테고리', '대상', '고정', '공개', '작성일', ''].map(h => (
                 <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
@@ -71,6 +73,7 @@ export default function AdminAnnouncementsPage() {
             {!items.length && <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>공지 없음</td></tr>}
           </tbody>
         </table>
+        </div>
       </div>
 
       {modal && (

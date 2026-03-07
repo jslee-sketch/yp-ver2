@@ -3,6 +3,7 @@ import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 
 const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252', card: 'var(--bg-elevated)', border: 'var(--border-subtle)', text: 'var(--text-primary)', textSec: 'var(--text-muted)' };
+const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' };
 
 const TABS = ['전체', '제안', '승인', '적용', '거부'] as const;
 const TAB_STATUS: Record<string, string> = { '제안': 'PROPOSED', '승인': 'APPROVED', '적용': 'APPLIED', '거부': 'REJECTED' };
@@ -50,9 +51,10 @@ export default function AdminPolicyProposalsPage() {
           }}>{t}</button>
         ))}
       </div>
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
-          <thead>
+          <thead style={stickyHead}>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['#', '제목', '유형', '파라미터', '현재값', '제안값', '상태', ''].map(h => (
                 <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
@@ -82,6 +84,7 @@ export default function AdminPolicyProposalsPage() {
             {!items.length && <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>{error ? `오류: ${error}` : '제안 없음'}</td></tr>}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

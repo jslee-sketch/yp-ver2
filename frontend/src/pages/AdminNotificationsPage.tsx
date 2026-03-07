@@ -3,6 +3,7 @@ import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 
 const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252', card: 'var(--bg-elevated)', border: 'var(--border-subtle)', text: 'var(--text-primary)', textSec: 'var(--text-muted)' };
+const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' };
 
 export default function AdminNotificationsPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -57,9 +58,10 @@ export default function AdminNotificationsPage() {
 
       <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>전체 알림 목록</h3>
       {loading ? <div style={{ padding: 20, color: C.textSec }}>로딩 중...</div> : (
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 650 }}>
-            <thead>
+            <thead style={stickyHead}>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
                 {['ID', '사용자', '유형', '제목', '읽음', '시간'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
@@ -80,6 +82,7 @@ export default function AdminNotificationsPage() {
               {!items.length && <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>알림 없음</td></tr>}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

@@ -65,6 +65,7 @@ def admin_list_deals(
             "product_name": getattr(d, "product_name", ""),
             "creator_id": getattr(d, "creator_id", None),
             "target_price": getattr(d, "target_price", None),
+            "market_price": getattr(d, "market_price", None),
             "status": getattr(d, "status", ""),
             "created_at": str(getattr(d, "created_at", "")),
             "offer_count": offer_counts.get(d.id, 0),

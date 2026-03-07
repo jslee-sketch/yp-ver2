@@ -3,6 +3,7 @@ import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 
 const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252', card: 'var(--bg-elevated)', border: 'var(--border-subtle)', text: 'var(--text-primary)', textSec: 'var(--text-muted)' };
+const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' };
 
 export default function AdminOffersPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -33,36 +34,38 @@ export default function AdminOffersPage() {
       <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16 }}>오퍼 관리</h1>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="O-#/D-#/판매자 검색" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }} />
-        <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); }} style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }}>
+        <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); }} style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: '#1a1a2e', color: '#e0e0e0', fontSize: 13 }}>
           <option value="">전체 상태</option>
           {['ACTIVE', 'INACTIVE', 'EXPIRED'].map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
-          <thead>
-            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-              {['O-#', 'D-#', '상품명', '판매자', '제안가', '배송비', '수량', '상태'].map(h => (
-                <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(o => (
-              <tr key={o.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                <td style={{ padding: '10px 8px', color: C.cyan }}>O-{o.id}</td>
-                <td style={{ padding: '10px 8px', color: C.textSec }}>D-{o.deal_id}</td>
-                <td style={{ padding: '10px 8px', color: C.text }}>{o.product_name || '-'}</td>
-                <td style={{ padding: '10px 8px', color: C.text }}>{o.business_name || `S-${o.seller_id}`}</td>
-                <td style={{ padding: '10px 8px', color: C.orange }}>{o.price ? o.price.toLocaleString() : '-'}</td>
-                <td style={{ padding: '10px 8px', color: C.textSec }}>{o.shipping_fee != null ? o.shipping_fee.toLocaleString() : '-'}</td>
-                <td style={{ padding: '10px 8px', color: C.text }}>{o.quantity ?? '-'}</td>
-                <td style={{ padding: '10px 8px' }}><span style={{ color: o.status === 'ACTIVE' ? C.green : C.textSec, fontWeight: 600 }}>{o.status}</span></td>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
+            <thead style={stickyHead}>
+              <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+                {['O-#', 'D-#', '상품명', '판매자', '제안가', '배송비', '수량', '상태'].map(h => (
+                  <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
               </tr>
-            ))}
-            {!filtered.length && <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>오퍼 없음</td></tr>}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map(o => (
+                <tr key={o.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                  <td style={{ padding: '10px 8px', color: '#4ade80', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => window.open(`/deal/${o.deal_id}`, '_blank')}>O-{o.id}</td>
+                  <td style={{ padding: '10px 8px', color: '#60a5fa', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => window.open(`/deal/${o.deal_id}`, '_blank')}>D-{o.deal_id}</td>
+                  <td style={{ padding: '10px 8px', color: C.text }}>{o.product_name || '-'}</td>
+                  <td style={{ padding: '10px 8px', color: C.text }}>{o.business_name || `S-${o.seller_id}`}</td>
+                  <td style={{ padding: '10px 8px', color: C.orange }}>{o.price ? o.price.toLocaleString() + '원' : '-'}</td>
+                  <td style={{ padding: '10px 8px', color: C.textSec }}>{o.shipping_fee != null && o.shipping_fee > 0 ? o.shipping_fee.toLocaleString() + '원' : '무료'}</td>
+                  <td style={{ padding: '10px 8px', color: C.text }}>{o.quantity ?? o.total_available_qty ?? '-'}</td>
+                  <td style={{ padding: '10px 8px' }}><span style={{ color: o.status === 'ACTIVE' ? C.green : C.textSec, fontWeight: 600 }}>{o.status}</span></td>
+                </tr>
+              ))}
+              {!filtered.length && <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>오퍼 없음</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
       <div style={{ marginTop: 8, fontSize: 12, color: C.textSec }}>{filtered.length}건</div>
     </div>

@@ -3,6 +3,7 @@ import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 
 const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252', card: 'var(--bg-elevated)', border: 'var(--border-subtle)', text: 'var(--text-primary)', textSec: 'var(--text-muted)' };
+const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' };
 
 export default function AdminDisputePage() {
   const [items, setItems] = useState<any[]>([]);
@@ -76,9 +77,10 @@ export default function AdminDisputePage() {
       </div>
 
       {/* 테이블 */}
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'auto' }}>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
-          <thead>
+          <thead style={stickyHead}>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {['R-#', 'D-#', '구매자', '판매자', '금액', '사유', tab === 'open' ? '접수일' : '종료일', '상태', ''].map(h => (
                 <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
@@ -108,6 +110,7 @@ export default function AdminDisputePage() {
             {!filtered.length && <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>{tab === 'open' ? '진행 중인 분쟁 없음' : '종료된 분쟁 없음'}</td></tr>}
           </tbody>
         </table>
+        </div>
       </div>
       <div style={{ marginTop: 8, fontSize: 12, color: C.textSec }}>{filtered.length}건</div>
 
