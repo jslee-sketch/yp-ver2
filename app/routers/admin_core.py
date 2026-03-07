@@ -528,3 +528,156 @@ def admin_broadcast_notification(
 
     db.commit()
     return {"sent": created, "target_role": target_role}
+
+
+# ── POST /admin/refund-simulate ──────────────────────────
+@router.post("/refund-simulate")
+def refund_simulate(body: dict, db: Session = Depends(get_db)):
+    """환불 시뮬레이션: 수동 조건 입력 또는 실제 예약 기반"""
+    from app.core.refund_policy import (
+        FaultParty, RefundTrigger, CoolingState, SettlementState,
+        RefundContext, RefundPolicyEngine,
+        is_shipping_refundable_by_policy, decide_shipping_refund_cap,
+    )
+    from app.policy.api import pg_fee_rate as get_pg_fee_rate, platform_fee_rate_fallback
+
+    mode = body.get("mode", "manual")
+
+    # ── by_reservation: 실제 예약 기반 ──
+    if mode == "by_reservation":
+        reservation_id = body.get("reservation_id")
+        if not reservation_id:
+            raise HTTPException(422, "reservation_id 필요")
+        resv = db.query(models.Reservation).filter(models.Reservation.id == reservation_id).first()
+        if not resv:
+            raise HTTPException(404, "예약을 찾을 수 없습니다")
+        offer = db.query(models.Offer).filter(models.Offer.id == resv.offer_id).first()
+        try:
+            from app.crud import preview_refund_for_reservation
+            result = preview_refund_for_reservation(
+                db, reservation_id=resv.id,
+                fault_party=body.get("fault_party", "BUYER"),
+                trigger=body.get("trigger", "BUYER_CANCEL"),
+            )
+            return {
+                "mode": "by_reservation",
+                "reservation_id": reservation_id,
+                "result": result if isinstance(result, dict) else str(result),
+                "reservation_info": {
+                    "offer_id": resv.offer_id,
+                    "amount_total": resv.amount_total,
+                    "amount_goods": getattr(resv, "amount_goods", 0),
+                    "amount_shipping": getattr(resv, "amount_shipping", 0),
+                    "qty": resv.qty,
+                    "refunded_qty": getattr(resv, "refunded_qty", 0),
+                    "status": getattr(resv.status, "value", str(resv.status)) if resv.status else "",
+                    "shipped_at": str(resv.shipped_at) if getattr(resv, "shipped_at", None) else None,
+                    "arrival_confirmed_at": str(resv.arrival_confirmed_at) if getattr(resv, "arrival_confirmed_at", None) else None,
+                },
+                "offer_info": {
+                    "price": getattr(offer, "price", None),
+                    "shipping_fee": getattr(offer, "shipping_fee_standard", getattr(offer, "shipping_fee", None)),
+                } if offer else None,
+            }
+        except Exception as e:
+            return {"mode": "by_reservation", "error": str(e)}
+
+    # ── manual: 수동 시뮬레이션 ──
+    product_price = int(body.get("product_price", 0))
+    shipping_fee = int(body.get("shipping_fee", 0))
+    quantity = int(body.get("quantity", 1))
+    refund_quantity = int(body.get("refund_quantity", quantity))
+
+    fault_party = FaultParty(body.get("fault_party", "BUYER"))
+    trigger = RefundTrigger(body.get("trigger", "BUYER_CANCEL"))
+    cooling_state = CoolingState(body.get("cooling_state", "BEFORE_SHIPPING"))
+    settlement_state = SettlementState(body.get("settlement_state", "NOT_SETTLED"))
+
+    # 금액 계산
+    goods_refund = product_price * refund_quantity
+    shipping_auto_max = round(shipping_fee * refund_quantity / quantity) if quantity > 0 else 0
+
+    # 배송비 환불 상한 결정
+    shipping_cap = decide_shipping_refund_cap(
+        fault_party=fault_party, trigger=trigger,
+        cooling_state=cooling_state,
+        auto_max_shipping_refund=shipping_auto_max,
+    )
+    shipping_refund = min(shipping_auto_max, shipping_cap)
+    total_refund = goods_refund + shipping_refund
+
+    # 수수료율
+    pfr = get_pg_fee_rate()
+    plr = platform_fee_rate_fallback()
+
+    # 정책 엔진 실행
+    ctx = RefundContext(
+        reservation_id=0, deal_id=None, offer_id=None, buyer_id=0, seller_id=None,
+        amount_total=total_refund,
+        amount_goods=goods_refund,
+        amount_shipping=shipping_refund,
+        quantity_total=quantity,
+        quantity_refund=refund_quantity,
+        fault_party=fault_party, trigger=trigger,
+        settlement_state=settlement_state, cooling_state=cooling_state,
+        pg_fee_rate=pfr, platform_fee_rate=plr,
+    )
+    engine = RefundPolicyEngine()
+    decision = engine.decide_for_paid_reservation(ctx)
+    plan = engine.build_financial_plan(ctx, decision)
+
+    # 정산 영향 계산
+    total_paid = product_price * quantity + shipping_fee
+    seller_payout_original = round(total_paid * (1 - pfr - plr))
+    remaining_paid = product_price * (quantity - refund_quantity) + (shipping_fee - shipping_refund)
+    seller_payout_after = round(remaining_paid * (1 - pfr - plr))
+
+    return {
+        "mode": "manual",
+        "input": {
+            "product_price": product_price,
+            "shipping_fee": shipping_fee,
+            "quantity": quantity,
+            "refund_quantity": refund_quantity,
+            "fault_party": fault_party.value,
+            "trigger": trigger.value,
+            "cooling_state": cooling_state.value,
+            "settlement_state": settlement_state.value,
+        },
+        "breakdown": {
+            "goods_refund": goods_refund,
+            "shipping_auto_max": shipping_auto_max,
+            "shipping_cap_by_policy": shipping_cap,
+            "shipping_refund": shipping_refund,
+            "total_refund": total_refund,
+        },
+        "fees": {
+            "pg_fee_rate": pfr,
+            "pg_fee_amount": plan.pg_fee_amount,
+            "pg_fee_bearer": plan.pg_fee_charge_to.value if plan.pg_fee_charge_to else None,
+            "platform_fee_rate": plr,
+            "platform_fee_amount": plan.platform_fee_amount,
+            "platform_fee_bearer": plan.platform_fee_charge_to.value if plan.platform_fee_charge_to else None,
+        },
+        "decision": {
+            "use_pg_refund": decision.use_pg_refund,
+            "need_settlement_recovery": decision.need_settlement_recovery,
+            "revoke_buyer_points": decision.revoke_buyer_points,
+            "revoke_seller_points": decision.revoke_seller_points,
+            "note": decision.note,
+        },
+        "settlement_impact": {
+            "total_paid": total_paid,
+            "seller_payout_original": seller_payout_original,
+            "seller_payout_after_refund": seller_payout_after,
+            "seller_impact": seller_payout_after - seller_payout_original,
+        },
+        "policy_notes": [
+            f"배송 상태: {cooling_state.value}",
+            f"귀책: {fault_party.value}",
+            f"배송비 환불 {'가능' if shipping_refund > 0 else '불가'} (정책 cap: {shipping_cap}원)",
+            f"PG수수료({pfr*100:.1f}%) {plan.pg_fee_charge_to.value if plan.pg_fee_charge_to else '?'} 부담",
+            f"플랫폼수수료({plr*100:.1f}%) {plan.platform_fee_charge_to.value if plan.platform_fee_charge_to else '?'} 부담",
+            decision.note,
+        ],
+    }

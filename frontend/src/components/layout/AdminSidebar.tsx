@@ -31,6 +31,7 @@ const sections = [
     items: [
       { label: '정산 관리', path: '/admin/settlements' },
       { label: '분쟁', path: '/admin/disputes' },
+      { label: '환불 시뮬레이터', path: '/admin/refund-simulator' },
     ],
   },
   {

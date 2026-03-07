@@ -294,6 +294,7 @@ export const API = {
     ANNOUNCEMENT:        (id: number) => `/admin/announcements/${id}`,
     NOTIFICATIONS_ALL:   '/admin/notifications/all',
     NOTIFICATIONS_BROADCAST: '/admin/notifications/broadcast',
+    REFUND_SIMULATE:     '/admin/refund-simulate',
     POLICY_STATUS:       '/admin/policy/status',
     POLICY_PROPOSALS:    '/admin/policy/proposals',
     POLICY_PROPOSAL:     (id: number) => `/admin/policy/proposals/${id}`,

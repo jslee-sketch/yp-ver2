@@ -70,6 +70,7 @@ import AdminReportsPage from './pages/AdminReportsPage';
 import AdminNotificationsPage from './pages/AdminNotificationsPage';
 import AdminAnnouncementsPage from './pages/AdminAnnouncementsPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
+import AdminRefundSimulatorPage from './pages/AdminRefundSimulatorPage';
 
 function App() {
   return (
@@ -103,6 +104,7 @@ function App() {
           <Route path="logs"              element={<AdminLogsPage />} />
           <Route path="anomalies"         element={<AdminAnomaliesPage />} />
           <Route path="reports"           element={<AdminReportsPage />} />
+          <Route path="refund-simulator" element={<AdminRefundSimulatorPage />} />
           <Route path="notifications"     element={<AdminNotificationsPage />} />
           <Route path="announcements"     element={<AdminAnnouncementsPage />} />
           <Route path="settings"          element={<AdminSettingsPage />} />
