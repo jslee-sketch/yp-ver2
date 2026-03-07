@@ -97,6 +97,7 @@ _alter_cols = [
     ("deals", "product_code", "VARCHAR"),
     ("deals", "condition", "VARCHAR"),
     ("deals", "market_price", "FLOAT"),
+    ("deals", "price_evidence", "TEXT"),
     ("deal_ai_logs", "note", "TEXT"),
     ("sellers", "business_license_image", "VARCHAR(500)"),
     ("sellers", "ecommerce_permit_image", "VARCHAR(500)"),

@@ -340,7 +340,7 @@ class Deal(Base):
     # v3.6: LLM 기반 매칭용 키
     ai_product_key = Column(String, index=True, nullable=True)
     ai_parsed_intent = Column(Text, nullable=True)
-
+    price_evidence = Column(Text, nullable=True)  # JSON: 가격 근거 (채택/제외 상품 목록)
 
 
     creator = relationship("Buyer", back_populates="deals")

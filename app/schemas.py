@@ -407,6 +407,9 @@ class DealCreate(BaseModel):
     delivery_days:    Optional[int] = None
     extra_conditions: Optional[str] = None
 
+    # 가격 근거 (JSON)
+    price_evidence: Optional[str] = None
+
 
 class DealOut(ORMModel):
     id: int

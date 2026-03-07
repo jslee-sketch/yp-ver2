@@ -60,6 +60,21 @@ class DealConditions(BaseModel):
     extra_conditions: Optional[str] = None    # 기타 조건 (자유 텍스트)
 
 
+class PriceAnalysisItem(BaseModel):
+    title: str
+    price: int
+    link: Optional[str] = None
+    mall: Optional[str] = None
+    reason: Optional[str] = None   # 제외 사유 (excluded에만)
+
+class PriceAnalysis(BaseModel):
+    lowest_price: Optional[int] = None
+    included_items: List[PriceAnalysisItem] = []
+    excluded_items: List[PriceAnalysisItem] = []
+    total_searched: int = 0
+    total_included: int = 0
+    total_excluded: int = 0
+
 class DealAIResponse(BaseModel):
     """LLM + 네이버 API가 정리해서 돌려주는 결과"""
     canonical_name: str
@@ -70,6 +85,7 @@ class DealAIResponse(BaseModel):
     product_detail: Optional[str] = None    # 상세 제품명
     suggested_options: List[SuggestedOption] = []
     price: PriceSuggestion
+    price_analysis: Optional[PriceAnalysis] = None  # 가격 근거 상세
     conditions: Optional[DealConditions] = None
     normalized_free_text: Optional[str] = None
     # ── 3-stage 파이프라인 추가 필드 (Optional) ──
@@ -262,6 +278,73 @@ def _get_reliable_market_price(
         "link": best.get("link", ""),
         "brand": re.sub(r"<[^>]+>", "", best.get("brand", "")),
     }
+
+
+# ─────────────────────────────────────────────
+# 가격 근거 분석 (채택/제외 분류)
+# ─────────────────────────────────────────────
+
+_ACCESSORY_KW = re.compile(
+    r'케이스|커버|필름|충전기|어댑터|거치대|파우치|스트랩|이어팁|리모컨|보호|캡|젤리|범퍼|강화유리',
+    re.IGNORECASE,
+)
+_BUNDLE_KW = re.compile(r'세트|묶음|패키지|번들|기획전|합본', re.IGNORECASE)
+_USED_KW = re.compile(r'중고|리퍼|반품|전시|매입|S급|A급|B급|재생|수리', re.IGNORECASE)
+
+
+def _analyze_market_prices(
+    naver_items: list,
+    expected_price_range: list | None = None,
+) -> PriceAnalysis:
+    """네이버 검색 결과를 채택/제외로 분류하고 근거를 반환."""
+    total_searched = len(naver_items)
+    included: list[PriceAnalysisItem] = []
+    excluded: list[PriceAnalysisItem] = []
+
+    # 중앙값 계산 (이상치 기준)
+    prices_all = sorted([int(it.get("lprice", 0)) for it in naver_items if int(it.get("lprice", 0)) > 0])
+    median_price = prices_all[len(prices_all) // 2] if prices_all else 0
+
+    for item in naver_items:
+        price = int(item.get("lprice", 0))
+        if price <= 0:
+            continue
+        title = re.sub(r"<[^>]+>", "", item.get("title", ""))
+        link = item.get("link", "")
+        mall = item.get("mallName", "")
+        reason = None
+
+        # 제외 규칙 체크
+        if _ACCESSORY_KW.search(title):
+            reason = "액세서리"
+        elif _BUNDLE_KW.search(title):
+            reason = "묶음상품"
+        elif _USED_KW.search(title):
+            reason = "중고/리퍼"
+        elif median_price > 0 and price < median_price * 0.3:
+            reason = "가격 이상치"
+        elif expected_price_range and len(expected_price_range) == 2:
+            ep_min = float(expected_price_range[0])
+            if price < ep_min * 0.3:
+                reason = "가격 이상치"
+
+        if reason:
+            excluded.append(PriceAnalysisItem(title=title, price=price, reason=reason))
+        else:
+            included.append(PriceAnalysisItem(title=title, price=price, link=link, mall=mall))
+
+    # 채택 목록은 가격 순 정렬
+    included.sort(key=lambda x: x.price)
+    lowest = included[0].price if included else None
+
+    return PriceAnalysis(
+        lowest_price=lowest,
+        included_items=included[:5],
+        excluded_items=excluded[:5],
+        total_searched=total_searched,
+        total_included=len(included),
+        total_excluded=len(excluded),
+    )
 
 
 # ─────────────────────────────────────────────
@@ -462,6 +545,11 @@ def _run_ai_deal_helper(raw_title: str, raw_free_text: str) -> DealAIResponse:
 
     data["price"] = price_data
 
+    # ── 가격 근거 분석 ────────────────────────────────
+    if naver_items:
+        analysis = _analyze_market_prices(naver_items, data.get("expected_price_range"))
+        data["price_analysis"] = analysis.model_dump()
+
     # ── brands 리스트 보강 ────────────────────────────
     brands = data.get("brands") or []
     if data.get("brand") and data["brand"] not in brands:
@@ -524,11 +612,15 @@ def ai_deal_helper(
                 price_data["price_source"] = "llm_estimate"
                 price_data["commentary"] = "해당 옵션의 정확한 시장가를 찾지 못했어요."
 
+            # 가격 근거 분석
+            analysis = _analyze_market_prices(naver_items) if naver_items else None
+
             recalc_result = DealAIResponse(
                 canonical_name=raw_title,
                 model_name=raw_title,
                 suggested_options=[],
                 price=PriceSuggestion(**price_data),
+                price_analysis=analysis,
             )
             return recalc_result
 

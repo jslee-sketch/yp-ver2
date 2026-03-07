@@ -34,6 +34,21 @@ interface ModelOption {
 }
 
 // ── AI 결과 타입 ──────────────────────────────────────────
+type PriceAnalysisItem = {
+  title: string;
+  price: number;
+  link?: string | null;
+  mall?: string | null;
+  reason?: string | null;
+};
+type PriceAnalysisData = {
+  lowest_price: number | null;
+  included_items: PriceAnalysisItem[];
+  excluded_items: PriceAnalysisItem[];
+  total_searched: number;
+  total_included: number;
+  total_excluded: number;
+};
 type AIResult = {
   canonical_name: string;
   model_name: string;
@@ -50,6 +65,7 @@ type AIResult = {
     commentary: string | null;
     price_source?: string | null;
   };
+  price_analysis?: PriceAnalysisData | null;
   category?: string | null;
   warnings?: string[];
 };
@@ -439,13 +455,20 @@ export default function DealCreatePage() {
   const [optionGroups,          setOptionGroups]          = useState<OptionGroup[]>([]);
   const [aiFilledFields,        setAiFilledFields]        = useState<Set<string>>(new Set());
 
-  // Step 3: 시장가격 + 목표가격 + 수량
+  // Step 3: 가격 챌린지 + 목표가격 + 수량
   const [marketPrice,     setMarketPrice]     = useState<number | null>(null);
   const [targetPrice,     setTargetPrice]     = useState('');
   const [quantity,        setQuantity]        = useState(1);
-  const [priceCommentary, setPriceCommentary] = useState('');
-  const [recalculating,   setRecalculating]   = useState(false);
-  const [isFirstCalc,     setIsFirstCalc]     = useState(true);
+  const [, setPriceCommentary] = useState('');
+  // 가격 챌린지 신규 상태
+  const [guessPrice,      setGuessPrice]      = useState('');
+  const [isAnalyzing,     setIsAnalyzing]     = useState(false);
+  const [loadingMsg,      setLoadingMsg]      = useState('');
+  const [reaction,        setReaction]        = useState('');
+  const [priceAnalysis,   setPriceAnalysis]   = useState<PriceAnalysisData | null>(null);
+  const [discountPercent, setDiscountPercent] = useState(8);
+  const [showExcluded,    setShowExcluded]    = useState(false);
+  const [marketChecked,   setMarketChecked]   = useState(false);
 
   // Step 4: 기타 요청사항
   const [freeTextNote,    setFreeTextNote]    = useState('');
@@ -463,36 +486,60 @@ export default function DealCreatePage() {
     if (!isTypingRef.current) window.scrollTo(0, scrollRef.current);
   }, [optionGroups]);
 
-  // ── Step 3 진입 시 옵션 기반 가격 재계산 ─────────────
+  // ── Step 3 진입 시 상태 초기화 ─────────────
   const prevStepRef = useRef(step);
   useEffect(() => {
     if (step === 3 && prevStepRef.current === 2) {
-      // 2단계(제품 정보)에서 3단계(가격)로 올 때 재계산
-      const selectedOptStr = optionGroups
-        .filter(g => g.selectedIndex >= 0 && g.selectedIndex < g.values.length)
-        .map(g => g.values[g.selectedIndex])
-        .join(' ');
-      const searchQuery = [productDetail || productNameConfirmed || productName, selectedOptStr]
-        .filter(Boolean).join(' ');
-      if (searchQuery.trim()) {
-        setRecalculating(true);
-        aiRecalcPrice(searchQuery, selectedOptStr || undefined)
-          .then(result => {
-            if (result?.price) {
-              const p = result.price;
-              if (p.center_price) {
-                setMarketPrice(p.center_price);
-                setPriceCommentary(p.commentary || '');
-              }
-            }
-          })
-          .catch(() => {})
-          .finally(() => { setRecalculating(false); setIsFirstCalc(false); });
-      }
+      // 2→3 진입: 가격 챌린지 상태 초기화
+      setMarketChecked(false);
+      setReaction('');
+      setPriceAnalysis(null);
+      setShowExcluded(false);
     }
     prevStepRef.current = step;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
+
+  // ── 가격 챌린지: "맞춰보기" 분석 ─────────────
+  const loadingMessages = ['시장을 조사하고 있어요...', '네이버쇼핑 검색 중...', '부품/액세서리 걸러내는 중...', '가격 비교 분석 중...'];
+  const startPriceChallenge = async () => {
+    const gp = Number(guessPrice.replace(/,/g, ''));
+    if (!gp || gp <= 0) return;
+    setIsAnalyzing(true);
+    setReaction('');
+    setPriceAnalysis(null);
+    let msgIdx = 0;
+    const iv = setInterval(() => { setLoadingMsg(loadingMessages[msgIdx % loadingMessages.length]); msgIdx++; }, 600);
+    try {
+      const selectedOptStr = optionGroups
+        .filter(g => g.selectedIndex >= 0 && g.selectedIndex < g.values.length)
+        .map(g => g.values[g.selectedIndex]).join(' ');
+      const searchQuery = [productDetail || productNameConfirmed || productName, selectedOptStr].filter(Boolean).join(' ');
+      const result = await aiRecalcPrice(searchQuery, selectedOptStr || undefined);
+      if (result?.price?.center_price) {
+        const mp = result.price.center_price;
+        setMarketPrice(mp);
+        setPriceCommentary(result.price.commentary || '');
+        // price_analysis
+        const pa = (result as any).price_analysis as PriceAnalysisData | null;
+        if (pa) { setPriceAnalysis(pa); if (pa.lowest_price) setMarketPrice(pa.lowest_price); }
+        const finalMp = pa?.lowest_price || mp;
+        // 반응 메시지
+        const diff = Math.abs(gp - finalMp) / finalMp * 100;
+        if (diff <= 5) setReaction('거의 맞추셨어요! 가격 감각이 좋으시네요.');
+        else if (diff <= 20) setReaction('꽤 괜찮은 감이에요!');
+        else setReaction('의외의 가격이죠? 아래 근거를 확인해보세요.');
+        // 초기 목표가 = 예상가
+        setTargetPrice(String(gp));
+        const pct = Math.max(0, Math.min(50, Math.round((1 - gp / finalMp) * 100)));
+        setDiscountPercent(pct >= 0 ? pct : 0);
+      } else {
+        setReaction('시장가 정보를 찾지 못했어요. 직접 목표가를 입력해주세요.');
+      }
+      setMarketChecked(true);
+    } catch { setReaction('분석 중 오류가 발생했어요.'); setMarketChecked(true); }
+    finally { clearInterval(iv); setIsAnalyzing(false); setLoadingMsg(''); }
+  };
 
   // ── 이동 ─────────────────────────────────────────────
   const goTo = (n: number) => { setDir(n > step ? 1 : -1); setStep(n); };
@@ -705,6 +752,7 @@ export default function DealCreatePage() {
         target_price: targetPrice ? Number(targetPrice) : null,
         market_price: marketPrice || null,
         anchor_price: aiResult?.price?.center_price || null,
+        price_evidence: priceAnalysis ? JSON.stringify(priceAnalysis) : null,
       };
       const res = await apiClient.post(API.DEALS.CREATE, dealData);
       const newDealId = res.data?.id;
@@ -1195,115 +1243,209 @@ export default function DealCreatePage() {
               </div>
             )}
 
-            {/* ══ Step 3: 시장가격 + 목표가격 + 수량 ══ */}
-            {step === 3 && (
+            {/* ══ Step 3: 가격 챌린지 + 목표가 + 수량 ══ */}
+            {step === 3 && (() => {
+              const tp = Number(targetPrice.replace(/,/g, '')) || 0;
+              const canNext = marketChecked && tp > 0 && quantity >= 1;
+              const tpRatio = marketPrice && tp > 0 ? tp / marketPrice : null;
+              const tpWarn = tpRatio != null
+                ? tpRatio > 1 ? { msg: '시장가보다 높아요. 판매자 오퍼가 적을 수 있어요.', c: C.yellow }
+                : tpRatio < 0.3 ? { msg: '목표가가 매우 낮아요. 오퍼를 받기 어려울 수 있어요.', c: '#ff5252' }
+                : tpRatio < 0.7 ? { msg: '도전적인 목표에요!', c: '#60a5fa' }
+                : null : null;
+              return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                {/* 헤더 */}
                 <div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: C.textPri, lineHeight: 1.3, marginBottom: 6 }}>
-                    💰 가격 & 수량
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.cyan, marginBottom: 6 }}>
+                    {productNameConfirmed || productDetail || productName}
                   </div>
-                  <div style={{ fontSize: 13, color: C.textSec }}>
-                    시장가격을 참고해서 목표가격과 수량을 정해주세요
+                  <div style={{ fontSize: 22, fontWeight: 900, color: C.textPri, lineHeight: 1.3 }}>
+                    지금 시장에서 얼마에 팔리고 있을까요?
                   </div>
                 </div>
 
-                {/* 시장가격 (읽기 전용) */}
-                <div style={{
-                  background: C.bgCard, border: `1px solid ${C.border}`,
-                  borderRadius: 16, padding: '18px 18px',
-                }}>
-                  <SectionTitle>📊 시장가격 (참고)</SectionTitle>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                    <span style={{ fontSize: 28, fontWeight: 900, color: C.cyan }}>
-                      {recalculating ? (isFirstCalc ? '가격 조회중...' : '재계산중...') : marketPrice ? `${marketPrice.toLocaleString()}원` : '정보 없음'}
-                    </span>
-                    {recalculating && (
-                      <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${C.border}`, borderTopColor: C.cyan, animation: 'spin 0.8s linear infinite' }} />
-                    )}
+                {/* 예상 가격 입력 */}
+                <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 10 }}>내 예상 가격:</div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={guessPrice ? Number(guessPrice.replace(/,/g, '')).toLocaleString() : ''}
+                      onChange={e => setGuessPrice(e.target.value.replace(/[^0-9]/g, ''))}
+                      onFocus={e => e.target.select()}
+                      placeholder="예상 가격 입력"
+                      className="dc-input"
+                      style={{ padding: '13px 40px 13px 14px', fontSize: 18, fontWeight: 700, borderRadius: 12, background: C.bgInput, border: `1px solid ${C.border}`, color: C.textPri, textAlign: 'right' }}
+                    />
+                    <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14 }}>원</span>
                   </div>
-                  {priceCommentary && (
-                    <div style={{ fontSize: 12, color: C.textDim, marginTop: 6, lineHeight: 1.5 }}>
-                      {priceCommentary}
-                    </div>
-                  )}
+                  <button
+                    onClick={startPriceChallenge}
+                    disabled={isAnalyzing || !guessPrice || Number(guessPrice) <= 0}
+                    style={{
+                      width: '100%', marginTop: 12, padding: '14px', borderRadius: 12, border: 'none', fontSize: 16, fontWeight: 800,
+                      background: (!guessPrice || Number(guessPrice) <= 0) ? C.bgSurface : `linear-gradient(135deg, ${C.cyan}, ${C.green})`,
+                      color: (!guessPrice || Number(guessPrice) <= 0) ? C.textDim : '#000',
+                      cursor: (!guessPrice || Number(guessPrice) <= 0 || isAnalyzing) ? 'not-allowed' : 'pointer',
+                      opacity: isAnalyzing ? 0.6 : 1,
+                    }}
+                  >{isAnalyzing ? loadingMsg || '분석 중...' : '맞춰보기! 🎯'}</button>
                 </div>
 
-                {/* 목표가격 */}
-                <div>
-                  <SectionTitle>🎯 목표가격</SectionTitle>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={targetPrice ? Number(targetPrice.replace(/,/g, '')).toLocaleString() : ''}
-                        onChange={e => {
-                          const num = e.target.value.replace(/[^0-9]/g, '');
-                          setTargetPrice(num);
-                        }}
-                        placeholder={marketPrice ? `시장가의 85% 기준: ${Math.round(marketPrice * 0.85).toLocaleString()}원` : '원하는 가격 입력'}
-                        className="dc-input"
-                        style={{
-                          padding: '13px 40px 13px 14px', fontSize: 16, fontWeight: 700, borderRadius: 12,
-                          background: C.bgInput, border: `1px solid ${C.border}`, color: C.textPri,
-                        }}
-                      />
-                      <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14 }}>원</span>
+                {/* 분석 결과 */}
+                {marketChecked && marketPrice && (
+                  <>
+                    {/* 시장 최저가 */}
+                    <div style={{ textAlign: 'center', padding: 16, background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16 }}>
+                      <div style={{ fontSize: 13, color: C.textSec, marginBottom: 4 }}>시장 최저가</div>
+                      <div style={{ fontSize: 32, fontWeight: 900, color: C.green }}>{marketPrice.toLocaleString()}원</div>
+                      {reaction && <div style={{ fontSize: 14, color: C.textSec, marginTop: 8 }}>{reaction}</div>}
                     </div>
-                    {marketPrice && targetPrice && Number(targetPrice) > 0 && (
-                      <div style={{ fontSize: 12, color: Number(targetPrice) < marketPrice ? C.green : C.orange }}>
-                        시장가 대비 {Math.round((1 - Number(targetPrice) / marketPrice) * 100)}% {Number(targetPrice) < marketPrice ? '할인' : '할증'}
+
+                    {/* 채택 상품 근거 */}
+                    {priceAnalysis && priceAnalysis.included_items.length > 0 && (
+                      <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 10 }}>
+                          가격 근거 ({priceAnalysis.total_included}건)
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                          {priceAnalysis.included_items.map((item, idx) => (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: idx < priceAnalysis.included_items.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, color: C.textPri, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
+                                <div style={{ fontSize: 11, color: C.textDim }}>{item.mall || '쇼핑몰'}{idx === 0 ? ' · 최저' : ''}</div>
+                              </div>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: idx === 0 ? C.green : C.textPri, whiteSpace: 'nowrap', marginLeft: 8 }}>
+                                {item.price.toLocaleString()}원
+                              </div>
+                              {item.link && (
+                                <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8, fontSize: 16, textDecoration: 'none', color: C.cyan }}>→</a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                {/* 수량 */}
-                <div>
-                  <SectionTitle>📦 수량</SectionTitle>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <button
-                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                      style={{
-                        width: 44, height: 44, borderRadius: 12, fontSize: 22, fontWeight: 700,
-                        background: C.bgSurface, border: `1px solid ${C.border}`,
-                        color: quantity <= 1 ? C.textDim : C.textPri,
-                        cursor: quantity <= 1 ? 'not-allowed' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}
-                    >−</button>
-                    <div style={{
-                      minWidth: 60, textAlign: 'center',
-                      fontSize: 24, fontWeight: 900, color: C.textPri,
-                    }}>
-                      {quantity}
-                    </div>
-                    <button
-                      onClick={() => setQuantity(q => Math.min(9999, q + 1))}
-                      style={{
-                        width: 44, height: 44, borderRadius: 12, fontSize: 22, fontWeight: 700,
-                        background: C.bgSurface, border: `1px solid ${C.border}`,
-                        color: C.textPri, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}
-                    >+</button>
-                    <span style={{ fontSize: 13, color: C.textSec }}>개</span>
-                  </div>
-                  {targetPrice && Number(targetPrice) > 0 && quantity > 1 && (
-                    <div style={{ fontSize: 13, color: C.textSec, marginTop: 10 }}>
-                      예상 총액: <span style={{ color: C.cyan, fontWeight: 700 }}>
-                        {(Number(targetPrice) * quantity).toLocaleString()}원
-                      </span>
-                    </div>
-                  )}
-                </div>
+                    {/* 제외 항목 (접이식) */}
+                    {priceAnalysis && priceAnalysis.excluded_items.length > 0 && (
+                      <div>
+                        <button
+                          onClick={() => setShowExcluded(!showExcluded)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: C.textDim, padding: '4px 0' }}
+                        >{showExcluded ? '▼' : '▶'} 제외된 항목 {priceAnalysis.total_excluded}건</button>
+                        {showExcluded && (
+                          <div style={{ marginTop: 6, padding: '8px 12px', background: C.bgCard, borderRadius: 12, border: `1px solid ${C.border}` }}>
+                            {priceAnalysis.excluded_items.map((item, idx) => (
+                              <div key={idx} style={{ fontSize: 12, color: C.textDim, padding: '4px 0', display: 'flex', gap: 8 }}>
+                                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</span>
+                                <span style={{ whiteSpace: 'nowrap' }}>{item.price.toLocaleString()}원</span>
+                                <span style={{ color: '#ff5252', whiteSpace: 'nowrap' }}>❌ {item.reason}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
+                    {/* 목표가 설정 */}
+                    <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18 }}>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: C.textPri, marginBottom: 14 }}>
+                        자, 이제 목표가를 정해볼까요?
+                      </div>
+
+                      {/* 할인율 슬라이더 */}
+                      <input
+                        type="range" min={0} max={50} step={1}
+                        value={discountPercent}
+                        onChange={e => {
+                          const pct = Number(e.target.value);
+                          setDiscountPercent(pct);
+                          if (marketPrice) setTargetPrice(String(Math.round(marketPrice * (1 - pct / 100))));
+                        }}
+                        style={{ width: '100%', accentColor: C.green, marginBottom: 4 }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: C.textDim }}>
+                        <span>0%</span>
+                        <span style={{ color: C.green, fontWeight: 700, fontSize: 16 }}>{discountPercent}% 절감</span>
+                        <span>50%</span>
+                      </div>
+
+                      {/* 절감액 */}
+                      {tp > 0 && marketPrice && tp < marketPrice && (
+                        <div style={{ textAlign: 'center', padding: 12, background: 'rgba(74,222,128,0.1)', borderRadius: 8, marginTop: 8 }}>
+                          <span style={{ color: C.green, fontSize: 18, fontWeight: 700 }}>
+                            {(marketPrice - tp).toLocaleString()}원 절감!
+                          </span>
+                        </div>
+                      )}
+
+                      {/* 직접 입력 */}
+                      <div style={{ marginTop: 14 }}>
+                        <div style={{ fontSize: 13, color: C.textSec, marginBottom: 6 }}>또는 직접 입력:</div>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type="text" inputMode="numeric"
+                            value={targetPrice ? Number(targetPrice.replace(/,/g, '')).toLocaleString() : ''}
+                            onChange={e => {
+                              const num = e.target.value.replace(/[^0-9]/g, '');
+                              setTargetPrice(num);
+                              if (marketPrice && Number(num) > 0) {
+                                const pct = Math.max(0, Math.min(50, Math.round((1 - Number(num) / marketPrice) * 100)));
+                                setDiscountPercent(pct >= 0 ? pct : 0);
+                              }
+                            }}
+                            placeholder="목표가 입력"
+                            className="dc-input"
+                            style={{ padding: '13px 40px 13px 14px', fontSize: 16, fontWeight: 700, borderRadius: 12, background: C.bgInput, border: `1px solid ${C.border}`, color: C.textPri, textAlign: 'right' }}
+                          />
+                          <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14 }}>원</span>
+                        </div>
+                      </div>
+
+                      {/* 목표가 검증 */}
+                      {tpWarn && (
+                        <div style={{ fontSize: 12, color: tpWarn.c, marginTop: 8 }}>{tpWarn.msg}</div>
+                      )}
+                    </div>
+
+                    {/* 수량 */}
+                    <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 10 }}>수량</div>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="text" inputMode="numeric"
+                          value={quantity > 0 ? quantity.toLocaleString() : ''}
+                          onChange={e => {
+                            const n = Number(e.target.value.replace(/[^0-9]/g, ''));
+                            setQuantity(Math.max(1, Math.min(9999, n || 1)));
+                          }}
+                          className="dc-input"
+                          style={{ padding: '13px 40px 13px 14px', fontSize: 16, fontWeight: 700, borderRadius: 12, background: C.bgInput, border: `1px solid ${C.border}`, color: C.textPri, textAlign: 'right' }}
+                        />
+                        <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14 }}>개</span>
+                      </div>
+                      {tp > 0 && quantity > 1 && (
+                        <div style={{ fontSize: 13, color: C.textSec, marginTop: 8 }}>
+                          예상 총액: <span style={{ color: C.cyan, fontWeight: 700 }}>{(tp * quantity).toLocaleString()}원</span>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* 다음 버튼 */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-                  {primaryBtn('다음', () => goTo(4))}
-                  {skipBtn(() => goTo(4))}
+                  {canNext
+                    ? primaryBtn('다음 →', () => goTo(4))
+                    : <div style={{ width: '100%', padding: '14px', borderRadius: 14, textAlign: 'center', background: C.bgSurface, color: C.textDim, fontSize: 15, fontWeight: 700 }}>다음 →</div>
+                  }
+                  {!marketChecked && <div style={{ fontSize: 12, color: C.textDim, textAlign: 'center' }}>예상 가격을 입력하고 시장가를 확인해주세요.</div>}
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             {/* ══ Step 4: 기타 요청사항 ══ */}
             {step === 4 && (
