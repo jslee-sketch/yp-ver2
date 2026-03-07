@@ -59,6 +59,11 @@ async function login(page: Page, email: string, pw: string) {
       actuator_id: payload.actuator_id,
       verified: payload.verified,
     }
+    // Store in localStorage so React AuthContext picks it up
+    await page.evaluate(({ token, userData }) => {
+      localStorage.setItem('access_token', token)
+      localStorage.setItem('user', JSON.stringify(userData))
+    }, { token: r.data.access_token, userData: data })
     return { token: r.data.access_token, h: { Authorization: `Bearer ${r.data.access_token}` }, data }
   }
   return null
@@ -123,7 +128,7 @@ test.describe.serial('Phase 1: 전 페이지 클릭 테스트', () => {
       '/admin', '/admin/buyers', '/admin/sellers', '/admin/actuators',
       '/admin/deals', '/admin/offers', '/admin/reservations', '/admin/delivery',
       '/admin/settlements', '/admin/refunds', '/admin/disputes',
-      '/admin/policy/params', '/admin/policy/docs', '/admin/policy/proposals',
+      '/admin/policy-params', '/admin/policy-docs', '/admin/policy-proposals',
       '/admin/stats', '/admin/anomalies', '/admin/logs', '/admin/reports',
       '/admin/notifications', '/admin/announcements', '/admin/settings',
     ]

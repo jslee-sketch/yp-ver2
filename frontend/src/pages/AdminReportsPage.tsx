@@ -10,14 +10,22 @@ export default function AdminReportsPage() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<any>(null);
   const [resolution, setResolution] = useState('');
+  const [error, setError] = useState('');
 
   const load = async () => {
+    setError('');
     try {
       const params: any = {};
       if (statusFilter) params.status = statusFilter;
       const r = await apiClient.get(API.ADMIN.REPORTS, { params });
-      setItems(Array.isArray(r.data) ? r.data : r.data?.items || []);
-    } catch {}
+      const data = r.data;
+      const list = Array.isArray(data) ? data : (data?.items || data?.results || []);
+      setItems(list);
+    } catch (e: any) {
+      console.error('Reports load error:', e);
+      setError(e?.message || 'API 오류');
+      setItems([]);
+    }
     setLoading(false);
   };
   useEffect(() => { load(); }, [statusFilter]);
@@ -66,7 +74,7 @@ export default function AdminReportsPage() {
                 </td>
               </tr>
             ))}
-            {!items.length && <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>신고 없음</td></tr>}
+            {!items.length && <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>{error ? `오류: ${error}` : '신고 없음'}</td></tr>}
           </tbody>
         </table>
       </div>

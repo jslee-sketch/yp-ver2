@@ -11,14 +11,22 @@ export default function AdminPolicyProposalsPage() {
   const [items, setItems] = useState<any[]>([]);
   const [tab, setTab] = useState<string>('전체');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const load = async () => {
+    setError('');
     try {
       const params: any = {};
       if (TAB_STATUS[tab]) params.status = TAB_STATUS[tab];
       const r = await apiClient.get(API.ADMIN.POLICY_PROPOSALS, { params });
-      setItems(Array.isArray(r.data) ? r.data : r.data?.items || []);
-    } catch {}
+      const data = r.data;
+      const list = Array.isArray(data) ? data : (data?.items || data?.results || []);
+      setItems(list);
+    } catch (e: any) {
+      console.error('PolicyProposals load error:', e);
+      setError(e?.message || 'API 오류');
+      setItems([]);
+    }
     setLoading(false);
   };
   useEffect(() => { setLoading(true); load(); }, [tab]);
@@ -71,7 +79,7 @@ export default function AdminPolicyProposalsPage() {
                 </td>
               </tr>
             ))}
-            {!items.length && <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>제안 없음</td></tr>}
+            {!items.length && <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>{error ? `오류: ${error}` : '제안 없음'}</td></tr>}
           </tbody>
         </table>
       </div>
