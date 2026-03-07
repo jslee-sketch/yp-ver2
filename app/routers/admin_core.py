@@ -19,6 +19,95 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+# ── GET /admin/stats/counts — 초경량 카운트 전용 ─────────
+@router.get("/stats/counts")
+def admin_stats_counts(db: Session = Depends(get_db)):
+    """DB 실제 COUNT만 반환. 대시보드 KPI용."""
+    from sqlalchemy import cast, String as SAString
+    result: dict = {}
+    try:
+        result["buyers"] = db.query(sa_func.count(models.Buyer.id)).scalar() or 0
+    except Exception:
+        result["buyers"] = 0
+    try:
+        result["sellers"] = db.query(sa_func.count(models.Seller.id)).scalar() or 0
+    except Exception:
+        result["sellers"] = 0
+    try:
+        result["deals"] = db.query(sa_func.count(models.Deal.id)).scalar() or 0
+    except Exception:
+        result["deals"] = 0
+    try:
+        result["offers"] = db.query(sa_func.count(models.Offer.id)).scalar() or 0
+    except Exception:
+        result["offers"] = 0
+    try:
+        result["reservations"] = db.query(sa_func.count(models.Reservation.id)).scalar() or 0
+    except Exception:
+        result["reservations"] = 0
+    try:
+        result["actuators"] = db.query(sa_func.count(models.Actuator.id)).scalar() or 0
+    except Exception:
+        result["actuators"] = 0
+    try:
+        result["pending_sellers"] = (
+            db.query(sa_func.count(models.Seller.id))
+            .filter(models.Seller.verified_at.is_(None))
+            .scalar() or 0
+        )
+    except Exception:
+        result["pending_sellers"] = 0
+    try:
+        result["pending_settlement"] = (
+            db.query(sa_func.count(models.ReservationSettlement.id))
+            .filter(models.ReservationSettlement.status.in_(["HOLD", "READY"]))
+            .scalar() or 0
+        )
+    except Exception:
+        result["pending_settlement"] = 0
+    try:
+        result["disputed"] = (
+            db.query(sa_func.count(models.Reservation.id))
+            .filter(models.Reservation.is_disputed == True)
+            .scalar() or 0
+        )
+    except Exception:
+        result["disputed"] = 0
+    try:
+        status_str = cast(models.Reservation.status, SAString)
+        rows = db.query(status_str, sa_func.count(models.Reservation.id)).group_by(status_str).all()
+        result["reservation_status"] = {str(r[0]): r[1] for r in rows}
+    except Exception:
+        result["reservation_status"] = {}
+    try:
+        sett_q = db.query(models.ReservationSettlement)
+        result["settlement_summary"] = {
+            "HOLD": sett_q.filter(models.ReservationSettlement.status == "HOLD").count(),
+            "READY": sett_q.filter(models.ReservationSettlement.status == "READY").count(),
+            "APPROVED": sett_q.filter(models.ReservationSettlement.status == "APPROVED").count(),
+            "PAID": sett_q.filter(models.ReservationSettlement.status == "PAID").count(),
+        }
+    except Exception:
+        result["settlement_summary"] = {}
+    try:
+        status_str = cast(models.Reservation.status, SAString)
+        paid_row = (
+            db.query(
+                sa_func.coalesce(sa_func.sum(models.Reservation.amount_total), 0),
+                sa_func.count(models.Reservation.id),
+            )
+            .filter(status_str.in_(["PAID", "SHIPPED", "ARRIVED", "CONFIRMED"]))
+            .first()
+        )
+        result["gmv"] = int(paid_row[0]) if paid_row else 0
+        paid_cnt = int(paid_row[1]) if paid_row else 0
+        result["aov"] = round(result["gmv"] / paid_cnt) if paid_cnt > 0 else 0
+    except Exception:
+        result["gmv"] = 0
+        result["aov"] = 0
+    return result
+
+
 # ── GET /admin/deals ─────────────────────────────────────
 @router.get("/deals")
 def admin_list_deals(

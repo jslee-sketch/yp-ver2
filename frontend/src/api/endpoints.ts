@@ -279,6 +279,7 @@ export const API = {
     OFFERS:              '/admin/offers',
     RESERVATIONS:        '/admin/reservations',
     STATS:               '/admin/stats',
+    STATS_COUNTS:        '/admin/stats/counts',
     POLICY_YAML:         '/admin/policy/yaml',
     POLICY_YAML_HISTORY: '/admin/policy/yaml/history',
     POLICY_DOCS:         '/admin/policy/docs',
