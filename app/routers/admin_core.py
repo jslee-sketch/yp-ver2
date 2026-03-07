@@ -197,7 +197,7 @@ def admin_list_reservations(
             "seller_id": sid,
             "seller_name": seller_map.get(sid, "") if sid else "",
             "amount": getattr(r, "amount_total", 0),
-            "status": str(getattr(r, "status", "")),
+            "status": getattr(r.status, "value", str(r.status)) if r.status else "",
             "is_disputed": getattr(r, "is_disputed", False),
             "dispute_reason": getattr(r, "dispute_reason", None),
             "dispute_resolution": getattr(r, "dispute_resolution", None),
@@ -222,6 +222,8 @@ def admin_stats(
     date_to: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
+    from sqlalchemy import text as sa_text, cast, String as SAString
+
     dt_from = None
     dt_to = None
     if date_from:
@@ -235,25 +237,65 @@ def admin_stats(
         except ValueError:
             pass
 
-    # base queries
-    rq = db.query(models.Reservation)
-    if dt_from:
-        rq = rq.filter(models.Reservation.created_at >= dt_from)
-    if dt_to:
-        rq = rq.filter(models.Reservation.created_at <= dt_to)
+    # ── reservation stats ──
+    total_reservations = 0
+    gmv = 0
+    refunded = 0
+    aov = 0
+    status_counts: dict = {}
+    try:
+        rq = db.query(models.Reservation)
+        if dt_from:
+            rq = rq.filter(models.Reservation.created_at >= dt_from)
+        if dt_to:
+            rq = rq.filter(models.Reservation.created_at <= dt_to)
+        total_reservations = rq.count()
 
-    total_reservations = rq.count()
-    paid_reservations = rq.filter(models.Reservation.status.in_(["PAID", "SHIPPED", "ARRIVED", "CONFIRMED"])).all()
-    gmv = sum(getattr(r, "amount", 0) or 0 for r in paid_reservations)
-    refunded = rq.filter(models.Reservation.status.in_(["REFUNDED", "CANCELLED"])).count()
+        # Use cast to string to avoid PostgreSQL enum issues
+        status_str = cast(models.Reservation.status, SAString)
+
+        # GMV: sum of amount_total for paid-like statuses
+        paid_sum_row = (
+            rq.with_entities(
+                sa_func.coalesce(sa_func.sum(models.Reservation.amount_total), 0),
+                sa_func.count(models.Reservation.id),
+            )
+            .filter(status_str.in_(["PAID", "SHIPPED", "ARRIVED", "CONFIRMED"]))
+            .first()
+        )
+        gmv = int(paid_sum_row[0]) if paid_sum_row else 0
+        paid_count = int(paid_sum_row[1]) if paid_sum_row else 0
+        aov = round(gmv / paid_count, 0) if paid_count > 0 else 0
+
+        refunded = rq.filter(status_str.in_(["REFUNDED", "CANCELLED"])).count()
+    except Exception:
+        pass
     refund_rate = round(refunded / total_reservations * 100, 2) if total_reservations > 0 else 0
 
-    deal_count = db.query(sa_func.count(models.Deal.id)).scalar() or 0
-    completed_deals = db.query(sa_func.count(models.Deal.id)).filter(models.Deal.status == "CLOSED").scalar() or 0
-    deal_success_rate = round(completed_deals / deal_count * 100, 2) if deal_count > 0 else 0
-    aov = round(gmv / len(paid_reservations), 0) if paid_reservations else 0
+    # reservation status summary (cast enum to string for JSON keys)
+    try:
+        status_str = cast(models.Reservation.status, SAString)
+        rows = (
+            db.query(status_str, sa_func.count(models.Reservation.id))
+            .group_by(status_str)
+            .all()
+        )
+        status_counts = {str(r[0]): r[1] for r in rows}
+    except Exception:
+        pass
 
-    # settlement summary
+    # ── deal stats ──
+    deal_count = 0
+    deal_success_rate = 0
+    try:
+        deal_count = db.query(sa_func.count(models.Deal.id)).scalar() or 0
+        completed_deals = db.query(sa_func.count(models.Deal.id)).filter(models.Deal.status == "CLOSED").scalar() or 0
+        deal_success_rate = round(completed_deals / deal_count * 100, 2) if deal_count > 0 else 0
+    except Exception:
+        pass
+
+    # ── settlement summary ──
+    settlement_summary: dict = {}
     try:
         sett_q = db.query(models.ReservationSettlement)
         hold = sett_q.filter(models.ReservationSettlement.status == "HOLD").count()
@@ -262,17 +304,9 @@ def admin_stats(
         paid_s = sett_q.filter(models.ReservationSettlement.status == "PAID").count()
         settlement_summary = {"HOLD": hold, "READY": ready, "APPROVED": approved, "PAID": paid_s}
     except Exception:
-        settlement_summary = {}
-
-    # reservation status summary
-    status_counts = {}
-    try:
-        rows = db.query(models.Reservation.status, sa_func.count(models.Reservation.id)).group_by(models.Reservation.status).all()
-        status_counts = {r[0]: r[1] for r in rows}
-    except Exception:
         pass
 
-    # platform_fee (take rate proxy)
+    # ── platform fee / take rate ──
     total_platform_fee = 0
     try:
         fee_sum = db.query(sa_func.sum(models.ReservationSettlement.platform_fee)).scalar()
@@ -281,7 +315,7 @@ def admin_stats(
         pass
     take_rate = round(total_platform_fee / gmv * 100, 2) if gmv > 0 else 0
 
-    # entity counts (for dashboard KPI)
+    # ── entity counts (dashboard KPI) ──
     buyer_count = 0
     seller_count = 0
     offer_count = 0
