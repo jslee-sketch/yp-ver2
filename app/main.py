@@ -442,11 +442,11 @@ async def lifespan(app: FastAPI):
                 _seed_db.commit()
                 print(f"[seed] Created buyer #{_demo_buyer.id}, seller #{_demo_seller.id}, deal #{_demo_deal.id}")
 
-            # admin seed (항상 실행 — 관리자 계정이 없으면 생성)
+            # admin seed (항상 실행 — 관리자 계정이 없으면 생성, 있으면 비밀번호 통일)
             _admin_exists = _seed_db.query(models.User).filter(models.User.email == "admin@yeokping.com").first()
+            from passlib.context import CryptContext as _Ctx2
+            _pwd2 = _Ctx2(schemes=["bcrypt"], deprecated="auto")
             if not _admin_exists:
-                from passlib.context import CryptContext as _Ctx2
-                _pwd2 = _Ctx2(schemes=["bcrypt"], deprecated="auto")
                 _admin = models.User(
                     email="admin@yeokping.com",
                     hashed_password=_pwd2.hash("admin1234!"),
@@ -457,6 +457,12 @@ async def lifespan(app: FastAPI):
                 _seed_db.add(_admin)
                 _seed_db.commit()
                 print("[seed] Admin account created: admin@yeokping.com / admin1234!", flush=True)
+            else:
+                # 비밀번호 통일 (admin1234!)
+                if not _pwd2.verify("admin1234!", _admin_exists.hashed_password):
+                    _admin_exists.hashed_password = _pwd2.hash("admin1234!")
+                    _seed_db.commit()
+                    print("[seed] Admin password reset to admin1234!", flush=True)
 
             # seller seed (항상 실행 — 테스트 판매자 계정이 없으면 생성)
             try:
