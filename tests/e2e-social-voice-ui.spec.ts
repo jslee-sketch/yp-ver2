@@ -86,6 +86,23 @@ async function setAuth(page: Page, token: string, user: { email: string; nick: s
 
 async function wait(ms = 3000) { await new Promise(r => setTimeout(r, ms)) }
 
+/** Extract user ID from JWT token */
+function getUserId(token: string): number {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString())
+    return Number(payload.sub) || 0
+  } catch { return 0 }
+}
+
+/** Create a deal via API — uses correct schema fields */
+async function createDeal(req: APIRequestContext, token: string, data: { product_name: string; brand?: string; target_price?: number; max_budget?: number; desired_qty?: number }) {
+  const uid = getUserId(token)
+  return req.post(`${BASE}/deals/`, {
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    data: { creator_id: uid, product_name: data.product_name, brand: data.brand || null, target_price: data.target_price || null, max_budget: data.max_budget || null, desired_qty: data.desired_qty || 1 },
+  })
+}
+
 test.setTimeout(10800_000)
 
 /* ═══════════════════════════════════════════════════════════════
@@ -618,7 +635,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
 
   // Navigate to deal create
   async function gotoDealCreate() {
-    await page.goto(`${BASE}/deals/create`, { timeout: 30000 })
+    await page.goto(`${BASE}/deal/create`, { timeout: 30000 })
     await page.waitForTimeout(3000)
   }
 
@@ -1067,7 +1084,7 @@ test('Phase 3: Deal Create Step 1 UI (30)', async ({ page, request }) => {
     try { await loginUI(page, BUYER.email, BUYER.pw) } catch {
       await setAuth(page, token, { email: BUYER.email, nick: BUYER.nick })
     }
-    await page.goto(`${BASE}/deals/create`, { timeout: 30000 })
+    await page.goto(`${BASE}/deal/create`, { timeout: 30000 })
     await page.waitForTimeout(3000)
   }
 
@@ -1482,7 +1499,7 @@ test('Phase 4: Integration Scenarios (20)', async ({ page, request }) => {
     const sd = await socialR.json()
     const tok = sd.access_token
     if (tok) {
-      const dealR = await request.post(`${BASE}/deals/`, { headers: bh(tok), data: { product_name: '갤럭시 S25 울트라 256GB', brand: 'Samsung', desired_price: 1450000, max_budget: 1600000, quantity: 1 } })
+      const dealR = await createDeal(request, tok, { product_name: '갤럭시 S25 울트라 256GB', brand: 'Samsung', target_price: 1450000, max_budget: 1600000 })
       if (dealR.ok()) {
         const dd = await dealR.json()
         dealId = dd.id || dd.deal_id || 0
@@ -1518,7 +1535,7 @@ test('Phase 4: Integration Scenarios (20)', async ({ page, request }) => {
     })
     const d = await r.json()
     if (d.access_token) {
-      const deal = await request.post(`${BASE}/deals/`, { headers: bh(d.access_token), data: { product_name: '다이슨 에어랩', brand: 'Dyson', desired_price: 580000, max_budget: 650000, quantity: 1 } })
+      const deal = await createDeal(request, d.access_token, { product_name: '다이슨 에어랩', brand: 'Dyson', target_price: 580000, max_budget: 650000 })
       log('P4-구매자', '103. 구글→딜생성', deal.ok() ? 'PASS' : 'WARN', `status=${deal.status()}`)
     } else {
       log('P4-구매자', '103. 구글→딜', 'FAIL', 'no token')
@@ -1751,7 +1768,7 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
   try { token = await getToken(request, BUYER.email, BUYER.pw) } catch { token = '' }
   const bh = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
 
-  async function loginAndGo(path = '/deals/create') {
+  async function loginAndGo(path = '/deal/create') {
     await setAuth(page, token, { email: BUYER.email, nick: BUYER.nick })
     await page.goto(`${BASE}${path}`, { timeout: 30000 })
     await page.waitForTimeout(3000)
@@ -1875,7 +1892,7 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
     const page2 = await page.context().newPage()
     await page2.goto(`${BASE}/`)
     await page2.evaluate((t: string) => { localStorage.setItem('access_token', t); localStorage.setItem('token', t) }, token)
-    await page2.goto(`${BASE}/deals/create`, { timeout: 20000 })
+    await page2.goto(`${BASE}/deal/create`, { timeout: 20000 })
     await page2.waitForTimeout(2000)
     const body = await page2.textContent('body') || ''
     const loaded = body.includes('갤럭시') || body.includes('또는') || body.includes('사진')
@@ -1958,7 +1975,7 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
 
   // 138. 인증 없이 딜 생성
   try {
-    const r = await request.post(`${BASE}/deals/`, { data: { product_name: 'test', desired_price: 100000 } })
+    const r = await request.post(`${BASE}/deals/`, { data: { product_name: 'test', creator_id: 1, target_price: 100000 } })
     log('P5-동시성', '138. 인증없이 딜', r.status() === 401 || r.status() === 403 ? 'PASS' : 'WARN', `status=${r.status()}`)
   } catch (e) { log('P5-동시성', '138. 인증없이', 'WARN', String(e).slice(0, 80)) }
   await wait()
@@ -1981,7 +1998,7 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
   // 141. 가격 999,999,999,999원
   try {
     if (token) {
-      const r = await request.post(`${BASE}/deals/`, { headers: bh, data: { product_name: '초고가 테스트', desired_price: 999999999999, max_budget: 999999999999 } })
+      const r = await createDeal(request, token, { product_name: '초고가 테스트', target_price: 999999999999, max_budget: 999999999999 })
       log('P5-극한', '141. 초고가 딜', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
     } else {
       log('P5-극한', '141. 초고가', 'SKIP', 'no token')
@@ -1992,7 +2009,7 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
   // 142. 수량 99999
   try {
     if (token) {
-      const r = await request.post(`${BASE}/deals/`, { headers: bh, data: { product_name: '대량 테스트', desired_price: 10000, quantity: 99999 } })
+      const r = await createDeal(request, token, { product_name: '대량 테스트', target_price: 10000, desired_qty: 99999 })
       log('P5-극한', '142. 대량 수량', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
     } else {
       log('P5-극한', '142. 대량', 'SKIP', 'no token')
@@ -2003,7 +2020,7 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
   // 143. 목표가 0원
   try {
     if (token) {
-      const r = await request.post(`${BASE}/deals/`, { headers: bh, data: { product_name: '0원 테스트', desired_price: 0 } })
+      const r = await createDeal(request, token, { product_name: '0원 테스트', target_price: 0 })
       log('P5-극한', '143. 0원 딜', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
     } else {
       log('P5-극한', '143. 0원', 'SKIP', 'no token')
@@ -2014,7 +2031,7 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
   // 144. 목표가 -1원
   try {
     if (token) {
-      const r = await request.post(`${BASE}/deals/`, { headers: bh, data: { product_name: '마이너스 테스트', desired_price: -1 } })
+      const r = await createDeal(request, token, { product_name: '마이너스 테스트', target_price: -1 })
       log('P5-극한', '144. -1원 딜', r.status() >= 400 ? 'PASS' : 'WARN', `status=${r.status()}`)
     } else {
       log('P5-극한', '144. -1원', 'SKIP', 'no token')
@@ -2027,7 +2044,7 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
     if (token) {
       let ok = 0, fail = 0
       for (let i = 0; i < 5; i++) {
-        const r = await request.post(`${BASE}/deals/`, { headers: bh, data: { product_name: `연속딜${i+1}`, desired_price: 100000 + i * 10000 } })
+        const r = await createDeal(request, token, { product_name: `연속딜${i+1}`, target_price: 100000 + i * 10000 })
         if (r.status() < 400) ok++; else fail++
       }
       log('P5-극한', '145. 연속 딜 5회', ok > 0 ? 'PASS' : 'WARN', `ok=${ok} fail=${fail}`)
@@ -2040,8 +2057,8 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
   // 146. 같은 제품 또 딜 생성
   try {
     if (token) {
-      const r1 = await request.post(`${BASE}/deals/`, { headers: bh, data: { product_name: '중복딜', desired_price: 500000 } })
-      const r2 = await request.post(`${BASE}/deals/`, { headers: bh, data: { product_name: '중복딜', desired_price: 500000 } })
+      const r1 = await createDeal(request, token, { product_name: '중복딜', target_price: 500000 })
+      const r2 = await createDeal(request, token, { product_name: '중복딜', target_price: 500000 })
       log('P5-극한', '146. 같은제품 중복딜', r1.status() < 500 && r2.status() < 500 ? 'PASS' : 'WARN', `r1=${r1.status()} r2=${r2.status()}`)
     } else {
       log('P5-극한', '146. 중복딜', 'SKIP', 'no token')
