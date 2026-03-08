@@ -771,12 +771,20 @@ export default function DealCreatePage() {
   // ── 음성 녹음 ────────────────────────────────────────
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4' });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 },
+      });
+      // 코덱 우선순위 (브라우저 호환)
+      const mimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4', ''];
+      let mimeType = '';
+      for (const mt of mimeTypes) {
+        if (!mt || MediaRecorder.isTypeSupported(mt)) { mimeType = mt; break; }
+      }
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       chunksRef.current = [];
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      mr.onstop = () => { stream.getTracks().forEach(t => t.stop()); processVoice(); };
-      mr.start();
+      mr.onstop = () => { stream.getTracks().forEach(t => t.stop()); processVoice(mimeType); };
+      mr.start(250); // 250ms 간격으로 데이터 수집
       mediaRecorderRef.current = mr;
       setIsRecording(true);
       setRecordingTime(0);
@@ -787,8 +795,15 @@ export default function DealCreatePage() {
           return prev + 1;
         });
       }, 1000);
-    } catch {
-      showToast('마이크 접근 권한이 필요합니다. 브라우저 설정을 확인해주세요.', 'error');
+    } catch (err: unknown) {
+      const e = err as { name?: string };
+      if (e.name === 'NotAllowedError') {
+        showToast('마이크 권한을 허용해주세요. 브라우저 설정에서 확인할 수 있어요.', 'error');
+      } else if (e.name === 'NotFoundError') {
+        showToast('마이크를 찾을 수 없습니다. 마이크가 연결되어 있는지 확인해주세요.', 'error');
+      } else {
+        showToast('음성 녹음을 시작할 수 없습니다.', 'error');
+      }
     }
   };
 
@@ -800,13 +815,20 @@ export default function DealCreatePage() {
     setIsRecording(false);
   };
 
-  const processVoice = async () => {
+  const processVoice = async (mimeType?: string) => {
     if (chunksRef.current.length === 0) return;
+    const blob = new Blob(chunksRef.current, { type: mimeType || chunksRef.current[0]?.type || 'audio/webm' });
+    if (blob.size < 1000) {
+      showToast('음성이 너무 짧아요. 다시 시도해주세요.', 'error');
+      return;
+    }
     setVoiceLoading(true);
     try {
-      const blob = new Blob(chunksRef.current, { type: chunksRef.current[0].type });
+      const ext = (mimeType || '').includes('mp4') ? 'mp4'
+        : (mimeType || '').includes('ogg') ? 'ogg'
+        : 'webm';
       const form = new FormData();
-      form.append('file', blob, 'voice.webm');
+      form.append('file', blob, `voice.${ext}`);
       const resp = await apiClient.post(API.AI.DEAL_HELPER_VOICE, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 30000,
@@ -1162,229 +1184,256 @@ export default function DealCreatePage() {
                   >← 다시 입력하기</button>
                 </motion.div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                  <div>
-                    <div style={{ fontSize: 24, fontWeight: 900, color: C.textPri, lineHeight: 1.3, marginBottom: 8 }}>
-                      어떤 상품을<br />원하시나요?
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  {/* 타이틀 */}
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 24, fontWeight: 900, color: C.textPri, marginBottom: 6 }}>
+                      어떤 제품을 찾으세요?
                     </div>
                     <div style={{ fontSize: 13, color: C.textSec }}>
-                      찾고 있는 상품의 이름을 알려주세요.<br />
-                      핑퐁이 AI가 상품 정보를 분석해드려요 🎯
+                      핑퐁이 AI가 상품 정보를 분석해드려요
                     </div>
                   </div>
 
-                  {/* 상품명 입력 */}
-                  <TextInput
-                    label="상품명" required
-                    value={productName} onChange={setProductName}
-                    placeholder="예: 에어팟 프로 2세대"
-                  />
-
-                  {/* 사진 인식 (최대 3장) */}
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8, display: 'block' }}>
-                      📷 사진으로 상품 인식 (최대 3장)
-                    </label>
+                  {/* 메인 검색창 + AI 분석 버튼 */}
+                  <div style={{ display: 'flex', gap: 8 }}>
                     <input
-                      ref={imageInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleImageUpload}
-                      style={{ display: 'none' }}
+                      type="text"
+                      value={productName}
+                      onChange={e => setProductName(e.target.value)}
+                      placeholder="예: 갤럭시 S25 울트라 256GB"
+                      onKeyDown={e => { if (e.key === 'Enter' && productName.trim()) { void handleAIAnalysis(); } }}
+                      autoFocus
+                      style={{
+                        flex: 1, padding: '14px 16px', borderRadius: 12,
+                        border: `2px solid ${productName.trim() ? `${C.cyan}44` : C.border}`,
+                        background: C.bgInput, color: C.textPri, fontSize: 16,
+                        transition: 'border-color 0.15s',
+                      }}
                     />
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {imagePreviews.map((preview, idx) => (
-                        <div key={idx} style={{
-                          position: 'relative', width: 80, height: 80,
-                          borderRadius: 8, overflow: 'hidden',
-                          border: `2px solid ${
-                            imageResults[idx]?.confidence === 'high' ? C.green :
-                            imageResults[idx]?.confidence === 'medium' ? C.yellow :
-                            C.border
-                          }`,
-                        }}>
-                          <img src={preview} alt={`사진${idx + 1}`}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          {recognizingIdx === idx && (
-                            <div style={{
-                              position: 'absolute', inset: 0,
-                              background: 'rgba(0,0,0,0.6)', display: 'flex',
-                              alignItems: 'center', justifyContent: 'center',
-                              color: '#fff', fontSize: 11,
-                            }}>분석중...</div>
-                          )}
-                          <button
-                            onClick={() => removeImage(idx)}
-                            style={{
-                              position: 'absolute', top: 2, right: 2,
-                              width: 20, height: 20, borderRadius: '50%',
-                              background: 'rgba(0,0,0,0.7)', border: 'none',
-                              color: '#fff', fontSize: 11, cursor: 'pointer',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              lineHeight: '20px',
-                            }}
-                          >X</button>
-                        </div>
-                      ))}
-                      {imagePreviews.length < 3 && (
-                        <button
-                          onClick={() => imageInputRef.current?.click()}
-                          disabled={recognizingIdx >= 0}
-                          style={{
-                            width: 80, height: 80, display: 'flex',
-                            flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                            background: C.bgSurface, borderRadius: 8,
-                            border: `2px dashed ${C.border}`, cursor: 'pointer',
-                            transition: 'all 0.15s',
-                          }}
-                        >
-                          <span style={{ fontSize: 24 }}>📷</span>
-                          <span style={{ fontSize: 10, color: C.textDim, marginTop: 2 }}>
-                            {imagePreviews.length === 0 ? '사진 찍기' : `+${3 - imagePreviews.length}장`}
-                          </span>
-                        </button>
-                      )}
-                    </div>
+                    <button
+                      onClick={() => { void handleAIAnalysis(); }}
+                      disabled={!productName.trim() || aiLoading}
+                      style={{
+                        padding: '14px 20px', borderRadius: 12, whiteSpace: 'nowrap',
+                        background: productName.trim() && !aiLoading ? C.green : '#333',
+                        color: productName.trim() && !aiLoading ? '#000' : '#666',
+                        border: 'none', cursor: productName.trim() && !aiLoading ? 'pointer' : 'default',
+                        fontWeight: 800, fontSize: 14, transition: 'all 0.15s',
+                      }}
+                    >
+                      {aiLoading ? '분석중...' : 'AI 분석'}
+                    </button>
+                  </div>
 
-                    {/* 인식 결과 요약 */}
-                    {imageResults.some(r => r !== null) && (
+                  {/* 인기 태그 */}
+                  <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
+                    {POPULAR_TAGS.map(tag => (
+                      <button
+                        key={tag.value}
+                        onClick={() => setProductName(tag.value)}
+                        style={{
+                          flexShrink: 0, padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                          background: productName === tag.value ? `${C.cyan}18` : C.bgSurface,
+                          border: `1px solid ${productName === tag.value ? C.cyan : C.border}`,
+                          color: productName === tag.value ? C.cyan : C.textSec,
+                          cursor: 'pointer', transition: 'all 0.15s',
+                        }}
+                      >{tag.label}</button>
+                    ))}
+                  </div>
+
+                  {/* "또는" 구분선 */}
+                  <div style={{ position: 'relative', textAlign: 'center', margin: '4px 0' }}>
+                    <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: C.border }} />
+                    <span style={{
+                      position: 'relative', zIndex: 1, padding: '0 14px',
+                      background: C.bgDeep, fontSize: 13, color: C.textDim,
+                    }}>또는</span>
+                  </div>
+
+                  {/* 사진 + 음성 버튼 (나란히) */}
+                  <input
+                    ref={imageInputRef}
+                    type="file" accept="image/*" capture="environment"
+                    onChange={handleImageUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <button
+                      onClick={() => imageInputRef.current?.click()}
+                      disabled={recognizingIdx >= 0 || imagePreviews.length >= 3}
+                      style={{
+                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        gap: 8, padding: 14, background: C.bgSurface, borderRadius: 12,
+                        border: `1px solid ${C.border}`, cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        opacity: recognizingIdx >= 0 ? 0.5 : 1,
+                      }}
+                    >
+                      <span style={{ fontSize: 20 }}>📷</span>
+                      <span style={{ color: C.textPri, fontSize: 14 }}>사진으로 찾기</span>
+                    </button>
+                    <button
+                      onClick={isRecording ? stopRecording : startRecording}
+                      disabled={voiceLoading}
+                      style={{
+                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        gap: 8, padding: 14, borderRadius: 12, cursor: voiceLoading ? 'not-allowed' : 'pointer',
+                        background: isRecording ? 'rgba(255,45,120,0.12)' : C.bgSurface,
+                        border: `1px solid ${isRecording ? C.magenta + '66' : C.border}`,
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <span style={{ fontSize: 20 }}>{isRecording ? '⏹' : '🎤'}</span>
+                      <span style={{ color: isRecording ? C.magenta : C.textPri, fontSize: 14 }}>
+                        {voiceLoading ? '분석중...' : isRecording ? `중지 (${recordingTime}초)` : '음성으로 찾기'}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* 녹음 진행바 (녹음 중일 때만) */}
+                  {isRecording && (
+                    <div>
                       <div style={{
-                        marginTop: 10, padding: '8px 12px', borderRadius: 10,
-                        background: C.bgCard, border: `1px solid ${C.border}`,
+                        height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.08)',
+                        overflow: 'hidden', marginBottom: 4,
                       }}>
-                        {imageResults.map((rec, idx) => rec && (
+                        <div style={{
+                          height: '100%', borderRadius: 2,
+                          background: C.magenta,
+                          width: `${(recordingTime / 30) * 100}%`,
+                          transition: 'width 1s linear',
+                        }} />
+                      </div>
+                      <div style={{ textAlign: 'center', color: C.magenta, fontSize: 12 }}>
+                        녹음 중... {recordingTime}/30초
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 음성 로딩 */}
+                  {voiceLoading && !isRecording && (
+                    <div style={{
+                      textAlign: 'center', padding: 16,
+                      background: C.bgSurface, borderRadius: 12, color: C.textSec, fontSize: 13,
+                    }}>
+                      🎤 음성을 분석하고 있어요...
+                    </div>
+                  )}
+
+                  {/* 사진 미리보기 (썸네일 가로 배열) */}
+                  {imagePreviews.length > 0 && (
+                    <div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        {imagePreviews.map((preview, idx) => (
                           <div key={idx} style={{
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '4px 0', fontSize: 13,
-                            opacity: rec.confidence === 'low' ? 0.5 : 1,
+                            position: 'relative', width: 64, height: 64,
+                            borderRadius: 8, overflow: 'hidden',
+                            border: `2px solid ${
+                              imageResults[idx]?.confidence === 'high' ? C.green :
+                              imageResults[idx]?.confidence === 'medium' ? C.yellow :
+                              C.border
+                            }`,
                           }}>
-                            <span>{rec.confidence === 'high' ? '✅' : rec.confidence === 'medium' ? '💡' : '⚠️'}</span>
-                            <span style={{ color: rec.confidence === 'low' ? C.textDim : C.textPri }}>
-                              사진{idx + 1}: {rec.product_name
-                                ? `${rec.brand ? rec.brand + ' ' : ''}${rec.product_name}${rec.specs ? ` (${rec.specs})` : ''}`
-                                : '인식 불가'}
-                            </span>
+                            <img src={preview} alt={`사진${idx + 1}`}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            {recognizingIdx === idx && (
+                              <div style={{
+                                position: 'absolute', inset: 0,
+                                background: 'rgba(0,0,0,0.6)', display: 'flex',
+                                alignItems: 'center', justifyContent: 'center',
+                                color: '#fff', fontSize: 10,
+                              }}>분석중</div>
+                            )}
+                            <button
+                              onClick={() => removeImage(idx)}
+                              style={{
+                                position: 'absolute', top: 1, right: 1,
+                                width: 18, height: 18, borderRadius: '50%',
+                                background: 'rgba(0,0,0,0.7)', border: 'none',
+                                color: '#fff', fontSize: 10, cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              }}
+                            >✕</button>
                           </div>
                         ))}
+                        {imagePreviews.length < 3 && (
+                          <button
+                            onClick={() => imageInputRef.current?.click()}
+                            disabled={recognizingIdx >= 0}
+                            style={{
+                              width: 64, height: 64, display: 'flex',
+                              alignItems: 'center', justifyContent: 'center',
+                              background: C.bgSurface, borderRadius: 8,
+                              border: `1px dashed ${C.border}`, cursor: 'pointer',
+                              fontSize: 20, color: C.textDim,
+                            }}
+                          >+</button>
+                        )}
                       </div>
-                    )}
-                  </div>
+                      {/* 인식 결과 한 줄 */}
+                      {imageResults.some(r => r?.product_name) && (
+                        <div style={{ marginTop: 8, fontSize: 13 }}>
+                          {imageResults.map((rec, idx) => rec?.product_name && (
+                            <div key={idx} style={{ color: rec.confidence === 'high' ? C.green : C.yellow, padding: '2px 0' }}>
+                              {rec.confidence === 'high' ? '✅' : '💡'} {rec.brand ? `${rec.brand} ` : ''}{rec.product_name}{rec.specs ? ` (${rec.specs})` : ''}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
+                  {/* 음성 인식 결과 (태그 형태) */}
+                  {voiceResult && voiceResult.transcript && (
+                    <div style={{
+                      background: C.bgSurface, borderRadius: 12, padding: 14,
+                    }}>
+                      <div style={{ color: C.textDim, fontSize: 12, marginBottom: 6 }}>🎤 음성 인식 결과</div>
+                      <div style={{ color: C.textPri, fontSize: 14, marginBottom: 10, lineHeight: 1.5 }}>
+                        "{voiceResult.transcript}"
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {voiceResult.product_query && (
+                          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, background: `${C.green}18`, color: C.green }}>
+                            제품: {voiceResult.product_query}
+                          </span>
+                        )}
+                        {voiceResult.brand && (
+                          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, background: `${C.cyan}18`, color: C.cyan }}>
+                            브랜드: {voiceResult.brand}
+                          </span>
+                        )}
+                        {voiceResult.target_price != null && voiceResult.target_price > 0 && (
+                          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, background: `${C.yellow}18`, color: C.yellow }}>
+                            희망가: {voiceResult.target_price.toLocaleString()}원
+                          </span>
+                        )}
+                        {voiceResult.quantity != null && voiceResult.quantity > 1 && (
+                          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, background: `${C.purple}18`, color: C.purple }}>
+                            수량: {voiceResult.quantity}개
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 추가 설명 (선택) */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>추가 설명 (선택)</label>
                     <textarea
                       value={freeText}
                       onChange={e => setFreeText(e.target.value)}
                       placeholder="색상, 용량, 사이즈 등 원하는 옵션을 적어주세요"
-                      rows={3}
+                      rows={2}
                       className="dc-input"
                       style={{
-                        padding: '13px 14px', fontSize: 14, borderRadius: 12, resize: 'none',
+                        padding: '12px 14px', fontSize: 14, borderRadius: 12, resize: 'none',
                         background: C.bgInput, border: `1px solid ${C.border}`, color: C.textPri,
                         lineHeight: 1.55,
                       }}
                     />
-                    <div style={{ fontSize: 11, color: C.textDim }}>
-                      여기에 적은 내용을 AI가 분석해서 옵션을 자동으로 설정해드려요
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ fontSize: 12, color: C.textSec, marginBottom: 10 }}>이런 딜이 인기 있어요</div>
-                    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-                      {POPULAR_TAGS.map(tag => (
-                        <button
-                          key={tag.value}
-                          onClick={() => setProductName(tag.value)}
-                          style={{
-                            flexShrink: 0, padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-                            background: productName === tag.value ? `${C.cyan}18` : C.bgSurface,
-                            border: `1px solid ${productName === tag.value ? C.cyan : C.border}`,
-                            color: productName === tag.value ? C.cyan : C.textSec,
-                            cursor: 'pointer', transition: 'all 0.15s',
-                          }}
-                        >{tag.label}</button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 음성 입력 */}
-                  <div style={{
-                    padding: '14px 16px', borderRadius: 14,
-                    background: isRecording ? 'rgba(255,45,120,0.08)' : C.bgSurface,
-                    border: `1px solid ${isRecording ? C.magenta + '55' : C.border}`,
-                    transition: 'all 0.2s',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>🎙️ 음성으로 입력</span>
-                      {voiceLoading && <span style={{ fontSize: 11, color: C.cyan }}>분석중...</span>}
-                    </div>
-                    {isRecording ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{
-                          width: 12, height: 12, borderRadius: '50%',
-                          background: C.magenta, animation: 'pulse 1s ease-in-out infinite',
-                        }} />
-                        <span style={{ fontSize: 14, fontWeight: 700, color: C.magenta, fontVariantNumeric: 'tabular-nums' }}>
-                          {recordingTime}초 / 30초
-                        </span>
-                        <div style={{ flex: 1 }} />
-                        <button onClick={stopRecording} style={{
-                          padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-                          background: 'rgba(255,45,120,0.15)', border: `1px solid ${C.magenta}55`,
-                          color: C.magenta, cursor: 'pointer',
-                        }}>⏹ 완료</button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={startRecording}
-                        disabled={voiceLoading}
-                        style={{
-                          width: '100%', padding: '10px 0', borderRadius: 10,
-                          fontSize: 13, fontWeight: 700, cursor: voiceLoading ? 'not-allowed' : 'pointer',
-                          background: 'rgba(0,240,255,0.06)', border: `1px solid ${C.border}`,
-                          color: C.cyan, transition: 'all 0.15s',
-                        }}
-                      >
-                        {voiceLoading ? '🔄 음성 분석 중...' : '🎙️ 눌러서 말하기'}
-                      </button>
-                    )}
-
-                    {/* 음성 인식 결과 */}
-                    {voiceResult && (
-                      <div style={{
-                        marginTop: 10, padding: '10px 12px', borderRadius: 10,
-                        background: C.bgCard, border: `1px solid ${C.border}`,
-                      }}>
-                        <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>인식 결과</div>
-                        <div style={{ fontSize: 13, color: C.textPri, marginBottom: 6, lineHeight: 1.5 }}>
-                          "{voiceResult.transcript}"
-                        </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                          {voiceResult.product_query && (
-                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${C.cyan}15`, color: C.cyan }}>
-                              상품: {voiceResult.product_query}
-                            </span>
-                          )}
-                          {voiceResult.brand && (
-                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${C.purple}15`, color: C.purple }}>
-                              브랜드: {voiceResult.brand}
-                            </span>
-                          )}
-                          {voiceResult.target_price && (
-                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${C.green}15`, color: C.green }}>
-                              희망가: {voiceResult.target_price.toLocaleString()}원
-                            </span>
-                          )}
-                          {voiceResult.quantity && (
-                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${C.orange}15`, color: C.orange }}>
-                              수량: {voiceResult.quantity}개
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   {primaryBtn('🔍 핑퐁이 AI 분석하기', handleAIAnalysis, !productName.trim())}
