@@ -205,9 +205,41 @@ def social_callback(
 @router.post("/register", response_model=CallbackResponse)
 def social_register(body: SocialRegisterRequest, db: Session = Depends(database.get_db)):
     """소셜 로그인 신규 유저: 역할 선택 후 실제 DB 생성 + JWT 발급"""
+    import re
+
+    # ── 닉네임 검증 ──
+    nick = (body.nickname or "").strip()
+    if not nick or len(nick) < 2:
+        raise HTTPException(400, "닉네임은 2자 이상이어야 합니다")
+    if len(nick) > 20:
+        raise HTTPException(400, "닉네임은 20자 이하여야 합니다")
+    if not re.match(r'^[가-힣a-zA-Z0-9_]+$', nick):
+        raise HTTPException(400, "닉네임은 한글/영문/숫자/_ 만 사용할 수 있습니다")
+
     sentinel_hash = get_password_hash(secrets.token_urlsafe(32))
     email = body.social_email or f"{body.social_provider}_{body.social_id}@social.yeokping.com"
-    display_name = body.social_name or body.nickname
+    display_name = body.social_name or nick
+
+    # ── 이메일 중복 체크 (이미 가입된 유저 → 소셜 연동 후 JWT 발급) ──
+    existing = db.query(models.Buyer).filter(models.Buyer.email == email).first()
+    if not existing:
+        existing = db.query(models.Seller).filter(models.Seller.email == email).first()
+    if not existing:
+        existing = db.query(models.Actuator).filter(models.Actuator.email == email).first()
+    if existing:
+        # 이미 가입된 유저 → social 정보 연동 + JWT 발급
+        existing.social_provider = body.social_provider
+        existing.social_id = body.social_id
+        db.commit()
+        role_found = "buyer" if isinstance(existing, models.Buyer) else "seller" if isinstance(existing, models.Seller) else "actuator"
+        jwt_token = create_access_token(
+            data={"sub": str(existing.id), "role": role_found},
+            expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        )
+        return CallbackResponse(
+            access_token=jwt_token, is_new_user=False,
+            social_provider=body.social_provider, social_id=body.social_id, social_email=email,
+        )
 
     if body.role == "buyer":
         user = models.Buyer(
