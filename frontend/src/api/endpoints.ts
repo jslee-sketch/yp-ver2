@@ -219,6 +219,7 @@ export const API = {
   // ── AI 딜 헬퍼 ───────────────────────────────────────────────
   AI: {
     DEAL_HELPER:       '/ai/deal_helper',
+    DEAL_HELPER_IMAGE: '/ai/deal_helper/image-recognize',
     INTENT_RESOLVE:    '/ai/resolve_intent',
     PRICE_SUGGEST:     '/ai/price_suggest',
   },

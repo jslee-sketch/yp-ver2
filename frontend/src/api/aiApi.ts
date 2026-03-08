@@ -31,6 +31,22 @@ export async function aiRecalcPrice(searchQuery: string, selectedOptions?: strin
   }
 }
 
+export async function aiImageRecognize(file: File) {
+  if (!FEATURES.USE_API_AI) return null;
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.post(API.AI.DEAL_HELPER_IMAGE, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 20000,
+    });
+    return res.data;
+  } catch (err) {
+    console.error('이미지 인식 API 실패:', err);
+    return null;
+  }
+}
+
 export async function aiResolveIntent(text: string) {
   if (!FEATURES.USE_API_AI) return null;
   try {

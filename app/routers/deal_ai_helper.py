@@ -1,11 +1,12 @@
 # app/routers/deal_ai_helper.py
 from __future__ import annotations
 
+import base64
 import json
 import re
 from typing import List, Optional
 
-from fastapi import APIRouter, Body, HTTPException, Depends
+from fastapi import APIRouter, Body, File, HTTPException, Depends, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -648,3 +649,80 @@ def ai_deal_helper(
         print("[ai_deal_helper] ERROR:", repr(e))
         import traceback; traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"AI helper error: {e.__class__.__name__}")
+
+
+# ─────────────────────────────────────────────
+# 이미지 인식 엔드포인트 (GPT-4o Vision)
+# ─────────────────────────────────────────────
+
+class ImageRecognizeResponse(BaseModel):
+    product_name: str = ""
+    brand: Optional[str] = None
+    model_name: Optional[str] = None
+    specs: Optional[str] = None
+    confidence: str = "low"  # "high" | "medium" | "low"
+
+
+@router.post("/image-recognize", response_model=ImageRecognizeResponse)
+async def image_recognize(file: UploadFile = File(...)):
+    """
+    사진에서 제품을 인식하고 상품명/브랜드/모델/스펙을 반환.
+    GPT-4o Vision API 사용.
+    """
+    # ── 파일 검증 ──
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="이미지 파일만 업로드할 수 있습니다.")
+
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:  # 10MB 제한
+        raise HTTPException(status_code=400, detail="파일 크기는 10MB 이하여야 합니다.")
+
+    # ── base64 인코딩 ──
+    b64 = base64.b64encode(contents).decode("utf-8")
+    mime = file.content_type or "image/jpeg"
+    data_url = f"data:{mime};base64,{b64}"
+
+    # ── GPT-4o Vision 호출 ──
+    try:
+        client = get_client()
+        resp = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "이 사진에서 상품을 인식해주세요. "
+                                "반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트 없이 JSON만:\n"
+                                '{"product_name": "한국어 상품명", '
+                                '"brand": "브랜드명 또는 null", '
+                                '"model_name": "모델명 또는 null", '
+                                '"specs": "주요 스펙 한줄 또는 null", '
+                                '"confidence": "high 또는 medium 또는 low"}'
+                            ),
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": data_url, "detail": "low"},
+                        },
+                    ],
+                }
+            ],
+            max_tokens=200,
+            temperature=0,
+            timeout=15,
+        )
+        text = (resp.choices[0].message.content or "").strip()
+        data = _parse_json_safely(text)
+        return ImageRecognizeResponse(**data)
+
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        print(f"[image-recognize] ERROR: {e}")
+        import traceback; traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"이미지 인식 실패: {e.__class__.__name__}")
