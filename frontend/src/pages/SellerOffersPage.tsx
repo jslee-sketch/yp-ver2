@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { trackBehavior } from '../utils/behaviorTracker';
 import { useAuth } from '../contexts/AuthContext';
 import { useApiData } from '../api/hooks';
 import apiClient from '../api/client';
@@ -87,6 +88,11 @@ export default function SellerOffersPage() {
         price: Number(editPrice),
         shipping_fee_per_reservation: Number(editShipping),
         delivery_days: editDeliveryDays ? Number(editDeliveryDays) : null,
+      });
+      trackBehavior('SELLER_EDIT_OFFER', {
+        target_type: 'offer',
+        target_id: editTarget.id,
+        meta: { old_price: editTarget.price, new_price: Number(editPrice), direction: Number(editPrice) > editTarget.price ? 'up' : 'down' },
       });
       showToast('오퍼 수정 완료', 'success');
       setEditTarget(null);

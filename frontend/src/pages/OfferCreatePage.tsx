@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { createOffer, fetchOffersByDeal } from '../api/offerApi';
 import { fetchDeal } from '../api/dealApi';
 import { showToast } from '../components/common/Toast';
+import { trackBehavior } from '../utils/behaviorTracker';
 
 // ── 디자인 토큰 ──────────────────────────────────────────
 const C = {
@@ -309,6 +310,11 @@ export default function OfferCreatePage() {
     }
     setSubmitting(true);
     const numPrice = parseInt(priceStr.replace(/[^\d]/g, ''), 10) || 0;
+    const isSeller = !!user?.seller;
+    trackBehavior(isSeller ? 'SELLER_SUBMIT_OFFER' : 'SUBMIT_OFFER', {
+      target_type: 'offer',
+      meta: { deal_id: Number(dealId), price: numPrice },
+    });
     try {
       const result = await createOffer({
         deal_id:                     Number(dealId),

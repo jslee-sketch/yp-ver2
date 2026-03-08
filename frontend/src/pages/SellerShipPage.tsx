@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchSellerReservations, markShipped, fetchCarriers } from '../api/reservationApi';
 import { showToast } from '../components/common/Toast';
+import { trackBehavior } from '../utils/behaviorTracker';
 
 const DEFAULT_CARRIERS = ['CJ대한통운', '한진택배', '로젠택배', '우체국택배', 'CU편의점택배', '롯데택배'];
 
@@ -105,6 +106,7 @@ export default function SellerShipPage() {
       setOrders(prev => prev.map(o => o.id === shipTarget.id ? { ...o, status: 'SHIPPED' as ShipStatus, tracking_number: tracking, shipping_carrier: carrier } : o));
       setShipTarget(null);
       setTracking('');
+      trackBehavior('SELLER_SHIPPING', { target_type: 'reservation', target_id: shipTarget.id });
       showToast('발송 처리 완료!', 'success');
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: unknown } } };

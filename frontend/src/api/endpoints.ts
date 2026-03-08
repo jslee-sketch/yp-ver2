@@ -301,4 +301,19 @@ export const API = {
     POLICY_PROPOSAL:     (id: number) => `/admin/policy/proposals/${id}`,
   },
 
+  // ── 행동 수집 + AI 프로파일링 ──────────────────────────
+  BEHAVIOR: {
+    TRACK:               '/behavior/track',
+    LOGS:                '/behavior/logs',
+    STATS:               '/behavior/stats',
+    ANALYZE:             (type: string, id: number) => `/behavior/analyze/${type}/${id}`,
+    ANALYZE_ALL:         '/behavior/analyze-all',
+    PROFILES:            '/behavior/profiles',
+    PROFILE:             (type: string, id: number) => `/behavior/profiles/${type}/${id}`,
+    MATCH_DEALS:         '/behavior/match-deals',
+    MATCH_SELLERS:       '/behavior/match-deals-for-sellers',
+    HESITATING:          '/behavior/hesitating',
+    SELLER_SKIP_PATTERNS: '/behavior/seller-skip-patterns',
+  },
+
 } as const;

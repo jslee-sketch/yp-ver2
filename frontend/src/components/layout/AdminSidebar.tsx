@@ -48,6 +48,7 @@ const sections = [
       { label: '활동 로그', path: '/admin/logs' },
       { label: '이상 감지', path: '/admin/anomalies' },
       { label: '신고', path: '/admin/reports' },
+      { label: '마이너리티 리포트', path: '/admin/minority-report' },
     ],
   },
   {

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { fetchDeal } from '../api/dealApi';
 import { fetchOffersByDeal, createReservation, payReservation } from '../api/reservationApi';
 import { showToast } from '../components/common/Toast';
+import { trackBehavior } from '../utils/behaviorTracker';
 
 const C = {
   bgDeep: '#0a0e1a', bgCard: '#111827', bgSurface: '#1a2236', bgInput: '#0f1625',
@@ -113,6 +114,11 @@ export default function DealJoinPage() {
 
   const handleReserve = async () => {
     if (!user || !selectedOffer) return;
+    trackBehavior('JOIN_DEAL', {
+      target_type: 'offer',
+      target_id: selectedOffer.id,
+      meta: { deal_id: Number(dealId), price: selectedOffer.price },
+    });
     setSubmitting(true);
     try {
       const result = await createReservation({

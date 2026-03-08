@@ -5,6 +5,7 @@ import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 import { refundPreview, refundReservation } from '../api/reservationApi';
 import { showToast } from '../components/common/Toast';
+import { trackBehavior } from '../utils/behaviorTracker';
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -53,6 +54,11 @@ export default function SellerRefundsPage() {
   const [disputeLoading, setDisputeLoading] = useState(false);
 
   const sellerId = user?.seller?.id ?? user?.id ?? 0;
+
+  // ── 행동 수집: SELLER_VIEW_REFUND ──
+  useEffect(() => {
+    trackBehavior('SELLER_VIEW_REFUND', { meta: { page: 'refunds' } });
+  }, []);
 
   useEffect(() => {
     if (!sellerId) return;

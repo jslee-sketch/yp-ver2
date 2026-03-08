@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { trackBehavior } from '../utils/behaviorTracker';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchMySettlements } from '../api/settlementApi';
 import { useApiData } from '../api/hooks';
@@ -43,6 +44,12 @@ export default function SellerSettlementsPage() {
   );
 
   const items = settlements ?? [];
+
+  // ── 행동 수집: SELLER_VIEW_SETTLEMENT ──
+  useEffect(() => {
+    trackBehavior('SELLER_VIEW_SETTLEMENT', { meta: { page: 'settlements' } });
+  }, []);
+
   const filtered = filter === '전체' ? items : items.filter(s => {
     if (filter === 'HOLD') return s.status === 'HOLD' || s.status === 'PENDING';
     if (filter === 'READY') return s.status === 'READY' || s.status === 'APPROVED';

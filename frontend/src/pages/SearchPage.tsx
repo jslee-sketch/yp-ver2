@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchDeals } from '../api/dealApi';
+import { trackBehavior } from '../utils/behaviorTracker';
+import { useAuth } from '../contexts/AuthContext';
 import type { DealResponse } from '../api/types';
 
 // ── 타입 ──────────────────────────────────────────────
@@ -156,6 +158,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 
 export default function SearchPage() {
   const navigate  = useNavigate();
+  const { user }  = useAuth();
   const [params]  = useSearchParams();
   const initialQ  = params.get('q') ?? '';
 
@@ -181,6 +184,12 @@ export default function SearchPage() {
     const trimmed = q.trim();
     if (!trimmed) { setIsSearching(false); setResults([]); setSelectedCat(null); return; }
     setIsSearching(true);
+
+    const isSeller = !!user?.seller;
+    trackBehavior(isSeller ? 'SELLER_SEARCH' : 'SEARCH', {
+      target_name: trimmed,
+      meta: { category: selectedCat },
+    });
 
     // 서버 사이드 키워드 검색
     const apiData = await fetchDeals(1, 200, { keyword: trimmed });

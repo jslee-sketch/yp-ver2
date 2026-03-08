@@ -1231,3 +1231,36 @@ class Announcement(Base):
     author = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# -------------------------------------------------------
+# UserBehaviorLog (행동 수집)
+# -------------------------------------------------------
+class UserBehaviorLog(Base):
+    __tablename__ = "user_behavior_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_type = Column(String(20))  # BUYER / SELLER / ACTUATOR
+    user_id = Column(Integer, index=True)
+    action = Column(String(50), index=True)
+    target_type = Column(String(30), nullable=True)
+    target_id = Column(Integer, nullable=True)
+    target_name = Column(String(200), nullable=True)
+    meta_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), index=True)
+
+
+# -------------------------------------------------------
+# UserProfile (AI 프로파일링 결과)
+# -------------------------------------------------------
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_type = Column(String(20))
+    user_id = Column(Integer, index=True)
+    profile_json = Column(Text)
+    analyzed_at = Column(DateTime, nullable=True)
+    behavior_count = Column(Integer, server_default="0")
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())

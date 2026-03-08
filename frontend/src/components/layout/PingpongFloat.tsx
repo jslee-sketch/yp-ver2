@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { askPingpong } from '../../api/pingpongApi';
+import { trackBehavior } from '../../utils/behaviorTracker';
 
 interface ChatMessage {
   id: number;
@@ -164,6 +165,11 @@ export default function PingpongFloat() {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsSending(true);
+
+    const isSeller = !!user?.seller;
+    trackBehavior(isSeller ? 'SELLER_PINGPONG_CHAT' : 'PINGPONG_CHAT', {
+      target_name: text.trim().slice(0, 100),
+    });
 
     const result = await askPingpong(text.trim(), {
       page:    location.pathname,

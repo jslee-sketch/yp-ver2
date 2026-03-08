@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { trackBehavior } from '../utils/behaviorTracker';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchReviewsBySeller, fetchSellerReviewSummary } from '../api/reviewApi';
 import { useApiData } from '../api/hooks';
@@ -43,6 +44,11 @@ export default function SellerReviewsPage() {
 
   const items = reviews ?? [];
 
+  // ── 행동 수집: SELLER_VIEW_REVIEW ──
+  useEffect(() => {
+    trackBehavior('SELLER_VIEW_REVIEW', { meta: { page: 'reviews' } });
+  }, []);
+
   const handleReply = async () => {
     if (!replyTarget || !replyText.trim()) return;
     setReplySaving(true);
@@ -50,6 +56,7 @@ export default function SellerReviewsPage() {
       await apiClient.post(API.REVIEWS.REPLY(replyTarget.id), {
         comment: replyText.trim(),
       });
+      trackBehavior('SELLER_REPLY_REVIEW', { target_type: 'review', target_id: replyTarget.id });
       showToast('답글 등록 완료', 'success');
       setReplyTarget(null);
       setReplyText('');

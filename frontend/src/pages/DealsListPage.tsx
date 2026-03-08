@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { trackBehavior } from '../utils/behaviorTracker';
 import { DealCard } from '../components/deal/DealCard';
 import { fetchDeals, mapDealResponseToDisplay } from '../api/dealApi';
 import { useApiData } from '../api/hooks';
@@ -37,6 +38,13 @@ export default function DealsListPage() {
   }, []);
 
   const allDeals = deals ?? [];
+
+  // ── 행동 수집: VIEW_DEALS ──
+  useEffect(() => {
+    trackBehavior('VIEW_DEALS', {
+      meta: { category: activeCategory, sort: activeSort },
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Status filter
   const statusFiltered = activeStatus === 'all' ? allDeals : allDeals.filter(d => {

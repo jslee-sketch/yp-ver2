@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { trackBehavior } from '../utils/behaviorTracker';
 import { fetchDeal } from '../api/dealApi';
 import { fetchOffersByDeal } from '../api/offerApi';
 import { fetchChatMessages, sendChatMessage } from '../api/chatApi';
@@ -246,6 +247,16 @@ export default function PriceJourneyPage() {
       }).catch(() => {});
     }
   }, [dealId, user]);
+
+  // ── 행동 수집: VIEW_PRICE_JOURNEY ──
+  useEffect(() => {
+    if (dealId) {
+      trackBehavior('VIEW_PRICE_JOURNEY', {
+        target_type: 'deal',
+        target_id: Number(dealId),
+      });
+    }
+  }, [dealId]);
 
   // ── 채팅 ──
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);

@@ -13,6 +13,7 @@ import { fetchDeal } from '../api/dealApi';
 import { fetchOffersByDeal } from '../api/offerApi';
 import { fetchChatMessages, sendChatMessage } from '../api/chatApi';
 import { useAuth } from '../contexts/AuthContext';
+import { trackBehavior } from '../utils/behaviorTracker';
 import type { Deal, Offer, SpectatorStats, DealStage } from '../types';
 
 // ── Mock 데이터 (API 실패 시 fallback) ──────────────
@@ -217,6 +218,18 @@ export default function DealDetailPage() {
 
     fetchAll().finally(() => setLoading(false));
   }, [dealId, buyerId]);
+
+  // ── 행동 수집: VIEW_DEAL / SELLER_VIEW_DEAL_DETAIL ──
+  useEffect(() => {
+    if (!dealId || loading) return;
+    const isSeller = !!user?.seller;
+    trackBehavior(isSeller ? 'SELLER_VIEW_DEAL_DETAIL' : 'VIEW_DEAL', {
+      target_type: 'deal',
+      target_id: dealId,
+      target_name: deal.product_name,
+      meta: { category: deal.category, price: deal.desired_price },
+    });
+  }, [dealId, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (chatSheetOpen) {

@@ -56,6 +56,7 @@ from app.models import (  # noqa: F401
     SpectatorPrediction, SpectatorMonthlyStats, SpectatorBadge,
     Report, UploadedFile, PayoutRequest,
     Announcement,
+    UserBehaviorLog, UserProfile,
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -737,6 +738,11 @@ _include_router_safe("spectator", ("router",), label="spectator")
 # PINGPONG AI Agent
 # --------------------------------------------------
 _include_router_safe("pingpong", ("router",), label="pingpong")
+
+# --------------------------------------------------
+# Behavior Tracking & AI Profiling
+# --------------------------------------------------
+_include_router_safe("behavior", ("router",), label="behavior")
 
 # --------------------------------------------------
 # 5️⃣ 플랫폼 필수 기능 (v2)

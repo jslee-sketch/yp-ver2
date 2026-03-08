@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { trackBehavior } from '../utils/behaviorTracker';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
@@ -84,6 +85,7 @@ export default function SellerInquiriesPage() {
         : i));
       setReplyTarget(null);
       setReplyText('');
+      trackBehavior('SELLER_REPLY_INQUIRY', { target_type: 'inquiry', target_id: replyTarget.id });
       showToast('답변 등록 완료', 'success');
     } catch {
       showToast('답변 등록 실패', 'error');

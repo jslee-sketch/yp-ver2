@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 import { showToast } from '../components/common/Toast';
+import { trackBehavior } from '../utils/behaviorTracker';
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -67,6 +68,7 @@ export default function SellerShippingPolicyPage() {
       await apiClient.patch(API.SELLERS.UPDATE(sellerId), {
         shipping_policy: form,
       });
+      trackBehavior('SELLER_UPDATE_POLICY', { meta: { policy: form } });
       showToast('배송 정책 저장 완료', 'success');
     } catch {
       showToast('저장 실패', 'error');
