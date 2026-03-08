@@ -4,19 +4,22 @@
 """
 import os
 
-# Kakao
-KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID", "")
-KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI", "http://localhost:5173/auth/callback/kakao")
+# Redirect base (prod vs dev)
+SOCIAL_REDIRECT_BASE = os.getenv("SOCIAL_REDIRECT_BASE", "http://localhost:5173")
 
-# Naver
-NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID", "")
-NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET", "")
-NAVER_REDIRECT_URI = os.getenv("NAVER_REDIRECT_URI", "http://localhost:5173/auth/callback/naver")
+# Kakao (KAKAO_CLIENT_ID or KAKAO_REST_API_KEY)
+KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID", "") or os.getenv("KAKAO_REST_API_KEY", "")
+KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI", f"{SOCIAL_REDIRECT_BASE}/auth/callback/kakao")
+
+# Naver (NAVER_CLIENT_ID or NAVER_LOGIN_CLIENT_ID)
+NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID", "") or os.getenv("NAVER_LOGIN_CLIENT_ID", "")
+NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET", "") or os.getenv("NAVER_LOGIN_CLIENT_SECRET", "")
+NAVER_REDIRECT_URI = os.getenv("NAVER_REDIRECT_URI", f"{SOCIAL_REDIRECT_BASE}/auth/callback/naver")
 
 # Google
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
-GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:5173/auth/callback/google")
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", f"{SOCIAL_REDIRECT_BASE}/auth/callback/google")
 
 PROVIDER_CONFIG = {
     "kakao": {

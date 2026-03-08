@@ -81,6 +81,7 @@ class BuyerOut(ORMModel):
     gender: Optional[str] = None
     birth_date: Optional[datetime] = None
     payment_method: Optional[str] = None
+    social_provider: Optional[str] = None
 
 
 # ---------------- Seller ----------------

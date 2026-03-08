@@ -109,3 +109,10 @@ dispute:
 settlement:
   payout_delay_days_default: 30
   payout_delay_days_dispute_path: 30
+
+# 배송 추적 설정
+delivery:
+  tracking_provider: sweettracker
+  polling_interval_minutes: 30
+  auto_confirm_days: 3
+  max_batch_check: 100

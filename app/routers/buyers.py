@@ -62,6 +62,7 @@ def read_me(
                         "trust_tier": getattr(buyer, "trust_tier", "Bronze"),
                         "is_active": getattr(buyer, "is_active", True),
                         "created_at": str(getattr(buyer, "created_at", "")),
+                        "social_provider": getattr(buyer, "social_provider", None),
                     }
         except (JWTError, Exception):
             pass

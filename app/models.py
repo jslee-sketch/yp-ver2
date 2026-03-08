@@ -669,8 +669,13 @@ class Reservation(Base):
     shipping_carrier = Column(String(50), nullable=True)
     tracking_number = Column(String(100), nullable=True)
     shipped_at = Column(DateTime(timezone=True), nullable=True)              # 셀러가 "배송완료" 누른 시각
-    delivered_at = Column(DateTime(timezone=True), nullable=True)           # 필요하면 택배사 기준 "배송완료"용(쓸지 안쓸지는 나중에)
+    delivered_at = Column(DateTime(timezone=True), nullable=True)           # 택배사 기준 "배달완료" 시각
     arrival_confirmed_at = Column(DateTime(timezone=True), nullable=True)   # 바이어가 "도착완료" 누른 시각
+    # 배송 추적 확장
+    delivery_status = Column(String(30), nullable=True)                     # READY/COLLECTING/IN_TRANSIT/OUT_FOR_DELIVERY/DELIVERED/FAILED
+    delivery_last_detail = Column(Text, nullable=True)                      # 최근 배송 상세 (JSON)
+    delivery_last_checked_at = Column(DateTime(timezone=True), nullable=True)  # 마지막 조회 시각
+    auto_confirm_deadline = Column(DateTime(timezone=True), nullable=True)  # 자동 구매확정 기한
     # 🔼🔼🔼
 
         # ✅ 분쟁 상태 (SSOT 추천)

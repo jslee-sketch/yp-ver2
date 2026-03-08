@@ -47,7 +47,7 @@ export default function AdminBuyersPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
             <thead style={stickyHead}>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                {['ID', '닉네임', '이메일', '전화', '포인트', '총구매액', '상태', '가입일', ''].map(h => (
+                {['ID', '닉네임', '이메일', '소셜', '전화', '포인트', '총구매액', '상태', '가입일', ''].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -58,6 +58,7 @@ export default function AdminBuyersPage() {
                   <td style={{ padding: '10px 8px', color: '#4ade80', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => window.open(`/mypage?user_id=${b.id}`, '_blank')}>B-{b.id}</td>
                   <td style={{ padding: '10px 8px', color: C.text, cursor: 'pointer' }} onClick={() => setModal(b)}>{b.nickname || '-'}</td>
                   <td style={{ padding: '10px 8px', color: C.text }}>{b.email}</td>
+                  <td style={{ padding: '10px 8px', fontSize: 15, textAlign: 'center' }}>{b.social_provider === 'kakao' ? '💬' : b.social_provider === 'naver' ? '🟢' : b.social_provider === 'google' ? '🌐' : '-'}</td>
                   <td style={{ padding: '10px 8px', color: C.textSec }}>{b.phone || '-'}</td>
                   <td style={{ padding: '10px 8px', color: C.green }}>{(b.points || 0).toLocaleString()}</td>
                   <td style={{ padding: '10px 8px', color: C.orange }}>{(b.total_purchase || 0).toLocaleString()}원</td>
@@ -70,7 +71,7 @@ export default function AdminBuyersPage() {
                   </td>
                 </tr>
               ))}
-              {!filtered.length && <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>구매자 없음</td></tr>}
+              {!filtered.length && <tr><td colSpan={10} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>구매자 없음</td></tr>}
             </tbody>
           </table>
         </div>
@@ -81,7 +82,7 @@ export default function AdminBuyersPage() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setModal(null)}>
           <div style={{ background: C.card, borderRadius: 16, padding: 24, minWidth: 400, maxWidth: 500, border: `1px solid ${C.border}` }} onClick={e => e.stopPropagation()}>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 16 }}>구매자 상세 B-{modal.id}</h3>
-            {Object.entries({ 닉네임: modal.nickname, 이메일: modal.email, 전화: modal.phone, 포인트: (modal.points || 0).toLocaleString(), 레벨: modal.level, 신뢰등급: modal.trust_tier, 가입일: modal.created_at }).map(([k, v]) => (
+            {Object.entries({ 닉네임: modal.nickname, 이메일: modal.email, 소셜: modal.social_provider ? (modal.social_provider === 'kakao' ? '💬 카카오' : modal.social_provider === 'naver' ? '🟢 네이버' : '🌐 Google') : '없음', 전화: modal.phone, 포인트: (modal.points || 0).toLocaleString(), 레벨: modal.level, 신뢰등급: modal.trust_tier, 가입일: modal.created_at }).map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${C.border}`, fontSize: 13 }}>
                 <span style={{ color: C.textSec }}>{k}</span><span style={{ color: C.text }}>{String(v ?? '-')}</span>
               </div>

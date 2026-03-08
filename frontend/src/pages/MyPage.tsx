@@ -119,6 +119,7 @@ export default function MyPage() {
     payment_method:  String(apiProfile?.payment_method ?? ''),
     created_at:      String(primary?.created_at ?? ''),
     is_active:       Boolean(primary?.is_active ?? true),
+    social_provider: String(apiProfile?.social_provider ?? authUser?.social_provider ?? ''),
     isSeller,
     seller:          authUser?.seller,
   };
@@ -416,6 +417,13 @@ export default function MyPage() {
             <InfoRow label="성별" value={GENDER_LABELS[u.gender] || '미등록'} />
             <InfoRow label="생년월일" value={u.birth_date ? u.birth_date.replace(/-/g, '.') : '미등록'} />
             <InfoRow label="가입일" value={formatKSTDate(u.created_at)} />
+            {u.social_provider && (
+              <InfoRow
+                label="소셜 연동"
+                value={u.social_provider === 'kakao' ? '💬 카카오' : u.social_provider === 'naver' ? '🟢 네이버' : u.social_provider === 'google' ? '🌐 Google' : u.social_provider}
+                valueColor={u.social_provider === 'kakao' ? '#FEE500' : u.social_provider === 'naver' ? '#03C75A' : '#4285F4'}
+              />
+            )}
             <InfoRow label="결제수단" value={PAYMENT_OPTIONS.find(p => p.key === u.payment_method)?.label || '미등록'} />
           </div>
 

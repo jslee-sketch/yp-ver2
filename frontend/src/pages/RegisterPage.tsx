@@ -170,7 +170,7 @@ function ProfileStep({
   password, setPassword, passwordConfirm, setPasswordConfirm,
   showPw, setShowPw, showPwConfirm, setShowPwConfirm,
   pwError, pwConfirmError,
-  apiError, onNext,
+  apiError, onNext, isSocial, socialProvider,
 }: {
   nickname: string; setNickname: (v: string) => void;
   nickStatus: 'idle' | 'checking' | 'ok' | 'taken' | 'banned' | 'invalid';
@@ -186,14 +186,24 @@ function ProfileStep({
   pwError: string; pwConfirmError: string;
   apiError: string;
   onNext: () => void;
+  isSocial?: boolean;
+  socialProvider?: string;
 }) {
   const nickColor = { idle: C.textSec, checking: C.yellow, ok: C.green, taken: C.red, banned: C.red, invalid: C.red }[nickStatus];
   const emailColor = { idle: C.textSec, checking: C.yellow, ok: C.green, taken: C.red, invalid: C.red }[emailStatus];
 
-  const canNext = !!nickname && nickStatus === 'ok'
-    && !!email && emailStatus === 'ok'
-    && !!password && !pwError
-    && !!passwordConfirm && !pwConfirmError;
+  const SOCIAL_LABELS: Record<string, { label: string; color: string }> = {
+    kakao:  { label: '카카오', color: '#FEE500' },
+    naver:  { label: '네이버', color: '#03C75A' },
+    google: { label: 'Google', color: '#4285F4' },
+  };
+
+  const canNext = isSocial
+    ? !!nickname && nickStatus === 'ok'
+    : !!nickname && nickStatus === 'ok'
+      && !!email && emailStatus === 'ok'
+      && !!password && !pwError
+      && !!passwordConfirm && !pwConfirmError;
 
   const EyeBtn = ({ show, toggle }: { show: boolean; toggle: () => void }) => (
     <button
@@ -208,37 +218,58 @@ function ProfileStep({
       <div style={{ fontSize: 13, color: C.textSec, marginBottom: 28 }}>딜에서 사용할 정보를 입력해요.</div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
-        {/* 이메일 */}
-        <div>
-          <InputField
-            label="이메일" value={email} onChange={setEmail}
-            placeholder="example@email.com" type="email"
-            hint="실제 사용하는 이메일을 입력해주세요"
-            error={emailMsg && emailStatus !== 'ok' && emailStatus !== 'idle' && emailStatus !== 'checking' ? emailMsg : undefined}
-          />
-          {emailMsg && (emailStatus === 'ok' || emailStatus === 'checking') && (
-            <div style={{ fontSize: 11, color: emailColor, marginTop: 4, paddingLeft: 2 }}>{emailMsg}</div>
-          )}
-        </div>
+        {/* 소셜 로그인 배지 */}
+        {isSocial && socialProvider && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
+            borderRadius: 12, background: `${SOCIAL_LABELS[socialProvider]?.color ?? C.green}18`,
+            border: `1px solid ${SOCIAL_LABELS[socialProvider]?.color ?? C.green}44`,
+          }}>
+            <span style={{ fontSize: 18 }}>{socialProvider === 'kakao' ? '💬' : socialProvider === 'naver' ? '🟢' : '🌐'}</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                {SOCIAL_LABELS[socialProvider]?.label} 계정으로 가입 중
+              </div>
+              {email && <div style={{ fontSize: 11, color: C.textSec, marginTop: 2 }}>{email}</div>}
+            </div>
+          </div>
+        )}
 
-        {/* 비밀번호 */}
-        <InputField
-          label="비밀번호" value={password} onChange={setPassword}
-          placeholder="8자 이상, 영문+숫자+특수문자"
-          type={showPw ? 'text' : 'password'}
-          hint={!pwError ? '비밀번호는 8자 이상, 영문+숫자+특수문자를 포함해야 해요' : undefined}
-          error={pwError}
-          suffix={<EyeBtn show={showPw} toggle={() => setShowPw(!showPw)} />}
-        />
+        {/* 이메일 — 소셜이면 숨김 */}
+        {!isSocial && (
+          <div>
+            <InputField
+              label="이메일" value={email} onChange={setEmail}
+              placeholder="example@email.com" type="email"
+              hint="실제 사용하는 이메일을 입력해주세요"
+              error={emailMsg && emailStatus !== 'ok' && emailStatus !== 'idle' && emailStatus !== 'checking' ? emailMsg : undefined}
+            />
+            {emailMsg && (emailStatus === 'ok' || emailStatus === 'checking') && (
+              <div style={{ fontSize: 11, color: emailColor, marginTop: 4, paddingLeft: 2 }}>{emailMsg}</div>
+            )}
+          </div>
+        )}
 
-        {/* 비밀번호 확인 */}
-        <InputField
-          label="비밀번호 확인" value={passwordConfirm} onChange={setPasswordConfirm}
-          placeholder="비밀번호를 한 번 더 입력해주세요"
-          type={showPwConfirm ? 'text' : 'password'}
-          error={pwConfirmError}
-          suffix={<EyeBtn show={showPwConfirm} toggle={() => setShowPwConfirm(!showPwConfirm)} />}
-        />
+        {/* 비밀번호 — 소셜이면 숨김 */}
+        {!isSocial && (
+          <>
+            <InputField
+              label="비밀번호" value={password} onChange={setPassword}
+              placeholder="8자 이상, 영문+숫자+특수문자"
+              type={showPw ? 'text' : 'password'}
+              hint={!pwError ? '비밀번호는 8자 이상, 영문+숫자+특수문자를 포함해야 해요' : undefined}
+              error={pwError}
+              suffix={<EyeBtn show={showPw} toggle={() => setShowPw(!showPw)} />}
+            />
+            <InputField
+              label="비밀번호 확인" value={passwordConfirm} onChange={setPasswordConfirm}
+              placeholder="비밀번호를 한 번 더 입력해주세요"
+              type={showPwConfirm ? 'text' : 'password'}
+              error={pwConfirmError}
+              suffix={<EyeBtn show={showPwConfirm} toggle={() => setShowPwConfirm(!showPwConfirm)} />}
+            />
+          </>
+        )}
 
         {/* 닉네임 */}
         <div>
@@ -1440,6 +1471,20 @@ export default function RegisterPage() {
     clearTimeout(phoneTimer.current);
   }, []);
 
+  // ── 소셜 로그인 사용자: 이메일/역할 자동 채움 ────────────
+  useEffect(() => {
+    if (method !== 'email') {
+      const saved = localStorage.getItem('user');
+      if (saved) {
+        try {
+          const u = JSON.parse(saved);
+          if (u.email) setEmailRaw(u.email);
+          if (!role) setRole('buyer');
+        } catch { /* ignore */ }
+      }
+    }
+  }, [method]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── URL 파라미터 자동 처리 (초대 링크) ──────────────────
   useEffect(() => {
     const refCode = searchParams.get('ref');
@@ -1665,6 +1710,44 @@ export default function RegisterPage() {
           }
           return;
         }
+        // 소셜 로그인 구매자: 기존 계정 프로필 업데이트
+        if (FEATURES.USE_API_AUTH && method !== 'email') {
+          setRegistering(true);
+          setApiError('');
+
+          const fullAddress = address ? (addressDetail ? `${address} ${addressDetail}` : address) : undefined;
+          const fullBirthDate = birthYear && birthMonth && birthDay
+            ? `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`
+            : undefined;
+
+          try {
+            const saved = JSON.parse(localStorage.getItem('user') || '{}');
+            const buyerId = saved.id;
+            if (buyerId) {
+              await apiClient.patch(`/buyers/${buyerId}`, {
+                name: nickname,
+                nickname,
+                phone: phone.replace(/\D/g, '') || undefined,
+                address: fullAddress,
+                zip_code: zipCode || undefined,
+                gender: gender || undefined,
+                birth_date: fullBirthDate || undefined,
+                payment_method: paymentMethod || undefined,
+              });
+              // AuthContext 업데이트
+              const token = localStorage.getItem('access_token') || '';
+              login(token, { ...saved, name: nickname, nickname, social_provider: method });
+            }
+            goTo(6);
+          } catch (err: unknown) {
+            const e = err as { response?: { data?: { detail?: unknown }; status?: number } };
+            const detail = e.response?.data?.detail;
+            setApiError(typeof detail === 'string' ? detail : '프로필 저장에 실패했어요');
+          } finally {
+            setRegistering(false);
+          }
+          return;
+        }
         goTo(6);
       } else {
         // 판매자/액추에이터 → BizStep
@@ -1838,6 +1921,8 @@ export default function RegisterPage() {
                 pwError={pwError} pwConfirmError={pwConfirmError}
                 apiError={apiError}
                 onNext={() => { void goNext(); }}
+                isSocial={method !== 'email'}
+                socialProvider={method !== 'email' ? method : undefined}
               />
             )}
             {step === 3 && (

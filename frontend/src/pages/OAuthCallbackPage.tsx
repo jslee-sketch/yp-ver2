@@ -59,6 +59,7 @@ export default function OAuthCallbackPage() {
             level: b.level ?? 1,
             points: b.points ?? 0,
             trust_tier: b.trust_tier,
+            social_provider: provider,
           });
         } catch {
           login(access_token, {
@@ -68,6 +69,7 @@ export default function OAuthCallbackPage() {
             role: 'buyer',
             level: 1,
             points: 0,
+            social_provider: provider,
           });
         }
 

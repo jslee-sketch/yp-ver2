@@ -19,6 +19,7 @@ export interface AuthUser {
   trust_tier?: string;
   verified?: boolean;
   seller?: SellerInfo;
+  social_provider?: string;
 }
 
 interface AuthContextType {

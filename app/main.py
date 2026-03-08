@@ -145,6 +145,11 @@ _alter_cols = [
     ("reservations", "dispute_reason", "VARCHAR(500)"),
     ("reservations", "dispute_resolution", "VARCHAR(500)"),
     ("reservations", "dispute_admin_id", "INTEGER"),
+    # 배송 추적 확장 컬럼
+    ("reservations", "delivery_status", "VARCHAR(30)"),
+    ("reservations", "delivery_last_detail", "TEXT"),
+    ("reservations", "delivery_last_checked_at", "TIMESTAMP"),
+    ("reservations", "auto_confirm_deadline", "TIMESTAMP"),
 ]
 try:
     _insp = _sa.inspect(engine)
@@ -743,6 +748,11 @@ _include_router_safe("pingpong", ("router",), label="pingpong")
 # Behavior Tracking & AI Profiling
 # --------------------------------------------------
 _include_router_safe("behavior", ("router",), label="behavior")
+
+# --------------------------------------------------
+# Delivery Tracking (SweetTracker)
+# --------------------------------------------------
+_include_router_safe("delivery_tracking", ("router",), label="delivery_tracking")
 
 # --------------------------------------------------
 # 5️⃣ 플랫폼 필수 기능 (v2)

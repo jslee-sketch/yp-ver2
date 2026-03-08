@@ -80,6 +80,28 @@ export default function MyOrdersPage() {
   const [refundPreviewData, setRefundPreviewData] = useState<Record<string, unknown> | null>(null);
   const [refundLoading, setRefundLoading] = useState(false);
 
+  // Delivery tracking
+  const [trackingInfo, setTrackingInfo] = useState<Record<string, unknown> | null>(null);
+  const [trackingOrderId, setTrackingOrderId] = useState<number | null>(null);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+
+  const handleTrackDelivery = async (orderId: number) => {
+    if (trackingOrderId === orderId && trackingInfo) {
+      setTrackingOrderId(null);
+      setTrackingInfo(null);
+      return;
+    }
+    setTrackingLoading(true);
+    setTrackingOrderId(orderId);
+    try {
+      const resp = await apiClient.get(`/delivery/track/${orderId}`);
+      setTrackingInfo(resp.data as Record<string, unknown>);
+    } catch {
+      setTrackingInfo({ success: false, error: '조회 실패' });
+    }
+    setTrackingLoading(false);
+  };
+
   // Dispute modal
   const [disputeTarget, setDisputeTarget] = useState<MyOrder | null>(null);
   const [disputeReason, setDisputeReason] = useState('');
@@ -312,17 +334,57 @@ export default function MyOrdersPage() {
 
               {/* 배송중 */}
               {item.status === 'SHIPPED' && (
-                <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
-                  <button onClick={() => void handleConfirmArrival(item.id)} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(0,230,118,0.12)', border: '1px solid rgba(0,230,118,0.35)', color: '#00e676', cursor: 'pointer' }}>
-                    📦 수령 확인
-                  </button>
-                  <button onClick={() => void openRefundModal(item)} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(255,152,0,0.1)', border: '1px solid rgba(255,152,0,0.3)', color: '#ff9100', cursor: 'pointer' }}>
-                    환불요청
-                  </button>
-                  {!item.is_disputed && (
-                    <button onClick={() => { setDisputeTarget(item); setDisputeReason(''); }} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(255,82,82,0.1)', border: '1px solid rgba(255,82,82,0.3)', color: '#ff5252', cursor: 'pointer' }}>
-                      ⚠️ 분쟁 신청
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {item.tracking_number && (
+                      <button onClick={() => void handleTrackDelivery(item.id)} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.35)', color: '#3b82f6', cursor: 'pointer' }}>
+                        {trackingLoading && trackingOrderId === item.id ? '조회중...' : '🚚 배송 조회'}
+                      </button>
+                    )}
+                    <button onClick={() => void handleConfirmArrival(item.id)} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(0,230,118,0.12)', border: '1px solid rgba(0,230,118,0.35)', color: '#00e676', cursor: 'pointer' }}>
+                      📦 수령 확인
                     </button>
+                    <button onClick={() => void openRefundModal(item)} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(255,152,0,0.1)', border: '1px solid rgba(255,152,0,0.3)', color: '#ff9100', cursor: 'pointer' }}>
+                      환불요청
+                    </button>
+                    {!item.is_disputed && (
+                      <button onClick={() => { setDisputeTarget(item); setDisputeReason(''); }} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(255,82,82,0.1)', border: '1px solid rgba(255,82,82,0.3)', color: '#ff5252', cursor: 'pointer' }}>
+                        ⚠️ 분쟁 신청
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 배송 추적 결과 */}
+                  {trackingOrderId === item.id && trackingInfo && (
+                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 14, marginTop: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
+                      {trackingInfo.success ? (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: '#4ade80' }}>{String(trackingInfo.status_label)}</span>
+                            <span style={{ fontSize: 11, color: '#888' }}>{String(trackingInfo.carrier ?? '')} {String(trackingInfo.tracking_number ?? '')}</span>
+                          </div>
+                          <div style={{ borderLeft: '2px solid rgba(255,255,255,0.15)', paddingLeft: 14, marginLeft: 4 }}>
+                            {(trackingInfo.details as Array<Record<string, string>> || []).slice().reverse().map((d, i) => (
+                              <div key={i} style={{ position: 'relative', paddingBottom: 10, color: i === 0 ? '#4ade80' : '#888', fontSize: 12 }}>
+                                <div style={{ position: 'absolute', left: -19, top: 4, width: 8, height: 8, borderRadius: '50%', background: i === 0 ? '#4ade80' : '#444' }} />
+                                <div style={{ fontWeight: i === 0 ? 700 : 400 }}>{d.kind}</div>
+                                <div style={{ fontSize: 10, color: '#666', marginTop: 1 }}>{d.time} · {d.where}</div>
+                              </div>
+                            ))}
+                          </div>
+                          {trackingInfo.status === 'DELIVERED' && (
+                            <div style={{ marginTop: 8, textAlign: 'center' }}>
+                              <div style={{ color: '#f59e0b', fontSize: 12, marginBottom: 6 }}>배달 완료! 3일 내 수취 확인하지 않으면 자동 구매확정됩니다.</div>
+                              <button onClick={() => void handleConfirmArrival(item.id)} style={{ background: '#4ade80', color: '#000', padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
+                                수취 확인
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div style={{ fontSize: 12, color: '#ff5252' }}>{String(trackingInfo.error || trackingInfo.message || '조회 실패')}</div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

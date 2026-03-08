@@ -146,12 +146,18 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  const handleSocialLogin = async (method: string) => {
-    if (method === 'phone') {
+  const handleSocialLogin = async (provider: string) => {
+    if (provider === 'phone') {
       showToast('전화번호 로그인은 준비 중이에요. 이메일로 로그인해주세요!', 'info');
       return;
     }
-    showToast('소셜 로그인은 준비 중이에요. 이메일로 로그인해주세요!', 'info');
+    try {
+      const res = await apiClient.get(`/auth/social/${provider}/authorize`);
+      const { url } = res.data as { url: string };
+      window.location.href = url;
+    } catch {
+      showToast('소셜 로그인 설정이 아직 준비되지 않았어요', 'error');
+    }
   };
 
   return (

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchSellerReservations, markShipped, fetchCarriers } from '../api/reservationApi';
+import apiClient from '../api/client';
 import { showToast } from '../components/common/Toast';
 import { trackBehavior } from '../utils/behaviorTracker';
 
@@ -46,6 +47,36 @@ export default function SellerShipPage() {
   const [carrier, setCarrier] = useState(DEFAULT_CARRIERS[0]);
   const [tracking, setTracking] = useState('');
   const [shipLoading, setShipLoading] = useState(false);
+
+  // Delivery tracking
+  const [trackResult, setTrackResult] = useState<Record<string, unknown> | null>(null);
+  const [trackOrderId, setTrackOrderId] = useState<number | null>(null);
+  const [trackLoading, setTrackLoading] = useState(false);
+
+  const handleTrack = async (orderId: number) => {
+    if (trackOrderId === orderId) { setTrackOrderId(null); setTrackResult(null); return; }
+    setTrackLoading(true);
+    setTrackOrderId(orderId);
+    try {
+      const resp = await apiClient.get(`/delivery/track/${orderId}`);
+      setTrackResult(resp.data as Record<string, unknown>);
+    } catch { setTrackResult({ success: false, error: '조회 실패' }); }
+    setTrackLoading(false);
+  };
+
+  const deliveryBadge = (status?: string) => {
+    const map: Record<string, { label: string; color: string }> = {
+      READY: { label: '준비', color: '#888' },
+      COLLECTING: { label: '집하', color: '#f59e0b' },
+      IN_TRANSIT: { label: '이동중', color: '#3b82f6' },
+      OUT_FOR_DELIVERY: { label: '배달중', color: '#8b5cf6' },
+      DELIVERED: { label: '완료', color: '#4ade80' },
+    };
+    const s = map[status || ''] || { label: status || '미확인', color: '#666' };
+    return (
+      <span style={{ background: s.color + '20', color: s.color, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600 }}>{s.label}</span>
+    );
+  };
 
   useEffect(() => {
     fetchCarriers().then(data => {
@@ -193,8 +224,28 @@ export default function SellerShipPage() {
               )}
 
               {order.tracking_number && (
-                <div style={{ marginTop: 6, fontSize: 11, color: C.orange }}>
-                  🚚 {order.shipping_carrier ? `${order.shipping_carrier} ` : ''}{order.tracking_number}
+                <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 11, color: C.orange }}>🚚 {order.shipping_carrier ? `${order.shipping_carrier} ` : ''}{order.tracking_number}</span>
+                  {order.status === 'SHIPPED' && (
+                    <button onClick={() => void handleTrack(order.id)} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', color: '#3b82f6', cursor: 'pointer', fontWeight: 600 }}>
+                      {trackLoading && trackOrderId === order.id ? '...' : '조회'}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* 배송 추적 결과 */}
+              {trackOrderId === order.id && trackResult && (
+                <div style={{ marginTop: 6, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
+                  {trackResult.success ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                      {deliveryBadge(String(trackResult.status))}
+                      <span style={{ color: '#888' }}>{String((trackResult.latest as Record<string, string>)?.kind ?? '')}</span>
+                      <span style={{ color: '#666', fontSize: 11 }}>{String((trackResult.latest as Record<string, string>)?.time ?? '')}</span>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 11, color: '#ff5252' }}>{String(trackResult.error || '조회 실패')}</div>
+                  )}
                 </div>
               )}
 
