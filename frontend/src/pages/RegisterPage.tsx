@@ -228,7 +228,7 @@ function ProfileStep({
             <span style={{ fontSize: 18 }}>{socialProvider === 'kakao' ? '💬' : socialProvider === 'naver' ? '🟢' : '🌐'}</span>
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
-                {SOCIAL_LABELS[socialProvider]?.label} 계정으로 가입 중
+                {SOCIAL_LABELS[socialProvider]?.label} 계정으로 가입
               </div>
               {email && <div style={{ fontSize: 11, color: C.textSec, marginTop: 2 }}>{email}</div>}
             </div>
@@ -275,8 +275,8 @@ function ProfileStep({
         <div>
           <InputField
             label="닉네임" value={nickname} onChange={setNickname}
-            placeholder="역핑에서 쓸 이름"
-            hint="2~20글자, 특수문자 제외"
+            placeholder="한글/영문/숫자/_ (2~20자)"
+            hint="딜에서 사용할 닉네임을 입력해주세요"
             error={nickMsg && nickStatus !== 'ok' && nickStatus !== 'idle' && nickStatus !== 'checking' ? nickMsg : undefined}
           />
           {nickMsg && (nickStatus === 'ok' || nickStatus === 'checking') && (
@@ -1264,10 +1264,9 @@ function BizStep({
 const METHOD_LABELS: Record<string, string> = { kakao: '카카오', naver: '네이버', google: 'Google', phone: '전화번호', email: '이메일' };
 const ROLE_LABELS: Record<string, string> = { buyer: '구매자', seller: '판매자', actuator: '액추에이터' };
 
-function CompleteStep({ method, role, nickname, onFinish, navigate, email, password }: {
+function CompleteStep({ method, role, nickname, onFinish, navigate }: {
   method: string; role: string; nickname: string; onFinish: () => void;
   navigate: (path: string, opts?: { state?: Record<string, string> }) => void;
-  email?: string; password?: string;
 }) {
   const isSeller = role === 'seller';
   const isActuator = role === 'actuator';
@@ -1359,14 +1358,14 @@ function CompleteStep({ method, role, nickname, onFinish, navigate, email, passw
       )}
 
       <button
-        onClick={needsApproval ? () => navigate('/login', { state: { email: email || '', password: password || '' } }) : onFinish}
+        onClick={onFinish}
         style={{
           width: '100%', maxWidth: 320, padding: '15px',
           borderRadius: 14, fontSize: 15, fontWeight: 800,
           background: `linear-gradient(135deg, ${C.green}, ${C.cyan})`,
           color: '#0a0a0f', cursor: 'pointer',
         }}
-      >{needsApproval ? '로그인하기' : '역핑 시작하기 →'}</button>
+      >{needsApproval ? '홈으로 이동' : '역핑 시작하기 →'}</button>
     </div>
   );
 }
@@ -1471,15 +1470,15 @@ export default function RegisterPage() {
     clearTimeout(phoneTimer.current);
   }, []);
 
-  // ── 소셜 로그인 사용자: 이메일/역할 자동 채움 ────────────
+  // ── 소셜 로그인 사용자: social_pending에서 이메일 채움 ────
   useEffect(() => {
     if (method !== 'email') {
-      const saved = localStorage.getItem('user');
-      if (saved) {
+      const pending = localStorage.getItem('social_pending');
+      if (pending) {
         try {
-          const u = JSON.parse(saved);
-          if (u.email) setEmailRaw(u.email);
-          if (!role) setRole('buyer');
+          const p = JSON.parse(pending);
+          if (p.email) setEmailRaw(p.email);
+          // role은 자동 설정하지 않음 → Step 1에서 선택
         } catch { /* ignore */ }
       }
     }
@@ -1710,7 +1709,7 @@ export default function RegisterPage() {
           }
           return;
         }
-        // 소셜 로그인 구매자: 기존 계정 프로필 업데이트
+        // 소셜 로그인 구매자: POST /auth/social/register
         if (FEATURES.USE_API_AUTH && method !== 'email') {
           setRegistering(true);
           setApiError('');
@@ -1721,28 +1720,35 @@ export default function RegisterPage() {
             : undefined;
 
           try {
-            const saved = JSON.parse(localStorage.getItem('user') || '{}');
-            const buyerId = saved.id;
-            if (buyerId) {
-              await apiClient.patch(`/buyers/${buyerId}`, {
-                name: nickname,
-                nickname,
-                phone: phone.replace(/\D/g, '') || undefined,
-                address: fullAddress,
-                zip_code: zipCode || undefined,
-                gender: gender || undefined,
-                birth_date: fullBirthDate || undefined,
-                payment_method: paymentMethod || undefined,
-              });
-              // AuthContext 업데이트
-              const token = localStorage.getItem('access_token') || '';
-              login(token, { ...saved, name: nickname, nickname, social_provider: method });
-            }
+            const pending = JSON.parse(localStorage.getItem('social_pending') || '{}');
+            const res = await apiClient.post(API.AUTH.SOCIAL_REGISTER, {
+              social_provider: pending.provider || method,
+              social_id: pending.social_id || '',
+              social_email: pending.email || email || undefined,
+              social_name: pending.name || undefined,
+              role: 'buyer',
+              nickname,
+              phone: phone.replace(/\D/g, '') || undefined,
+              address: fullAddress,
+              zip_code: zipCode || undefined,
+              gender: gender || undefined,
+              birth_date: fullBirthDate || undefined,
+              payment_method: paymentMethod || undefined,
+            });
+            const { access_token } = res.data as { access_token: string };
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+            login(access_token, {
+              id: 0, email: pending.email || email,
+              name: nickname, nickname,
+              role: 'buyer', level: 1, points: 0,
+              social_provider: method,
+            });
+            localStorage.removeItem('social_pending');
             goTo(6);
           } catch (err: unknown) {
             const e = err as { response?: { data?: { detail?: unknown }; status?: number } };
             const detail = e.response?.data?.detail;
-            setApiError(typeof detail === 'string' ? detail : '프로필 저장에 실패했어요');
+            setApiError(typeof detail === 'string' ? detail : '가입에 실패했어요');
           } finally {
             setRegistering(false);
           }
@@ -1756,63 +1762,139 @@ export default function RegisterPage() {
       return;
     }
     if (step === 5) {
-      if (FEATURES.USE_API_AUTH && method === 'email') {
+      if (FEATURES.USE_API_AUTH) {
         setRegistering(true);
         setApiError('');
 
         const fullAddress = address ? (addressDetail ? `${address} ${addressDetail}` : address) : undefined;
+        const isSocial = method !== 'email';
 
         try {
-          if (role === 'seller') {
-            // 판매자 API 호출
-            await apiClient.post(API.SELLERS.LIST, {
-              email: email.trim(), password,
-              business_name: bizName,
+          if (isSocial) {
+            // 소셜 seller/actuator → POST /auth/social/register
+            const pending = JSON.parse(localStorage.getItem('social_pending') || '{}');
+            const basePayload = {
+              social_provider: pending.provider || method,
+              social_id: pending.social_id || '',
+              social_email: pending.email || email || undefined,
+              social_name: pending.name || undefined,
+              role,
               nickname,
-              business_number: bizNum.replace(/\D/g, ''),
               phone: phone.replace(/\D/g, '') || undefined,
-              company_phone: companyPhone.replace(/\D/g, '') || undefined,
-              address: fullAddress || '',
-              zip_code: zipCode || '',
-              established_date: new Date().toISOString(),
-              bank_name: bankName || undefined,
-              account_number: accountNum || undefined,
-              account_holder: accountHolder || undefined,
-              actuator_id: actuatorVerified && actuatorResolvedId ? actuatorResolvedId : undefined,
-              business_license_image: bizLicenseUrl || undefined,
-              ecommerce_permit_image: ecommercePermitUrl || undefined,
-              bankbook_image: bankbookUrl || undefined,
-              external_ratings: externalRatings.some(r => r.score) ? JSON.stringify(externalRatings.filter(r => r.score)) : undefined,
+            };
+
+            let extraPayload = {};
+            if (role === 'seller') {
+              extraPayload = {
+                business_name: bizName,
+                business_number: bizNum.replace(/\D/g, ''),
+                company_phone: companyPhone.replace(/\D/g, '') || undefined,
+                address: fullAddress || '',
+                zip_code: zipCode || '',
+                bank_name: bankName || undefined,
+                account_number: accountNum || undefined,
+                account_holder: accountHolder || undefined,
+                actuator_id: actuatorVerified && actuatorResolvedId ? actuatorResolvedId : undefined,
+                business_license_image: bizLicenseUrl || undefined,
+                ecommerce_permit_image: ecommercePermitUrl || undefined,
+                bankbook_image: bankbookUrl || undefined,
+                external_ratings: externalRatings.some(r => r.score) ? JSON.stringify(externalRatings.filter(r => r.score)) : undefined,
+              };
+            } else if (role === 'actuator') {
+              const actFullBizAddr = actBizAddress
+                ? (actBizAddressDetail ? `${actBizAddress} ${actBizAddressDetail}` : actBizAddress)
+                : undefined;
+              extraPayload = {
+                bank_name: bankName || undefined,
+                account_number: accountNum || undefined,
+                account_holder: accountHolder || undefined,
+                bankbook_image: bankbookUrl || undefined,
+                is_business: actIsBusiness,
+                ...(actIsBusiness ? {
+                  business_name: actBizName || undefined,
+                  business_number: actBizNum || undefined,
+                  ecommerce_permit_number: actEcommerceNum || undefined,
+                  business_address: actFullBizAddr || undefined,
+                  business_zip_code: actBizZipCode || undefined,
+                  company_phone: actCompanyPhone || undefined,
+                  business_license_image: actBizLicenseUrl || undefined,
+                  ecommerce_permit_image: actEcommercePermitUrl || undefined,
+                } : {}),
+              };
+            }
+
+            const res = await apiClient.post(API.AUTH.SOCIAL_REGISTER, { ...basePayload, ...extraPayload });
+            const { access_token } = res.data as { access_token: string };
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+            login(access_token, {
+              id: 0, email: pending.email || email,
+              name: nickname, nickname,
+              role: role as 'buyer' | 'seller' | 'actuator',
+              level: role === 'seller' ? 6 : 1, points: 0,
+              social_provider: method,
             });
-          } else if (role === 'actuator') {
-            // 액추에이터 API 호출
-            const actFullBizAddr = actBizAddress
-              ? (actBizAddressDetail ? `${actBizAddress} ${actBizAddressDetail}` : actBizAddress)
-              : undefined;
-            await apiClient.post(API.ACTUATORS.CREATE, {
-              name: nickname,
-              email: email.trim(),
-              phone: phone.replace(/\D/g, '') || undefined,
-              password,
-              nickname,
-              bank_name: bankName || undefined,
-              account_number: accountNum || undefined,
-              account_holder: accountHolder || undefined,
-              bankbook_image: bankbookUrl || undefined,
-              is_business: actIsBusiness,
-              ...(actIsBusiness ? {
-                business_name: actBizName || undefined,
-                business_number: actBizNum || undefined,
-                ecommerce_permit_number: actEcommerceNum || undefined,
-                business_address: actFullBizAddr || undefined,
-                business_zip_code: actBizZipCode || undefined,
-                company_phone: actCompanyPhone || undefined,
-                business_license_image: actBizLicenseUrl || undefined,
-                ecommerce_permit_image: actEcommercePermitUrl || undefined,
-              } : {}),
-            });
+            localStorage.removeItem('social_pending');
+          } else {
+            // 이메일 seller/actuator
+            if (role === 'seller') {
+              await apiClient.post(API.SELLERS.LIST, {
+                email: email.trim(), password,
+                business_name: bizName,
+                nickname,
+                business_number: bizNum.replace(/\D/g, ''),
+                phone: phone.replace(/\D/g, '') || undefined,
+                company_phone: companyPhone.replace(/\D/g, '') || undefined,
+                address: fullAddress || '',
+                zip_code: zipCode || '',
+                established_date: new Date().toISOString(),
+                bank_name: bankName || undefined,
+                account_number: accountNum || undefined,
+                account_holder: accountHolder || undefined,
+                actuator_id: actuatorVerified && actuatorResolvedId ? actuatorResolvedId : undefined,
+                business_license_image: bizLicenseUrl || undefined,
+                ecommerce_permit_image: ecommercePermitUrl || undefined,
+                bankbook_image: bankbookUrl || undefined,
+                external_ratings: externalRatings.some(r => r.score) ? JSON.stringify(externalRatings.filter(r => r.score)) : undefined,
+              });
+              // 이메일 seller 자동 로그인
+              try {
+                const loginRes = await loginApi(email.trim(), password);
+                const { access_token } = loginRes.data as { access_token: string };
+                apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+                login(access_token, {
+                  id: 0, email: email.trim(),
+                  name: nickname, nickname,
+                  role: 'seller', level: 6, points: 0,
+                });
+              } catch { /* 자동 로그인 실패해도 가입은 성공 */ }
+            } else if (role === 'actuator') {
+              const actFullBizAddr = actBizAddress
+                ? (actBizAddressDetail ? `${actBizAddress} ${actBizAddressDetail}` : actBizAddress)
+                : undefined;
+              await apiClient.post(API.ACTUATORS.CREATE, {
+                name: nickname,
+                email: email.trim(),
+                phone: phone.replace(/\D/g, '') || undefined,
+                password,
+                nickname,
+                bank_name: bankName || undefined,
+                account_number: accountNum || undefined,
+                account_holder: accountHolder || undefined,
+                bankbook_image: bankbookUrl || undefined,
+                is_business: actIsBusiness,
+                ...(actIsBusiness ? {
+                  business_name: actBizName || undefined,
+                  business_number: actBizNum || undefined,
+                  ecommerce_permit_number: actEcommerceNum || undefined,
+                  business_address: actFullBizAddr || undefined,
+                  business_zip_code: actBizZipCode || undefined,
+                  company_phone: actCompanyPhone || undefined,
+                  business_license_image: actBizLicenseUrl || undefined,
+                  ecommerce_permit_image: actEcommercePermitUrl || undefined,
+                } : {}),
+              });
+            }
           }
-          // 자동 로그인 스킵 → CompleteStep
           goTo(6);
         } catch (err: unknown) {
           const e = err as { response?: { data?: { detail?: unknown }; status?: number } };
@@ -2016,8 +2098,6 @@ export default function RegisterPage() {
                 method={method}
                 role={role}
                 nickname={nickname}
-                email={email}
-                password={password}
                 onFinish={() => navigate('/')}
                 navigate={navigate}
               />

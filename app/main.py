@@ -150,6 +150,11 @@ _alter_cols = [
     ("reservations", "delivery_last_detail", "TEXT"),
     ("reservations", "delivery_last_checked_at", "TIMESTAMP"),
     ("reservations", "auto_confirm_deadline", "TIMESTAMP"),
+    # 소셜 로그인 (seller / actuator)
+    ("sellers", "social_provider", "VARCHAR(20)"),
+    ("sellers", "social_id", "VARCHAR(100)"),
+    ("actuators", "social_provider", "VARCHAR(20)"),
+    ("actuators", "social_id", "VARCHAR(100)"),
 ]
 try:
     _insp = _sa.inspect(engine)

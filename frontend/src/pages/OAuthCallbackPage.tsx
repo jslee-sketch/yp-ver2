@@ -38,15 +38,32 @@ export default function OAuthCallbackPage() {
           state,
         });
 
-        const { access_token, is_new_user } = res.data as {
-          access_token: string;
+        const { access_token, is_new_user, social_provider: sp, social_id, social_email, social_name } = res.data as {
+          access_token: string | null;
           is_new_user: boolean;
+          social_provider?: string;
+          social_id?: string;
+          social_email?: string;
+          social_name?: string;
         };
 
-        // JWT 설정
+        if (is_new_user || !access_token) {
+          // 신규: 소셜 정보 저장 → 회원가입 페이지
+          localStorage.setItem('social_pending', JSON.stringify({
+            provider: sp || provider,
+            social_id: social_id || '',
+            email: social_email || '',
+            name: social_name || '',
+          }));
+          navigate(`/register?method=${provider}`, { replace: true });
+          return;
+        }
+
+        // 기존 유저: JWT 설정
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
 
-        // 프로필 가져오기
+        // 프로필 가져오기 (buyer → seller → actuator 순서 시도)
+        let profileOk = false;
         try {
           const buyerRes = await apiClient.get(API.BUYERS.PROFILE);
           const b = buyerRes.data;
@@ -61,10 +78,49 @@ export default function OAuthCallbackPage() {
             trust_tier: b.trust_tier,
             social_provider: provider,
           });
-        } catch {
+          profileOk = true;
+        } catch { /* not a buyer */ }
+
+        if (!profileOk) {
+          try {
+            const sellerRes = await apiClient.get(API.SELLERS.PROFILE);
+            const s = sellerRes.data;
+            login(access_token, {
+              id: s.id,
+              email: s.email,
+              name: s.business_name || s.nickname || '',
+              nickname: s.nickname,
+              role: 'seller',
+              level: s.level ?? 6,
+              points: s.points ?? 0,
+              social_provider: provider,
+            });
+            profileOk = true;
+          } catch { /* not a seller */ }
+        }
+
+        if (!profileOk) {
+          try {
+            const actRes = await apiClient.get(API.ACTUATORS.PROFILE);
+            const a = actRes.data;
+            login(access_token, {
+              id: a.id,
+              email: a.email,
+              name: a.name || a.nickname || '',
+              nickname: a.nickname,
+              role: 'actuator',
+              level: 1,
+              points: 0,
+              social_provider: provider,
+            });
+            profileOk = true;
+          } catch { /* fallback */ }
+        }
+
+        if (!profileOk) {
           login(access_token, {
             id: 0,
-            email: '',
+            email: social_email || '',
             name: provider,
             role: 'buyer',
             level: 1,
@@ -73,12 +129,7 @@ export default function OAuthCallbackPage() {
           });
         }
 
-        // 새 유저면 추가 정보 입력 페이지로, 기존 유저면 홈으로
-        if (is_new_user) {
-          navigate(`/register?method=${provider}`, { replace: true });
-        } else {
-          navigate('/', { replace: true });
-        }
+        navigate('/', { replace: true });
       } catch (err: unknown) {
         const e = err as { response?: { data?: { detail?: string } } };
         setError(e.response?.data?.detail ?? '소셜 로그인에 실패했어요');

@@ -152,6 +152,10 @@ class Seller(Base):
     # 배송 정책 (JSON)
     shipping_policy = Column(JSON().with_variant(JSONB(), "postgresql"), nullable=True)
 
+    # 소셜 로그인
+    social_provider = Column(String(20), nullable=True)
+    social_id = Column(String(100), nullable=True)
+
     # 비밀번호 재설정 토큰
     reset_token = Column(String(64), nullable=True, index=True)
     reset_token_expires_at = Column(DateTime, nullable=True)
@@ -194,6 +198,10 @@ class Actuator(Base):
 
     # 이 Actuator가 받은 커미션들
     commissions = relationship("ActuatorCommission", backref="actuator")
+
+    # 소셜 로그인
+    social_provider = Column(String(20), nullable=True)
+    social_id = Column(String(100), nullable=True)
 
     # 비밀번호 재설정 토큰
     reset_token = Column(String(64), nullable=True, index=True)

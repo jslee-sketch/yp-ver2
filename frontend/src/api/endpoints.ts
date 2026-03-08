@@ -21,6 +21,7 @@ export const API = {
     SELLER_ME:       '/auth/seller/me',
     SOCIAL_AUTHORIZE: (provider: string) => `/auth/social/${provider}/authorize`,
     SOCIAL_CALLBACK:  (provider: string) => `/auth/social/${provider}/callback`,
+    SOCIAL_REGISTER:  '/auth/social/register',
   },
 
   // ── 계정 ────────────────────────────────────────────────────
