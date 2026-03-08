@@ -112,10 +112,14 @@ def social_callback(
             email = f"{provider}_{social_id}@social.yeokping.com"
 
         sentinel_hash = get_password_hash(secrets.token_urlsafe(32))
+        display_name = name or email.split("@")[0]
+        # 닉네임 자동 생성 (소셜 로그인)
+        auto_nick = f"{provider}_{social_id[:8]}"
         buyer = models.Buyer(
             email=email,
             password_hash=sentinel_hash,
-            name=name or email.split("@")[0],
+            name=display_name,
+            nickname=auto_nick,
             social_provider=provider,
             social_id=social_id,
         )

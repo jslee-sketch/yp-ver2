@@ -9,6 +9,7 @@ SOCIAL_REDIRECT_BASE = os.getenv("SOCIAL_REDIRECT_BASE", "http://localhost:5173"
 
 # Kakao (KAKAO_CLIENT_ID or KAKAO_REST_API_KEY)
 KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID", "") or os.getenv("KAKAO_REST_API_KEY", "")
+KAKAO_CLIENT_SECRET = os.getenv("KAKAO_CLIENT_SECRET", "")
 KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI", f"{SOCIAL_REDIRECT_BASE}/auth/callback/kakao")
 
 # Naver (NAVER_CLIENT_ID or NAVER_LOGIN_CLIENT_ID)
@@ -27,7 +28,7 @@ PROVIDER_CONFIG = {
         "token_url": "https://kauth.kakao.com/oauth/token",
         "profile_url": "https://kapi.kakao.com/v2/user/me",
         "client_id": KAKAO_CLIENT_ID,
-        "client_secret": "",
+        "client_secret": KAKAO_CLIENT_SECRET,
         "redirect_uri": KAKAO_REDIRECT_URI,
     },
     "naver": {

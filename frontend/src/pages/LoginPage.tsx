@@ -155,8 +155,14 @@ export default function LoginPage() {
       const res = await apiClient.get(`/auth/social/${provider}/authorize`);
       const { url } = res.data as { url: string };
       window.location.href = url;
-    } catch {
-      showToast('소셜 로그인 설정이 아직 준비되지 않았어요', 'error');
+    } catch (err: unknown) {
+      const e = err as { response?: { status?: number; data?: { detail?: string } } };
+      const detail = e.response?.data?.detail || '';
+      if (e.response?.status === 501) {
+        showToast(`${provider} 로그인 키가 설정되지 않았어요 (관리자 확인 필요)`, 'error');
+      } else {
+        showToast(detail || '소셜 로그인에 실패했어요. 잠시 후 다시 시도해주세요.', 'error');
+      }
     }
   };
 
