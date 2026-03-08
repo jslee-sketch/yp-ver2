@@ -1070,9 +1070,10 @@ export default function DealCreatePage() {
 
       {/* ── TopBar ── */}
       <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 56,
+        position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 428, height: 56,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 20px', zIndex: 10,
+        padding: '0 20px', zIndex: 10, boxSizing: 'border-box',
         background: 'rgba(10,14,26,0.92)', backdropFilter: 'blur(10px)',
         borderBottom: `1px solid ${C.border}`,
       }}>
@@ -1087,7 +1088,7 @@ export default function DealCreatePage() {
       </div>
 
       {/* ── 진행 바 ── */}
-      <div style={{ position: 'fixed', top: 56, left: 0, right: 0, height: 3, zIndex: 10, background: C.border }}>
+      <div style={{ position: 'fixed', top: 56, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 428, height: 3, zIndex: 10, background: C.border }}>
         <div style={{
           height: '100%', width: `${(step / 5) * 100}%`,
           background: `linear-gradient(90deg, ${C.cyan}, ${C.green})`,
@@ -1205,10 +1206,10 @@ export default function DealCreatePage() {
                       onKeyDown={e => { if (e.key === 'Enter' && productName.trim()) { void handleAIAnalysis(); } }}
                       autoFocus
                       style={{
-                        flex: 1, padding: '14px 16px', borderRadius: 12,
+                        flex: 1, minWidth: 0, padding: '14px 16px', borderRadius: 12,
                         border: `2px solid ${productName.trim() ? `${C.cyan}44` : C.border}`,
                         background: C.bgInput, color: C.textPri, fontSize: 16,
-                        transition: 'border-color 0.15s',
+                        transition: 'border-color 0.15s', boxSizing: 'border-box',
                       }}
                     />
                     <button
