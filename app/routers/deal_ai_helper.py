@@ -30,6 +30,7 @@ class DealAIRequest(BaseModel):
     raw_free_text: Optional[str] = Field(None, description="사용자가 쓴 설명/요구사항 (선택)")
     recalc_price: bool = Field(False, description="True면 가격만 재계산 (네이버 검색)")
     selected_options: Optional[str] = Field(None, description="선택된 옵션 텍스트 (가격 재계산용)")
+    brand: Optional[str] = Field(None, description="브랜드명 (가격 재계산 시 검색 필터용)")
 
 
 class SuggestedOption(BaseModel):
@@ -293,14 +294,52 @@ _BUNDLE_KW = re.compile(r'세트|묶음|패키지|번들|기획전|합본', re.I
 _USED_KW = re.compile(r'중고|리퍼|반품|전시|매입|S급|A급|B급|재생|수리', re.IGNORECASE)
 
 
+# ── 브랜드 별칭 매핑 (한/영) ──────────────────────
+_BRAND_ALIASES: dict[str, list[str]] = {
+    'samsung':   ['삼성', 'samsung', '갤럭시', 'galaxy'],
+    'apple':     ['애플', 'apple', '아이폰', 'iphone', '아이패드', 'ipad', '맥북', 'macbook', '에어팟', 'airpods'],
+    'lg':        ['lg', '엘지', '그램', 'gram'],
+    'sony':      ['소니', 'sony', '플레이스테이션', 'playstation', 'ps5'],
+    'dyson':     ['다이슨', 'dyson'],
+    'nintendo':  ['닌텐도', 'nintendo'],
+    'xiaomi':    ['샤오미', 'xiaomi', '미', 'redmi'],
+    'lenovo':    ['레노버', 'lenovo', '씽크패드', 'thinkpad'],
+    'hp':        ['hp', '에이치피'],
+    'dell':      ['dell', '델'],
+    'asus':      ['에이수스', 'asus', '아수스'],
+    'nike':      ['나이키', 'nike'],
+    'adidas':    ['아디다스', 'adidas'],
+}
+
+_ALL_KNOWN_BRANDS: list[str] = []
+for _aliases in _BRAND_ALIASES.values():
+    _ALL_KNOWN_BRANDS.extend(_aliases)
+
+
+def _get_brand_aliases(brand: str) -> list[str]:
+    """주어진 브랜드의 모든 별칭(소문자) 반환."""
+    bl = brand.lower().strip()
+    for aliases in _BRAND_ALIASES.values():
+        lower_aliases = [a.lower() for a in aliases]
+        if bl in lower_aliases:
+            return lower_aliases
+    return [bl]
+
+
 def _analyze_market_prices(
     naver_items: list,
     expected_price_range: list | None = None,
+    brand: str | None = None,
 ) -> PriceAnalysis:
     """네이버 검색 결과를 채택/제외로 분류하고 근거를 반환."""
     total_searched = len(naver_items)
     included: list[PriceAnalysisItem] = []
     excluded: list[PriceAnalysisItem] = []
+
+    # 브랜드 별칭 준비
+    my_aliases: list[str] = []
+    if brand:
+        my_aliases = _get_brand_aliases(brand)
 
     # 중앙값 계산 (이상치 기준)
     prices_all = sorted([int(it.get("lprice", 0)) for it in naver_items if int(it.get("lprice", 0)) > 0])
@@ -311,6 +350,7 @@ def _analyze_market_prices(
         if price <= 0:
             continue
         title = re.sub(r"<[^>]+>", "", item.get("title", ""))
+        title_lower = title.lower()
         link = item.get("link", "")
         mall = item.get("mallName", "")
         reason = None
@@ -328,6 +368,19 @@ def _analyze_market_prices(
             ep_min = float(expected_price_range[0])
             if price < ep_min * 0.3:
                 reason = "가격 이상치"
+
+        # 브랜드 불일치 제외
+        if not reason and my_aliases:
+            has_my_brand = any(alias in title_lower for alias in my_aliases)
+            if not has_my_brand:
+                # 다른 유명 브랜드가 포함되어 있으면 확실히 다른 브랜드 상품
+                has_other = any(
+                    ob in title_lower
+                    for ob in _ALL_KNOWN_BRANDS
+                    if ob not in my_aliases
+                )
+                if has_other:
+                    reason = "다른 브랜드 상품"
 
         if reason:
             excluded.append(PriceAnalysisItem(title=title, price=price, reason=reason))
@@ -548,7 +601,10 @@ def _run_ai_deal_helper(raw_title: str, raw_free_text: str) -> DealAIResponse:
 
     # ── 가격 근거 분석 ────────────────────────────────
     if naver_items:
-        analysis = _analyze_market_prices(naver_items, data.get("expected_price_range"))
+        analysis = _analyze_market_prices(
+            naver_items, data.get("expected_price_range"),
+            brand=data.get("brand"),
+        )
         data["price_analysis"] = analysis.model_dump()
 
     # ── brands 리스트 보강 ────────────────────────────
@@ -584,14 +640,20 @@ def ai_deal_helper(
 
         # ── 가격 재계산 모드 (옵션 변경 시 네이버 검색만) ──
         if body.recalc_price:
-            search_q = raw_title
+            recalc_brand = (body.brand or "").strip()
+            # 브랜드를 검색 쿼리에 포함
+            parts = []
+            if recalc_brand and recalc_brand.lower() not in raw_title.lower():
+                parts.append(recalc_brand)
+            parts.append(raw_title)
             if body.selected_options:
-                search_q = f"{raw_title} {body.selected_options}"
+                parts.append(body.selected_options)
+            search_q = " ".join(parts)
             naver_items = _fetch_naver_items(search_q, display=10)
             naver = None
             if naver_items:
                 naver = _select_best_product(
-                    {"canonical_name": raw_title, "brand": "", "category": "", "expected_price_range": []},
+                    {"canonical_name": raw_title, "brand": recalc_brand, "category": "", "expected_price_range": []},
                     naver_items,
                 )
             price_data: dict = {}
@@ -613,8 +675,10 @@ def ai_deal_helper(
                 price_data["price_source"] = "llm_estimate"
                 price_data["commentary"] = "해당 옵션의 정확한 시장가를 찾지 못했어요."
 
-            # 가격 근거 분석
-            analysis = _analyze_market_prices(naver_items) if naver_items else None
+            # 가격 근거 분석 (브랜드 필터 포함)
+            analysis = _analyze_market_prices(
+                naver_items, brand=recalc_brand or None,
+            ) if naver_items else None
 
             recalc_result = DealAIResponse(
                 canonical_name=raw_title,

@@ -15,7 +15,7 @@ export async function aiDealHelper(productName: string, freeText?: string) {
   }
 }
 
-export async function aiRecalcPrice(searchQuery: string, selectedOptions?: string) {
+export async function aiRecalcPrice(searchQuery: string, selectedOptions?: string, brand?: string) {
   if (!FEATURES.USE_API_AI) return null;
   try {
     const body: Record<string, unknown> = {
@@ -23,6 +23,7 @@ export async function aiRecalcPrice(searchQuery: string, selectedOptions?: strin
       recalc_price: true,
     };
     if (selectedOptions) body.selected_options = selectedOptions;
+    if (brand) body.brand = brand;
     const res = await apiClient.post(API.AI.DEAL_HELPER, body);
     return res.data;
   } catch (err) {

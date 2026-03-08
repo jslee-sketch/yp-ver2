@@ -525,7 +525,7 @@ export default function DealCreatePage() {
         .filter(g => g.selectedIndex >= 0 && g.selectedIndex < g.values.length)
         .map(g => g.values[g.selectedIndex]).join(' ');
       const searchQuery = [productDetail || productNameConfirmed || productName, selectedOptStr].filter(Boolean).join(' ');
-      const result = await aiRecalcPrice(searchQuery, selectedOptStr || undefined);
+      const result = await aiRecalcPrice(searchQuery, selectedOptStr || undefined, brand || undefined);
       if (result?.price?.center_price) {
         const mp = result.price.center_price;
         setMarketPrice(mp);
