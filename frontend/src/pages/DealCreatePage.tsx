@@ -439,15 +439,15 @@ export default function DealCreatePage() {
   const [aiLoading,        setAiLoading]        = useState(false);
   const [showModelSelect,  setShowModelSelect]  = useState(false);
   const [modelOptions,     setModelOptions]     = useState<ModelOption[]>([]);
-  // 사진 인식
-  const [, setImageFile] = useState<File | null>(null);
-  const [imagePreview,     setImagePreview]     = useState<string | null>(null);
-  const [imageRecognizing, setImageRecognizing] = useState(false);
-  const [imageResult,      setImageResult]      = useState<{
+  // 사진 인식 (최대 3장)
+  type ImageRecResult = {
     product_name: string; brand?: string | null;
     model_name?: string | null; specs?: string | null;
     confidence: string;
-  } | null>(null);
+  };
+  const [imagePreviews,   setImagePreviews]   = useState<string[]>([]);
+  const [imageResults,    setImageResults]    = useState<(ImageRecResult | null)[]>([]);
+  const [recognizingIdx,  setRecognizingIdx]  = useState(-1);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   // AI 결과
@@ -692,39 +692,62 @@ export default function DealCreatePage() {
     goTo(2);
   };
 
-  // ── 사진 인식 ────────────────────────────────────────
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-    setImageResult(null);
-    setImageRecognizing(true);
+  // ── 사진 인식 (최대 3장) ─────────────────────────────
+  const confOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
 
-    try {
-      const result = await aiImageRecognize(file);
-      if (result && result.product_name) {
-        setImageResult(result);
-        // 상품명 자동 입력
-        setProductName(result.product_name);
-        if (result.specs) {
-          setFreeText(prev => prev ? prev : result.specs || '');
-        }
-      } else {
-        setImageResult({ product_name: '', confidence: 'low' });
-      }
-    } catch {
-      setImageResult({ product_name: '', confidence: 'low' });
-    } finally {
-      setImageRecognizing(false);
+  const applyBestRecognition = (results: (ImageRecResult | null)[]) => {
+    const valid = results.filter((r): r is ImageRecResult => !!r && !!r.product_name);
+    if (valid.length === 0) return;
+    const best = valid.reduce((a, b) => (confOrder[a.confidence] || 0) >= (confOrder[b.confidence] || 0) ? a : b);
+    if (best.confidence !== 'low') {
+      setProductName([best.brand, best.product_name].filter(Boolean).join(' ').trim());
+      if (best.specs && !freeText) setFreeText(best.specs);
     }
   };
 
-  const clearImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setImageResult(null);
-    if (imageInputRef.current) imageInputRef.current.value = '';
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (imagePreviews.length >= 3) {
+      showToast('사진은 최대 3장까지 가능합니다.', 'info');
+      return;
+    }
+
+    const idx = imagePreviews.length;
+    setImagePreviews(prev => [...prev, URL.createObjectURL(file)]);
+    setImageResults(prev => [...prev, null]);
+    setRecognizingIdx(idx);
+
+    try {
+      const result = await aiImageRecognize(file);
+      const rec: ImageRecResult = result && result.product_name
+        ? result
+        : { product_name: '', confidence: 'low' };
+      setImageResults(prev => {
+        const next = [...prev];
+        next[idx] = rec;
+        applyBestRecognition(next);
+        return next;
+      });
+    } catch {
+      setImageResults(prev => {
+        const next = [...prev];
+        next[idx] = { product_name: '', confidence: 'low' };
+        return next;
+      });
+    } finally {
+      setRecognizingIdx(-1);
+      if (imageInputRef.current) imageInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = (idx: number) => {
+    setImagePreviews(prev => prev.filter((_, i) => i !== idx));
+    setImageResults(prev => {
+      const next = prev.filter((_, i) => i !== idx);
+      applyBestRecognition(next);
+      return next;
+    });
   };
 
   // ── 분석 버튼 ────────────────────────────────────────
@@ -1074,117 +1097,100 @@ export default function DealCreatePage() {
                     </div>
                   </div>
 
-                  {/* 상품명 + 카메라 버튼 */}
+                  {/* 상품명 입력 */}
+                  <TextInput
+                    label="상품명" required
+                    value={productName} onChange={setProductName}
+                    placeholder="예: 에어팟 프로 2세대"
+                  />
+
+                  {/* 사진 인식 (최대 3장) */}
                   <div>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                      <div style={{ flex: 1 }}>
-                        <TextInput
-                          label="상품명" required
-                          value={productName} onChange={setProductName}
-                          placeholder="예: 에어팟 프로 2세대"
-                        />
-                      </div>
-                      <input
-                        ref={imageInputRef}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={handleImageUpload}
-                        style={{ display: 'none' }}
-                      />
-                      <button
-                        onClick={() => imageInputRef.current?.click()}
-                        disabled={imageRecognizing}
-                        style={{
-                          width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-                          background: imageRecognizing ? `${C.cyan}30` : C.bgSurface,
-                          border: `1px solid ${C.cyan}40`,
-                          color: C.cyan, fontSize: 22, cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          transition: 'all 0.15s',
-                        }}
-                        title="사진으로 상품 인식"
-                      >
-                        {imageRecognizing ? (
-                          <span style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>...</span>
-                        ) : (
-                          <span>📷</span>
-                        )}
-                      </button>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 8, display: 'block' }}>
+                      📷 사진으로 상품 인식 (최대 3장)
+                    </label>
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {imagePreviews.map((preview, idx) => (
+                        <div key={idx} style={{
+                          position: 'relative', width: 80, height: 80,
+                          borderRadius: 8, overflow: 'hidden',
+                          border: `2px solid ${
+                            imageResults[idx]?.confidence === 'high' ? C.green :
+                            imageResults[idx]?.confidence === 'medium' ? C.yellow :
+                            C.border
+                          }`,
+                        }}>
+                          <img src={preview} alt={`사진${idx + 1}`}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          {recognizingIdx === idx && (
+                            <div style={{
+                              position: 'absolute', inset: 0,
+                              background: 'rgba(0,0,0,0.6)', display: 'flex',
+                              alignItems: 'center', justifyContent: 'center',
+                              color: '#fff', fontSize: 11,
+                            }}>분석중...</div>
+                          )}
+                          <button
+                            onClick={() => removeImage(idx)}
+                            style={{
+                              position: 'absolute', top: 2, right: 2,
+                              width: 20, height: 20, borderRadius: '50%',
+                              background: 'rgba(0,0,0,0.7)', border: 'none',
+                              color: '#fff', fontSize: 11, cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              lineHeight: '20px',
+                            }}
+                          >X</button>
+                        </div>
+                      ))}
+                      {imagePreviews.length < 3 && (
+                        <button
+                          onClick={() => imageInputRef.current?.click()}
+                          disabled={recognizingIdx >= 0}
+                          style={{
+                            width: 80, height: 80, display: 'flex',
+                            flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            background: C.bgSurface, borderRadius: 8,
+                            border: `2px dashed ${C.border}`, cursor: 'pointer',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <span style={{ fontSize: 24 }}>📷</span>
+                          <span style={{ fontSize: 10, color: C.textDim, marginTop: 2 }}>
+                            {imagePreviews.length === 0 ? '사진 찍기' : `+${3 - imagePreviews.length}장`}
+                          </span>
+                        </button>
+                      )}
                     </div>
 
-                    {/* 이미지 미리보기 + 인식 결과 */}
-                    {imagePreview && (
+                    {/* 인식 결과 요약 */}
+                    {imageResults.some(r => r !== null) && (
                       <div style={{
-                        marginTop: 12, padding: 12, borderRadius: 12,
+                        marginTop: 10, padding: '8px 12px', borderRadius: 10,
                         background: C.bgCard, border: `1px solid ${C.border}`,
                       }}>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                          <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <img
-                              src={imagePreview}
-                              alt="상품 사진"
-                              style={{
-                                width: 80, height: 80, borderRadius: 8,
-                                objectFit: 'cover', border: `1px solid ${C.border}`,
-                              }}
-                            />
-                            <button
-                              onClick={clearImage}
-                              style={{
-                                position: 'absolute', top: -6, right: -6,
-                                width: 20, height: 20, borderRadius: '50%',
-                                background: C.bgDeep, border: `1px solid ${C.border}`,
-                                color: C.textSec, fontSize: 11, cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              }}
-                            >X</button>
+                        {imageResults.map((rec, idx) => rec && (
+                          <div key={idx} style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '4px 0', fontSize: 13,
+                            opacity: rec.confidence === 'low' ? 0.5 : 1,
+                          }}>
+                            <span>{rec.confidence === 'high' ? '✅' : rec.confidence === 'medium' ? '💡' : '⚠️'}</span>
+                            <span style={{ color: rec.confidence === 'low' ? C.textDim : C.textPri }}>
+                              사진{idx + 1}: {rec.product_name
+                                ? `${rec.brand ? rec.brand + ' ' : ''}${rec.product_name}${rec.specs ? ` (${rec.specs})` : ''}`
+                                : '인식 불가'}
+                            </span>
                           </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            {imageRecognizing ? (
-                              <div style={{ fontSize: 13, color: C.cyan }}>
-                                AI가 상품을 인식하고 있어요...
-                              </div>
-                            ) : imageResult ? (
-                              imageResult.product_name ? (
-                                <div>
-                                  <div style={{ fontSize: 13, fontWeight: 700, color: C.green, marginBottom: 4 }}>
-                                    인식 완료!
-                                  </div>
-                                  <div style={{ fontSize: 14, fontWeight: 600, color: C.textPri, marginBottom: 2 }}>
-                                    {imageResult.product_name}
-                                  </div>
-                                  {imageResult.brand && (
-                                    <div style={{ fontSize: 12, color: C.textSec }}>
-                                      브랜드: {imageResult.brand}
-                                      {imageResult.model_name ? ` | 모델: ${imageResult.model_name}` : ''}
-                                    </div>
-                                  )}
-                                  {imageResult.specs && (
-                                    <div style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>
-                                      {imageResult.specs}
-                                    </div>
-                                  )}
-                                  <div style={{
-                                    fontSize: 10, marginTop: 4, padding: '2px 6px', borderRadius: 4,
-                                    display: 'inline-block',
-                                    background: imageResult.confidence === 'high' ? `${C.green}20` :
-                                                imageResult.confidence === 'medium' ? `${C.yellow}20` : `${C.orange}20`,
-                                    color: imageResult.confidence === 'high' ? C.green :
-                                           imageResult.confidence === 'medium' ? C.yellow : C.orange,
-                                  }}>
-                                    신뢰도: {imageResult.confidence === 'high' ? '높음' :
-                                              imageResult.confidence === 'medium' ? '보통' : '낮음'}
-                                  </div>
-                                </div>
-                              ) : (
-                                <div style={{ fontSize: 13, color: C.orange }}>
-                                  상품을 인식하지 못했어요. 직접 입력해주세요.
-                                </div>
-                              )
-                            ) : null}
-                          </div>
-                        </div>
+                        ))}
                       </div>
                     )}
                   </div>

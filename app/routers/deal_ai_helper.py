@@ -140,6 +140,13 @@ def _build_prompt(raw_title: str, raw_free_text: str) -> str:
 - selected_value: 사용자가 입력에서 명시한 구체적 값. 없으면 null.
 - values: 이 옵션에서 가능한 후보 값 목록.
 
+⚠️ 중요: 브랜드 일관성
+- brand 필드에 설정한 브랜드와 옵션의 values는 반드시 일치해야 한다.
+- 예: brand가 "오뚜기"이면, "종류" 옵션 values에 오뚜기 제품만 넣어라 ("오뚜기 진라면", "오뚜기 참깨라면" 등).
+  다른 브랜드 제품 ("신라면", "삼양라면" 등)을 넣지 마라.
+- 예: brand가 "종가집"이면, "종류" 옵션에 종가집 제품만 넣어라. "비비고 김치"를 넣지 마라.
+- 브랜드 옵션("브랜드" title)이 필요하면, brands 리스트와 동일하게 구성하라.
+
 ### 4. 가격 (LLM 추정)
 center_price, desired_price_suggestion, max_budget_suggestion을 LLM이 아는 범위에서 추정.
 commentary에 "LLM 추정치" 라고 반드시 명시.
@@ -618,6 +625,16 @@ def _run_ai_deal_helper(raw_title: str, raw_free_text: str) -> DealAIResponse:
     # ── 스키마 검증 + 옵션 10개 상한 ────────────────────
     opts = data.get("suggested_options") or []
     data["suggested_options"] = opts[:10]
+
+    # ── 브랜드 일관성 후처리 ────────────────────────────
+    main_brand = (data.get("brand") or "").strip()
+    if main_brand:
+        for opt in data["suggested_options"]:
+            # "브랜드" 옵션이면 brands 리스트와 동기화
+            if isinstance(opt, dict) and (opt.get("title") or "").strip() in ("브랜드", "brand", "Brand"):
+                opt["values"] = data["brands"][:5] if data.get("brands") else [main_brand]
+                if main_brand in opt["values"]:
+                    opt["selected_value"] = main_brand
 
     return DealAIResponse.model_validate(data)
 
