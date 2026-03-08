@@ -450,6 +450,20 @@ export default function DealCreatePage() {
   const [recognizingIdx,  setRecognizingIdx]  = useState(-1);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  // 음성 인식
+  type VoiceResult = {
+    transcript: string; product_query?: string | null; brand?: string | null;
+    product_name?: string | null; target_price?: number | null;
+    quantity?: number | null; options?: string[] | null; confidence: string;
+  };
+  const [isRecording,    setIsRecording]    = useState(false);
+  const [recordingTime,  setRecordingTime]  = useState(0);
+  const [voiceLoading,   setVoiceLoading]   = useState(false);
+  const [voiceResult,    setVoiceResult]    = useState<VoiceResult | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef        = useRef<Blob[]>([]);
+  const timerRef         = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // AI 결과
   const [aiResult,         setAiResult]         = useState<AIResult | null>(null);
 
@@ -505,6 +519,10 @@ export default function DealCreatePage() {
       setReaction('');
       setPriceAnalysis(null);
       setShowExcluded(false);
+      // 음성 인식 희망가 자동 채우기
+      if (voiceResult?.target_price && !guessPrice) {
+        setGuessPrice(voiceResult.target_price.toLocaleString('ko-KR'));
+      }
     }
     prevStepRef.current = step;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -748,6 +766,64 @@ export default function DealCreatePage() {
       applyBestRecognition(next);
       return next;
     });
+  };
+
+  // ── 음성 녹음 ────────────────────────────────────────
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4' });
+      chunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = () => { stream.getTracks().forEach(t => t.stop()); processVoice(); };
+      mr.start();
+      mediaRecorderRef.current = mr;
+      setIsRecording(true);
+      setRecordingTime(0);
+      setVoiceResult(null);
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => {
+          if (prev >= 29) { stopRecording(); return 30; }
+          return prev + 1;
+        });
+      }, 1000);
+    } catch {
+      showToast('마이크 접근 권한이 필요합니다. 브라우저 설정을 확인해주세요.', 'error');
+    }
+  };
+
+  const stopRecording = () => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+
+  const processVoice = async () => {
+    if (chunksRef.current.length === 0) return;
+    setVoiceLoading(true);
+    try {
+      const blob = new Blob(chunksRef.current, { type: chunksRef.current[0].type });
+      const form = new FormData();
+      form.append('file', blob, 'voice.webm');
+      const resp = await apiClient.post(API.AI.DEAL_HELPER_VOICE, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000,
+      });
+      const data = resp.data as VoiceResult & { success: boolean };
+      if (data.success && data.product_query) {
+        setVoiceResult(data);
+        setProductName(data.product_query);
+        if (data.quantity && data.quantity > 0) setQuantity(data.quantity);
+        showToast('음성 인식 완료!', 'success');
+      } else {
+        showToast('음성을 인식하지 못했어요. 다시 시도해주세요.', 'error');
+      }
+    } catch {
+      showToast('음성 인식 실패. 다시 시도해주세요.', 'error');
+    }
+    setVoiceLoading(false);
   };
 
   // ── 분석 버튼 ────────────────────────────────────────
@@ -1231,6 +1307,84 @@ export default function DealCreatePage() {
                         >{tag.label}</button>
                       ))}
                     </div>
+                  </div>
+
+                  {/* 음성 입력 */}
+                  <div style={{
+                    padding: '14px 16px', borderRadius: 14,
+                    background: isRecording ? 'rgba(255,45,120,0.08)' : C.bgSurface,
+                    border: `1px solid ${isRecording ? C.magenta + '55' : C.border}`,
+                    transition: 'all 0.2s',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>🎙️ 음성으로 입력</span>
+                      {voiceLoading && <span style={{ fontSize: 11, color: C.cyan }}>분석중...</span>}
+                    </div>
+                    {isRecording ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{
+                          width: 12, height: 12, borderRadius: '50%',
+                          background: C.magenta, animation: 'pulse 1s ease-in-out infinite',
+                        }} />
+                        <span style={{ fontSize: 14, fontWeight: 700, color: C.magenta, fontVariantNumeric: 'tabular-nums' }}>
+                          {recordingTime}초 / 30초
+                        </span>
+                        <div style={{ flex: 1 }} />
+                        <button onClick={stopRecording} style={{
+                          padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                          background: 'rgba(255,45,120,0.15)', border: `1px solid ${C.magenta}55`,
+                          color: C.magenta, cursor: 'pointer',
+                        }}>⏹ 완료</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={startRecording}
+                        disabled={voiceLoading}
+                        style={{
+                          width: '100%', padding: '10px 0', borderRadius: 10,
+                          fontSize: 13, fontWeight: 700, cursor: voiceLoading ? 'not-allowed' : 'pointer',
+                          background: 'rgba(0,240,255,0.06)', border: `1px solid ${C.border}`,
+                          color: C.cyan, transition: 'all 0.15s',
+                        }}
+                      >
+                        {voiceLoading ? '🔄 음성 분석 중...' : '🎙️ 눌러서 말하기'}
+                      </button>
+                    )}
+
+                    {/* 음성 인식 결과 */}
+                    {voiceResult && (
+                      <div style={{
+                        marginTop: 10, padding: '10px 12px', borderRadius: 10,
+                        background: C.bgCard, border: `1px solid ${C.border}`,
+                      }}>
+                        <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>인식 결과</div>
+                        <div style={{ fontSize: 13, color: C.textPri, marginBottom: 6, lineHeight: 1.5 }}>
+                          "{voiceResult.transcript}"
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {voiceResult.product_query && (
+                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${C.cyan}15`, color: C.cyan }}>
+                              상품: {voiceResult.product_query}
+                            </span>
+                          )}
+                          {voiceResult.brand && (
+                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${C.purple}15`, color: C.purple }}>
+                              브랜드: {voiceResult.brand}
+                            </span>
+                          )}
+                          {voiceResult.target_price && (
+                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${C.green}15`, color: C.green }}>
+                              희망가: {voiceResult.target_price.toLocaleString()}원
+                            </span>
+                          )}
+                          {voiceResult.quantity && (
+                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${C.orange}15`, color: C.orange }}>
+                              수량: {voiceResult.quantity}개
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {primaryBtn('🔍 핑퐁이 AI 분석하기', handleAIAnalysis, !productName.trim())}

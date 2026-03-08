@@ -807,3 +807,133 @@ async def image_recognize(file: UploadFile = File(...)):
         print(f"[image-recognize] ERROR: {e}")
         import traceback; traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"이미지 인식 실패: {e.__class__.__name__}")
+
+
+# ─────────────────────────────────────────────
+# 음성 인식 엔드포인트 (Whisper STT + GPT Parse)
+# ─────────────────────────────────────────────
+
+class VoiceRecognizeResponse(BaseModel):
+    success: bool = True
+    transcript: str = ""
+    product_query: Optional[str] = None
+    brand: Optional[str] = None
+    product_name: Optional[str] = None
+    target_price: Optional[int] = None
+    quantity: Optional[int] = None
+    options: Optional[List[str]] = None
+    confidence: str = "low"  # "high" | "medium" | "low"
+
+
+@router.post("/voice-recognize", response_model=VoiceRecognizeResponse)
+async def voice_recognize(file: UploadFile = File(...)):
+    """
+    음성 파일 → Whisper STT → GPT-4o-mini 파싱 → 구조화된 딜 정보 반환.
+    지원 형식: webm, mp4, wav, m4a, ogg, mp3
+    """
+    allowed_types = {
+        "audio/webm", "audio/mp4", "audio/wav", "audio/x-wav",
+        "audio/m4a", "audio/ogg", "audio/mpeg", "audio/mp3",
+        "video/webm",  # MediaRecorder가 video/webm으로 보낼 수 있음
+    }
+    content_type = (file.content_type or "").lower()
+    if content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail=f"지원하지 않는 오디오 형식입니다: {content_type}")
+
+    contents = await file.read()
+    if len(contents) > 25 * 1024 * 1024:  # 25MB (Whisper 제한)
+        raise HTTPException(status_code=400, detail="파일 크기는 25MB 이하여야 합니다.")
+
+    if len(contents) < 1000:  # 너무 짧은 파일
+        raise HTTPException(status_code=400, detail="녹음이 너무 짧습니다. 다시 시도해주세요.")
+
+    try:
+        client = get_client()
+
+        # ── 1단계: Whisper STT ──
+        import io
+        ext = "webm"
+        if "wav" in content_type:
+            ext = "wav"
+        elif "mp4" in content_type or "m4a" in content_type:
+            ext = "m4a"
+        elif "ogg" in content_type:
+            ext = "ogg"
+        elif "mpeg" in content_type or "mp3" in content_type:
+            ext = "mp3"
+
+        audio_file = io.BytesIO(contents)
+        audio_file.name = f"voice.{ext}"
+
+        whisper_resp = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file,
+            language="ko",
+        )
+        transcript = (whisper_resp.text or "").strip()
+
+        if not transcript:
+            return VoiceRecognizeResponse(
+                success=False,
+                transcript="",
+                confidence="low",
+            )
+
+        # ── 2단계: GPT-4o-mini로 구조화 파싱 ──
+        parse_prompt = (
+            "사용자가 음성으로 공동구매 딜을 만들려고 합니다.\n"
+            "아래 음성 텍스트에서 상품 정보를 추출해 JSON으로 응답하세요.\n"
+            "반드시 JSON만 응답하세요. 다른 텍스트 없이:\n\n"
+            f"음성 텍스트: \"{transcript}\"\n\n"
+            "JSON 형식:\n"
+            "{\n"
+            '  "product_query": "검색에 사용할 상품명 (예: 에어팟 프로 2세대)",\n'
+            '  "brand": "브랜드명 또는 null",\n'
+            '  "product_name": "정식 상품명 또는 null",\n'
+            '  "target_price": 희망가격(숫자) 또는 null,\n'
+            '  "quantity": 수량(숫자) 또는 null,\n'
+            '  "options": ["색상:화이트", "용량:256GB"] 또는 [],\n'
+            '  "confidence": "high" 또는 "medium" 또는 "low"\n'
+            "}\n\n"
+            "규칙:\n"
+            "- product_query는 반드시 채워주세요\n"
+            "- 가격 언급이 있으면 target_price에 숫자로 (만원 → ×10000)\n"
+            "- 수량 언급이 없으면 quantity는 null\n"
+            "- 옵션(색상, 용량, 사이즈 등) 언급이 있으면 options에\n"
+            "- confidence: 상품이 명확하면 high, 애매하면 medium, 알 수 없으면 low"
+        )
+
+        parse_resp = client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[{"role": "user", "content": parse_prompt}],
+            temperature=0.1,
+            max_tokens=300,
+            timeout=15,
+        )
+        parse_text = (parse_resp.choices[0].message.content or "").strip()
+        parsed = _parse_json_safely(parse_text)
+
+        return VoiceRecognizeResponse(
+            success=True,
+            transcript=transcript,
+            product_query=parsed.get("product_query"),
+            brand=parsed.get("brand"),
+            product_name=parsed.get("product_name"),
+            target_price=parsed.get("target_price"),
+            quantity=parsed.get("quantity"),
+            options=parsed.get("options", []),
+            confidence=parsed.get("confidence", "medium"),
+        )
+
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        print(f"[voice-recognize] ERROR: {e}")
+        import traceback; traceback.print_exc()
+        return VoiceRecognizeResponse(
+            success=False,
+            transcript=transcript if 'transcript' in dir() else "",
+            confidence="low",
+        )

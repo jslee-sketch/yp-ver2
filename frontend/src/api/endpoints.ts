@@ -220,6 +220,7 @@ export const API = {
   AI: {
     DEAL_HELPER:       '/ai/deal_helper',
     DEAL_HELPER_IMAGE: '/ai/deal_helper/image-recognize',
+    DEAL_HELPER_VOICE: '/ai/deal_helper/voice-recognize',
     INTENT_RESOLVE:    '/ai/resolve_intent',
     PRICE_SUGGEST:     '/ai/price_suggest',
   },
