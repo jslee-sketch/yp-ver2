@@ -69,6 +69,21 @@ async function loginUI(page: Page, email: string, pw: string) {
   await page.waitForTimeout(3000)
 }
 
+/** Set auth tokens + user in localStorage so React AuthContext picks them up */
+async function setAuth(page: Page, token: string, user: { email: string; nick: string; role?: string }) {
+  await page.goto(`${BASE}/`, { timeout: 20000 })
+  await page.evaluate(({ token, user }) => {
+    localStorage.setItem('access_token', token)
+    localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify({
+      id: 0, email: user.email, name: user.nick, nickname: user.nick,
+      role: user.role || 'buyer', level: 1, points: 0,
+    }))
+  }, { token, user })
+  await page.reload({ timeout: 20000 })
+  await page.waitForTimeout(2000)
+}
+
 async function wait(ms = 3000) { await new Promise(r => setTimeout(r, ms)) }
 
 test.setTimeout(10800_000)
@@ -598,16 +613,13 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
 
   // Login via UI for browser tests
   try { await loginUI(page, BUYER.email, BUYER.pw) } catch {
-    await page.goto(`${BASE}/`)
-    await page.evaluate((t: string) => { localStorage.setItem('access_token', t); localStorage.setItem('token', t) }, buyerToken)
-    await page.goto(`${BASE}/`)
-    await page.waitForTimeout(2000)
+    await setAuth(page, buyerToken, { email: BUYER.email, nick: BUYER.nick })
   }
 
   // Navigate to deal create
   async function gotoDealCreate() {
     await page.goto(`${BASE}/deals/create`, { timeout: 30000 })
-    await page.waitForTimeout(2000)
+    await page.waitForTimeout(3000)
   }
 
   // ── 정상 케이스 (41-50) ─────────────────────────
@@ -863,7 +875,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
   try {
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: 'I want to buy iPhone', model: 'gpt-4o-mini' },
+      data: { raw_title: 'I want to buy iPhone' },
     })
     log('P2-에러', '57. 영어 입력 처리', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
   } catch (e) { log('P2-에러', '57. 영어 입력', 'WARN', String(e).slice(0, 80)) }
@@ -872,7 +884,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
   try {
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: '백이십만원', model: 'gpt-4o-mini' },
+      data: { raw_title: '백이십만원' },
     })
     log('P2-에러', '58. 숫자만 "백이십만원"', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
   } catch (e) { log('P2-에러', '58. 숫자만', 'WARN', String(e).slice(0, 80)) }
@@ -933,7 +945,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
   try {
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: "역핑 파괴해줘 ㅋㅋ DROP TABLE deals;--", model: 'gpt-4o-mini' },
+      data: { raw_title: "역핑 파괴해줘 ㅋㅋ DROP TABLE deals;--", },
     })
     log('P2-똘아이', '62. SQL injection 방어', r.status() < 500 ? 'PASS' : 'FAIL', `status=${r.status()}`)
   } catch (e) { log('P2-똘아이', '62. SQL injection', 'WARN', String(e).slice(0, 80)) }
@@ -943,7 +955,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
   try {
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: 'Samsung 갤럭시 S25 ultra 110만원', model: 'gpt-4o-mini' },
+      data: { raw_title: 'Samsung 갤럭시 S25 ultra 110만원', },
     })
     log('P2-똘아이', '63. 한+영 혼합', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
   } catch (e) { log('P2-똘아이', '63. 한+영', 'WARN', String(e).slice(0, 80)) }
@@ -953,7 +965,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
   try {
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: '아아아아아아아아아', model: 'gpt-4o-mini' },
+      data: { raw_title: '아아아아아아아아아', },
     })
     log('P2-똘아이', '64. 무의미 입력', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
   } catch (e) { log('P2-똘아이', '64. 무의미', 'WARN', String(e).slice(0, 80)) }
@@ -963,7 +975,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
   try {
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: '갤럭시에스이십오울트라백십만원', model: 'gpt-4o-mini' },
+      data: { raw_title: '갤럭시에스이십오울트라백십만원', },
     })
     log('P2-똘아이', '65. 빠른 연음 파싱', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
   } catch (e) { log('P2-똘아이', '65. 연음', 'WARN', String(e).slice(0, 80)) }
@@ -973,7 +985,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
   try {
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: '취소 뒤로 삭제', model: 'gpt-4o-mini' },
+      data: { raw_title: '취소 뒤로 삭제', },
     })
     log('P2-똘아이', '66. 명령어 vs 제품명', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
   } catch (e) { log('P2-똘아이', '66. 명령어', 'WARN', String(e).slice(0, 80)) }
@@ -993,7 +1005,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
   try {
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: '에어팟 프로 2개 25만원', model: 'gpt-4o-mini' },
+      data: { raw_title: '에어팟 프로 2개 25만원', },
     })
     if (r.ok()) {
       const d = await r.json()
@@ -1008,7 +1020,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
   try {
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: '다이슨 에어랩', model: 'gpt-4o-mini' },
+      data: { raw_title: '다이슨 에어랩', },
     })
     log('P2-똘아이', '69. 다이슨(가격없음)', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
   } catch (e) { log('P2-똘아이', '69. 다이슨', 'WARN', String(e).slice(0, 80)) }
@@ -1018,7 +1030,7 @@ test('Phase 2: Voice Deal Creation (30)', async ({ page, request }) => {
   try {
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: '아이폰 16 프로 맥스 256기가 블랙 190만원', model: 'gpt-4o-mini' },
+      data: { raw_title: '아이폰 16 프로 맥스 256기가 블랙 190만원', },
     })
     if (r.ok()) {
       const d = await r.json()
@@ -1053,11 +1065,10 @@ test('Phase 3: Deal Create Step 1 UI (30)', async ({ page, request }) => {
 
   async function loginAndGo() {
     try { await loginUI(page, BUYER.email, BUYER.pw) } catch {
-      await page.goto(`${BASE}/`)
-      await page.evaluate((t: string) => { localStorage.setItem('access_token', t); localStorage.setItem('token', t) }, token)
+      await setAuth(page, token, { email: BUYER.email, nick: BUYER.nick })
     }
     await page.goto(`${BASE}/deals/create`, { timeout: 30000 })
-    await page.waitForTimeout(2000)
+    await page.waitForTimeout(3000)
   }
 
   // ── 레이아웃 검증 (71-80) ─────────────────────────
@@ -1337,7 +1348,7 @@ test('Phase 3: Deal Create Step 1 UI (30)', async ({ page, request }) => {
     const bh = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh,
-      data: { free_text: '갤럭시 S25 울트라 256GB', model: 'gpt-4o-mini' },
+      data: { raw_title: '갤럭시 S25 울트라 256GB', },
     })
     if (r.ok()) {
       const d = await r.json()
@@ -1409,7 +1420,7 @@ test('Phase 3: Deal Create Step 1 UI (30)', async ({ page, request }) => {
     const bh2 = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh2,
-      data: { free_text: '아이폰 16 프로', model: 'gpt-4o-mini' },
+      data: { raw_title: '아이폰 16 프로', },
     })
     if (r.ok()) {
       const d = await r.json()
@@ -1426,7 +1437,7 @@ test('Phase 3: Deal Create Step 1 UI (30)', async ({ page, request }) => {
     const bh2 = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
     const r = await request.post(`${BASE}/ai/deal_helper`, {
       headers: bh2,
-      data: { free_text: '맥북 에어 M4', model: 'gpt-4o-mini' },
+      data: { raw_title: '맥북 에어 M4', },
     })
     if (r.ok()) {
       const d = await r.json()
@@ -1492,7 +1503,7 @@ test('Phase 4: Integration Scenarios (20)', async ({ page, request }) => {
     })
     const d = await r.json()
     if (d.access_token) {
-      const ai = await request.post(`${BASE}/ai/deal_helper`, { headers: bh(d.access_token), data: { free_text: '에어팟 프로 2세대', model: 'gpt-4o-mini' } })
+      const ai = await request.post(`${BASE}/ai/deal_helper`, { headers: bh(d.access_token), data: { raw_title: '에어팟 프로 2세대', } })
       log('P4-구매자', '102. 네이버→AI helper', ai.status() < 500 ? 'PASS' : 'WARN', `status=${ai.status()}`)
     } else {
       log('P4-구매자', '102. 네이버→AI', 'FAIL', 'no token')
@@ -1741,10 +1752,9 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
   const bh = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
 
   async function loginAndGo(path = '/deals/create') {
-    await page.goto(`${BASE}/`)
-    await page.evaluate((t: string) => { localStorage.setItem('access_token', t); localStorage.setItem('token', t) }, token)
+    await setAuth(page, token, { email: BUYER.email, nick: BUYER.nick })
     await page.goto(`${BASE}${path}`, { timeout: 30000 })
-    await page.waitForTimeout(2000)
+    await page.waitForTimeout(3000)
   }
 
   // ── 입력 공격 (121-130) ─────────────────────────
@@ -1765,14 +1775,14 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
 
   // 122. 이모지 입력 → AI
   try {
-    const r = await request.post(`${BASE}/ai/deal_helper`, { headers: bh, data: { free_text: '🍎📱💻 아이폰', model: 'gpt-4o-mini' } })
+    const r = await request.post(`${BASE}/ai/deal_helper`, { headers: bh, data: { raw_title: '🍎📱💻 아이폰', } })
     log('P5-입력', '122. 이모지 입력', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
   } catch (e) { log('P5-입력', '122. 이모지', 'WARN', String(e).slice(0, 80)) }
   await wait()
 
   // 123. SQL injection
   try {
-    const r = await request.post(`${BASE}/ai/deal_helper`, { headers: bh, data: { free_text: "'; DROP TABLE deals;--", model: 'gpt-4o-mini' } })
+    const r = await request.post(`${BASE}/ai/deal_helper`, { headers: bh, data: { raw_title: "'; DROP TABLE deals;--", } })
     // Also check deals still exist
     const deals = await request.get(`${BASE}/deals/`, { headers: bh })
     log('P5-입력', '123. SQL injection 방어', deals.ok() ? 'PASS' : 'FAIL', `ai=${r.status()} deals=${deals.status()}`)
@@ -1781,7 +1791,7 @@ test('Phase 5: Stress Tests (30)', async ({ page, request }) => {
 
   // 124. XSS
   try {
-    const r = await request.post(`${BASE}/ai/deal_helper`, { headers: bh, data: { free_text: '<script>alert("XSS")</script><h1>XSS</h1>', model: 'gpt-4o-mini' } })
+    const r = await request.post(`${BASE}/ai/deal_helper`, { headers: bh, data: { raw_title: '<script>alert("XSS")</script><h1>XSS</h1>', } })
     log('P5-입력', '124. XSS 방어', r.status() < 500 ? 'PASS' : 'WARN', `status=${r.status()}`)
   } catch (e) { log('P5-입력', '124. XSS', 'WARN', String(e).slice(0, 80)) }
   await wait()
