@@ -223,13 +223,13 @@ def main():
     report_lines.append(f"- Rate limited: {rate_limits}")
 
     # Write report
-    report_path = "pingpong-persona-final-report.md"
+    report_path = "pingpong-persona-final-report-v2.md"
     with open(report_path, "w", encoding="utf-8") as f:
         f.write("\n".join(report_lines))
     print(f"\nReport: {report_path}", flush=True)
 
     # Write JSON
-    json_path = "pingpong-persona-final-report.json"
+    json_path = "pingpong-persona-final-report-v2.json"
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
     print(f"JSON: {json_path}", flush=True)
