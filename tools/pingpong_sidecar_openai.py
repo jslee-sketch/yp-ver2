@@ -123,9 +123,12 @@ def _kb_allowed_for_role(path_l: str, role: str) -> bool:
     # guide_buyer.md는 BUYER/ADMIN만 (SELLER는 자기 가이드)
     if "guide_buyer" in path_l:
         return role in ("BUYER", "ADMIN", "")
-    # guide_seller.md는 SELLER/ADMIN만
+    # guide_seller.md는 SELLER/ADMIN/ACTUATOR
     if "guide_seller" in path_l:
         return role in ("SELLER", "ADMIN", "ACTUATOR", "")
+    # guide_actuator.md는 ACTUATOR/ADMIN만
+    if "guide_actuator" in path_l:
+        return role in ("ACTUATOR", "ADMIN", "")
     # 그 외(defaults.yaml, 공통 정책 등)는 모두 허용
     return True
 
@@ -156,6 +159,8 @@ def retrieve_kb_snippets(query: str, role: str = "") -> str:
         elif role_u == "SELLER" and "guide_seller" in path_l:
             s *= 1.5
         elif role_u == "ADMIN" and "guide_admin" in path_l:
+            s *= 1.5
+        elif role_u == "ACTUATOR" and "guide_actuator" in path_l:
             s *= 1.5
         if s > 0:
             scored.append((s, it))
@@ -1313,6 +1318,15 @@ def openai_generate(client: OpenAI, category: str, question: str, docs: str, his
                 lines.append(f"핑퐁이: {a}")
         hist_txt = "\n".join(lines)
 
+    # DOCS가 비어 있으면 일반 지식으로 답변 생성 방지
+    no_docs_guard = ""
+    if not docs:
+        no_docs_guard = (
+            "\n\n[중요] DOCS가 비어 있습니다. "
+            "역핑 플랫폼과 관련 없는 일반 상식/외부 정보로 답변하지 마세요. "
+            "\"해당 내용은 제가 안내드리기 어렵습니다. 딜, 오퍼, 배송, 환불 등 역핑 관련 질문을 해주세요!\" 라고 답하세요."
+        )
+
     prompt = f"""
 [최근 대화]
 {hist_txt if hist_txt else "(없음)"}
@@ -1321,7 +1335,7 @@ def openai_generate(client: OpenAI, category: str, question: str, docs: str, his
 {question}
 
 [DOCS]
-{docs if docs else "(없음)"}
+{docs if docs else "(없음)"}{no_docs_guard}
 """.strip()
 
     resp = client.chat.completions.create(
@@ -1584,6 +1598,12 @@ def normalize_external_query(text: str, *, max_len: int = 80) -> str:
     return out
 
 
+_EXTERNAL_DISCLAIMER = "\n\n참고: 저는 역핑 플랫폼 안내 전문이에요! 딜, 오퍼, 배송, 환불 등에 대해 더 물어봐 주세요 😊"
+
+def _finalize_external(msg: str) -> str:
+    """External 결과에 역핑 안내 면책 추가 + finalize."""
+    return finalize(msg + _EXTERNAL_DISCLAIMER, "external")
+
 def handle_external(raw: str, q: str) -> Optional[str]:
     """
     External handler SSOT:
@@ -1601,7 +1621,7 @@ def handle_external(raw: str, q: str) -> Optional[str]:
         S.last_mode = "external"
         S.history.append({"user": q, "bot": msg})
         S.history[:] = S.history[-KEEP_TURNS:]
-        return finalize(msg, "external")
+        return _finalize_external(msg)
 
     # ✅ Finance fast-path: FINANCE_PAT이 매칭되면 쇼핑 가격 핸들러보다 먼저 처리.
     # 환율/주가 쿼리가 PRICE_PAT("얼마")에도 걸리기 때문에 반드시 여기서 선점해야 함.
@@ -1621,7 +1641,7 @@ def handle_external(raw: str, q: str) -> Optional[str]:
         S.last_links = links
         S.last_external_kind = "finance"
         S.last_external_query = eq
-        return finalize(msg, "external")
+        return _finalize_external(msg)
 
     # kind는 무조건 여기서 먼저 초기화
     kind: str = ""
@@ -1701,7 +1721,7 @@ def handle_external(raw: str, q: str) -> Optional[str]:
         S.last_mode = "external"
         S.history.append({"user": q, "bot": msg})
         S.history[:] = S.history[-KEEP_TURNS:]
-        return finalize(msg, "external")
+        return _finalize_external(msg)
 
     # 9) success rendering
     if kind == "weather":
@@ -1715,7 +1735,7 @@ def handle_external(raw: str, q: str) -> Optional[str]:
         S.last_mode = "external"
         S.history.append({"user": q, "bot": msg})
         S.history[:] = S.history[-KEEP_TURNS:]
-        return finalize(msg, "external")
+        return _finalize_external(msg)
 
     if kind == "news":
         # store items for follow-up URL requests
@@ -1728,7 +1748,7 @@ def handle_external(raw: str, q: str) -> Optional[str]:
         S.last_mode = "external"
         S.history.append({"user": q, "bot": msg})
         S.history[:] = S.history[-KEEP_TURNS:]
-        return finalize(msg, "external")
+        return _finalize_external(msg)
 
     # price — 링크는 eq로 항상 직접 생성 (네이버쇼핑 봇차단 제외)
     # (eq fallback은 fetch 직전 4-a 단계에서 이미 처리됨)
@@ -1768,7 +1788,7 @@ def handle_external(raw: str, q: str) -> Optional[str]:
         S.last_mode = "external"
         S.history.append({"user": q, "bot": msg})
         S.history[:] = S.history[-KEEP_TURNS:]
-        return finalize(msg, "external")
+        return _finalize_external(msg)
 
     low = ext.get("low_estimate")
     rg = ext.get("range") or {}
@@ -1781,7 +1801,7 @@ def handle_external(raw: str, q: str) -> Optional[str]:
     S.last_mode = "external"
     S.history.append({"user": q, "bot": msg})
     S.history[:] = S.history[-KEEP_TURNS:]
-    return finalize(msg, "external")
+    return _finalize_external(msg)
 
 
 
@@ -2229,7 +2249,7 @@ def step_once(raw: str, client: OpenAI) -> str:
             S.last_mode = "external"
             S.history.append({"user": q, "bot": _wm})
             S.history[:] = S.history[-KEEP_TURNS:]
-            return finalize(_wm, "external")
+            return _finalize_external(_wm)
         # EXTERNAL_PRICE: handle_external이 None 반환해도 LLM fallthrough 금지
         # → external_query(제품명)로 쇼핑 링크 직접 반환 (쇼핑 사이트명만이면 last_price_query 사용)
         if intent.kind == "EXTERNAL_PRICE":
@@ -2272,7 +2292,7 @@ def step_once(raw: str, client: OpenAI) -> str:
             S.last_mode = "external"
             S.history.append({"user": q, "bot": _pm})
             S.history[:] = S.history[-KEEP_TURNS:]
-            return finalize(_pm, "external")
+            return _finalize_external(_pm)
         # EXTERNAL_NEWS: handle_external이 None 반환해도 뇌피셜 뉴스 금지
         if intent.kind == "EXTERNAL_NEWS":
             _eq = (intent.external_query or q).strip()
@@ -2285,7 +2305,7 @@ def step_once(raw: str, client: OpenAI) -> str:
             S.last_mode = "external"
             S.history.append({"user": q, "bot": _nm})
             S.history[:] = S.history[-KEEP_TURNS:]
-            return finalize(_nm, "external")
+            return _finalize_external(_nm)
         # 기타 external 실패 → smalltalk fallthrough
 
     # YEOKPING_GENERAL
