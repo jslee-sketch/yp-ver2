@@ -1298,6 +1298,12 @@ export default function DealCreatePage() {
                   </div>
 
                   {/* 메인 검색창 + AI 분석 버튼 */}
+                  <style>{`
+                    @keyframes neonPulse {
+                      0%, 100% { box-shadow: 0 0 10px rgba(74, 222, 128, 0.4); }
+                      50% { box-shadow: 0 0 25px rgba(74, 222, 128, 0.8), 0 0 40px rgba(74, 222, 128, 0.3); }
+                    }
+                  `}</style>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input
                       type="text"
@@ -1308,9 +1314,10 @@ export default function DealCreatePage() {
                       autoFocus
                       style={{
                         flex: 1, minWidth: 0, padding: '14px 16px', borderRadius: 12,
-                        border: `2px solid ${productName.trim() ? `${C.cyan}44` : C.border}`,
+                        border: productName.trim() ? '2px solid #4ade80' : `2px solid ${C.border}`,
                         background: C.bgInput, color: C.textPri, fontSize: 16,
-                        transition: 'border-color 0.15s', boxSizing: 'border-box',
+                        boxShadow: productName.trim() ? '0 0 12px rgba(74, 222, 128, 0.3)' : 'none',
+                        transition: 'all 0.3s ease', boxSizing: 'border-box',
                       }}
                     />
                     <button
@@ -1318,13 +1325,16 @@ export default function DealCreatePage() {
                       disabled={!productName.trim() || aiLoading}
                       style={{
                         padding: '14px 20px', borderRadius: 12, whiteSpace: 'nowrap',
-                        background: productName.trim() && !aiLoading ? C.green : '#333',
+                        background: productName.trim() && !aiLoading ? '#4ade80' : '#333',
                         color: productName.trim() && !aiLoading ? '#000' : '#666',
                         border: 'none', cursor: productName.trim() && !aiLoading ? 'pointer' : 'default',
-                        fontWeight: 800, fontSize: 14, transition: 'all 0.15s',
+                        fontWeight: 800, fontSize: 14,
+                        boxShadow: productName.trim() && !aiLoading ? '0 0 15px rgba(74, 222, 128, 0.5)' : 'none',
+                        animation: productName.trim() && !aiLoading ? 'neonPulse 1.5s ease-in-out infinite' : 'none',
+                        transition: 'all 0.3s ease',
                       }}
                     >
-                      {aiLoading ? '분석중...' : 'AI 분석'}
+                      {aiLoading ? '분석중...' : 'AI 분석 🔍'}
                     </button>
                   </div>
 
@@ -1555,7 +1565,6 @@ export default function DealCreatePage() {
                     />
                   </div>
 
-                  {primaryBtn('🔍 핑퐁이 AI 분석하기', handleAIAnalysis, !productName.trim())}
                 </div>
               )
             )}
