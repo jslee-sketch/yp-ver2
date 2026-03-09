@@ -30,7 +30,7 @@ export default function SellerBusinessInfoPage() {
     if (!sellerId) { setLoading(false); return; }
     (async () => {
       try {
-        const { data } = await apiClient.get(`/v3_6/sellers/${sellerId}`);
+        const { data } = await apiClient.get(`/sellers/${sellerId}`);
         const seller = data?.seller || data;
         const init: Record<string, string> = {};
         FIELDS.forEach(f => { init[f.key] = seller?.[f.key] || ''; });

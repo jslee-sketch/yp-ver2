@@ -161,15 +161,15 @@ _alter_cols = [
     ("sellers", "business_type", "VARCHAR(100)"),
     ("sellers", "business_item", "VARCHAR(100)"),
     ("sellers", "tax_invoice_email", "VARCHAR(100)"),
-    ("sellers", "business_verified", "BOOLEAN DEFAULT 0"),
-    ("sellers", "business_registered_at", "DATETIME"),
-    ("sellers", "business_updated_at", "DATETIME"),
+    ("sellers", "business_verified", "BOOLEAN DEFAULT FALSE"),
+    ("sellers", "business_registered_at", "TIMESTAMP"),
+    ("sellers", "business_updated_at", "TIMESTAMP"),
     # 세금계산서용 사업자 추가 필드 (Actuator)
     ("actuators", "representative_name", "VARCHAR(50)"),
     ("actuators", "business_type", "VARCHAR(100)"),
     ("actuators", "business_item", "VARCHAR(100)"),
     ("actuators", "tax_invoice_email", "VARCHAR(100)"),
-    ("actuators", "business_verified", "BOOLEAN DEFAULT 0"),
+    ("actuators", "business_verified", "BOOLEAN DEFAULT FALSE"),
 ]
 try:
     _insp = _sa.inspect(engine)

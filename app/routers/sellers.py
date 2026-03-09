@@ -178,6 +178,14 @@ class SellerBasicOut(BaseModel):
     address: Optional[str] = None
     created_at: Optional[datetime] = None
     approval_status: Optional[str] = None  # APPROVED / PENDING / etc
+    # 사업자 정보 (세금계산서용)
+    business_name: Optional[str] = None
+    business_number: Optional[str] = None
+    representative_name: Optional[str] = None
+    business_type: Optional[str] = None
+    business_item: Optional[str] = None
+    tax_invoice_email: Optional[str] = None
+    verified_at: Optional[datetime] = None
 
 # -----------------------------------------------------
 # 4️⃣ Seller 단건 조회 (기본 프로필 + 승인 상태)
@@ -247,6 +255,13 @@ def get_seller_basic(
         address=address,
         created_at=created,
         approval_status=approval_status,
+        business_name=getattr(seller_row, "business_name", None) if seller_row else None,
+        business_number=getattr(seller_row, "business_number", None) if seller_row else None,
+        representative_name=getattr(seller_row, "representative_name", None) if seller_row else None,
+        business_type=getattr(seller_row, "business_type", None) if seller_row else None,
+        business_item=getattr(seller_row, "business_item", None) if seller_row else None,
+        tax_invoice_email=getattr(seller_row, "tax_invoice_email", None) if seller_row else None,
+        verified_at=getattr(seller_row, "verified_at", None) if seller_row else None,
     )
 
 # -----------------------------------------------------

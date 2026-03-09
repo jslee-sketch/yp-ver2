@@ -318,8 +318,8 @@ export const API = {
 
   // ── 판매자 OCR / 사업자 정보 ──────────────────────────
   SELLER_BUSINESS: {
-    OCR:               '/v3_6/sellers/ocr-business',
-    UPDATE:            (id: number) => `/v3_6/sellers/${id}/business-info`,
+    OCR:               '/sellers/ocr-business',
+    UPDATE:            (id: number) => `/sellers/${id}/business-info`,
   },
 
   // ── 행동 수집 + AI 프로파일링 ──────────────────────────
