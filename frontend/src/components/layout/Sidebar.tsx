@@ -19,42 +19,41 @@ const SidebarTab: React.FC<{ isVisible: boolean; onClick: () => void }> = ({ isV
     {isVisible && (
       <motion.button
         key="sidebar-tab"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
         onClick={onClick}
         onMouseEnter={e => {
-          e.currentTarget.style.background = 'rgba(0,230,118,0.12)';
-          e.currentTarget.style.width = '30px';
+          e.currentTarget.style.background = '#38d96a';
+          e.currentTarget.style.boxShadow = '0 4px 20px rgba(74, 222, 128, 0.6)';
         }}
         onMouseLeave={e => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-          e.currentTarget.style.width = '24px';
+          e.currentTarget.style.background = '#4ade80';
+          e.currentTarget.style.boxShadow = '0 2px 12px rgba(74, 222, 128, 0.4)';
         }}
         style={{
           position: 'fixed',
-          left: 0,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          width: 24,
-          height: 72,
-          borderRadius: '0 10px 10px 0',
-          background: 'rgba(255,255,255,0.06)',
-          zIndex: 399,
+          top: 12,
+          left: 12,
+          zIndex: 1000,
+          width: 44,
+          height: 44,
+          borderRadius: 12,
+          border: 'none',
+          background: '#4ade80',
+          color: '#000',
+          fontSize: 22,
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          boxShadow: '0 2px 12px rgba(74, 222, 128, 0.4)',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 4,
-          transition: 'width 0.2s ease, background 0.2s ease',
-          border: 'none',
-          cursor: 'pointer',
+          transition: 'background 0.2s ease, box-shadow 0.2s ease',
         }}
         aria-label="메뉴 열기"
       >
-        {[0, 1, 2].map(i => (
-          <div key={i} style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.35)' }} />
-        ))}
+        ☰
       </motion.button>
     )}
   </AnimatePresence>

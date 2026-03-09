@@ -73,6 +73,7 @@ type PriceConsensus = {
   notice: string | null;
   fallback_price: number | null;
   user_target_price: number;
+  luxury_warning?: string;
 };
 
 type AIResult = {
@@ -1892,6 +1893,16 @@ export default function DealCreatePage() {
                         fontSize: 13, lineHeight: 1.5,
                       }}>
                         {consensus?.confidence === 'not_available' ? '⚫' : '💡'} {consensus?.notice || priceAnalysis?.notice}
+                      </div>
+                    )}
+
+                    {consensus?.luxury_warning && (
+                      <div style={{
+                        background: '#f59e0b15', border: '1px solid #f59e0b40',
+                        borderRadius: 12, padding: '10px 14px',
+                        color: '#f59e0b', fontSize: 13, lineHeight: 1.5,
+                      }}>
+                        ⚠️ {consensus.luxury_warning}
                       </div>
                     )}
 

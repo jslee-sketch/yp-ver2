@@ -203,6 +203,20 @@ def read_deals(
 # ---------------------------
 # 🔍 유사 딜 찾기 (딜 생성 시 중복 방지)
 # ---------------------------
+def _normalize_for_matching(text: str) -> str:
+    """매칭용 정규화: 공백/대소문자/특수문자 통일."""
+    text = text.lower().strip()
+    text = _re.sub(r'[_\-/·]', ' ', text)       # 특수문자 → 공백
+    text = _re.sub(r'\s+', ' ', text)            # 다중 공백 → 단일
+    # 한글+영문/숫자 사이 공백 추가: "갤럭시S25" → "갤럭시 s25"
+    text = _re.sub(r'([가-힣])([a-zA-Z0-9])', r'\1 \2', text)
+    text = _re.sub(r'([a-zA-Z0-9])([가-힣])', r'\1 \2', text)
+    # 영문+숫자 사이: "S25울트라" → "s 25울트라"
+    text = _re.sub(r'([a-zA-Z])(\d)', r'\1 \2', text)
+    text = _re.sub(r'(\d)([a-zA-Z])', r'\1 \2', text)
+    return text.strip()
+
+
 @router.get("/find-similar")
 def find_similar_deals(
     product_name: str = Query(..., min_length=2),
@@ -214,15 +228,20 @@ def find_similar_deals(
 
     q = db.query(models.Deal).filter(models.Deal.status == "open")
 
-    keywords = [kw for kw in product_name.strip().split() if len(kw) >= 2]
+    normalized = _normalize_for_matching(product_name)
+    keywords = [kw for kw in normalized.split() if len(kw) >= 2]
     if not keywords:
         return {"similar_deals": [], "count": 0}
 
-    # 키워드 OR 매칭
+    # 키워드 OR 매칭 (원본 + 정규화 둘 다)
     conditions = []
     for kw in keywords:
         conditions.append(models.Deal.product_name.ilike(f"%{kw}%"))
         conditions.append(models.Deal.product_detail.ilike(f"%{kw}%"))
+    # 원본 키워드도 추가 (공백 있는 원본)
+    for kw in product_name.strip().split():
+        if len(kw) >= 2:
+            conditions.append(models.Deal.product_name.ilike(f"%{kw}%"))
     q = q.filter(or_(*conditions))
 
     if brand:
@@ -233,12 +252,14 @@ def find_similar_deals(
             )
         )
 
-    results = q.order_by(models.Deal.created_at.desc()).limit(10).all()
+    results = q.order_by(models.Deal.created_at.desc()).limit(20).all()
 
     similar = []
     for deal in results:
-        combined = f"{deal.product_name or ''} {deal.product_detail or ''}".lower()
-        match_count = sum(1 for kw in keywords if kw.lower() in combined)
+        deal_normalized = _normalize_for_matching(
+            f"{deal.product_name or ''} {deal.product_detail or ''}"
+        )
+        match_count = sum(1 for kw in keywords if kw in deal_normalized)
         score = round(match_count / len(keywords) * 100) if keywords else 0
         if score < 40:
             continue

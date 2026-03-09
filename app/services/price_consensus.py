@@ -21,6 +21,19 @@ _ACCESSORY_RE = re.compile(
 _BUNDLE_RE = re.compile(r"세트|묶음|패키지|번들|기획전|합본", re.IGNORECASE)
 _USED_RE = re.compile(r"중고|리퍼|반품|전시|매입|S급|A급|B급|재생|수리", re.IGNORECASE)
 
+_LUXURY_BRANDS = [
+    '롤렉스', 'rolex', '샤넬', 'chanel', '에르메스', 'hermes',
+    '루이비통', 'louis vuitton', '구찌', 'gucci', '프라다', 'prada',
+    '디올', 'dior', '버버리', 'burberry', '발렌시아가', 'balenciaga',
+    '까르띠에', 'cartier', '오메가', 'omega', '파텍필립', 'patek',
+]
+
+
+def _is_luxury_brand(query: str, brand: str = "") -> bool:
+    combined = f"{query} {brand}".lower()
+    return any(lb in combined for lb in _LUXURY_BRANDS)
+
+
 _SUSPICION_THRESHOLD = 0.01  # 목표가 대비 1% 미만이면 의심
 _HIGH_AGREEMENT = 0.15  # 소스 간 15% 이내 → HIGH
 _MED_AGREEMENT = 0.30  # 30% 이내 → MEDIUM
@@ -70,7 +83,7 @@ def build_price_consensus(
     try:
         sq = f"{brand} {product_name}".strip() if brand else product_name
         raw_items = search_coupang_products(sq, limit=10)
-        filtered = _filter_items(raw_items, query_models=query_models)
+        filtered = _filter_items(raw_items, query_models=query_models, search_query=product_name)
         if filtered:
             filtered.sort(key=lambda x: x["price"])
             prices = [it["price"] for it in filtered]
@@ -178,19 +191,23 @@ def build_price_consensus(
     else:
         mp = clean_prices[0]
 
-    return _build(conf, mp, sources, user_target_price=user_target_price)
+    result = _build(conf, mp, sources, user_target_price=user_target_price)
+    if _is_luxury_brand(product_name, brand):
+        result['luxury_warning'] = '명품 제품은 가품/병행수입 여부를 반드시 확인하세요.'
+    return result
 
 
 # ── helpers ──
 
-def _filter_items(items: list, query_models: list[str] | None = None) -> list:
+def _filter_items(items: list, query_models: list[str] | None = None, search_query: str = "") -> list:
     """액세서리/묶음/중고/모델 불일치 제외."""
+    filter_bundles = not bool(_BUNDLE_RE.search(search_query)) if search_query else True
     out = []
     for it in items:
         title = it.get("title", "")
         if _ACCESSORY_RE.search(title):
             continue
-        if _BUNDLE_RE.search(title):
+        if filter_bundles and _BUNDLE_RE.search(title):
             continue
         if _USED_RE.search(title):
             continue

@@ -367,15 +367,28 @@ _MODEL_PATTERNS = [
     re.compile(r'[Aa]ir\s*\d*'),                                       # Air, Air 5
     re.compile(r'[Mm]ini\s*\d*'),                                      # Mini, Mini 6
     re.compile(r'\d{1,2}세대'),                                         # 10세대
+    # 제품명+숫자 패턴
+    re.compile(r'그램\s*\d{2}', re.IGNORECASE),                        # 그램 16, 그램17
+    re.compile(r'[Gg]ram\s*\d{2}'),                                    # Gram 16
+    re.compile(r'스위치\s*\d', re.IGNORECASE),                          # 스위치2
+    re.compile(r'[Ss]witch\s*\d'),                                     # Switch2
+    re.compile(r'버즈\s*\d', re.IGNORECASE),                           # 버즈3
+    re.compile(r'[Bb]uds\s*\d'),                                      # Buds3
+    re.compile(r'워치\s*\d', re.IGNORECASE),                           # 워치7
+    re.compile(r'[Ww]atch\s*\d'),                                     # Watch7
+    re.compile(r'[Oo][Ll][Ee][Dd]'),                                   # OLED
+    re.compile(r'[Ll]ite'),                                            # Lite
+    re.compile(r'\b[Ff][Ee]\b'),                                       # FE
 ]
 
 
 def _extract_model_numbers(text: str) -> list[str]:
-    """텍스트에서 모델 번호들을 추출. 예: 'S23', '16 Pro', 'V15' 등."""
+    """텍스트에서 모델 번호들을 추출. 예: 'S23', '16 Pro', 'V15', '그램16' 등."""
     found = []
     for pat in _MODEL_PATTERNS:
         for m in pat.finditer(text):
-            found.append(m.group().strip().upper())
+            # 공백 제거 후 대문자화: "그램 16" → "그램16"
+            found.append(re.sub(r'\s+', '', m.group()).upper())
     return found
 
 
@@ -443,10 +456,13 @@ def _analyze_market_prices(
         mall = item.get("mallName", "")
         reason = None
 
+        # 검색어 자체가 "세트/묶음" 포함이면 세트 필터 비활성화
+        filter_bundles = not bool(_BUNDLE_KW.search(search_query or ''))
+
         # 제외 규칙 체크
         if _ACCESSORY_KW.search(title):
             reason = "액세서리"
-        elif _BUNDLE_KW.search(title):
+        elif filter_bundles and _BUNDLE_KW.search(title):
             reason = "묶음상품"
         elif _USED_KW.search(title):
             reason = "중고/리퍼"
