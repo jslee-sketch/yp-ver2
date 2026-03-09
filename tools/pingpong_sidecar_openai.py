@@ -177,6 +177,121 @@ def retrieve_kb_snippets(query: str, role: str = "") -> str:
     _dbg(f"[KB] role={role_u} query={ql[:40]} → {len(out)} docs, {total} chars")
     return "\n\n".join(out)
 
+
+# ============================================================
+# FAQ Direct Mapping — KB retrieve 보완 (키워드 매칭 한계 극복)
+# ============================================================
+_FAQ_DIRECT_MAP: Dict[str, Any] = {
+    # ---- 구매자 ----
+    "사진으로 찾기": "딜 생성 Step 1에서 📷 버튼을 클릭하면 제품 사진을 최대 3장 업로드할 수 있습니다. AI가 자동으로 제품을 인식합니다. 경로: /deal/create",
+    "사진 찍어서": "딜 생성 Step 1에서 📷 버튼을 클릭하면 제품 사진을 최대 3장 업로드할 수 있습니다. AI가 자동으로 제품을 인식합니다. 경로: /deal/create",
+    "사진 검색": "딜 생성 Step 1에서 📷 버튼을 클릭하면 제품 사진을 최대 3장 업로드할 수 있습니다. AI가 자동으로 제품을 인식합니다. 경로: /deal/create",
+    "사진으로 딜": "딜 생성 Step 1에서 📷 버튼을 클릭하면 제품 사진을 최대 3장 업로드할 수 있습니다. AI가 자동으로 제품을 인식합니다. 경로: /deal/create",
+    "카메라": "딜 생성 Step 1에서 📷 버튼을 클릭하면 제품 사진을 최대 3장 업로드할 수 있습니다. 경로: /deal/create",
+    "음성으로 딜": "딜 생성 Step 1에서 🎤 버튼을 클릭하고 마이크에 '갤럭시 S25 110만원'처럼 말하면 AI가 자동으로 인식합니다. 최대 30초 녹음. 경로: /deal/create",
+    "음성 검색": "딜 생성 Step 1에서 🎤 버튼을 클릭하고 마이크에 '갤럭시 S25 110만원'처럼 말하면 AI가 자동으로 인식합니다. 경로: /deal/create",
+    "음성으로 제품": "딜 생성 Step 1에서 🎤 버튼을 클릭하면 음성으로 제품을 검색할 수 있습니다. 경로: /deal/create",
+    "마이크": "딜 생성 Step 1에서 🎤 버튼을 클릭하면 음성으로 제품을 검색할 수 있습니다. 경로: /deal/create",
+    "딜 생성 단계": "딜 생성은 5단계입니다. Step 1: 제품 찾기 (텍스트/사진/음성), Step 2: 제품 정보 확인, Step 3: 가격 설정 (가격 챌린지), Step 4: 기타 요청사항, Step 5: 최종 확인 및 딜 만들기. 경로: /deal/create",
+    "단계가 몇": "딜 생성은 5단계입니다. Step 1: 제품 찾기, Step 2: 제품 정보 확인, Step 3: 가격 설정, Step 4: 기타 요청사항, Step 5: 최종 확인. 경로: /deal/create",
+    "몇 단계": "딜 생성은 5단계입니다. Step 1: 제품 찾기, Step 2: 제품 정보 확인, Step 3: 가격 설정, Step 4: 기타 요청사항, Step 5: 최종 확인. 경로: /deal/create",
+    "카카오 로그인": "카카오(💬), 네이버(N), 구글(G) 계정으로 간편 로그인 가능합니다. 소셜 로그인 시 역할(구매자/판매자/액츄에이터)을 선택하고 닉네임을 설정합니다. 기존 이메일 계정과 자동 연동됩니다. 경로: /login",
+    "카카오": "카카오(💬) 계정으로 간편 로그인 가능합니다. 소셜 로그인 시 역할을 선택하고 닉네임을 설정합니다. 경로: /login",
+    "네이버 로그인": "네이버(N) 계정으로 간편 로그인 가능합니다. 경로: /login",
+    "구글 로그인": "구글(G) 계정으로 간편 로그인 가능합니다. 경로: /login",
+    "소셜 로그인": "카카오(💬), 네이버(N), 구글(G) 계정으로 간편 로그인 가능합니다. 경로: /login",
+    "신뢰도": "시장가 신뢰도 등급: 🟢 높음 (2개+ 소스 15% 이내 일치), 🟡 보통 (30% 이내 또는 1개 소스), 🔴 낮음 (정확한 가격 확인 불가), ⚫ 온라인 판매 불가. 3중 소스: 네이버쇼핑 + 쿠팡 + GPT-4o 교차 검증.",
+    "초록 노랑 빨강": "시장가 신뢰도: 🟢 초록 = 높음 (2개+ 소스 일치), 🟡 노랑 = 보통 (1개 소스), 🔴 빨강 = 낮음 (확인 불가).",
+    "가격 챌린지": "딜 생성 Step 3에서 예상 가격을 입력하고 [맞춰보기! 🎯] 버튼을 누르면 AI가 네이버+쿠팡+GPT 3중 소스로 시장가를 조사합니다. 슬라이더로 할인율(0~50%)을 조정하면 목표가와 절감액이 실시간 계산됩니다.",
+    "맞춰보기": "딜 생성 Step 3에서 [맞춰보기! 🎯] 버튼을 누르면 AI가 3중 소스(네이버+쿠팡+GPT)로 시장가를 조사하고 신뢰도 등급(🟢🟡🔴⚫)을 표시합니다.",
+    "유사 딜방": "딜 생성 시 비슷한 제품의 기존 딜이 있으면 '비슷한 딜방이 있어요!' 카드가 표시됩니다. [참여 →] 버튼으로 기존 딜에 참여하거나 새로 만들 수 있습니다.",
+    "비슷한 딜": "딜 생성 시 비슷한 제품의 기존 딜이 있으면 '비슷한 딜방이 있어요!' 카드가 표시됩니다. [참여 →] 버튼으로 기존 딜에 참여 가능.",
+    # ---- 판매자 ----
+    "배송비 유형": "배송비 3가지: 무료배송(FREE), 건당 배송비(PER_RESERVATION), 수량당 배송비(PER_ITEM: 기본배송비+개당배송비×수량). 설정: /seller/shipping-policy",
+    "배송비 수량": "수량당 배송비(PER_ITEM): 기본배송비 + (개당배송비 × 수량). /seller/shipping-policy에서 설정.",
+    "리뷰 답글": "판매자는 /seller/reviews에서 구매자 리뷰에 답글을 작성할 수 있습니다. 구매자 도착 확인 후 30일 이내 리뷰 작성 가능.",
+    "판매자 승인": "회원가입 시 '판매자' 선택 → 사업자 정보 입력 → 서류 업로드 → 관리자 승인 (보통 1~2일). 승인 후 오퍼 제출 가능.",
+    # ---- 관리자 ----
+    "마이너리티 리포트": "🔮 마이너리티 리포트는 사용자 행동 분석 대시보드입니다. 구매자 8개 + 판매자 14개 = 22개 행동 수집 포인트. AI 프로파일링, 망설이는 구매자 감지, 판매자 오퍼 기회 매칭, 인기 검색 키워드 분석. 경로: /admin/minority-report",
+    "마이너리티": "🔮 마이너리티 리포트: 사용자 행동 분석 대시보드. 22개 수집 포인트(구매자8+판매자14). 경로: /admin/minority-report",
+    "행동 분석": "마이너리티 리포트: 구매자 8개(검색/딜조회/가격여정/참여/핑퐁이/카테고리/브랜드/관전) + 판매자 14개(검색/딜조회/오퍼수정/배송/정산/환불/리뷰/문의/정책/속도 등) = 22개 수집 포인트.",
+    "행동 수집": "행동 수집 포인트: 구매자 8개 + 판매자 14개 = 총 22개. 경로: /admin/minority-report",
+    "넛지 알림": "망설이는 구매자 넛지 알림: 같은 제품을 여러 번 검색하거나 딜방을 방문하지만 생성하지 않는 구매자를 감지 → '이 제품 딜방을 만들어볼까요?' 알림을 자동 발송. 경로: /admin/minority-report",
+    "스킵 패턴": "판매자 스킵 패턴 분석: 판매자가 딜을 보고 오퍼를 안 내는 패턴을 분석. 목표가 너무 낮음/카테고리 안 맞음/수량 적음 등 스킵 사유 파악 → 딜 생성 가이드에 반영. 경로: /admin/minority-report",
+    "환불 시뮬레이터": "환불 시뮬레이터: 수동 모드(조건 직접 입력) + 예약 조회 모드. 배송비 3가지(무료/건당/수량당). 환불 사유(구매자/판매자/시스템/분쟁) → 귀책+트리거 자동 매핑. 경로: /admin/refund-simulator",
+    "ANO": "이상 감지: ANO-### 고유번호 자동 부여. 상태: Open → Processing → Closed. 상세 모달에서 발생일/내용/관련번호/처리결과 관리. 경로: /admin/anomalies",
+    "RPT": "신고 관리: RPT-### 고유번호 자동 부여. 이상 감지(ANO)와 동일한 처리 워크플로우. 경로: /admin/reports",
+    "defaults.yaml": "정책 관리: /admin/policy-params에서 defaults.yaml 실시간 수정 가능. 결제 제한시간, 오퍼 마감, 쿨링기간, 수수료율 등 SSOT(Single Source of Truth).",
+    # ---- 액츄에이터 ----
+    "액츄에이터": "액츄에이터는 판매자를 모집하고 지원하는 역할입니다. 추천 코드로 판매자와 연결되며 거래 성사 시 커미션을 받습니다. 커미션: Lv.6 0.5%, Lv.5 0.2%, Lv.4 0.1%, Lv.3↑ 0%.",
+    "커미션": "액츄에이터 커미션: Lv.6(신규) 0.5%, Lv.5 0.2%, Lv.4 0.1%, Lv.3 이상 0%. 판매자 정산과 별도 지급.",
+    # ---- 공통 / 역할별 분기 ----
+    "핑퐁이": "핑퐁이는 역핑의 AI 어시스턴트입니다. 딜 생성, 오퍼 비교, 배송 추적, 환불 정책, 가격 질문 등 역핑 관련 모든 것을 도와드립니다. 현재 페이지에 맞는 바로가기 버튼도 제공해요!",
+    "뭘 도와": {
+        "BUYER": "딜 생성(사진/음성/텍스트), 시장가 조회, 가격 챌린지, 배송 추적, 환불 안내, 분쟁 신청 등을 도와드려요! 😊",
+        "SELLER": "오퍼 제출, 배송 관리, 정산 확인, 환불 처리, 리뷰 관리, 수수료 안내 등을 도와드려요!",
+        "ADMIN": "마이너리티 리포트, 환불 시뮬레이터, 배송 일괄 조회, 이상 감지, 정책 관리 등 관리자 기능을 안내해드려요!",
+        "ACTUATOR": "판매자 모집, 커미션 구조, 딜 탐색, 정산 관리 등을 안내해드려요!",
+    },
+    "도와줄 수 있": {
+        "BUYER": "딜 생성(사진/음성/텍스트), 시장가 조회, 가격 챌린지, 배송 추적, 환불 안내, 분쟁 신청 등을 도와드려요! 😊",
+        "SELLER": "오퍼 제출, 배송 관리, 정산 확인, 환불 처리, 리뷰 관리, 수수료 안내 등을 도와드려요!",
+        "ADMIN": "마이너리티 리포트, 환불 시뮬레이터, 배송 일괄 조회, 이상 감지, 정책 관리 등 관리자 기능을 안내해드려요!",
+        "ACTUATOR": "판매자 모집, 커미션 구조, 딜 탐색, 정산 관리 등을 안내해드려요!",
+    },
+}
+
+# 역할별 접근 제한 정의
+_FAQ_ADMIN_ONLY = {"마이너리티 리포트", "마이너리티", "행동 분석", "행동 수집", "넛지 알림",
+                   "스킵 패턴", "환불 시뮬레이터", "ANO", "RPT", "defaults.yaml"}
+_FAQ_BUYER_ONLY = {"사진으로 찾기", "사진 찍어서", "사진 검색", "사진으로 딜", "카메라",
+                   "음성으로 딜", "음성 검색", "음성으로 제품", "마이크",
+                   "가격 챌린지", "맞춰보기", "신뢰도", "초록 노랑 빨강",
+                   "유사 딜방", "비슷한 딜", "딜 생성 단계", "단계가 몇", "몇 단계"}
+
+
+def _faq_direct_lookup(question: str, role: str) -> Optional[str]:
+    """FAQ 직접 매핑 — retrieve_kb 보완. 긴 키 우선 매칭."""
+    ql = (question or "").lower().strip()
+    if not ql:
+        return None
+    role_u = (role or "").upper()
+
+    best_match: Any = None
+    best_len = 0
+
+    for key, answer in _FAQ_DIRECT_MAP.items():
+        if key.lower() in ql and len(key) > best_len:
+            # 역할 체크
+            if key in _FAQ_ADMIN_ONLY and role_u != "ADMIN":
+                continue
+            if key in _FAQ_BUYER_ONLY and role_u not in ("BUYER", "ADMIN"):
+                return "이 기능은 구매자 전용 기능입니다. 📍 구매자로 로그인하시면 이용 가능합니다."
+            best_match = answer
+            best_len = len(key)
+
+    if best_match is None:
+        return None
+    # 역할별 분기 (dict인 경우)
+    if isinstance(best_match, dict):
+        return best_match.get(role_u) or best_match.get("BUYER", "")
+    return best_match
+
+
+def _is_generic_answer(answer: str) -> bool:
+    """역핑과 관련 없는 일반적인 답변인지 감지"""
+    _generic_pats = [
+        "앱에서", "앱 내", "일반적으로", "보통은", "설정 화면에서",
+        "구글 렌즈", "카메라 아이콘을 눌러", "갤러리에서 선택",
+        "다른 앱", "검색 앱에서", "앱 설정",
+        "고객센터를 통해", "고객센터에 문의",
+        "구체적인 종류에 대한 정보",
+        "여러 가지가 있을 수",
+        "손가락을 좌우로",
+    ]
+    return any(p in answer for p in _generic_pats)
+
+
 # ============================================================
 # Exported time SSOT loader (for autotest_v2 imports)
 # ============================================================
@@ -2330,6 +2445,14 @@ def step_once(raw: str, client: OpenAI) -> str:
             S.history[:] = S.history[-KEEP_TURNS:]
             return finalize(msg, "server")
 
+        # ✅ FAQ 직접 매핑 (KB retrieve 키워드 매칭 한계 극복)
+        _faq = _faq_direct_lookup(q, S.role)
+        if _faq:
+            S.last_mode = "yeokping"
+            S.history.append({"user": q, "bot": _faq})
+            S.history[:] = S.history[-KEEP_TURNS:]
+            return finalize(_faq, "faq")
+
         # ------------------------------------------------------------
         # pingpong ask (/v3_6/pingpong/ask)
         # ------------------------------------------------------------
@@ -2362,8 +2485,17 @@ def step_once(raw: str, client: OpenAI) -> str:
         st = int(ask_obj.get("_http_status") or 0) if isinstance(ask_obj, dict) else 0
         offline = isinstance(ask_obj, dict) and ask_obj.get("error") == "OFFLINE"
         if offline or st >= 500:
+            # FAQ 직접 매핑 먼저 (서버 다운 시에도 정확한 답변 보장)
+            _faq_off = _faq_direct_lookup(q, S.role)
+            if _faq_off:
+                S.last_mode = "yeokping"
+                S.history.append({"user": q, "bot": _faq_off})
+                S.history[:] = S.history[-KEEP_TURNS:]
+                return finalize(_faq_off, "faq")
             docs = retrieve_kb_snippets(q, role=S.role)
             msg = openai_generate(client, "explain", q, docs, S.history, S.user_name, S.role)
+            if _is_generic_answer(msg):
+                msg = "해당 내용은 제가 안내드리기 어렵습니다. 딜, 오퍼, 배송, 환불 등 역핑 관련 질문을 해주세요! 😊"
             S.last_mode = "yeokping"
             S.history.append({"user": q, "bot": msg})
             S.history[:] = S.history[-KEEP_TURNS:]
@@ -2374,13 +2506,34 @@ def step_once(raw: str, client: OpenAI) -> str:
         _answer_raw = (ask_obj.get("answer") or "") if isinstance(ask_obj, dict) else ""
         _is_weak = (not _answer_raw.strip()) or any(p in msg for p in _weak_phrases)
         if _is_weak:
+            # FAQ 직접 매핑 먼저
+            _faq_w = _faq_direct_lookup(q, S.role)
+            if _faq_w:
+                S.last_mode = "yeokping"
+                S.history.append({"user": q, "bot": _faq_w})
+                S.history[:] = S.history[-KEEP_TURNS:]
+                return finalize(_faq_w, "faq")
             docs = retrieve_kb_snippets(q, role=S.role)
             if docs:
                 msg = openai_generate(client, "explain", q, docs, S.history, S.user_name, S.role)
+                if _is_generic_answer(msg):
+                    msg = "해당 내용은 제가 안내드리기 어렵습니다. 딜, 오퍼, 배송, 환불 등 역핑 관련 질문을 해주세요! 😊"
                 S.last_mode = "yeokping"
                 S.history.append({"user": q, "bot": msg})
                 S.history[:] = S.history[-KEEP_TURNS:]
                 return finalize(msg, "docs_fallback")
+
+        # ✅ server 답변이 역핑 무관 일반 답변이면 차단
+        if _is_generic_answer(msg):
+            # FAQ 재시도
+            _faq2 = _faq_direct_lookup(q, S.role)
+            if _faq2:
+                msg = _faq2
+                S.last_mode = "yeokping"
+                S.history.append({"user": q, "bot": msg})
+                S.history[:] = S.history[-KEEP_TURNS:]
+                return finalize(msg, "faq_rescue")
+            msg = "해당 내용은 제가 안내드리기 어렵습니다. 딜, 오퍼, 배송, 환불 등 역핑 관련 질문을 해주세요! 😊"
 
         S.last_mode = "yeokping"
         S.history.append({"user": q, "bot": msg})
