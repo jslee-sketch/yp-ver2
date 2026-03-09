@@ -508,6 +508,7 @@ export default function DealCreatePage() {
   const [conditionNew,          setConditionNew]          = useState(true);
   const [optionGroups,          setOptionGroups]          = useState<OptionGroup[]>([]);
   const [aiFilledFields,        setAiFilledFields]        = useState<Set<string>>(new Set());
+  const [similarDeals,          setSimilarDeals]          = useState<any[]>([]);
 
   // Step 3: 가격 챌린지 + 목표가격 + 수량
   const [marketPrice,     setMarketPrice]     = useState<number | null>(null);
@@ -766,6 +767,15 @@ export default function DealCreatePage() {
     setTargetPrice(''); // 빈칸 — 사용자가 직접 입력
     setPriceCommentary(result.price?.commentary || '');
     setQuantity(1);
+
+    // 유사 딜 체크 (비동기 — 블로킹하지 않음)
+    setSimilarDeals([]);
+    try {
+      const pn = result.product_detail || result.canonical_name || result.model_name || name;
+      const br = result.brand || '';
+      const resp = await apiClient.get(API.DEALS.FIND_SIMILAR, { params: { product_name: pn, brand: br } });
+      if (resp.data?.similar_deals?.length > 0) setSimilarDeals(resp.data.similar_deals);
+    } catch { /* ignore */ }
 
     setAiLoading(false);
     goTo(2);
@@ -1623,6 +1633,46 @@ export default function DealCreatePage() {
                   </div>
                   <div style={{ fontSize: 13, color: C.textSec }}>AI가 분석한 정보를 확인하고 수정해주세요</div>
                 </div>
+
+                {/* 유사 딜방 안내 */}
+                {similarDeals.length > 0 && (
+                  <div style={{
+                    background: 'rgba(74,222,128,0.06)', border: `1px solid rgba(74,222,128,0.25)`,
+                    borderRadius: 14, padding: 16,
+                  }}>
+                    <div style={{ color: C.green, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>
+                      비슷한 딜방이 이미 있어요!
+                    </div>
+                    {similarDeals.map((deal: any) => (
+                      <div key={deal.id} style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '10px 12px', background: C.bgCard, borderRadius: 10, marginBottom: 6,
+                        border: `1px solid ${C.border}`,
+                      }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, color: C.textPri, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {deal.product_detail || deal.product_name}
+                          </div>
+                          <div style={{ fontSize: 11, color: C.textDim }}>
+                            목표가 {deal.target_price?.toLocaleString()}원 · 매칭 {deal.match_score}%
+                            {deal.offer_count > 0 && ` · 오퍼 ${deal.offer_count}건`}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => navigate(`/deal/${deal.id}`)}
+                          style={{
+                            padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                            background: C.green, color: '#000', fontWeight: 700, fontSize: 12,
+                            whiteSpace: 'nowrap', marginLeft: 8,
+                          }}
+                        >참여 →</button>
+                      </div>
+                    ))}
+                    <div style={{ fontSize: 11, color: C.textDim, marginTop: 6 }}>
+                      기존 딜방에 참여하거나, 아래에서 새로 만들 수도 있어요.
+                    </div>
+                  </div>
+                )}
 
                 {/* 카테고리 */}
                 <div>

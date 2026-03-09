@@ -64,6 +64,7 @@ export const API = {
     CLOSE:             (id: number) => `/deals/${id}/close`,
     CLOSE_EXPIRED:     '/deals/close_expired',
     SEARCH:            '/deals/search',
+    FIND_SIMILAR:      '/deals/find-similar',
     COMPLETED:         '/deals/completed',
     AI_RESOLVE:        '/deals/ai/resolve_from_intent',
     INTENT_CREATE:     '/deals/intent',

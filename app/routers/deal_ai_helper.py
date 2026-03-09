@@ -357,6 +357,43 @@ def _is_high_value_product(query: str) -> bool:
     return any(kw in q for kw in _HIGH_VALUE_KEYWORDS)
 
 
+_MODEL_PATTERNS = [
+    re.compile(r'[SsZz]\d{1,3}(?:\s*(?:FE|fe))?', re.IGNORECASE),   # S23, S25 Ultra, Z Flip5, S23 FE
+    re.compile(r'\d{1,2}\s*[Pp]ro(?:\s*[Mm]ax)?'),                    # 16 Pro, 15 Pro Max
+    re.compile(r'\d{1,2}\s*[Uu]ltra'),                                 # 25 Ultra
+    re.compile(r'\d{1,2}\s*[Pp]lus'),                                  # 16 Plus
+    re.compile(r'[Vv]\d{1,3}'),                                        # V15, V50
+    re.compile(r'[Mm]\d{1,2}'),                                        # M4, M3
+    re.compile(r'[Aa]ir\s*\d*'),                                       # Air, Air 5
+    re.compile(r'[Mm]ini\s*\d*'),                                      # Mini, Mini 6
+    re.compile(r'\d{1,2}세대'),                                         # 10세대
+]
+
+
+def _extract_model_numbers(text: str) -> list[str]:
+    """텍스트에서 모델 번호들을 추출. 예: 'S23', '16 Pro', 'V15' 등."""
+    found = []
+    for pat in _MODEL_PATTERNS:
+        for m in pat.finditer(text):
+            found.append(m.group().strip().upper())
+    return found
+
+
+def _model_matches(query_models: list[str], item_text: str) -> bool:
+    """검색 쿼리의 모델번호가 아이템에도 존재하는지 확인."""
+    if not query_models:
+        return True  # 모델번호 없으면 필터 안 함
+    item_models = _extract_model_numbers(item_text)
+    if not item_models:
+        return True  # 아이템에 모델번호 없으면 통과 (일반 상품)
+    # 쿼리 모델 중 하나라도 아이템에 포함되면 OK
+    for qm in query_models:
+        for im in item_models:
+            if qm in im or im in qm:
+                return True
+    return False
+
+
 def _analyze_market_prices(
     naver_items: list,
     expected_price_range: list | None = None,
@@ -388,6 +425,9 @@ def _analyze_market_prices(
     my_aliases: list[str] = []
     if brand:
         my_aliases = _get_brand_aliases(brand)
+
+    # 모델번호 추출 (쿼리에서)
+    query_models = _extract_model_numbers(search_query) if search_query else []
 
     # 중앙값 계산 (이상치 기준)
     prices_all = sorted([int(it.get("lprice", 0)) for it in naver_items if int(it.get("lprice", 0)) > 0])
@@ -428,6 +468,14 @@ def _analyze_market_prices(
                 )
                 if has_other:
                     reason = "다른 브랜드 상품"
+
+        # 모델번호 불일치 제외
+        if not reason and query_models:
+            if not _model_matches(query_models, title):
+                item_models = _extract_model_numbers(title)
+                item_label = '/'.join(item_models) if item_models else '?'
+                query_label = '/'.join(query_models)
+                reason = f"다른 모델 ({item_label} ≠ {query_label})"
 
         if reason:
             excluded.append(PriceAnalysisItem(title=title, price=price, reason=reason))

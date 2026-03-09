@@ -62,11 +62,15 @@ def build_price_consensus(
             "count": naver_total_included,
         })
 
+    # 모델번호 추출
+    from app.routers.deal_ai_helper import _extract_model_numbers
+    query_models = _extract_model_numbers(product_name)
+
     # ═══ 소스 2: 쿠팡 ═══
     try:
         sq = f"{brand} {product_name}".strip() if brand else product_name
         raw_items = search_coupang_products(sq, limit=10)
-        filtered = _filter_items(raw_items)
+        filtered = _filter_items(raw_items, query_models=query_models)
         if filtered:
             filtered.sort(key=lambda x: x["price"])
             prices = [it["price"] for it in filtered]
@@ -179,8 +183,8 @@ def build_price_consensus(
 
 # ── helpers ──
 
-def _filter_items(items: list) -> list:
-    """액세서리/묶음/중고 제외."""
+def _filter_items(items: list, query_models: list[str] | None = None) -> list:
+    """액세서리/묶음/중고/모델 불일치 제외."""
     out = []
     for it in items:
         title = it.get("title", "")
@@ -190,6 +194,11 @@ def _filter_items(items: list) -> list:
             continue
         if _USED_RE.search(title):
             continue
+        # 모델번호 불일치 제외
+        if query_models:
+            from app.routers.deal_ai_helper import _model_matches
+            if not _model_matches(query_models, title):
+                continue
         out.append(it)
     return out
 

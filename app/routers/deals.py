@@ -201,6 +201,66 @@ def read_deals(
 
 
 # ---------------------------
+# 🔍 유사 딜 찾기 (딜 생성 시 중복 방지)
+# ---------------------------
+@router.get("/find-similar")
+def find_similar_deals(
+    product_name: str = Query(..., min_length=2),
+    brand: str = Query(""),
+    db: Session = Depends(get_db),
+):
+    """동일/유사 제품의 진행 중인 딜 찾기."""
+    from sqlalchemy import or_, func
+
+    q = db.query(models.Deal).filter(models.Deal.status == "open")
+
+    keywords = [kw for kw in product_name.strip().split() if len(kw) >= 2]
+    if not keywords:
+        return {"similar_deals": [], "count": 0}
+
+    # 키워드 OR 매칭
+    conditions = []
+    for kw in keywords:
+        conditions.append(models.Deal.product_name.ilike(f"%{kw}%"))
+        conditions.append(models.Deal.product_detail.ilike(f"%{kw}%"))
+    q = q.filter(or_(*conditions))
+
+    if brand:
+        q = q.filter(
+            or_(
+                models.Deal.brand.ilike(f"%{brand}%"),
+                models.Deal.product_name.ilike(f"%{brand}%"),
+            )
+        )
+
+    results = q.order_by(models.Deal.created_at.desc()).limit(10).all()
+
+    similar = []
+    for deal in results:
+        combined = f"{deal.product_name or ''} {deal.product_detail or ''}".lower()
+        match_count = sum(1 for kw in keywords if kw.lower() in combined)
+        score = round(match_count / len(keywords) * 100) if keywords else 0
+        if score < 40:
+            continue
+        offer_count = len(deal.offers) if hasattr(deal, "offers") and deal.offers else 0
+        similar.append({
+            "id": deal.id,
+            "product_name": deal.product_name,
+            "product_detail": deal.product_detail,
+            "brand": deal.brand,
+            "target_price": deal.target_price,
+            "market_price": deal.market_price,
+            "status": deal.status,
+            "offer_count": offer_count,
+            "match_score": score,
+            "created_at": str(deal.created_at) if deal.created_at else None,
+        })
+
+    similar.sort(key=lambda x: x["match_score"], reverse=True)
+    return {"similar_deals": similar[:5], "count": len(similar)}
+
+
+# ---------------------------
 # 🔍 특정 Deal 상세조회
 # ---------------------------
 @router.get("/{deal_id}", response_model=schemas.DealDetail)
