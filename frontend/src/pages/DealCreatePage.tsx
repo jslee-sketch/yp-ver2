@@ -460,9 +460,13 @@ export default function DealCreatePage() {
   const [recordingTime,  setRecordingTime]  = useState(0);
   const [voiceLoading,   setVoiceLoading]   = useState(false);
   const [voiceResult,    setVoiceResult]    = useState<VoiceResult | null>(null);
+  const [audioLevel,     setAudioLevel]     = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef        = useRef<Blob[]>([]);
   const timerRef         = useRef<ReturnType<typeof setInterval> | null>(null);
+  const analyserRef      = useRef<AnalyserNode | null>(null);
+  const audioCtxRef      = useRef<AudioContext | null>(null);
+  const animFrameRef     = useRef<number>(0);
 
   // AI 결과
   const [aiResult,         setAiResult]         = useState<AIResult | null>(null);
@@ -770,25 +774,73 @@ export default function DealCreatePage() {
 
   // ── 음성 녹음 ────────────────────────────────────────
   const startRecording = async () => {
+    console.log('[VOICE] startRecording called');
     try {
+      console.log('[VOICE] requesting mic permission...');
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 },
+        audio: { echoCancellation: true, noiseSuppression: true },
       });
+      console.log('[VOICE] mic stream obtained:', stream.getTracks().length, 'tracks');
+
       // 코덱 우선순위 (브라우저 호환)
       const mimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4', ''];
       let mimeType = '';
       for (const mt of mimeTypes) {
-        if (!mt || MediaRecorder.isTypeSupported(mt)) { mimeType = mt; break; }
+        const supported = !mt || MediaRecorder.isTypeSupported(mt);
+        console.log(`[VOICE] codec ${mt || '(default)'}: ${supported}`);
+        if (supported && !mimeType) { mimeType = mt; break; }
       }
+      console.log('[VOICE] selected mimeType:', mimeType || 'default');
+
       const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      console.log('[VOICE] MediaRecorder created, state:', mr.state);
       chunksRef.current = [];
-      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      mr.onstop = () => { stream.getTracks().forEach(t => t.stop()); processVoice(mimeType); };
-      mr.start(250); // 250ms 간격으로 데이터 수집
+
+      mr.ondataavailable = (e) => {
+        console.log('[VOICE] data chunk:', e.data.size, 'bytes');
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mr.onstop = () => {
+        console.log('[VOICE] recording stopped, chunks:', chunksRef.current.length);
+        stream.getTracks().forEach(t => t.stop());
+        processVoice(mimeType);
+      };
+
+      mr.onerror = (e) => {
+        console.error('[VOICE] recorder error:', e);
+      };
+
+      mr.start(250);
+      console.log('[VOICE] recording started, state:', mr.state);
       mediaRecorderRef.current = mr;
       setIsRecording(true);
       setRecordingTime(0);
       setVoiceResult(null);
+
+      // 실시간 오디오 레벨 시각화
+      try {
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        audioCtxRef.current = audioCtx;
+        analyserRef.current = analyser;
+
+        const updateLevel = () => {
+          if (!analyserRef.current) return;
+          const data = new Uint8Array(analyserRef.current.frequencyBinCount);
+          analyserRef.current.getByteFrequencyData(data);
+          const avg = data.reduce((a, b) => a + b, 0) / data.length;
+          setAudioLevel(avg);
+          animFrameRef.current = requestAnimationFrame(updateLevel);
+        };
+        updateLevel();
+      } catch (audioErr) {
+        console.warn('[VOICE] AudioContext failed (visualization disabled):', audioErr);
+      }
+
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => {
           if (prev >= 29) { stopRecording(); return 30; }
@@ -796,29 +848,48 @@ export default function DealCreatePage() {
         });
       }, 1000);
     } catch (err: unknown) {
-      const e = err as { name?: string };
+      const e = err as { name?: string; message?: string };
+      console.error('[VOICE] error:', e.name, e.message);
       if (e.name === 'NotAllowedError') {
-        showToast('마이크 권한을 허용해주세요. 브라우저 설정에서 확인할 수 있어요.', 'error');
+        showToast('마이크 권한을 허용해주세요. 브라우저 주소창의 🔒 아이콘을 클릭하세요.', 'error');
       } else if (e.name === 'NotFoundError') {
         showToast('마이크를 찾을 수 없습니다. 마이크가 연결되어 있는지 확인해주세요.', 'error');
+      } else if (e.name === 'NotReadableError') {
+        showToast('마이크가 다른 앱에서 사용 중입니다.', 'error');
       } else {
-        showToast('음성 녹음을 시작할 수 없습니다.', 'error');
+        showToast(`음성 녹음 오류: ${e.message || '알 수 없는 오류'}`, 'error');
       }
     }
   };
 
   const stopRecording = () => {
+    console.log('[VOICE] stopRecording called');
+    console.log('[VOICE] recorder state:', mediaRecorderRef.current?.state);
+
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
+      console.log('[VOICE] recorder.stop() called');
     }
+
+    // 오디오 시각화 정리
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    analyserRef.current = null;
+    if (audioCtxRef.current) { audioCtxRef.current.close().catch(() => {}); audioCtxRef.current = null; }
+    setAudioLevel(0);
     setIsRecording(false);
   };
 
   const processVoice = async (mimeType?: string) => {
-    if (chunksRef.current.length === 0) return;
+    if (chunksRef.current.length === 0) {
+      console.log('[VOICE] no chunks to process');
+      return;
+    }
     const blob = new Blob(chunksRef.current, { type: mimeType || chunksRef.current[0]?.type || 'audio/webm' });
+    console.log('[VOICE] blob size:', blob.size, 'bytes, type:', blob.type);
+
     if (blob.size < 1000) {
+      console.log('[VOICE] blob too small, skipping');
       showToast('음성이 너무 짧아요. 다시 시도해주세요.', 'error');
       return;
     }
@@ -829,20 +900,28 @@ export default function DealCreatePage() {
         : 'webm';
       const form = new FormData();
       form.append('file', blob, `voice.${ext}`);
+      console.log('[VOICE] sending to API, file: voice.' + ext, 'size:', blob.size);
+
       const resp = await apiClient.post(API.AI.DEAL_HELPER_VOICE, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 30000,
       });
       const data = resp.data as VoiceResult & { success: boolean };
+      console.log('[VOICE] API response:', JSON.stringify(data).substring(0, 300));
+
       if (data.success && data.product_query) {
         setVoiceResult(data);
         setProductName(data.product_query);
         if (data.quantity && data.quantity > 0) setQuantity(data.quantity);
         showToast('음성 인식 완료!', 'success');
+      } else if (data.transcript) {
+        setVoiceResult(data);
+        showToast('음성은 인식했지만 제품을 찾지 못했어요. 검색창에 직접 입력해주세요.', 'error');
       } else {
         showToast('음성을 인식하지 못했어요. 다시 시도해주세요.', 'error');
       }
-    } catch {
+    } catch (err) {
+      console.error('[VOICE] API error:', err);
       showToast('음성 인식 실패. 다시 시도해주세요.', 'error');
     }
     setVoiceLoading(false);
@@ -1293,22 +1372,39 @@ export default function DealCreatePage() {
                     </button>
                   </div>
 
-                  {/* 녹음 진행바 (녹음 중일 때만) */}
+                  {/* 녹음 중 시각적 피드백 */}
                   {isRecording && (
-                    <div>
+                    <div style={{ marginBottom: 4 }}>
+                      {/* 음성 파형 시각화 — 실시간 audioLevel 반응 */}
+                      <div style={{
+                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        gap: 3, height: 40, marginBottom: 8,
+                      }}>
+                        {Array.from({ length: 20 }, (_, i) => (
+                          <div key={i} style={{
+                            width: 3,
+                            backgroundColor: audioLevel > 30 ? '#4ade80' : audioLevel > 10 ? '#f59e0b' : '#ef4444',
+                            borderRadius: 2,
+                            height: `${Math.max(4, (audioLevel / 128) * 40 * (0.5 + Math.sin(Date.now() / 200 + i) * 0.5))}px`,
+                            transition: 'height 0.1s ease, background-color 0.3s',
+                          }} />
+                        ))}
+                      </div>
+                      {/* 진행바 */}
                       <div style={{
                         height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.08)',
-                        overflow: 'hidden', marginBottom: 4,
+                        overflow: 'hidden', marginBottom: 6,
                       }}>
                         <div style={{
                           height: '100%', borderRadius: 2,
-                          background: C.magenta,
+                          background: 'linear-gradient(90deg, #ef4444, #f59e0b)',
                           width: `${(recordingTime / 30) * 100}%`,
                           transition: 'width 1s linear',
                         }} />
                       </div>
-                      <div style={{ textAlign: 'center', color: C.magenta, fontSize: 12 }}>
-                        녹음 중... {recordingTime}/30초
+                      {/* 시간 표시 */}
+                      <div style={{ textAlign: 'center', color: '#ef4444', fontSize: 14, fontWeight: 'bold' }}>
+                        🔴 녹음 중 {recordingTime}초 / 30초
                       </div>
                     </div>
                   )}
