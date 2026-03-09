@@ -262,6 +262,9 @@ def _faq_direct_lookup(question: str, role: str) -> Optional[str]:
 
     for key, answer in _FAQ_DIRECT_MAP.items():
         if key.lower() in ql and len(key) > best_len:
+            # 역핑 외 맥락에서 ambiguous 키 스킵 (예: "마이너리티 리포트 영화 줄거리")
+            if key in _AMBIGUOUS_FAQ_KEYS and any(nkw in ql for nkw in _NON_YP_CONTEXT):
+                continue
             # 역할 체크
             if key in _FAQ_ADMIN_ONLY and role_u != "ADMIN":
                 continue
@@ -290,6 +293,28 @@ def _is_generic_answer(answer: str) -> bool:
         "손가락을 좌우로",
     ]
     return any(p in answer for p in _generic_pats)
+
+
+def _is_yeokping_related(question: str) -> bool:
+    """역핑 플랫폼 관련 질문인지 판별 (free chat vs KB 답변 결정용)"""
+    _yk_keywords = [
+        "역핑", "딜", "오퍼", "배송", "환불", "정산", "수수료", "판매자", "구매자",
+        "액츄에이터", "딜방", "시장가", "목표가", "핑퐁", "가격 챌린지",
+        "사진으로 딜", "음성으로 딜", "마이너리티 리포트", "시뮬레이터",
+        "카카오 로그인", "네이버 로그인", "구글 로그인", "소셜 로그인",
+        "분쟁", "신고", "리뷰", "운송장", "택배", "쿨링",
+        "ANO", "RPT", "defaults", "yaml", "넛지", "스킵",
+        "낙찰", "관전", "예측", "포인트", "등급",
+        "/deal", "/seller", "/admin", "/my-order",
+        "예약", "결제", "공동구매", "수취", "구매확정",
+    ]
+    q = question.lower()
+    return any(kw.lower() in q for kw in _yk_keywords)
+
+
+# FAQ ambiguous key 제외용 (영화/드라마 등 비역핑 맥락 감지)
+_AMBIGUOUS_FAQ_KEYS = {"마이너리티 리포트", "마이너리티"}
+_NON_YP_CONTEXT = ["영화", "줄거리", "감독", "배우", "출연", "시리즈", "드라마", "소설"]
 
 
 # ============================================================
@@ -1375,6 +1400,18 @@ def instructions_for(category: str, user_name: Optional[str], role: str = "") ->
     }
     tone = tone_map.get(role_u, "친근한 톤으로 답변해.")
 
+    if category == "free_chat":
+        return f"""
+너는 역핑(역경매 공동구매 플랫폼)의 AI 어시스턴트 '핑퐁이'야.
+현재 대화 상대: {role_label or '사용자'}
+호칭: "{name}"
+
+지금은 역핑과 직접 관련 없는 일반 대화야.
+밝고 친근하게 자유롭게 답변해줘.
+답변 마지막에 자연스럽게 "혹시 역핑에서 궁금한 것도 있으면 물어봐 주세요! 😊" 를 붙여줘.
+한국어로 답변. 3~5문장으로 간결하게.
+""".strip()
+
     if category == "smalltalk":
         return f"""
 너는 역핑(역경매 공동구매 플랫폼)의 AI 어시스턴트 '핑퐁이'야.
@@ -1385,8 +1422,7 @@ def instructions_for(category: str, user_name: Optional[str], role: str = "") ->
 1) 역핑/SSOT/서버/preview/DB/정책/내부시스템 같은 단어를 절대 꺼내지 마.
 2) "자료가 없어서", "확인할 수 없어서" 같은 메타 발화 금지.
 3) "제가 지금 조회해올게요/잠깐만 기다려" 같은 약속은 하지 마. 필요하면 링크/방법을 제시해.
-4) 역핑과 관련 없는 질문(영화, 뉴스, 연예인, 일반 상식 등)에는 답하지 마.
-   대신: "저는 역핑 플랫폼 안내 전문이에요! 딜, 오퍼, 배송, 환불 등에 대해 물어봐 주세요 😊" 라고 안내해.
+4) 밝고 친근하게 자유롭게 답변해줘. 답변 마지막에 "혹시 역핑에서 궁금한 것도 있으면 물어봐 주세요! 😊" 를 붙여줘.
 5) 1~4문장. {tone}
 """.strip()
     if category == "explain":
@@ -1433,9 +1469,9 @@ def openai_generate(client: OpenAI, category: str, question: str, docs: str, his
                 lines.append(f"핑퐁이: {a}")
         hist_txt = "\n".join(lines)
 
-    # DOCS가 비어 있으면 일반 지식으로 답변 생성 방지
+    # DOCS가 비어 있으면 일반 지식으로 답변 생성 방지 (explain 카테고리만)
     no_docs_guard = ""
-    if not docs:
+    if not docs and category == "explain":
         no_docs_guard = (
             "\n\n[중요] DOCS가 비어 있습니다. "
             "역핑 플랫폼과 관련 없는 일반 상식/외부 정보로 답변하지 마세요. "
@@ -2327,6 +2363,16 @@ def step_once(raw: str, client: OpenAI) -> str:
 
 
     # ------------------------------------------------------------
+    # 2.5) FAQ 직접 매핑 — intent 분류보다 먼저! (ADMIN FAQ 스킵 방지)
+    # ------------------------------------------------------------
+    _faq_top = _faq_direct_lookup(q, S.role)
+    if _faq_top:
+        S.last_mode = "yeokping"
+        S.history.append({"user": q, "bot": _faq_top})
+        S.history[:] = S.history[-KEEP_TURNS:]
+        return finalize(_faq_top, "faq")
+
+    # ------------------------------------------------------------
     # 3~5) LLM intent classification (replaces regex gates)
     # ------------------------------------------------------------
     intent = classify_intent(q, prev_mode, S.history[-2:], client)
@@ -2445,13 +2491,7 @@ def step_once(raw: str, client: OpenAI) -> str:
             S.history[:] = S.history[-KEEP_TURNS:]
             return finalize(msg, "server")
 
-        # ✅ FAQ 직접 매핑 (KB retrieve 키워드 매칭 한계 극복)
-        _faq = _faq_direct_lookup(q, S.role)
-        if _faq:
-            S.last_mode = "yeokping"
-            S.history.append({"user": q, "bot": _faq})
-            S.history[:] = S.history[-KEEP_TURNS:]
-            return finalize(_faq, "faq")
+        # (FAQ는 intent 분류 전에 이미 체크됨 — 여기 도달 시 FAQ 미히트 확정)
 
         # ------------------------------------------------------------
         # pingpong ask (/v3_6/pingpong/ask)
@@ -2485,17 +2525,18 @@ def step_once(raw: str, client: OpenAI) -> str:
         st = int(ask_obj.get("_http_status") or 0) if isinstance(ask_obj, dict) else 0
         offline = isinstance(ask_obj, dict) and ask_obj.get("error") == "OFFLINE"
         if offline or st >= 500:
-            # FAQ 직접 매핑 먼저 (서버 다운 시에도 정확한 답변 보장)
-            _faq_off = _faq_direct_lookup(q, S.role)
-            if _faq_off:
-                S.last_mode = "yeokping"
-                S.history.append({"user": q, "bot": _faq_off})
-                S.history[:] = S.history[-KEEP_TURNS:]
-                return finalize(_faq_off, "faq")
+            # (FAQ는 intent 전에 이미 체크됨)
             docs = retrieve_kb_snippets(q, role=S.role)
             msg = openai_generate(client, "explain", q, docs, S.history, S.user_name, S.role)
             if _is_generic_answer(msg):
-                msg = "해당 내용은 제가 안내드리기 어렵습니다. 딜, 오퍼, 배송, 환불 등 역핑 관련 질문을 해주세요! 😊"
+                if _is_yeokping_related(q):
+                    msg = "해당 역핑 기능에 대한 정보를 찾지 못했어요. 다른 질문을 해주시면 도움드리겠습니다! 😊"
+                else:
+                    msg = openai_generate(client, "free_chat", q, "", S.history, S.user_name, S.role)
+                    S.last_mode = "chitchat"
+                    S.history.append({"user": q, "bot": msg})
+                    S.history[:] = S.history[-KEEP_TURNS:]
+                    return finalize(msg, "free_chat")
             S.last_mode = "yeokping"
             S.history.append({"user": q, "bot": msg})
             S.history[:] = S.history[-KEEP_TURNS:]
@@ -2506,46 +2547,45 @@ def step_once(raw: str, client: OpenAI) -> str:
         _answer_raw = (ask_obj.get("answer") or "") if isinstance(ask_obj, dict) else ""
         _is_weak = (not _answer_raw.strip()) or any(p in msg for p in _weak_phrases)
         if _is_weak:
-            # FAQ 직접 매핑 먼저
-            _faq_w = _faq_direct_lookup(q, S.role)
-            if _faq_w:
-                S.last_mode = "yeokping"
-                S.history.append({"user": q, "bot": _faq_w})
-                S.history[:] = S.history[-KEEP_TURNS:]
-                return finalize(_faq_w, "faq")
             docs = retrieve_kb_snippets(q, role=S.role)
             if docs:
                 msg = openai_generate(client, "explain", q, docs, S.history, S.user_name, S.role)
                 if _is_generic_answer(msg):
-                    msg = "해당 내용은 제가 안내드리기 어렵습니다. 딜, 오퍼, 배송, 환불 등 역핑 관련 질문을 해주세요! 😊"
+                    if _is_yeokping_related(q):
+                        msg = "해당 역핑 기능에 대한 정보를 찾지 못했어요. 다른 질문을 해주시면 도움드리겠습니다! 😊"
+                    else:
+                        msg = openai_generate(client, "free_chat", q, "", S.history, S.user_name, S.role)
+                        S.last_mode = "chitchat"
+                        S.history.append({"user": q, "bot": msg})
+                        S.history[:] = S.history[-KEEP_TURNS:]
+                        return finalize(msg, "free_chat")
                 S.last_mode = "yeokping"
                 S.history.append({"user": q, "bot": msg})
                 S.history[:] = S.history[-KEEP_TURNS:]
                 return finalize(msg, "docs_fallback")
 
-        # ✅ server 답변이 역핑 무관 일반 답변이면 차단
+        # ✅ server 답변이 역핑 무관 일반 답변이면 → 역핑이면 차단, 아니면 자유 답변
         if _is_generic_answer(msg):
-            # FAQ 재시도
-            _faq2 = _faq_direct_lookup(q, S.role)
-            if _faq2:
-                msg = _faq2
-                S.last_mode = "yeokping"
+            if _is_yeokping_related(q):
+                msg = "해당 역핑 기능에 대한 정보를 찾지 못했어요. 다른 질문을 해주시면 도움드리겠습니다! 😊"
+            else:
+                msg = openai_generate(client, "free_chat", q, "", S.history, S.user_name, S.role)
+                S.last_mode = "chitchat"
                 S.history.append({"user": q, "bot": msg})
                 S.history[:] = S.history[-KEEP_TURNS:]
-                return finalize(msg, "faq_rescue")
-            msg = "해당 내용은 제가 안내드리기 어렵습니다. 딜, 오퍼, 배송, 환불 등 역핑 관련 질문을 해주세요! 😊"
+                return finalize(msg, "free_chat")
 
         S.last_mode = "yeokping"
         S.history.append({"user": q, "bot": msg})
         S.history[:] = S.history[-KEEP_TURNS:]
         return finalize(msg, "server")
 
-    # SMALLTALK (또는 EXTERNAL_* fallthrough)
-    ans = openai_generate(client, "smalltalk", q, "", S.history, S.user_name, S.role)
+    # SMALLTALK (또는 EXTERNAL_* fallthrough) → 자유 답변!
+    ans = openai_generate(client, "free_chat", q, "", S.history, S.user_name, S.role)
     S.last_mode = "chitchat"
     S.history.append({"user": q, "bot": ans})
     S.history[:] = S.history[-KEEP_TURNS:]
-    return finalize(ans, "없음")
+    return finalize(ans, "free_chat")
 
 
 
