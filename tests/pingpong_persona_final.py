@@ -129,25 +129,33 @@ def do_login(role, creds):
     return None
 
 
-def ask(token, question, role):
+def ask(token, question, role, _retries=2):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    try:
-        r = requests.post(
-            f"{BASE}/v3_6/pingpong/ask",
-            json={"question": question, "role": role.upper()},
-            headers=headers,
-            timeout=30,
-        )
-        if r.status_code == 200:
-            data = r.json()
-            answer = data.get("answer", data.get("response", json.dumps(data, ensure_ascii=False)))
-            engine = data.get("engine", "")
-            return answer, engine
-        if r.status_code == 429:
-            return "RATE_LIMITED", ""
-        return f"HTTP_{r.status_code}", ""
-    except Exception as e:
-        return f"ERROR: {str(e)[:100]}", ""
+    for attempt in range(_retries + 1):
+        try:
+            r = requests.post(
+                f"{BASE}/v3_6/pingpong/ask",
+                json={"question": question, "role": role.upper()},
+                headers=headers,
+                timeout=30,
+            )
+            if r.status_code == 200:
+                data = r.json()
+                answer = data.get("answer", data.get("response", json.dumps(data, ensure_ascii=False)))
+                engine = data.get("engine", "")
+                return answer, engine
+            if r.status_code == 429:
+                return "RATE_LIMITED", ""
+            # 5xx → retry
+            if r.status_code >= 500 and attempt < _retries:
+                time.sleep(2)
+                continue
+            return f"HTTP_{r.status_code}", ""
+        except Exception as e:
+            if attempt < _retries:
+                time.sleep(2)
+                continue
+            return f"ERROR: {str(e)[:100]}", ""
 
 
 def escape_md(s):
@@ -223,13 +231,13 @@ def main():
     report_lines.append(f"- Rate limited: {rate_limits}")
 
     # Write report
-    report_path = "pingpong-persona-final-report-v4.md"
+    report_path = "pingpong-persona-final-report-v5.md"
     with open(report_path, "w", encoding="utf-8") as f:
         f.write("\n".join(report_lines))
     print(f"\nReport: {report_path}", flush=True)
 
     # Write JSON
-    json_path = "pingpong-persona-final-report-v4.json"
+    json_path = "pingpong-persona-final-report-v5.json"
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
     print(f"JSON: {json_path}", flush=True)
