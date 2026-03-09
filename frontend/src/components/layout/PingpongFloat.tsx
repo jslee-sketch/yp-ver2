@@ -171,10 +171,12 @@ export default function PingpongFloat() {
       target_name: text.trim().slice(0, 100),
     });
 
+    const role = user?.role || (user?.seller ? 'seller' : 'buyer');
     const result = await askPingpong(text.trim(), {
       page:    location.pathname,
       deal_id: currentDealId,
       user_id: user?.id,
+      role,
     });
 
     const botText = result

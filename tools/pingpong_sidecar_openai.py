@@ -108,25 +108,55 @@ def load_kb() -> None:
 
     KB = kb
     _KB_LOADED = True
-    print(f"[OK] KB loaded: {len(KB)} files indexed", flush=True)
+    admin_count = sum(1 for it in KB if "/admin/" in it.path.lower())
+    public_count = sum(1 for it in KB if "/public/" in it.path.lower())
+    total_chars = sum(len(it.text) for it in KB)
+    print(f"[OK] KB loaded: {len(KB)} files ({public_count} public, {admin_count} admin, {total_chars:,} chars)", flush=True)
 
-def retrieve_kb_snippets(query: str) -> str:
+def _kb_allowed_for_role(path_l: str, role: str) -> bool:
+    """역할에 따라 KB 파일 접근 제한."""
+    role = (role or "").upper()
+    # admin/ 문서는 ADMIN만
+    if "/docs/admin/" in path_l or "/admin/" in path_l:
+        if role != "ADMIN":
+            return False
+    # guide_buyer.md는 BUYER/ADMIN만 (SELLER는 자기 가이드)
+    if "guide_buyer" in path_l:
+        return role in ("BUYER", "ADMIN", "")
+    # guide_seller.md는 SELLER/ADMIN만
+    if "guide_seller" in path_l:
+        return role in ("SELLER", "ADMIN", "ACTUATOR", "")
+    # 그 외(defaults.yaml, 공통 정책 등)는 모두 허용
+    return True
+
+
+def retrieve_kb_snippets(query: str, role: str = "") -> str:
     ql = (query or "").lower().strip()
     if not ql:
         return ""
     toks = re.findall(r"[가-힣]{2,}|[a-z]{2,}|[0-9]{1,}", ql)
     if not toks:
         return ""
+    role_u = (role or "").upper()
     scored: List[Tuple[float, KBItem]] = []
     for it in KB:
-        s = 0.0
         path_l = it.path.lower()
+        if not _kb_allowed_for_role(path_l, role_u):
+            continue
+        s = 0.0
         for t in toks[:20]:
             if t in path_l:
                 s += 8
             if t in it.text_l:
                 s += min(20, it.text_l.count(t) * 2)
         s *= it.weight
+        # 역할 가이드 매칭 보너스 (본인 가이드 우선)
+        if role_u == "BUYER" and "guide_buyer" in path_l:
+            s *= 1.5
+        elif role_u == "SELLER" and "guide_seller" in path_l:
+            s *= 1.5
+        elif role_u == "ADMIN" and "guide_admin" in path_l:
+            s *= 1.5
         if s > 0:
             scored.append((s, it))
     scored.sort(key=lambda x: x[0], reverse=True)
@@ -139,6 +169,7 @@ def retrieve_kb_snippets(query: str) -> str:
             break
         out.append(block)
         total += len(block)
+    _dbg(f"[KB] role={role_u} query={ql[:40]} → {len(out)} docs, {total} chars")
     return "\n\n".join(out)
 
 # ============================================================
@@ -1210,8 +1241,10 @@ def _merge_links(a: List[Dict[str, str]], b: List[Dict[str, str]]) -> List[Dict[
 # ============================================================
 # OpenAI only for smalltalk/explain (no internal facts)
 # ============================================================
-def instructions_for(category: str, user_name: Optional[str]) -> str:
+def instructions_for(category: str, user_name: Optional[str], role: str = "") -> str:
     name = f"{user_name}님" if user_name else "고객님"
+    role_u = (role or "").upper()
+    role_label = {"BUYER": "구매자", "SELLER": "판매자", "ADMIN": "관리자", "ACTUATOR": "액추에이터"}.get(role_u, "")
     if category == "smalltalk":
         return f"""
 너는 친절하고 자연스러운 대화 상대(핑퐁이)야.
@@ -1225,13 +1258,16 @@ def instructions_for(category: str, user_name: Optional[str]) -> str:
 6) 호칭은 "{name}".
 """.strip()
     if category == "explain":
+        role_hint = f"\n- 현재 사용자는 '{role_label}'입니다. {role_label} 관점에서 답변해." if role_label else ""
+        admin_hint = "\n- 관리자 전용 기능(마이너리티 리포트, 환불 시뮬레이터, 이상 감지 등)도 안내 가능합니다." if role_u == "ADMIN" else ""
         return f"""
 너는 역핑을 설명하는 역할이야.
 - 딜/딜방/오퍼/예약 흐름으로 설명해.
 - 숫자/정책시간은 '이미 주어진 SSOT'가 있을 때만 인용해.
-- 2~8문장.
+- 2~8문장.{role_hint}{admin_hint}
 - 연예인/아이돌 같은 일반상식 질문은 너의 역할이 아니므로, "smalltalk로 물어봐" 같은 말은 하지 말고,
   너무 보수적으로 회피하지도 말아라. 확신 없으면 완충표현으로 짧게 답해.
+- DOCS에 해당 내용이 없으면 "해당 기능에 대한 정보가 없습니다"라고 솔직히 답해.
 - 페이지 안내 시 반드시 경로를 포함해라. 예시:
   "내 주문 페이지(/my-orders)에서 확인하세요"
   "딜 검색(/search)에서 찾아보세요"
@@ -1244,7 +1280,7 @@ def instructions_for(category: str, user_name: Optional[str]) -> str:
     return f"한국어로 2~6문장. 호칭은 {name}."
 
 
-def openai_generate(client: OpenAI, category: str, question: str, docs: str, history: List[Dict[str, str]], user_name: Optional[str]) -> str:
+def openai_generate(client: OpenAI, category: str, question: str, docs: str, history: List[Dict[str, str]], user_name: Optional[str], role: str = "") -> str:
     hist = history[-KEEP_TURNS:]
     hist_txt = ""
     if hist:
@@ -1272,7 +1308,7 @@ def openai_generate(client: OpenAI, category: str, question: str, docs: str, his
     resp = client.chat.completions.create(
         model=OPENAI_MODEL,
         messages=[
-            {"role": "system", "content": instructions_for(category, user_name)},
+            {"role": "system", "content": instructions_for(category, user_name, role)},
             {"role": "user", "content": prompt},
         ],
         max_tokens=450,
@@ -2287,8 +2323,8 @@ def step_once(raw: str, client: OpenAI) -> str:
         st = int(ask_obj.get("_http_status") or 0) if isinstance(ask_obj, dict) else 0
         offline = isinstance(ask_obj, dict) and ask_obj.get("error") == "OFFLINE"
         if offline or st >= 500:
-            docs = retrieve_kb_snippets(q)
-            msg = openai_generate(client, "explain", q, docs, S.history, S.user_name)
+            docs = retrieve_kb_snippets(q, role=S.role)
+            msg = openai_generate(client, "explain", q, docs, S.history, S.user_name, S.role)
             S.last_mode = "yeokping"
             S.history.append({"user": q, "bot": msg})
             S.history[:] = S.history[-KEEP_TURNS:]
@@ -2299,9 +2335,9 @@ def step_once(raw: str, client: OpenAI) -> str:
         _answer_raw = (ask_obj.get("answer") or "") if isinstance(ask_obj, dict) else ""
         _is_weak = (not _answer_raw.strip()) or any(p in msg for p in _weak_phrases)
         if _is_weak:
-            docs = retrieve_kb_snippets(q)
+            docs = retrieve_kb_snippets(q, role=S.role)
             if docs:
-                msg = openai_generate(client, "explain", q, docs, S.history, S.user_name)
+                msg = openai_generate(client, "explain", q, docs, S.history, S.user_name, S.role)
                 S.last_mode = "yeokping"
                 S.history.append({"user": q, "bot": msg})
                 S.history[:] = S.history[-KEEP_TURNS:]
@@ -2313,7 +2349,7 @@ def step_once(raw: str, client: OpenAI) -> str:
         return finalize(msg, "server")
 
     # SMALLTALK (또는 EXTERNAL_* fallthrough)
-    ans = openai_generate(client, "smalltalk", q, "", S.history, S.user_name)
+    ans = openai_generate(client, "smalltalk", q, "", S.history, S.user_name, S.role)
     S.last_mode = "chitchat"
     S.history.append({"user": q, "bot": ans})
     S.history[:] = S.history[-KEEP_TURNS:]

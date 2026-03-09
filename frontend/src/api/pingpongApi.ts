@@ -19,7 +19,7 @@ function mapPageToScreen(page?: string): string {
 
 export async function askPingpong(
   message: string,
-  context?: { page?: string; deal_id?: number; user_id?: number },
+  context?: { page?: string; deal_id?: number; user_id?: number; role?: string },
 ) {
   if (!FEATURES.USE_API_PINGPONG) return null;
   try {
@@ -27,6 +27,7 @@ export async function askPingpong(
       question: message,
       screen: mapPageToScreen(context?.page),
       user_id: context?.user_id ?? null,
+      role: (context?.role || 'buyer').toUpperCase(),
       context: {
         deal_id: context?.deal_id ?? null,
       },
