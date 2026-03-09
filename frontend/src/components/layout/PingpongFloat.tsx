@@ -215,7 +215,7 @@ export default function PingpongFloat() {
             : '1px solid rgba(255,183,77,0.3)',
           boxShadow: '0 4px 20px rgba(0,0,0,0.45)',
           fontSize: chatOpen ? 18 : 24,
-          zIndex: 999,
+          zIndex: 9999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -233,7 +233,7 @@ export default function PingpongFloat() {
             {/* 외부 클릭 닫기 */}
             <div
               onClick={() => setChatOpen(false)}
-              style={{ position: 'fixed', inset: 0, zIndex: 997 }}
+              style={{ position: 'fixed', inset: 0, zIndex: 9997 }}
             />
 
             {/* 채팅 패널 */}
@@ -254,7 +254,7 @@ export default function PingpongFloat() {
                 borderRadius: 20,
                 boxShadow: '0 8px 40px rgba(0,0,0,0.55)',
                 border: '1px solid rgba(0,230,118,0.15)',
-                zIndex: 998,
+                zIndex: 9998,
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',

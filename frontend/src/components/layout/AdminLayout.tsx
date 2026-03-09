@@ -25,7 +25,6 @@ export default function AdminLayout() {
         left: 0,
         right: 0,
         bottom: 0,
-        display: 'flex',
         width: '100vw',
         height: '100vh',
         overflow: 'hidden',
@@ -36,12 +35,11 @@ export default function AdminLayout() {
       <AdminSidebar />
       <main
         style={{
-          flex: 1,
+          width: '100%',
           height: '100vh',
           overflowY: 'auto',
           overflowX: 'auto',
           padding: '24px 32px',
-          minWidth: 0,
         }}
       >
         <Outlet />
