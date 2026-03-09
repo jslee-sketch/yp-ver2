@@ -48,6 +48,8 @@ type PriceAnalysisData = {
   total_searched: number;
   total_included: number;
   total_excluded: number;
+  notice?: string | null;
+  fallback_price?: number | null;
 };
 type AIResult = {
   canonical_name: string;
@@ -548,13 +550,23 @@ export default function DealCreatePage() {
         .map(g => g.values[g.selectedIndex]).join(' ');
       const searchQuery = [productDetail || productNameConfirmed || productName, selectedOptStr].filter(Boolean).join(' ');
       const result = await aiRecalcPrice(searchQuery, selectedOptStr || undefined, brand || undefined);
-      if (result?.price?.center_price) {
+      // price_analysis
+      const pa = (result as any)?.price_analysis as PriceAnalysisData | null;
+      if (pa) setPriceAnalysis(pa);
+
+      // notice가 있으면 (고가 제품 등) fallback 처리
+      if (pa?.notice) {
+        const fbp = pa.fallback_price || gp;
+        setMarketPrice(fbp);
+        setPriceCommentary(pa.notice);
+        setReaction(pa.notice);
+        setTargetPrice(String(gp));
+        setDiscountPercent(0);
+      } else if (result?.price?.center_price) {
         const mp = result.price.center_price;
         setMarketPrice(mp);
         setPriceCommentary(result.price.commentary || '');
-        // price_analysis
-        const pa = (result as any).price_analysis as PriceAnalysisData | null;
-        if (pa) { setPriceAnalysis(pa); if (pa.lowest_price) setMarketPrice(pa.lowest_price); }
+        if (pa?.lowest_price) setMarketPrice(pa.lowest_price);
         const finalMp = pa?.lowest_price || mp;
         // 반응 메시지
         const diff = Math.abs(gp - finalMp) / finalMp * 100;
@@ -920,9 +932,19 @@ export default function DealCreatePage() {
       } else {
         showToast('음성을 인식하지 못했어요. 다시 시도해주세요.', 'error');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('[VOICE] API error:', err);
-      showToast('음성 인식 실패. 다시 시도해주세요.', 'error');
+      // axios 에러에서 서버 응답 추출
+      if (err?.response?.data) {
+        const d = err.response.data;
+        console.error('[VOICE] server response:', d);
+        const detail = d.detail || d.error || '서버 오류';
+        showToast(`음성 인식 실패: ${detail}`, 'error');
+      } else if (err?.message?.includes('timeout')) {
+        showToast('음성 인식 시간 초과. 더 짧게 녹음해주세요.', 'error');
+      } else {
+        showToast('음성 인식 서버 연결에 실패했습니다. 다시 시도해주세요.', 'error');
+      }
     }
     setVoiceLoading(false);
   };
@@ -1756,11 +1778,24 @@ export default function DealCreatePage() {
                 {/* 분석 결과 */}
                 {marketChecked && marketPrice && (
                   <>
+                    {/* 고가 제품 안내 */}
+                    {priceAnalysis?.notice && (
+                      <div style={{
+                        background: '#f59e0b20', border: '1px solid #f59e0b',
+                        borderRadius: 12, padding: '12px 16px',
+                        color: '#f59e0b', fontSize: 13, lineHeight: 1.5,
+                      }}>
+                        💡 {priceAnalysis.notice}
+                      </div>
+                    )}
+
                     {/* 시장 최저가 */}
                     <div style={{ textAlign: 'center', padding: 16, background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16 }}>
-                      <div style={{ fontSize: 13, color: C.textSec, marginBottom: 4 }}>시장 최저가</div>
-                      <div style={{ fontSize: 32, fontWeight: 900, color: C.green }}>{marketPrice.toLocaleString()}원</div>
-                      {reaction && <div style={{ fontSize: 14, color: C.textSec, marginTop: 8 }}>{reaction}</div>}
+                      <div style={{ fontSize: 13, color: C.textSec, marginBottom: 4 }}>
+                        {priceAnalysis?.notice ? '참고 가격 (목표가 기준)' : '시장 최저가'}
+                      </div>
+                      <div style={{ fontSize: 32, fontWeight: 900, color: priceAnalysis?.notice ? '#f59e0b' : C.green }}>{marketPrice.toLocaleString()}원</div>
+                      {reaction && !priceAnalysis?.notice && <div style={{ fontSize: 14, color: C.textSec, marginTop: 8 }}>{reaction}</div>}
                     </div>
 
                     {/* 채택 상품 근거 */}

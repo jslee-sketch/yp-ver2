@@ -76,6 +76,8 @@ class PriceAnalysis(BaseModel):
     total_searched: int = 0
     total_included: int = 0
     total_excluded: int = 0
+    notice: Optional[str] = None           # 고가 제품 등 특수 안내
+    fallback_price: Optional[int] = None   # 시장가 없을 때 목표가 기반 대체값
 
 class DealAIResponse(BaseModel):
     """LLM + 네이버 API가 정리해서 돌려주는 결과"""
@@ -333,15 +335,46 @@ def _get_brand_aliases(brand: str) -> list[str]:
     return [bl]
 
 
+_HIGH_VALUE_KEYWORDS = [
+    '자동차', '차량', 'suv', '세단', '전기차', 'ev ', 'eqs', 's클래스', 'e클래스', 'c클래스',
+    '벤츠', 'bmw', '아우디', '포르쉐', '테슬라', '렉서스', '제네시스', '볼보', '재규어',
+    '랜드로버', '람보르기니', '페라리', '마세라티', '벤틀리', '롤스로이스',
+    '부동산', '아파트', '빌라', '오피스텔', '토지',
+]
+
+
+def _is_high_value_product(query: str) -> bool:
+    """자동차/부동산 등 네이버쇼핑에서 본체 가격을 찾기 어려운 고가 제품인지 확인."""
+    q = query.lower()
+    return any(kw in q for kw in _HIGH_VALUE_KEYWORDS)
+
+
 def _analyze_market_prices(
     naver_items: list,
     expected_price_range: list | None = None,
     brand: str | None = None,
+    user_target_price: int | float | None = None,
+    search_query: str | None = None,
 ) -> PriceAnalysis:
     """네이버 검색 결과를 채택/제외로 분류하고 근거를 반환."""
     total_searched = len(naver_items)
     included: list[PriceAnalysisItem] = []
     excluded: list[PriceAnalysisItem] = []
+
+    # 고가 제품 감지 (자동차/부동산 등)
+    if search_query and _is_high_value_product(search_query):
+        if user_target_price and user_target_price > 10_000_000:
+            return PriceAnalysis(
+                lowest_price=None,
+                included_items=[],
+                excluded_items=[],
+                total_searched=total_searched,
+                total_included=0,
+                total_excluded=total_searched,
+                notice=f"자동차/고가 제품은 네이버쇼핑에서 정확한 시장가를 제공하기 어렵습니다. "
+                       f"공식 딜러 가격이나 전문 사이트를 참고해주세요.",
+                fallback_price=int(user_target_price),
+            )
 
     # 브랜드 별칭 준비
     my_aliases: list[str] = []
@@ -380,7 +413,6 @@ def _analyze_market_prices(
         if not reason and my_aliases:
             has_my_brand = any(alias in title_lower for alias in my_aliases)
             if not has_my_brand:
-                # 다른 유명 브랜드가 포함되어 있으면 확실히 다른 브랜드 상품
                 has_other = any(
                     ob in title_lower
                     for ob in _ALL_KNOWN_BRANDS
@@ -396,6 +428,34 @@ def _analyze_market_prices(
 
     # 채택 목록은 가격 순 정렬
     included.sort(key=lambda x: x.price)
+
+    # === 구매자 목표가 대비 이상치 감지 ===
+    if user_target_price and user_target_price > 0 and included:
+        market_median = included[len(included) // 2].price if included else 0
+        if market_median > 0:
+            ratio = market_median / user_target_price
+            # 시장가가 목표가의 10% 미만이면 → 부품/액세서리 가격일 가능성 높음
+            if ratio < 0.1:
+                refiltered = [it for it in included if it.price >= user_target_price * 0.3]
+                if refiltered:
+                    excluded.extend([it for it in included if it not in refiltered])
+                    for it in excluded:
+                        if not it.reason:
+                            it.reason = "가격 이상치 (목표가 대비)"
+                    included = refiltered
+                else:
+                    # 네이버에 본체 가격 없음 → fallback
+                    return PriceAnalysis(
+                        lowest_price=None,
+                        included_items=[],
+                        excluded_items=excluded[:5],
+                        total_searched=total_searched,
+                        total_included=0,
+                        total_excluded=len(excluded),
+                        notice=f"이 제품의 시장가를 찾을 수 없습니다. 네이버쇼핑에 해당 제품이 등록되어 있지 않을 수 있습니다.",
+                        fallback_price=int(user_target_price),
+                    )
+
     lowest = included[0].price if included else None
 
     return PriceAnalysis(
@@ -611,6 +671,7 @@ def _run_ai_deal_helper(raw_title: str, raw_free_text: str) -> DealAIResponse:
         analysis = _analyze_market_prices(
             naver_items, data.get("expected_price_range"),
             brand=data.get("brand"),
+            search_query=search_query,
         )
         data["price_analysis"] = analysis.model_dump()
 
@@ -695,6 +756,7 @@ def ai_deal_helper(
             # 가격 근거 분석 (브랜드 필터 포함)
             analysis = _analyze_market_prices(
                 naver_items, brand=recalc_brand or None,
+                search_query=search_q,
             ) if naver_items else None
 
             recalc_result = DealAIResponse(
@@ -831,55 +893,75 @@ async def voice_recognize(file: UploadFile = File(...)):
     음성 파일 → Whisper STT → GPT-4o-mini 파싱 → 구조화된 딜 정보 반환.
     지원 형식: webm, mp4, wav, m4a, ogg, mp3
     """
+    import io, traceback
+
+    content_type = (file.content_type or "").lower().split(";")[0].strip()
+    print(f"[VOICE-API] === 음성 인식 시작 ===", flush=True)
+    print(f"[VOICE-API] filename={file.filename} content_type={file.content_type} parsed={content_type}", flush=True)
+
     allowed_types = {
         "audio/webm", "audio/mp4", "audio/wav", "audio/x-wav",
         "audio/m4a", "audio/ogg", "audio/mpeg", "audio/mp3",
         "video/webm",  # MediaRecorder가 video/webm으로 보낼 수 있음
+        "application/octet-stream",  # fallback
     }
-    content_type = (file.content_type or "").lower()
     if content_type not in allowed_types:
+        print(f"[VOICE-API] 지원하지 않는 형식: {content_type}", flush=True)
         raise HTTPException(status_code=400, detail=f"지원하지 않는 오디오 형식입니다: {content_type}")
 
     contents = await file.read()
-    if len(contents) > 25 * 1024 * 1024:  # 25MB (Whisper 제한)
+    print(f"[VOICE-API] file size={len(contents)} bytes", flush=True)
+
+    if len(contents) > 25 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="파일 크기는 25MB 이하여야 합니다.")
 
-    if len(contents) < 1000:  # 너무 짧은 파일
-        raise HTTPException(status_code=400, detail="녹음이 너무 짧습니다. 다시 시도해주세요.")
+    if len(contents) < 100:
+        print(f"[VOICE-API] 파일 너무 작음", flush=True)
+        return VoiceRecognizeResponse(
+            success=False, transcript="",
+            confidence="low",
+        )
 
+    transcript = ""  # 에러 핸들링용 미리 선언
     try:
         client = get_client()
 
         # ── 1단계: Whisper STT ──
-        import io
+        # 확장자 결정 (content_type 또는 파일명 기준)
+        fname = (file.filename or "").lower()
         ext = "webm"
-        if "wav" in content_type:
+        if "wav" in content_type or fname.endswith(".wav"):
             ext = "wav"
-        elif "mp4" in content_type or "m4a" in content_type:
+        elif "mp4" in content_type or "m4a" in content_type or fname.endswith(".mp4") or fname.endswith(".m4a"):
             ext = "m4a"
-        elif "ogg" in content_type:
+        elif "ogg" in content_type or fname.endswith(".ogg"):
             ext = "ogg"
-        elif "mpeg" in content_type or "mp3" in content_type:
+        elif "mpeg" in content_type or "mp3" in content_type or fname.endswith(".mp3"):
             ext = "mp3"
+        print(f"[VOICE-API] ext={ext}", flush=True)
 
         audio_file = io.BytesIO(contents)
         audio_file.name = f"voice.{ext}"
 
+        print(f"[VOICE-API] calling Whisper...", flush=True)
         whisper_resp = client.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file,
             language="ko",
         )
         transcript = (whisper_resp.text or "").strip()
+        print(f"[VOICE-API] transcript: '{transcript}'", flush=True)
 
-        if not transcript:
+        if not transcript or len(transcript) < 2:
+            print(f"[VOICE-API] 빈/짧은 transcript", flush=True)
             return VoiceRecognizeResponse(
                 success=False,
-                transcript="",
+                transcript=transcript,
                 confidence="low",
             )
 
-        # ── 2단계: GPT-4o-mini로 구조화 파싱 ──
+        # ── 2단계: GPT 구조화 파싱 ──
+        print(f"[VOICE-API] GPT 파싱 시작...", flush=True)
         parse_prompt = (
             "사용자가 음성으로 공동구매 딜을 만들려고 합니다.\n"
             "아래 음성 텍스트에서 상품 정보를 추출해 JSON으로 응답하세요.\n"
@@ -911,9 +993,15 @@ async def voice_recognize(file: UploadFile = File(...)):
             timeout=15,
         )
         parse_text = (parse_resp.choices[0].message.content or "").strip()
+        print(f"[VOICE-API] GPT raw: {parse_text[:200]}", flush=True)
         parsed = _parse_json_safely(parse_text)
+        print(f"[VOICE-API] parsed: {parsed}", flush=True)
 
-        return VoiceRecognizeResponse(
+        # product_query가 없으면 transcript를 fallback
+        if not parsed.get("product_query"):
+            parsed["product_query"] = transcript
+
+        result = VoiceRecognizeResponse(
             success=True,
             transcript=transcript,
             product_query=parsed.get("product_query"),
@@ -924,16 +1012,18 @@ async def voice_recognize(file: UploadFile = File(...)):
             options=parsed.get("options", []),
             confidence=parsed.get("confidence", "medium"),
         )
+        print(f"[VOICE-API] 최종 결과: success={result.success} product_query={result.product_query}", flush=True)
+        return result
 
     except HTTPException:
         raise
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
-        print(f"[voice-recognize] ERROR: {e}")
-        import traceback; traceback.print_exc()
+        print(f"[VOICE-API] ERROR: {e}", flush=True)
+        traceback.print_exc()
         return VoiceRecognizeResponse(
             success=False,
-            transcript=transcript if 'transcript' in dir() else "",
+            transcript=transcript,
             confidence="low",
         )
