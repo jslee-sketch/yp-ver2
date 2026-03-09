@@ -51,6 +51,30 @@ type PriceAnalysisData = {
   notice?: string | null;
   fallback_price?: number | null;
 };
+// ── 가격 합의 엔진 타입 ─────────────────────────────────
+type PriceConsensusSource = {
+  source: string;
+  source_label: string;
+  price: number;
+  lowest_price: number;
+  items: { title: string; price: number; link?: string }[];
+  count: number;
+  suspicious: boolean;
+  suspicion_reason: string;
+};
+type PriceConsensus = {
+  market_price: number;
+  confidence: string;
+  confidence_emoji: string;
+  confidence_label: string;
+  confidence_color: string;
+  sources: PriceConsensusSource[];
+  source_count: number;
+  notice: string | null;
+  fallback_price: number | null;
+  user_target_price: number;
+};
+
 type AIResult = {
   canonical_name: string;
   model_name: string;
@@ -496,6 +520,8 @@ export default function DealCreatePage() {
   const [loadingMsg,      setLoadingMsg]      = useState('');
   const [reaction,        setReaction]        = useState('');
   const [priceAnalysis,   setPriceAnalysis]   = useState<PriceAnalysisData | null>(null);
+  const [consensus,       setConsensus]       = useState<PriceConsensus | null>(null);
+  const [showConsensus,   setShowConsensus]   = useState(false);
   const [discountPercent, setDiscountPercent] = useState(8);
   const [showExcluded,    setShowExcluded]    = useState(false);
   const [marketChecked,   setMarketChecked]   = useState(false);
@@ -524,6 +550,8 @@ export default function DealCreatePage() {
       setMarketChecked(false);
       setReaction('');
       setPriceAnalysis(null);
+      setConsensus(null);
+      setShowConsensus(false);
       setShowExcluded(false);
       // 음성 인식 희망가 자동 채우기
       if (voiceResult?.target_price && !guessPrice) {
@@ -535,7 +563,7 @@ export default function DealCreatePage() {
   }, [step]);
 
   // ── 가격 챌린지: "맞춰보기" 분석 ─────────────
-  const loadingMessages = ['시장을 조사하고 있어요...', '네이버쇼핑 검색 중...', '부품/액세서리 걸러내는 중...', '가격 비교 분석 중...'];
+  const loadingMessages = ['시장을 조사하고 있어요...', '네이버쇼핑 검색 중...', '쿠팡 가격 조회 중...', 'AI 시장가 추정 중...', '부품/액세서리 걸러내는 중...', '3중 소스 교차 검증 중...', '신뢰도 등급 판정 중...'];
   const startPriceChallenge = async () => {
     const gp = Number(guessPrice.replace(/,/g, ''));
     if (!gp || gp <= 0) return;
@@ -553,15 +581,32 @@ export default function DealCreatePage() {
       // price_analysis
       const pa = (result as any)?.price_analysis as PriceAnalysisData | null;
       if (pa) setPriceAnalysis(pa);
+      // price_consensus (3중 소스 합의)
+      const pc = (result as any)?.price_consensus as PriceConsensus | null;
+      if (pc) { setConsensus(pc); setShowConsensus(false); }
 
       // notice가 있으면 (고가 제품 등) fallback 처리
-      if (pa?.notice) {
-        const fbp = pa.fallback_price || gp;
-        setMarketPrice(fbp);
-        setPriceCommentary(pa.notice);
-        setReaction(pa.notice);
+      // consensus notice 우선 적용
+      const effectiveNotice = pc?.notice || pa?.notice;
+      if (effectiveNotice) {
+        const fbp = pc?.fallback_price || pa?.fallback_price || gp;
+        setMarketPrice(pc?.market_price || fbp);
+        setPriceCommentary(effectiveNotice);
+        setReaction(effectiveNotice);
         setTargetPrice(String(gp));
         setDiscountPercent(0);
+      } else if (pc && pc.market_price > 0) {
+        // consensus 시장가 우선 사용
+        const mp = pc.market_price;
+        setMarketPrice(mp);
+        setPriceCommentary(`${pc.confidence_emoji} ${pc.confidence_label} (${pc.source_count}개 소스 교차 검증)`);
+        const diff = Math.abs(gp - mp) / mp * 100;
+        if (diff <= 5) setReaction(`${pc.confidence_emoji} 거의 맞추셨어요! (${pc.confidence_label})`);
+        else if (diff <= 20) setReaction(`${pc.confidence_emoji} 꽤 괜찮은 감이에요! (${pc.confidence_label})`);
+        else setReaction(`${pc.confidence_emoji} 의외의 가격이죠? 아래 시장 분석을 확인해보세요.`);
+        setTargetPrice(String(gp));
+        const pct = Math.max(0, Math.min(50, Math.round((1 - gp / mp) * 100)));
+        setDiscountPercent(pct >= 0 ? pct : 0);
       } else if (result?.price?.center_price) {
         const mp = result.price.center_price;
         setMarketPrice(mp);
@@ -1787,24 +1832,39 @@ export default function DealCreatePage() {
                 {/* 분석 결과 */}
                 {marketChecked && marketPrice && (
                   <>
-                    {/* 고가 제품 안내 */}
-                    {priceAnalysis?.notice && (
+                    {/* 고가 제품 / 온라인 판매 불가 안내 */}
+                    {(consensus?.notice || priceAnalysis?.notice) && (
                       <div style={{
-                        background: '#f59e0b20', border: '1px solid #f59e0b',
+                        background: consensus?.confidence === 'not_available' ? '#88888820' : '#f59e0b20',
+                        border: `1px solid ${consensus?.confidence === 'not_available' ? '#888' : '#f59e0b'}`,
                         borderRadius: 12, padding: '12px 16px',
-                        color: '#f59e0b', fontSize: 13, lineHeight: 1.5,
+                        color: consensus?.confidence === 'not_available' ? '#ccc' : '#f59e0b',
+                        fontSize: 13, lineHeight: 1.5,
                       }}>
-                        💡 {priceAnalysis.notice}
+                        {consensus?.confidence === 'not_available' ? '⚫' : '💡'} {consensus?.notice || priceAnalysis?.notice}
                       </div>
                     )}
 
-                    {/* 시장 최저가 */}
-                    <div style={{ textAlign: 'center', padding: 16, background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16 }}>
+                    {/* 시장 최저가 + 신뢰도 뱃지 */}
+                    <div style={{ textAlign: 'center', padding: 16, background: C.bgCard, border: `1px solid ${consensus ? consensus.confidence_color + '30' : C.border}`, borderRadius: 16 }}>
+                      {consensus && (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '4px 12px', borderRadius: 20,
+                          background: consensus.confidence_color + '20',
+                          border: `1px solid ${consensus.confidence_color}50`,
+                          marginBottom: 8,
+                        }}>
+                          <span style={{ fontSize: 16 }}>{consensus.confidence_emoji}</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: consensus.confidence_color }}>{consensus.confidence_label}</span>
+                          <span style={{ fontSize: 11, color: C.textDim }}>({consensus.source_count}개 소스)</span>
+                        </div>
+                      )}
                       <div style={{ fontSize: 13, color: C.textSec, marginBottom: 4 }}>
-                        {priceAnalysis?.notice ? '참고 가격 (목표가 기준)' : '시장 최저가'}
+                        {(consensus?.notice || priceAnalysis?.notice) ? '참고 가격 (목표가 기준)' : consensus ? '시장 합의가' : '시장 최저가'}
                       </div>
-                      <div style={{ fontSize: 32, fontWeight: 900, color: priceAnalysis?.notice ? '#f59e0b' : C.green }}>{marketPrice.toLocaleString()}원</div>
-                      {reaction && !priceAnalysis?.notice && <div style={{ fontSize: 14, color: C.textSec, marginTop: 8 }}>{reaction}</div>}
+                      <div style={{ fontSize: 32, fontWeight: 900, color: (consensus?.notice || priceAnalysis?.notice) ? '#f59e0b' : consensus ? consensus.confidence_color : C.green }}>{marketPrice.toLocaleString()}원</div>
+                      {reaction && !(consensus?.notice || priceAnalysis?.notice) && <div style={{ fontSize: 14, color: C.textSec, marginTop: 8 }}>{reaction}</div>}
                     </div>
 
                     {/* 채택 상품 근거 */}
@@ -1846,6 +1906,64 @@ export default function DealCreatePage() {
                                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</span>
                                 <span style={{ whiteSpace: 'nowrap' }}>{item.price.toLocaleString()}원</span>
                                 <span style={{ color: '#ff5252', whiteSpace: 'nowrap' }}>❌ {item.reason}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 3중 소스 비교 (접이식) */}
+                    {consensus && consensus.sources.length > 0 && (
+                      <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden' }}>
+                        <button
+                          onClick={() => setShowConsensus(!showConsensus)}
+                          style={{
+                            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '14px 18px', background: 'none', border: 'none', cursor: 'pointer',
+                          }}
+                        >
+                          <span style={{ fontSize: 14, fontWeight: 700, color: C.textPri }}>
+                            {consensus.confidence_emoji} 가격 소스 비교 ({consensus.sources.filter(s => !s.suspicious).length}개 소스)
+                          </span>
+                          <span style={{ fontSize: 12, color: C.textDim }}>{showConsensus ? '▲ 접기' : '▼ 펼치기'}</span>
+                        </button>
+                        {showConsensus && (
+                          <div style={{ padding: '0 18px 18px' }}>
+                            {consensus.sources.map((src, idx) => (
+                              <div key={idx} style={{
+                                display: 'flex', alignItems: 'center', gap: 12,
+                                padding: '12px 0',
+                                borderTop: idx > 0 ? `1px solid ${C.border}` : 'none',
+                                opacity: src.suspicious ? 0.5 : 1,
+                              }}>
+                                {/* 소스 라벨 */}
+                                <div style={{
+                                  width: 60, flexShrink: 0, textAlign: 'center',
+                                  padding: '4px 0', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                                  background: src.source === 'naver' ? '#2db40020' : src.source === 'coupang' ? '#e4433520' : '#a855f720',
+                                  color: src.source === 'naver' ? '#2db400' : src.source === 'coupang' ? '#e44335' : '#a855f7',
+                                  border: `1px solid ${src.source === 'naver' ? '#2db40040' : src.source === 'coupang' ? '#e4433540' : '#a855f740'}`,
+                                }}>{src.source_label}</div>
+                                {/* 가격 */}
+                                <div style={{ flex: 1 }}>
+                                  <div style={{
+                                    fontSize: 16, fontWeight: 700,
+                                    color: src.suspicious ? '#ff5252' : C.textPri,
+                                    textDecoration: src.suspicious ? 'line-through' : 'none',
+                                  }}>
+                                    {src.price > 0 ? `${src.price.toLocaleString()}원` : '-'}
+                                  </div>
+                                  {src.count > 0 && (
+                                    <div style={{ fontSize: 11, color: C.textDim }}>{src.count}건 검색</div>
+                                  )}
+                                </div>
+                                {/* 의심 표시 */}
+                                {src.suspicious && (
+                                  <div style={{ fontSize: 11, color: '#ff5252', maxWidth: 120 }}>
+                                    {src.suspicion_reason || '의심'}
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>

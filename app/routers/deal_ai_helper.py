@@ -90,6 +90,7 @@ class DealAIResponse(BaseModel):
     suggested_options: List[SuggestedOption] = []
     price: PriceSuggestion
     price_analysis: Optional[PriceAnalysis] = None  # 가격 근거 상세
+    price_consensus: Optional[dict] = None           # 3중 소스 합의 결과
     conditions: Optional[DealConditions] = None
     normalized_free_text: Optional[str] = None
     # ── 3-stage 파이프라인 추가 필드 (Optional) ──
@@ -667,6 +668,7 @@ def _run_ai_deal_helper(raw_title: str, raw_free_text: str) -> DealAIResponse:
     data["price"] = price_data
 
     # ── 가격 근거 분석 ────────────────────────────────
+    analysis = None
     if naver_items:
         analysis = _analyze_market_prices(
             naver_items, data.get("expected_price_range"),
@@ -674,6 +676,38 @@ def _run_ai_deal_helper(raw_title: str, raw_free_text: str) -> DealAIResponse:
             search_query=search_query,
         )
         data["price_analysis"] = analysis.model_dump()
+
+    # ── 3중 소스 합의 엔진 ────────────────────────────
+    try:
+        from app.services.price_consensus import build_price_consensus
+        pa = analysis.model_dump() if analysis else {}
+        consensus = build_price_consensus(
+            product_name=data.get("canonical_name") or raw_title,
+            brand=data.get("brand", ""),
+            options="",
+            user_target_price=0,
+            naver_lowest=pa.get("lowest_price") or 0,
+            naver_included_items=[
+                {"title": it.title, "price": it.price, "link": it.link or "", "mall": it.mall or ""}
+                for it in (analysis.included_items if analysis else [])
+            ],
+            naver_total_included=pa.get("total_included", 0),
+        )
+        data["price_consensus"] = consensus
+
+        # 합의 결과로 가격 보정
+        if consensus.get("confidence") in ("not_available", "low", "none"):
+            cp = consensus.get("market_price", 0)
+            if cp > 0:
+                price_data = data.get("price") or {}
+                if not price_data.get("center_price") or (price_data["center_price"] < cp * 0.1):
+                    price_data["center_price"] = float(cp)
+                    price_data["price_source"] = "consensus"
+                    price_data["commentary"] = consensus.get("notice") or "AI 추정가 기준입니다."
+                    data["price"] = price_data
+    except Exception as e:
+        print(f"[CONSENSUS] 합의 엔진 에러: {e}", flush=True)
+        import traceback; traceback.print_exc()
 
     # ── brands 리스트 보강 ────────────────────────────
     brands = data.get("brands") or []
@@ -759,12 +793,32 @@ def ai_deal_helper(
                 search_query=search_q,
             ) if naver_items else None
 
+            # 3중 소스 합의
+            consensus = None
+            try:
+                from app.services.price_consensus import build_price_consensus
+                pa = analysis.model_dump() if analysis else {}
+                consensus = build_price_consensus(
+                    product_name=raw_title,
+                    brand=recalc_brand,
+                    options=body.selected_options or "",
+                    naver_lowest=pa.get("lowest_price") or 0,
+                    naver_included_items=[
+                        {"title": it.title, "price": it.price, "link": it.link or "", "mall": it.mall or ""}
+                        for it in (analysis.included_items if analysis else [])
+                    ],
+                    naver_total_included=pa.get("total_included", 0),
+                )
+            except Exception as e:
+                print(f"[CONSENSUS] recalc 에러: {e}", flush=True)
+
             recalc_result = DealAIResponse(
                 canonical_name=raw_title,
                 model_name=raw_title,
                 suggested_options=[],
                 price=PriceSuggestion(**price_data),
                 price_analysis=analysis,
+                price_consensus=consensus,
             )
             return recalc_result
 
