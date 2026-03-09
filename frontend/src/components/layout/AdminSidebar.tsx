@@ -32,6 +32,7 @@ const sections = [
     title: '정산',
     items: [
       { label: '정산 관리', path: '/admin/settlements' },
+      { label: '세금계산서', path: '/admin/tax-invoices' },
       { label: '분쟁', path: '/admin/disputes' },
       { label: '환불 시뮬레이터', path: '/admin/refund-simulator' },
     ],

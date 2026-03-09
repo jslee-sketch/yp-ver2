@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from app.database import get_db
 from app import models
+from app.services.tax_invoice import create_tax_invoice as _create_tax_invoice
 
 import logging
 logger = logging.getLogger(__name__)
@@ -545,6 +546,12 @@ def approve_settlement(
             "created_at": now,
         },
     )
+
+    # 세금계산서 자동 생성
+    try:
+        _create_tax_invoice(db, row)
+    except Exception as _tax_err:
+        logger.warning("세금계산서 생성 실패 (settlement=%s): %s", row.id, _tax_err)
 
     db.add(row)
     db.commit()
@@ -1255,6 +1262,12 @@ def batch_auto_approve(db: Session = Depends(get_db)):
         setattr(s, "approved_by", "system_auto")
         db.add(s)
         approved += 1
+
+        # 세금계산서 자동 생성
+        try:
+            _create_tax_invoice(db, s)
+        except Exception as _tax_err:
+            logger.warning("세금계산서 생성 실패 (settlement=%s): %s", s.id, _tax_err)
 
     db.commit()
     return AutoApproveResult(

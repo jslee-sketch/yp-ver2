@@ -350,3 +350,69 @@ def update_seller_fields(
     db.commit()
     db.refresh(seller)
     return {"id": seller.id, "updated": list(body.keys())}
+
+
+# -----------------------------------------------------
+# 8️⃣ 사업자등록증 OCR
+# -----------------------------------------------------
+@router.post("/ocr-business", summary="사업자등록증 OCR (GPT-4o Vision)")
+async def ocr_business(
+    file: UploadFile = File(...),
+):
+    """사업자등록증 이미지를 GPT-4o Vision으로 파싱하여 구조화된 데이터 반환."""
+    if not file.filename:
+        raise HTTPException(400, "파일이 없습니다.")
+    data = await file.read()
+    if len(data) > 10 * 1024 * 1024:
+        raise HTTPException(400, "파일 크기가 10MB를 초과합니다.")
+    try:
+        from app.services.business_ocr import ocr_business_registration
+        result = await ocr_business_registration(data, file.filename)
+        return {"ok": True, "data": result}
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(500, f"OCR 처리 실패: {e}")
+
+
+# -----------------------------------------------------
+# 9️⃣ 사업자 정보 수정 (변경 이력 기록)
+# -----------------------------------------------------
+@router.patch("/{seller_id}/business-info", summary="판매자 사업자 정보 수정")
+def update_business_info(
+    seller_id: int = Path(..., ge=1),
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+):
+    """사업자 정보 수정 + 변경 이력 자동 기록."""
+    seller = db.query(models.Seller).filter(models.Seller.id == seller_id).first()
+    if not seller:
+        raise HTTPException(404, "seller not found")
+
+    BIZ_FIELDS = {
+        "business_name", "business_number", "representative_name",
+        "address", "business_type", "business_item",
+        "tax_invoice_email",
+    }
+    changed = []
+    for k, v in body.items():
+        if k not in BIZ_FIELDS:
+            continue
+        old_val = getattr(seller, k, None)
+        if str(old_val or "") != str(v or ""):
+            log = models.BusinessInfoChangeLog(
+                user_type="seller",
+                user_id=seller_id,
+                field_name=k,
+                old_value=str(old_val) if old_val else None,
+                new_value=str(v) if v else None,
+                changed_by="self",
+            )
+            db.add(log)
+            changed.append(k)
+        setattr(seller, k, v)
+
+    seller.business_updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(seller)
+    return {"ok": True, "seller_id": seller.id, "changed_fields": changed}

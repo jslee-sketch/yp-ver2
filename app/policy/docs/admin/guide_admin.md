@@ -80,6 +80,18 @@ HOLD → READY → APPROVED → PAID 파이프라인.
 
 ---
 
+## 세금계산서 관리
+경로: /admin/tax-invoices
+정산 APPROVED 시 세금계산서 자동 생성 (PENDING).
+상태 파이프라인: PENDING → CONFIRMED(판매자 확인) → ISSUED(발행) / CANCELLED(취소).
+공급자: (주)텔러스테크 (고정, defaults.yaml tax_invoice.supplier).
+탭별 필터: 전체/PENDING/CONFIRMED/ISSUED/CANCELLED.
+체크박스 선택 → [일괄 발행] / [ECOUNT 내보내기].
+행 클릭 → 상세 모달 (공급자/공급받는자 정보, 금액 상세).
+ECOUNT 엑셀 내보내기: 선택한 건 또는 전체를 XLSX로 다운로드.
+
+---
+
 ## 환불 관리
 경로: /admin/refunds
 환불 요청 목록, 상태별 필터링.

@@ -304,6 +304,24 @@ export const API = {
     POLICY_PROPOSAL:     (id: number) => `/admin/policy/proposals/${id}`,
   },
 
+  // ── 세금계산서 ──────────────────────────────────────────
+  TAX_INVOICES: {
+    LIST:              '/v3_6/tax-invoices',
+    GENERATE:          '/v3_6/tax-invoices/generate',
+    CONFIRM:           (id: number) => `/v3_6/tax-invoices/${id}/confirm`,
+    ISSUE:             (id: number) => `/v3_6/tax-invoices/${id}/issue`,
+    CANCEL:            (id: number) => `/v3_6/tax-invoices/${id}/cancel`,
+    BATCH_ISSUE:       '/v3_6/tax-invoices/batch-issue',
+    SELLER_ME:         '/v3_6/tax-invoices/seller/me',
+    EXPORT_ECOUNT:     '/v3_6/tax-invoices/export-ecount',
+  },
+
+  // ── 판매자 OCR / 사업자 정보 ──────────────────────────
+  SELLER_BUSINESS: {
+    OCR:               '/v3_6/sellers/ocr-business',
+    UPDATE:            (id: number) => `/v3_6/sellers/${id}/business-info`,
+  },
+
   // ── 행동 수집 + AI 프로파일링 ──────────────────────────
   BEHAVIOR: {
     TRACK:               '/behavior/track',

@@ -57,6 +57,7 @@ from app.models import (  # noqa: F401
     Report, UploadedFile, PayoutRequest,
     Announcement,
     UserBehaviorLog, UserProfile,
+    TaxInvoice, TaxInvoiceStatus, BusinessInfoChangeLog,
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -155,6 +156,20 @@ _alter_cols = [
     ("sellers", "social_id", "VARCHAR(100)"),
     ("actuators", "social_provider", "VARCHAR(20)"),
     ("actuators", "social_id", "VARCHAR(100)"),
+    # 세금계산서용 사업자 추가 필드 (Seller)
+    ("sellers", "representative_name", "VARCHAR(50)"),
+    ("sellers", "business_type", "VARCHAR(100)"),
+    ("sellers", "business_item", "VARCHAR(100)"),
+    ("sellers", "tax_invoice_email", "VARCHAR(100)"),
+    ("sellers", "business_verified", "BOOLEAN DEFAULT 0"),
+    ("sellers", "business_registered_at", "DATETIME"),
+    ("sellers", "business_updated_at", "DATETIME"),
+    # 세금계산서용 사업자 추가 필드 (Actuator)
+    ("actuators", "representative_name", "VARCHAR(50)"),
+    ("actuators", "business_type", "VARCHAR(100)"),
+    ("actuators", "business_item", "VARCHAR(100)"),
+    ("actuators", "tax_invoice_email", "VARCHAR(100)"),
+    ("actuators", "business_verified", "BOOLEAN DEFAULT 0"),
 ]
 try:
     _insp = _sa.inspect(engine)
@@ -730,6 +745,7 @@ _include_router_safe("simulate_v3_6_run", ("router",), label="simulate_v3_6_run"
 
 _include_router_safe("settlements", ("router",), label="settlements")
 _include_router_safe("admin_settlements", ("router",), label="admin_settlements")
+_include_router_safe("tax_invoices", ("router",), label="tax_invoices")
 
 # --------------------------------------------------
 # Notification

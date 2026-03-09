@@ -991,6 +991,31 @@ function BizStep({
             </div>
             <InputField label="대표자 이름 *" value={ceoName} onChange={setCeoName} placeholder="대표자 성함" />
 
+            {/* 사업자등록증 OCR 자동 입력 */}
+            <div style={{ padding: '12px 16px', background: '#1a237e20', border: `1px dashed #7c4dff`, borderRadius: 14, textAlign: 'center' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#b388ff', marginBottom: 6 }}>사업자등록증 OCR 자동 입력</div>
+              <div style={{ fontSize: 11, color: C.textSec, marginBottom: 8 }}>사업자등록증 이미지를 업로드하면 AI가 자동으로 정보를 채워줍니다.</div>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <button style={{ padding: '8px 20px', borderRadius: 10, border: 'none', background: '#7c4dff', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+                  사업자등록증 업로드 (OCR)
+                </button>
+                <input type="file" accept="image/*" style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    try {
+                      const { ocrBusinessRegistration } = await import('../api/taxInvoiceApi');
+                      const r = await ocrBusinessRegistration(f);
+                      if (r.business_name) setBizName(r.business_name);
+                      if (r.business_number) { setBizNum(r.business_number); setBizVerify('ok'); }
+                      if (r.representative_name) setCeoName(r.representative_name);
+                    } catch { /* ignore */ }
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+            </div>
+
             {/* 서류 첨부 3종 */}
             <div style={{ padding: '16px', background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 12 }}>서류 첨부</div>

@@ -116,3 +116,18 @@ delivery:
   polling_interval_minutes: 30
   auto_confirm_days: 3
   max_batch_check: 100
+
+# 세금계산서
+tax_invoice:
+  auto_generate_on_approved: true
+  confirm_deadline_days: 7
+  vat_rate: 0.1
+  number_prefix: "YP"
+  supplier:
+    business_name: "(주)텔러스테크"
+    business_number: "113-86-39805"
+    representative: "이정상"
+    address: "서울시 금천구 두산로 70 에이동 811호"
+    business_type: "서비스"
+    business_item: "소프트웨어 개발 및 공급"
+    email: "sales@tellustech.co.kr"

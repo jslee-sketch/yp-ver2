@@ -160,6 +160,15 @@ class Seller(Base):
     reset_token = Column(String(64), nullable=True, index=True)
     reset_token_expires_at = Column(DateTime, nullable=True)
 
+    # 세금계산서용 사업자 추가 정보
+    representative_name = Column(String(50), nullable=True)    # 대표자명
+    business_type = Column(String(100), nullable=True)         # 업태
+    business_item = Column(String(100), nullable=True)         # 종목
+    tax_invoice_email = Column(String(100), nullable=True)     # 세금계산서 수신 이메일
+    business_verified = Column(Boolean, default=False)         # 사업자 인증 여부
+    business_registered_at = Column(DateTime, nullable=True)   # 사업자 등록일
+    business_updated_at = Column(DateTime, nullable=True)      # 사업자 정보 수정일
+
     actuator = relationship("Actuator", back_populates="sellers")
 
     # (NEW) 이 Seller 거래로 발생한 Actuator 커미션들
@@ -206,6 +215,13 @@ class Actuator(Base):
     # 비밀번호 재설정 토큰
     reset_token = Column(String(64), nullable=True, index=True)
     reset_token_expires_at = Column(DateTime, nullable=True)
+
+    # 세금계산서용 사업자 추가 정보
+    representative_name = Column(String(50), nullable=True)
+    business_type = Column(String(100), nullable=True)
+    business_item = Column(String(100), nullable=True)
+    tax_invoice_email = Column(String(100), nullable=True)
+    business_verified = Column(Boolean, default=False)
 
     # ACTIVE / SUSPENDED / CLOSED
     status = Column(String(20), nullable=False, default="ACTIVE")
@@ -1277,3 +1293,80 @@ class UserProfile(Base):
     behavior_count = Column(Integer, server_default="0")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
+
+
+# -------------------------------------------------------
+# 🧾 세금계산서 (Tax Invoice)
+# -------------------------------------------------------
+class TaxInvoiceStatus(str, enum.Enum):
+    PENDING = "PENDING"       # 생성됨, 확인 대기
+    CONFIRMED = "CONFIRMED"   # 판매자 확인 완료
+    ISSUED = "ISSUED"         # 발행 완료
+    CANCELLED = "CANCELLED"   # 취소
+
+
+class TaxInvoice(Base):
+    __tablename__ = "tax_invoices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    invoice_number = Column(String(30), unique=True, index=True)  # YP-YYYYMMDD-NNNNNN
+
+    status = Column(SAEnum(TaxInvoiceStatus, name="taxinvoicestatus"),
+                    default=TaxInvoiceStatus.PENDING, nullable=False)
+
+    # 공급자 (텔러스테크 — 고정값)
+    supplier_business_name = Column(String(100), nullable=False)
+    supplier_business_number = Column(String(20), nullable=False)
+    supplier_representative = Column(String(50), nullable=False)
+    supplier_address = Column(String(200), nullable=False)
+    supplier_email = Column(String(100), nullable=True)
+
+    # 공급받는 자 (판매자/액추에이터)
+    recipient_type = Column(String(10), nullable=False)  # "seller" / "actuator"
+    recipient_id = Column(Integer, nullable=False)
+    recipient_business_name = Column(String(100), nullable=True)
+    recipient_business_number = Column(String(20), nullable=True)
+    recipient_representative = Column(String(50), nullable=True)
+    recipient_address = Column(String(200), nullable=True)
+    recipient_email = Column(String(100), nullable=True)
+    recipient_business_type = Column(String(100), nullable=True)
+    recipient_business_item = Column(String(100), nullable=True)
+
+    # 금액
+    settlement_id = Column(Integer, ForeignKey("reservation_settlements.id"), nullable=False)
+    total_amount = Column(Integer, nullable=False)    # 수수료 총액 (VAT 포함)
+    supply_amount = Column(Integer, nullable=False)   # 공급가액
+    tax_amount = Column(Integer, nullable=False)      # 세액
+
+    # 날짜
+    issued_at = Column(DateTime, nullable=True)
+    confirmed_at = Column(DateTime, nullable=True)
+    cancelled_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    notes = Column(Text, nullable=True)
+
+    __table_args__ = (
+        Index("ix_tax_invoice_recipient", "recipient_type", "recipient_id"),
+        Index("ix_tax_invoice_status", "status"),
+    )
+
+
+# -------------------------------------------------------
+# 📋 사업자 정보 변경 이력
+# -------------------------------------------------------
+class BusinessInfoChangeLog(Base):
+    __tablename__ = "business_info_change_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_type = Column(String(20), nullable=False)   # "seller" / "actuator"
+    user_id = Column(Integer, nullable=False)
+    field_name = Column(String(50), nullable=False)
+    old_value = Column(Text, nullable=True)
+    new_value = Column(Text, nullable=True)
+    changed_by = Column(String(50), nullable=True)   # "self" / "admin" / "ocr"
+    changed_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        Index("ix_biz_change_log_user", "user_type", "user_id"),
+    )

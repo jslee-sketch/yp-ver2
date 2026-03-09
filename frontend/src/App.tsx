@@ -72,6 +72,9 @@ import AdminAnnouncementsPage from './pages/AdminAnnouncementsPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import AdminRefundSimulatorPage from './pages/AdminRefundSimulatorPage';
 import AdminMinorityReportPage from './pages/AdminMinorityReportPage';
+import AdminTaxInvoicesPage from './pages/AdminTaxInvoicesPage';
+import SellerTaxInvoicesPage from './pages/SellerTaxInvoicesPage';
+import SellerBusinessInfoPage from './pages/SellerBusinessInfoPage';
 
 function App() {
   return (
@@ -98,6 +101,7 @@ function App() {
           <Route path="delivery"          element={<AdminDeliveryPage />} />
           <Route path="refunds"           element={<AdminRefundsPage />} />
           <Route path="settlements"       element={<AdminSettlementsPage />} />
+          <Route path="tax-invoices"     element={<AdminTaxInvoicesPage />} />
           <Route path="disputes"          element={<AdminDisputePage />} />
           <Route path="policy-params"     element={<AdminPolicyParamsPage />} />
           <Route path="policy-docs"       element={<AdminPolicyDocsPage />} />
@@ -148,6 +152,8 @@ function App() {
           <Route path="/seller/shipping-policy" element={<ProtectedRoute><SellerShippingPolicyPage /></ProtectedRoute>} />
           <Route path="/seller/stats"          element={<ProtectedRoute><SellerStatsPage /></ProtectedRoute>} />
           <Route path="/seller/fees"           element={<ProtectedRoute><SellerFeesPage /></ProtectedRoute>} />
+          <Route path="/seller/tax-invoices"  element={<ProtectedRoute><SellerTaxInvoicesPage /></ProtectedRoute>} />
+          <Route path="/seller/business-info" element={<ProtectedRoute><SellerBusinessInfoPage /></ProtectedRoute>} />
           <Route path="/seller/notifications"  element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
           <Route path="/seller/announcements"  element={<ProtectedRoute><SellerAnnouncementsPage /></ProtectedRoute>} />
           <Route path="/settings"    element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
