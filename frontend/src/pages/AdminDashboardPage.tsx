@@ -57,7 +57,7 @@ export default function AdminDashboardPage() {
   if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
   if (error) return (
     <div style={{ padding: 40 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, paddingLeft: 48 }}>대시보드</h1>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16 }}>대시보드</h1>
       <div style={{ padding: 16, background: 'rgba(255,82,82,0.1)', border: '1px solid rgba(255,82,82,0.3)', borderRadius: 8, color: C.red, fontSize: 14, marginBottom: 16 }}>{error}</div>
       <button onClick={load} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: C.cyan, color: '#000', fontWeight: 600, cursor: 'pointer' }}>다시 시도</button>
     </div>
@@ -91,7 +91,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingLeft: 48 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text }}>대시보드</h1>
         <button onClick={load} style={{ padding: '6px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.cyan, cursor: 'pointer', fontSize: 12 }}>새로고침</button>
       </div>

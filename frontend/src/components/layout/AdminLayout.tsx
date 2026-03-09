@@ -39,7 +39,7 @@ export default function AdminLayout() {
           height: '100vh',
           overflowY: 'auto',
           overflowX: 'auto',
-          padding: '24px 32px',
+          padding: '24px 32px 24px 64px',
         }}
       >
         <Outlet />
