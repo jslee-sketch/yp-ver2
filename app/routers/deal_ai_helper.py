@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 import json
 import re
+import urllib.parse
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, File, HTTPException, Depends, UploadFile
@@ -97,6 +98,11 @@ class DealAIResponse(BaseModel):
     search_keyword: Optional[str] = None
     category: Optional[str] = None
     expected_price_range: Optional[List[float]] = None
+
+
+def _naver_search_url(query: str) -> str:
+    """봇 차단 안 당하는 네이버 쇼핑 검색 URL."""
+    return f"https://search.shopping.naver.com/search/all?query={urllib.parse.quote(query)}"
 
 
 # ─────────────────────────────────────────────
@@ -282,12 +288,13 @@ def _get_reliable_market_price(
 
     # 중앙값 가격에 가장 가까운 상품 찾기
     best = min(priced, key=lambda it: abs(int(it["lprice"]) - median_price))
+    best_title = re.sub(r"<[^>]+>", "", best.get("title", ""))
     return {
-        "product_name": re.sub(r"<[^>]+>", "", best.get("title", "")),
+        "product_name": best_title,
         "lowest_price": int(best["lprice"]),
         "highest_price": int(best.get("hprice", 0) or 0),
         "mall_name": best.get("mallName", ""),
-        "link": best.get("link", ""),
+        "link": _naver_search_url(best_title),
         "brand": re.sub(r"<[^>]+>", "", best.get("brand", "")),
     }
 
@@ -425,7 +432,7 @@ def _analyze_market_prices(
         if reason:
             excluded.append(PriceAnalysisItem(title=title, price=price, reason=reason))
         else:
-            included.append(PriceAnalysisItem(title=title, price=price, link=link, mall=mall))
+            included.append(PriceAnalysisItem(title=title, price=price, link=_naver_search_url(title), mall=mall))
 
     # 채택 목록은 가격 순 정렬
     included.sort(key=lambda x: x.price)
@@ -565,12 +572,13 @@ def _select_best_product(query_info: dict, naver_items: list) -> Optional[dict]:
                         return fallback
                     return None
 
+            product_title = re.sub(r"<[^>]+>", "", selected.get("title", ""))
             return {
-                "product_name": re.sub(r"<[^>]+>", "", selected.get("title", "")),
+                "product_name": product_title,
                 "lowest_price": sel_price,
                 "highest_price": int(selected.get("hprice", 0) or 0),
                 "mall_name": selected.get("mallName", ""),
-                "link": selected.get("link", ""),
+                "link": _naver_search_url(product_title),
                 "brand": re.sub(r"<[^>]+>", "", selected.get("brand", "")),
             }
     except Exception as e:
