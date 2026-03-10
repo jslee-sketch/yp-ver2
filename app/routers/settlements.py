@@ -566,6 +566,20 @@ def approve_settlement(
     db.commit()
     db.refresh(row)
 
+    # 이메일 알림 (best-effort, 실패해도 승인은 유지)
+    try:
+        _sid = getattr(row, "seller_id", None)
+        if _sid:
+            _s = db.query(models.Seller).get(_sid)
+            _email_to = getattr(_s, "tax_invoice_email", None) or getattr(_s, "email", None) if _s else None
+            if _email_to:
+                from app.services.email_sender import send_settlement_notification
+                _net = int(getattr(row, "seller_payout_amount", 0) or 0)
+                _sname = getattr(_s, "business_name", "") or f"Seller #{_sid}"
+                send_settlement_notification(_email_to, int(row.id), _sname, _net)
+    except Exception as _email_err:
+        logger.warning("정산 이메일 발송 실패 (settlement=%s): %s", row.id, _email_err)
+
     return {
         "ok": True,
         "settlement_id": int(row.id),
@@ -1384,3 +1398,126 @@ def payout_execute(
 
     db.commit()
     return PayoutExecuteResult(batch_id=batch_id, total=len(rows), success=success, failed=failed, failed_ids=failed_ids)
+
+
+# ── 정산내역서 PDF 다운로드 ──────────────────────────────
+@router.get(
+    "/{settlement_id}/pdf",
+    summary="정산내역서 PDF 다운로드",
+)
+def download_settlement_pdf(
+    settlement_id: int = Path(..., ge=1),
+    db: Session = Depends(get_db),
+):
+    """정산내역서 PDF 생성 및 다운로드."""
+    from io import BytesIO as _BytesIO
+    from fastapi.responses import StreamingResponse
+
+    row = db.get(models.ReservationSettlement, settlement_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Settlement not found")
+
+    seller = None
+    seller_id = getattr(row, "seller_id", None)
+    if seller_id:
+        seller = db.query(models.Seller).get(seller_id)
+
+    approved_date = ""
+    if getattr(row, "approved_at", None):
+        approved_date = row.approved_at.strftime("%Y-%m-%d") if hasattr(row.approved_at, "strftime") else str(row.approved_at)
+
+    total_sales = int(getattr(row, "total_amount", 0) or 0)
+    platform_fee = int(getattr(row, "platform_commission_amount", 0) or 0)
+    shipping_fee = int(getattr(row, "shipping_fee", 0) or 0)
+    net_amount = int(getattr(row, "seller_payout_amount", 0) or 0)
+    fee_rate = round(platform_fee / total_sales * 100, 1) if total_sales > 0 else 0
+
+    data = {
+        "id": settlement_id,
+        "approved_date": approved_date,
+        "seller_name": getattr(seller, "business_name", None) or f"Seller #{seller_id}" if seller else "-",
+        "biz_number": getattr(seller, "business_number", "-") if seller else "-",
+        "representative_name": getattr(seller, "representative_name", "") if seller else "",
+        "total_sales": total_sales,
+        "fee_rate": fee_rate,
+        "platform_fee": platform_fee,
+        "shipping_fee": shipping_fee,
+        "net_amount": net_amount,
+    }
+
+    try:
+        from app.services.settlement_pdf import generate_settlement_pdf
+        pdf_bytes = generate_settlement_pdf(data)
+    except ImportError:
+        raise HTTPException(500, "reportlab 패키지가 설치되지 않았습니다")
+    except Exception as e:
+        raise HTTPException(500, f"PDF 생성 실패: {e}")
+
+    return StreamingResponse(
+        _BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="settlement_{settlement_id}.pdf"'},
+    )
+
+
+# ── 원천징수영수증 PDF (개인 액추에이터용) ─────────────────────
+@router.get(
+    "/actuator/{actuator_id}/withholding-pdf",
+    summary="원천징수영수증 PDF 다운로드",
+)
+def download_withholding_pdf(
+    actuator_id: int = Path(..., ge=1),
+    period_start: str = Query("", description="기간 시작 (YYYY-MM-DD)"),
+    period_end: str = Query("", description="기간 종료 (YYYY-MM-DD)"),
+    db: Session = Depends(get_db),
+):
+    """개인 액추에이터 원천징수영수증 PDF."""
+    from io import BytesIO as _BytesIO
+    from fastapi.responses import StreamingResponse
+
+    act = db.query(models.Actuator).get(actuator_id)
+    if not act:
+        raise HTTPException(404, "Actuator not found")
+    if getattr(act, "is_business", False):
+        raise HTTPException(400, "사업자 액추에이터는 원천징수 대상이 아닙니다")
+
+    # 해당 기간 커미션 합산
+    q = db.query(models.ActuatorCommission).filter(
+        models.ActuatorCommission.actuator_id == actuator_id,
+    )
+    commissions = q.all()
+    gross = sum(int(getattr(r, "amount", 0) or 0) for r in commissions)
+
+    rate = float(getattr(act, "withholding_tax_rate", 0.033) or 0.033)
+    income_tax = round(gross * 0.03)
+    local_tax = round(gross * 0.003)
+    withholding_total = income_tax + local_tax
+    net = gross - withholding_total
+
+    data = {
+        "actuator_id": actuator_id,
+        "actuator_name": getattr(act, "name", "") or getattr(act, "nickname", ""),
+        "resident_id_last": getattr(act, "resident_id_last", ""),
+        "period_start": period_start or "-",
+        "period_end": period_end or "-",
+        "issue_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "gross_amount": gross,
+        "income_tax": income_tax,
+        "local_tax": local_tax,
+        "withholding_total": withholding_total,
+        "net_amount": net,
+    }
+
+    try:
+        from app.services.settlement_pdf import generate_withholding_pdf
+        pdf_bytes = generate_withholding_pdf(data)
+    except ImportError:
+        raise HTTPException(500, "reportlab 패키지가 설치되지 않았습니다")
+    except Exception as e:
+        raise HTTPException(500, f"PDF 생성 실패: {e}")
+
+    return StreamingResponse(
+        _BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="withholding_{actuator_id}.pdf"'},
+    )

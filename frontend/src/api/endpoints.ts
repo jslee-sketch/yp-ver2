@@ -241,6 +241,8 @@ export const API = {
     DETAIL:            (id: number) => `/settlements/${id}`,
     APPROVE:           (id: number) => `/settlements/${id}/approve`,
     PAYOUT:            (id: number) => `/settlements/${id}/payout`,
+    PDF:               (id: number) => `/settlements/${id}/pdf`,
+    WITHHOLDING_PDF:   (actId: number) => `/settlements/actuator/${actId}/withholding-pdf`,
     BY_SELLER:         (sellerId: number) => `/settlements/seller/${sellerId}`,
     ADMIN_LIST:        '/admin/settlements/',
     ADMIN_APPROVE:     (id: number) => `/admin/settlements/${id}/approve`,
@@ -324,6 +326,7 @@ export const API = {
   SELLER_BUSINESS: {
     OCR:               '/sellers/ocr-business',
     UPDATE:            (id: number) => `/sellers/${id}/business-info`,
+    VERIFY:            '/sellers/business/verify',
   },
 
   // ── 행동 수집 + AI 프로파일링 ──────────────────────────

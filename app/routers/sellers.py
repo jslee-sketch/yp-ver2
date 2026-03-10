@@ -468,3 +468,23 @@ def update_business_info(
     db.commit()
     db.refresh(seller)
     return {"ok": True, "seller_id": seller.id, "changed_fields": changed}
+
+
+# -----------------------------------------------------
+# 10. 사업자등록번호 진위확인 (국세청 API)
+# -----------------------------------------------------
+@router.post("/business/verify", summary="사업자등록번호 진위확인 (국세청 API)")
+def verify_business(
+    body: dict = Body(...),
+):
+    """
+    사업자등록번호 국세청 진위확인.
+    body: {"business_number": "1234567890"}
+    NTS_API_KEY 환경변수 필요 (없으면 스킵 응답).
+    """
+    biz_number = body.get("business_number", "")
+    if not biz_number:
+        raise HTTPException(400, "business_number 필수")
+    from app.services.business_verify import verify_business_number
+    result = verify_business_number(biz_number)
+    return result
