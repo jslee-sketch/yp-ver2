@@ -131,3 +131,59 @@ tax_invoice:
     business_type: "서비스"
     business_item: "소프트웨어 개발 및 공급"
     email: "sales@tellustech.co.kr"
+
+# ✅ 액추에이터 정산/원천징수 설정
+actuator:
+  # 개인 액추에이터 원천징수
+  personal:
+    withholding_tax_rate: 0.033        # 소득세 3% + 지방소득세 0.3%
+    income_tax_rate: 0.03
+    local_tax_rate: 0.003
+    payout_method: "bank_transfer"
+    min_payout_amount: 10000           # 최소 지급액 (원)
+  # 사업자 액추에이터 → 세금계산서 발행
+  business:
+    use_tax_invoice: true
+    vat_rate: 0.1
+  # 위탁계약서
+  contract:
+    current_version: "v1.0"
+    required_before_payout: true
+
+# ✅ 구매자 등급 체계
+buyer_grade:
+  tiers:
+    bronze:
+      min_purchases: 0
+      point_multiplier: 1.0
+    silver:
+      min_purchases: 5
+      point_multiplier: 1.2
+    gold:
+      min_purchases: 15
+      point_multiplier: 1.5
+    platinum:
+      min_purchases: 30
+      point_multiplier: 1.8
+    diamond:
+      min_purchases: 50
+      point_multiplier: 2.0
+
+# ✅ 관전 등급 체계
+spectator_grade:
+  tiers:
+    rookie:
+      min_predictions: 0
+      badge: "🔰"
+    amateur:
+      min_predictions: 10
+      badge: "⭐"
+    pro:
+      min_predictions: 30
+      badge: "🌟"
+    expert:
+      min_predictions: 60
+      badge: "💎"
+    master:
+      min_predictions: 100
+      badge: "👑"

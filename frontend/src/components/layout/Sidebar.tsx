@@ -287,6 +287,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="📊" label="활동 현황"     onClick={() => go('/actuator/stats')} />
                     <MenuItem icon="💰" label="커미션 관리"   onClick={() => go('/actuator/commissions')} />
                     <MenuItem icon="📢" label="판매자 초대"   onClick={() => go('/actuator/invite')} />
+                    <MenuItem icon="📝" label="위탁계약서"   onClick={() => go('/actuator/contract')} />
                     <MenuItem icon="👤" label="마이페이지"    onClick={() => go('/mypage')} />
                   </>
                 ) : isAdmin ? (

@@ -38,6 +38,7 @@ import ActuatorOffersPage from './pages/ActuatorOffersPage';
 import ActuatorStatsPage from './pages/ActuatorStatsPage';
 import ActuatorCommissionsPage from './pages/ActuatorCommissionsPage';
 import ActuatorInvitePage from './pages/ActuatorInvitePage';
+import ActuatorContractPage from './pages/ActuatorContractPage';
 import SellerSettlementsPage from './pages/SellerSettlementsPage';
 import SellerRefundsPage from './pages/SellerRefundsPage';
 import SellerStatsPage from './pages/SellerStatsPage';
@@ -165,6 +166,7 @@ function App() {
           <Route path="/actuator/stats"                      element={<ProtectedRoute><ActuatorStatsPage /></ProtectedRoute>} />
           <Route path="/actuator/commissions"                element={<ProtectedRoute><ActuatorCommissionsPage /></ProtectedRoute>} />
           <Route path="/actuator/invite"                     element={<ProtectedRoute><ActuatorInvitePage /></ProtectedRoute>} />
+          <Route path="/actuator/contract"                   element={<ProtectedRoute><ActuatorContractPage /></ProtectedRoute>} />
 
           {/* 404 catch-all */}
           <Route path="*" element={<NotFoundPage />} />

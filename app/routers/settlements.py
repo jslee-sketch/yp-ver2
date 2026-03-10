@@ -547,9 +547,18 @@ def approve_settlement(
         },
     )
 
-    # 세금계산서 자동 생성
+    # 세금계산서 자동 생성 (판매자 + 사업자 액추에이터)
     try:
         _create_tax_invoice(db, row)
+        # 사업자 액추에이터인 경우 추가 세금계산서 생성
+        _seller_id = getattr(row, "seller_id", None)
+        if _seller_id:
+            _seller = db.query(models.Seller).get(_seller_id)
+            _act_id = getattr(_seller, "actuator_id", None) if _seller else None
+            if _act_id:
+                _act = db.query(models.Actuator).get(_act_id)
+                if _act and getattr(_act, "is_business", False):
+                    _create_tax_invoice(db, row, recipient=_act, recipient_type="actuator")
     except Exception as _tax_err:
         logger.warning("세금계산서 생성 실패 (settlement=%s): %s", row.id, _tax_err)
 
@@ -1263,9 +1272,17 @@ def batch_auto_approve(db: Session = Depends(get_db)):
         db.add(s)
         approved += 1
 
-        # 세금계산서 자동 생성
+        # 세금계산서 자동 생성 (판매자 + 사업자 액추에이터)
         try:
             _create_tax_invoice(db, s)
+            _sid = getattr(s, "seller_id", None)
+            if _sid:
+                _slr = db.query(models.Seller).get(_sid)
+                _aid = getattr(_slr, "actuator_id", None) if _slr else None
+                if _aid:
+                    _a = db.query(models.Actuator).get(_aid)
+                    if _a and getattr(_a, "is_business", False):
+                        _create_tax_invoice(db, s, recipient=_a, recipient_type="actuator")
         except Exception as _tax_err:
             logger.warning("세금계산서 생성 실패 (settlement=%s): %s", s.id, _tax_err)
 

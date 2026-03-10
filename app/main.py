@@ -121,6 +121,12 @@ _alter_cols = [
     ("actuators", "company_phone", "VARCHAR(50)"),
     ("actuators", "business_license_image", "VARCHAR(500)"),
     ("actuators", "ecommerce_permit_image", "VARCHAR(500)"),
+    # actuator 위탁계약 + 원천징수
+    ("actuators", "contract_agreed", "BOOLEAN DEFAULT FALSE"),
+    ("actuators", "contract_agreed_at", "DATETIME"),
+    ("actuators", "contract_version", "VARCHAR(20)"),
+    ("actuators", "withholding_tax_rate", "FLOAT DEFAULT 0.033"),
+    ("actuators", "resident_id_last", "VARCHAR(10)"),
     # seller ERP 추가 컬럼
     ("sellers", "shipping_policy", "TEXT"),
     ("reservations", "refund_type", "VARCHAR(20)"),

@@ -499,3 +499,107 @@ def list_actuator_sellers(
         )
 
     return results
+
+
+# ── 위탁계약서 동의 ──────────────────────────────────────
+@router.post("/{actuator_id}/agree-contract", summary="위탁계약서 동의")
+def agree_contract(
+    actuator_id: int = Path(..., ge=1),
+    db: Session = Depends(get_db),
+):
+    """
+    액추에이터가 위탁계약서에 동의하면 contract_agreed=True, contract_agreed_at=now 세팅.
+    이미 동의했으면 200 + 기존 정보 반환.
+    """
+    act = db.query(models.Actuator).get(actuator_id)
+    if not act:
+        raise HTTPException(status_code=404, detail="Actuator not found")
+
+    if act.contract_agreed:
+        return {
+            "actuator_id": act.id,
+            "contract_agreed": True,
+            "contract_agreed_at": str(act.contract_agreed_at) if act.contract_agreed_at else None,
+            "contract_version": act.contract_version,
+            "message": "이미 동의 완료",
+        }
+
+    now = datetime.now(timezone.utc)
+    act.contract_agreed = True
+    act.contract_agreed_at = now
+    act.contract_version = "v1.0"
+    db.add(act)
+    db.commit()
+    db.refresh(act)
+
+    return {
+        "actuator_id": act.id,
+        "contract_agreed": True,
+        "contract_agreed_at": str(act.contract_agreed_at),
+        "contract_version": act.contract_version,
+        "message": "위탁계약서 동의 완료",
+    }
+
+
+@router.get("/{actuator_id}/contract-status", summary="계약 동의 상태 조회")
+def get_contract_status(
+    actuator_id: int = Path(..., ge=1),
+    db: Session = Depends(get_db),
+):
+    act = db.query(models.Actuator).get(actuator_id)
+    if not act:
+        raise HTTPException(status_code=404, detail="Actuator not found")
+
+    return {
+        "actuator_id": act.id,
+        "contract_agreed": bool(act.contract_agreed),
+        "contract_agreed_at": str(act.contract_agreed_at) if act.contract_agreed_at else None,
+        "contract_version": act.contract_version,
+        "is_business": bool(act.is_business),
+        "withholding_tax_rate": float(act.withholding_tax_rate or 0.033) if not act.is_business else None,
+    }
+
+
+@router.get("/{actuator_id}/payout-preview", summary="정산 미리보기 (원천징수 포함)")
+def payout_preview(
+    actuator_id: int = Path(..., ge=1),
+    db: Session = Depends(get_db),
+):
+    """개인: 3.3% 원천징수 차감 미리보기, 사업자: 세금계산서 안내"""
+    act = db.query(models.Actuator).get(actuator_id)
+    if not act:
+        raise HTTPException(status_code=404, detail="Actuator not found")
+
+    pending_rows = (
+        db.query(models.ActuatorCommission)
+        .filter(
+            models.ActuatorCommission.actuator_id == actuator_id,
+            models.ActuatorCommission.status == "PENDING",
+        )
+        .all()
+    )
+    gross = sum(int(r.amount or 0) for r in pending_rows)
+
+    if act.is_business:
+        return {
+            "actuator_id": act.id,
+            "type": "business",
+            "gross_amount": gross,
+            "net_amount": gross,
+            "withholding": 0,
+            "note": "사업자 → 세금계산서 발행 (VAT 별도)",
+        }
+
+    rate = float(act.withholding_tax_rate or 0.033)
+    withheld = round(gross * rate)
+    return {
+        "actuator_id": act.id,
+        "type": "personal",
+        "gross_amount": gross,
+        "withholding_rate": rate,
+        "income_tax": round(gross * 0.03),
+        "local_tax": round(gross * 0.003),
+        "withholding_total": withheld,
+        "net_amount": gross - withheld,
+        "note": "개인 → 원천징수 3.3% (소득세 3% + 지방소득세 0.3%)",
+    }

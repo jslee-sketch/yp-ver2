@@ -223,6 +223,15 @@ class Actuator(Base):
     tax_invoice_email = Column(String(100), nullable=True)
     business_verified = Column(Boolean, default=False)
 
+    # 위탁계약서 동의
+    contract_agreed = Column(Boolean, default=False)
+    contract_agreed_at = Column(DateTime, nullable=True)
+    contract_version = Column(String(20), nullable=True)
+
+    # 원천징수 (개인 액추에이터)
+    withholding_tax_rate = Column(Float, default=0.033)
+    resident_id_last = Column(String(10), nullable=True)
+
     # ACTIVE / SUSPENDED / CLOSED
     status = Column(String(20), nullable=False, default="ACTIVE")
 

@@ -596,12 +596,31 @@ def settle_actuator_commissions_for_actuator(
     total_amount = 0
     paid_ids: List[int] = []
 
+    # 액추에이터 조회 → 원천징수 처리
+    actuator = db.query(models.Actuator).get(actuator_id)
+    is_business = getattr(actuator, "is_business", False) if actuator else False
+    withholding_rate = getattr(actuator, "withholding_tax_rate", 0.033) if actuator else 0.033
+    contract_ok = getattr(actuator, "contract_agreed", False) if actuator else False
+
+    total_amount = 0
+    withheld_amount = 0
+    net_amount = 0
+    paid_ids: List[int] = []
+
     for row in rows:
-        total_amount += int(row.amount or 0)
+        amt = int(row.amount or 0)
+        total_amount += amt
         row.status = "PAID"
         row.paid_at = now
         db.add(row)
         paid_ids.append(row.id)
+
+    # 개인 액추에이터: 원천징수 3.3% 차감
+    if not is_business and withholding_rate > 0:
+        withheld_amount = round(total_amount * withholding_rate)
+        net_amount = total_amount - withheld_amount
+    else:
+        net_amount = total_amount
 
     db.commit()
 

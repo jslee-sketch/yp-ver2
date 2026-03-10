@@ -274,6 +274,9 @@ export const API = {
     ME_SELLERS:        '/actuators/me/sellers',
     COMMISSIONS:       (id: number) => `/actuators/${id}/commissions`,
     COMMISSIONS_SUMMARY: (id: number) => `/actuators/${id}/commissions/summary`,
+    AGREE_CONTRACT:    (id: number) => `/actuators/${id}/agree-contract`,
+    CONTRACT_STATUS:   (id: number) => `/actuators/${id}/contract-status`,
+    PAYOUT_PREVIEW:    (id: number) => `/actuators/${id}/payout-preview`,
   },
 
   // ── 관리자 ─────────────────────────────────────────────
