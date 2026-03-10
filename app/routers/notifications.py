@@ -374,7 +374,11 @@ def register_fcm_token(
     if not row:
         raise HTTPException(404, "사용자를 찾을 수 없습니다")
 
-    row.fcm_token = token
-    row.fcm_updated_at = now
-    db.commit()
+    try:
+        row.fcm_token = token
+        row.fcm_updated_at = now
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(500, f"FCM 토큰 저장 실패: {e}")
     return {"ok": True, "message": "FCM 토큰 등록 완료"}
