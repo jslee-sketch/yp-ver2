@@ -33,7 +33,7 @@ interface CommSummary {
   paid_total_amount: number;
 }
 
-function fmtP(n: number) { return '₩' + (n ?? 0).toLocaleString('ko-KR'); }
+function fmtP(n: number) { return (n ?? 0).toLocaleString('ko-KR') + '원'; }
 function fmtDate(s?: string) { return (s ?? '').split('T')[0].replace(/-/g, '.'); }
 
 type FilterKey = '전체' | 'PENDING' | 'PAID';

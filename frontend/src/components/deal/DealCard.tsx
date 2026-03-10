@@ -39,7 +39,7 @@ export const DealCard: React.FC<DealCardProps> = ({ deal, lowestOffer }) => {
       {/* 헤더 행 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ marginBottom: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             {deal.status === 'OPEN' ? (
               <Badge variant="live">
                 <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%', background: 'var(--accent-green)', marginRight: 3 }} />
@@ -48,6 +48,9 @@ export const DealCard: React.FC<DealCardProps> = ({ deal, lowestOffer }) => {
             ) : (
               <Badge variant="closed">마감</Badge>
             )}
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent-blue)', background: 'rgba(0,176,255,0.08)', padding: '1px 6px', borderRadius: 4 }}>
+              #{deal.id}
+            </span>
           </div>
           <h3 style={{
             fontSize: 15, fontWeight: 700, color: 'var(--text-primary)',
@@ -64,12 +67,20 @@ export const DealCard: React.FC<DealCardProps> = ({ deal, lowestOffer }) => {
         </div>
       </div>
 
-      {/* 가격 행: 시장가 → 최저 오퍼 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        {deal.anchor_price && (
-          <PriceText amount={deal.anchor_price} size="body-md" color="var(--text-muted)" strikethrough />
+      {/* 가격 행: 목표가 + 시장가 → 최저 오퍼 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+        {deal.desired_price > 0 && (
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+            목표 <span style={{ fontWeight: 700 }}>{deal.desired_price.toLocaleString('ko-KR')}원</span>
+          </span>
         )}
-        {deal.anchor_price && lowestOffer && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>→</span>}
+        {deal.anchor_price > 0 && (
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            시장 <PriceText amount={deal.anchor_price} size="body-md" color="var(--text-muted)" strikethrough />
+          </span>
+        )}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         {lowestOffer && (
           <>
             <span style={{ fontSize: 16, marginRight: 2 }}>⚡</span>
@@ -99,6 +110,13 @@ export const DealCard: React.FC<DealCardProps> = ({ deal, lowestOffer }) => {
       {/* 목표 달성률 프로그레스바 */}
       {achieveRate != null && (
         <ProgressBar value={achieveRate} showLabel height={5} />
+      )}
+
+      {/* 생성일 */}
+      {deal.created_at && (
+        <div style={{ fontSize: 11, color: 'var(--text-disabled)', marginTop: 8, textAlign: 'right' }}>
+          {deal.created_at.split('T')[0]?.replace(/-/g, '.')}
+        </div>
       )}
     </div>
   );

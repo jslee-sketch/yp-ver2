@@ -39,7 +39,7 @@ const C = {
   border: 'var(--border-subtle)', green: 'var(--accent-green)', cyan: '#00e5ff', orange: 'var(--accent-orange)',
 };
 
-function fmtP(n: number) { return '₩' + n.toLocaleString('ko-KR'); }
+function fmtP(n: number) { return n.toLocaleString('ko-KR') + '원'; }
 function fmtDate(s: string) { return (s ?? '').slice(5, 10).replace('-', '.'); }
 
 // ── 메인 ─────────────────────────────────────────────
@@ -196,8 +196,9 @@ export default function CompletedDealsPage() {
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>
-                    {deal.product_name}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: C.blue, background: 'rgba(0,176,255,0.08)', padding: '1px 5px', borderRadius: 3 }}>#{deal.id}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{deal.product_name}</span>
                   </div>
                   <div style={{ fontSize: 11, color: C.textSec, marginBottom: 8 }}>
                     {deal.brand}{deal.category ? ` · ${deal.category}` : ''}

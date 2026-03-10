@@ -21,7 +21,7 @@ const TIER_META = {
   BELOW:    { label: 'BELOW',    color: '#00b0ff', bg: '#00b0ff22', desc: '목표가 이하' },
 };
 
-function fmtP(n: number) { return '₩' + n.toLocaleString('ko-KR'); }
+function fmtP(n: number) { return n.toLocaleString('ko-KR') + '원'; }
 function fmtK(n: number) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
   if (n >= 1000)    return Math.round(n / 1000) + 'K';

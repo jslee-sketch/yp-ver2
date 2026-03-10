@@ -61,7 +61,7 @@ export default function AdminReportsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
             <thead style={stickyHead}>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                {['식별번호', '신고자', '대상', '카테고리', '설명', '처리상태', ''].map(h => (
+                {['식별번호', '신고자', '대상', '카테고리', '설명', '접수일', '처리상태', ''].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -74,6 +74,7 @@ export default function AdminReportsPage() {
                   <td style={{ padding: '10px 8px', color: C.text }}>{r.target_type} #{r.target_id}</td>
                   <td style={{ padding: '10px 8px', color: C.orange }}>{r.category}</td>
                   <td style={{ padding: '10px 8px', color: C.textSec, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.description || '-'}</td>
+                  <td style={{ padding: '10px 8px', color: C.textSec, fontSize: 12 }}>{r.created_at ? r.created_at.split('T')[0]?.replace(/-/g, '.') : '-'}</td>
                   <td style={{ padding: '10px 8px' }}><span style={{ color: statusColor[r.status] || C.textSec, fontWeight: 600 }}>{r.status}</span></td>
                   <td style={{ padding: '10px 8px' }}>
                     {r.status === 'OPEN' && <button onClick={e => { e.stopPropagation(); setModal(r); setResolution(''); }} style={{ padding: '4px 10px', fontSize: 12, borderRadius: 6, border: 'none', cursor: 'pointer', background: 'rgba(0,229,255,0.15)', color: C.cyan }}>처리</button>}

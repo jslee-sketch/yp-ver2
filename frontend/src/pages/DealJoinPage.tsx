@@ -14,7 +14,7 @@ const C = {
   border: 'rgba(0,240,255,0.12)',
 };
 
-const fmtP = (n: number) => '₩' + n.toLocaleString('ko-KR');
+const fmtP = (n: number) => n.toLocaleString('ko-KR') + '원';
 
 interface OfferItem {
   id: number;

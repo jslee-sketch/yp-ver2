@@ -187,7 +187,7 @@ export default function AdminDeliveryPage() {
                 const overdue = days !== null && days > 3 && !['ARRIVED', 'CONFIRMED', 'ARRIVAL_CONFIRMED', 'DELIVERED'].includes(st);
                 return (
                   <tr key={r.id} style={{ borderBottom: `1px solid ${C.border}`, background: overdue ? 'rgba(255,82,82,0.05)' : undefined }}>
-                    <td style={{ padding: '10px 8px', color: C.cyan }}>R-{r.id}</td>
+                    <td style={{ padding: '10px 8px', color: C.cyan, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => window.open(`/reservation/${r.id}`, '_blank')}>R-{r.id}</td>
                     <td style={{ padding: '10px 8px', color: C.text }}>{r.seller_name || `S-${r.seller_id}`}</td>
                     <td style={{ padding: '10px 8px', color: C.text }}>{r.buyer_name || `B-${r.buyer_id}`}</td>
                     <td style={{ padding: '10px 8px', color: C.textSec }}>{displayCarrier(r.carrier)}</td>

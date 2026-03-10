@@ -280,8 +280,8 @@ export default function OfferCreatePage() {
   // ── 배송비 표시 텍스트 ──────────────────────────────────
   const getShippingDisplay = (): string => {
     if (shippingMode === 'INCLUDED')        return '무료배송 (상품가 포함)';
-    if (shippingMode === 'PER_RESERVATION') return `참여당 ₩${feePerReservation.toLocaleString()}`;
-    return `개당 ₩${feePerQty.toLocaleString()} (${totalQty}개 = ₩${(feePerQty * totalQty).toLocaleString()})`;
+    if (shippingMode === 'PER_RESERVATION') return `참여당 ${feePerReservation.toLocaleString()}원`;
+    return `개당 ${feePerQty.toLocaleString()}원 (${totalQty}개 = ${(feePerQty * totalQty).toLocaleString()}원)`;
   };
 
   // ── 이미지 ────────────────────────────────────────────
@@ -396,7 +396,7 @@ export default function OfferCreatePage() {
             padding: '8px 18px', borderRadius: 24, marginBottom: 20,
             background: `${C.green}12`, border: `1px solid ${C.green}40`,
           }}>
-            <span style={{ fontWeight: 800, color: C.green, fontSize: 15 }}>₩{fmtPrice(price)}</span>
+            <span style={{ fontWeight: 800, color: C.green, fontSize: 15 }}>{fmtPrice(price)}원</span>
             <span style={{ color: C.textDim }}>·</span>
             <span style={{ color: C.textSec, fontSize: 13 }}>{totalQty}개</span>
             {tier && badge && (
@@ -549,9 +549,9 @@ export default function OfferCreatePage() {
                 <div style={{ ...cardStyle }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {[
-                      { icon: '🎯', label: '목표가',    value: `₩${fmtPrice((deal?.target_price ?? 0))}`, color: C.green },
-                      { icon: '📊', label: '시장가',    value: `₩${fmtPrice((deal?.anchor_price ?? 0))}`, color: C.yellow },
-                      { icon: '⚡', label: '현재 최저',  value: `₩${fmtPrice((deal?.lowest_offer ?? 0))}`, color: C.cyan },
+                      { icon: '🎯', label: '목표가',    value: `${fmtPrice((deal?.target_price ?? 0))}원`, color: C.green },
+                      { icon: '📊', label: '시장가',    value: `${fmtPrice((deal?.anchor_price ?? 0))}원`, color: C.yellow },
+                      { icon: '⚡', label: '현재 최저',  value: `${fmtPrice((deal?.lowest_offer ?? 0))}원`, color: C.cyan },
                       { icon: '📦', label: '현재 오퍼',  value: `${(deal?.offer_count ?? 0)}건`, color: C.textSec },
                       { icon: '👥', label: '참여수',    value: `${(deal?.current_orders ?? 0)}/${(deal?.target_orders ?? 0)}명`, color: C.textSec },
                     ].map(({ icon, label, value, color }) => (
@@ -582,7 +582,7 @@ export default function OfferCreatePage() {
                     <span style={{
                       position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
                       fontSize: 14, color: C.textSec, pointerEvents: 'none',
-                    }}>₩</span>
+                    }}>원</span>
                     <input
                       type="text"
                       value={priceStr}
@@ -623,9 +623,9 @@ export default function OfferCreatePage() {
                   <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan, marginBottom: 10 }}>💡 핑퐁이 가격 가이드</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                     {[
-                      { cond: '미만',   label: `₩${fmtPrice((deal?.target_price ?? 0))} 미만`, tier: 'PREMIUM' as const, badge: tierBadge('PREMIUM') },
-                      { cond: '동일',   label: `₩${fmtPrice((deal?.target_price ?? 0))} 동일`, tier: 'MATCHING' as const, badge: tierBadge('MATCHING') },
-                      { cond: '초과',   label: `₩${fmtPrice((deal?.target_price ?? 0))} 초과`, tier: 'BELOW' as const, badge: tierBadge('BELOW') },
+                      { cond: '미만',   label: `${fmtPrice((deal?.target_price ?? 0))}원 미만`, tier: 'PREMIUM' as const, badge: tierBadge('PREMIUM') },
+                      { cond: '동일',   label: `${fmtPrice((deal?.target_price ?? 0))}원 동일`, tier: 'MATCHING' as const, badge: tierBadge('MATCHING') },
+                      { cond: '초과',   label: `${fmtPrice((deal?.target_price ?? 0))}원 초과`, tier: 'BELOW' as const, badge: tierBadge('BELOW') },
                     ].map(row => {
                       const active = tier === row.tier;
                       return (
@@ -649,7 +649,7 @@ export default function OfferCreatePage() {
                   </div>
                   {price > 0 && price < (deal?.lowest_offer ?? 0) && (
                     <div style={{ marginTop: 10, fontSize: 12, color: C.green, fontWeight: 700 }}>
-                      🔥 현재 최저가 ₩{fmtPrice((deal?.lowest_offer ?? 0))}보다 낮게 설정하면 1위 오퍼!
+                      🔥 현재 최저가 {fmtPrice((deal?.lowest_offer ?? 0))}원보다 낮게 설정하면 1위 오퍼!
                     </div>
                   )}
                 </div>
@@ -822,7 +822,7 @@ export default function OfferCreatePage() {
                         <div style={{ fontSize: 12, color: C.textSec }}>참여 1건당 동일한 배송비</div>
                         {shippingMode === 'PER_RESERVATION' && (
                           <div style={{ marginTop: 8, position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14, pointerEvents: 'none' }}>₩</span>
+                            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14, pointerEvents: 'none' }}>원</span>
                             <input
                               type="number" min={0}
                               value={feePerReservation}
@@ -851,7 +851,7 @@ export default function OfferCreatePage() {
                           <>
                             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                               <div style={{ flex: 1, position: 'relative' }}>
-                                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14, pointerEvents: 'none' }}>₩</span>
+                                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14, pointerEvents: 'none' }}>원</span>
                                 <input
                                   type="number" min={0}
                                   value={feePerQty}
@@ -864,7 +864,7 @@ export default function OfferCreatePage() {
                               <span style={{ fontSize: 13, color: C.textSec, flexShrink: 0 }}>/ 개</span>
                             </div>
                             <div style={{ marginTop: 6, fontSize: 12, color: C.cyan }}>
-                              💡 {totalQty}개 참여 시 배송비: ₩{(feePerQty * totalQty).toLocaleString()}
+                              💡 {totalQty}개 참여 시 배송비: {(feePerQty * totalQty).toLocaleString()}원
                             </div>
                           </>
                         )}
@@ -1034,7 +1034,7 @@ export default function OfferCreatePage() {
                   {/* 가격 */}
                   <div style={{ paddingBottom: 14, marginBottom: 14, borderBottom: `1px solid ${C.border}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                      <span style={{ fontSize: 24, fontWeight: 900, color: C.textPri }}>₩{fmtPrice(price)}</span>
+                      <span style={{ fontSize: 24, fontWeight: 900, color: C.textPri }}>{fmtPrice(price)}원</span>
                       {tier && badge && (
                         <span style={{
                           padding: '3px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800,

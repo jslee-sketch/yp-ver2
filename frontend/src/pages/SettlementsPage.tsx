@@ -21,7 +21,7 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
   PAID:     { label: '지급완료', color: '#78909c' },
 };
 
-function fmtP(n: number) { return '₩' + n.toLocaleString('ko-KR'); }
+function fmtP(n: number) { return n.toLocaleString('ko-KR') + '원'; }
 function fmtDate(s: string) { return (s ?? '').split('T')[0].replace(/-/g, '.'); }
 
 export default function SettlementsPage() {
@@ -88,8 +88,22 @@ export default function SettlementsPage() {
               borderLeft: `3px solid ${meta.color}`,
               borderRadius: 14, padding: 14, marginBottom: 8,
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: C.textSec }}>예약 #{s.reservation_id}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.blue, background: 'rgba(0,176,255,0.08)', padding: '1px 6px', borderRadius: 4 }}>
+                    S-{s.id}
+                  </span>
+                  <span
+                    onClick={() => navigate(`/my-orders`)}
+                    style={{ fontSize: 11, color: C.blue, cursor: 'pointer', textDecoration: 'underline' }}
+                  >예약 #{s.reservation_id}</span>
+                  {s.deal_id && (
+                    <span
+                      onClick={() => navigate(`/deal/${s.deal_id}`)}
+                      style={{ fontSize: 11, color: C.blue, cursor: 'pointer', textDecoration: 'underline' }}
+                    >딜 #{s.deal_id}</span>
+                  )}
+                </div>
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
                   background: `${meta.color}22`, color: meta.color,

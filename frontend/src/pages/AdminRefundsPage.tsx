@@ -37,7 +37,7 @@ export default function AdminRefundsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
             <thead style={stickyHead}>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                {['R-#', '구매자', '판매자', '원금액', '환불금액', '환불유형', '상태', '환불일'].map(h => (
+                {['R-#', '구매자', '판매자', '원금액', '환불금액', '환불유형', '환불사유', '상태', '환불일'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -50,12 +50,13 @@ export default function AdminRefundsPage() {
                   <td style={{ padding: '10px 8px', color: C.text }}>{r.seller_name || `S-${r.seller_id}`}</td>
                   <td style={{ padding: '10px 8px', color: C.orange }}>{(r.amount || 0).toLocaleString()}원</td>
                   <td style={{ padding: '10px 8px', color: C.red, fontWeight: 600 }}>{(r.refunded_amount_total || 0).toLocaleString()}원</td>
-                  <td style={{ padding: '10px 8px', color: C.textSec }}>{r.refund_type || '-'}</td>
+                  <td style={{ padding: '10px 8px' }}>{r.refund_type ? <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, background: r.refund_type === 'FULL' ? 'rgba(255,82,82,0.15)' : 'rgba(255,145,0,0.15)', color: r.refund_type === 'FULL' ? C.red : C.orange }}>{r.refund_type}</span> : '-'}</td>
+                  <td style={{ padding: '10px 8px', color: C.textSec, fontSize: 12, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.refund_reason || r.reason || ''}>{r.refund_reason || r.reason || '-'}</td>
                   <td style={{ padding: '10px 8px' }}><span style={{ color: C.red, fontWeight: 600 }}>{cleanStatus(String(r.status || ''))}</span></td>
                   <td style={{ padding: '10px 8px', color: C.textSec }}>{r.refunded_at ? new Date(r.refunded_at).toLocaleDateString('ko-KR') : r.created_at ? new Date(r.created_at).toLocaleDateString('ko-KR') : '-'}</td>
                 </tr>
               ))}
-              {!items.length && <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>환불 없음</td></tr>}
+              {!items.length && <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>환불 없음</td></tr>}
             </tbody>
           </table>
         </div>

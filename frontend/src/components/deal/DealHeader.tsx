@@ -51,7 +51,17 @@ export const DealHeader: React.FC<DealHeaderProps> = ({ deal }) => {
         )}
       </div>
 
-      {/* 상품명 */}
+      {/* 딜 번호 + 상품명 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-blue)', background: 'rgba(0,176,255,0.1)', padding: '2px 8px', borderRadius: 6 }}>
+          Deal #{deal.id}
+        </span>
+        {deal.created_at && (
+          <span style={{ fontSize: 11, color: 'var(--text-disabled)' }}>
+            {deal.created_at.split('T')[0]?.replace(/-/g, '.')}
+          </span>
+        )}
+      </div>
       <h1 style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.3, color: 'var(--text-primary)', marginBottom: 8 }}>
         {deal.product_name}
       </h1>

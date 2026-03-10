@@ -4,6 +4,7 @@ import { trackBehavior } from '../utils/behaviorTracker';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchMySettlements } from '../api/settlementApi';
 import { useApiData } from '../api/hooks';
+import apiClient from '../api/client';
 import type { Settlement } from '../api/types';
 
 const C = {
@@ -28,6 +29,26 @@ function paid(s: Settlement) { return s.buyer_paid_amount ?? s.gross_amount ?? 0
 function pgFee(s: Settlement) { return s.pg_fee_amount ?? 0; }
 function platFee(s: Settlement) { return s.platform_commission_amount ?? s.platform_fee ?? 0; }
 function payout(s: Settlement) { return s.seller_payout_amount ?? s.net_amount ?? 0; }
+function shippingFee(s: Settlement) {
+  const any = s as Record<string, unknown>;
+  return (any.amount_shipping ?? any.shipping_fee ?? 0) as number;
+}
+
+async function downloadPdf(settlementId: number) {
+  try {
+    const res = await apiClient.get(`/settlements/${settlementId}/pdf`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([res.data as BlobPart]));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `settlement-${settlementId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch {
+    alert('PDF 다운로드에 실패했습니다.');
+  }
+}
 
 type FilterKey = '전체' | 'HOLD' | 'READY' | 'PAID';
 
@@ -159,9 +180,30 @@ export default function SellerSettlementsPage() {
                 <div><div style={{ fontSize: 10, color: C.textDim }}>PG수수료</div><div style={{ fontSize: 11, fontWeight: 600, color: '#ff5252' }}>{fmtP(pgFee(s))}</div></div>
                 <div><div style={{ fontSize: 10, color: C.textDim }}>역핑수수료</div><div style={{ fontSize: 11, fontWeight: 600, color: C.orange }}>{fmtP(platFee(s))}</div></div>
               </div>
-              {s.paid_at && (
-                <div style={{ fontSize: 10, color: C.green, marginTop: 6 }}>지급일: {fmtDate(s.paid_at)}</div>
+              {shippingFee(s) > 0 && (
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ fontSize: 10, color: C.textDim }}>배송비</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: C.text }}>{fmtP(shippingFee(s))}</div>
+                </div>
               )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+                <div>
+                  {s.paid_at && (
+                    <span style={{ fontSize: 10, color: C.green }}>지급일: {fmtDate(s.paid_at)}</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => void downloadPdf(s.id)}
+                  title="PDF 다운로드"
+                  style={{
+                    width: 28, height: 28, borderRadius: 6, border: `1px solid ${C.border}`,
+                    background: C.bgEl, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 13, color: C.textSec, padding: 0,
+                  }}
+                >
+                  <span style={{ lineHeight: 1 }}>&#128196;</span>
+                </button>
+              </div>
             </div>
           );
         })}

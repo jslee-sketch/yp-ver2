@@ -25,23 +25,27 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onSelect }) => {
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-        {/* 왼쪽: 배지 + 셀러명 */}
+        {/* 왼쪽: 배지 + 오퍼번호 + 셀러명 */}
         <div>
-          {isPremium && (
-            <Badge variant="premium" className="slide-in" style={{ marginBottom: 4, display: 'inline-block' }}>
-              PREMIUM
-            </Badge>
-          )}
-          {offer.tier === 'MATCHING' && (
-            <Badge variant="matching" style={{ marginBottom: 4, display: 'inline-block' }}>
-              MATCHING
-            </Badge>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            {isPremium && (
+              <Badge variant="premium" className="slide-in" style={{ display: 'inline-block' }}>
+                PREMIUM
+              </Badge>
+            )}
+            {offer.tier === 'MATCHING' && (
+              <Badge variant="matching" style={{ display: 'inline-block' }}>
+                MATCHING
+              </Badge>
+            )}
+            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', background: 'var(--bg-elevated)', padding: '1px 5px', borderRadius: 3 }}>
+              Offer #{offer.id}
+            </span>
+          </div>
           <div style={{
             fontSize: 14,
             fontWeight: 700,
             color: isBelow ? 'var(--text-muted)' : 'var(--text-primary)',
-            marginTop: isPremium || offer.tier === 'MATCHING' ? 4 : 0,
           }}>
             {offer.seller_name}
           </div>

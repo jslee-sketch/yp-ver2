@@ -10,6 +10,8 @@ type ActivityStatus = 'PENDING_PAY' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCEL
 
 interface MyOrder {
   id: number;
+  deal_id?: number;
+  offer_id?: number;
   product_name: string;
   seller_name?: string;
   price?: number;
@@ -17,6 +19,7 @@ interface MyOrder {
   amount_total: number;
   status: ActivityStatus;
   created_at: string;
+  paid_at?: string;
   tracking_number?: string;
   shipping_carrier?: string;
   is_disputed?: boolean;
@@ -48,7 +51,7 @@ const C = {
 };
 
 function fmtDate(s: string) { return (s ?? '').split('T')[0].replace(/-/g, '.'); }
-function fmtPrice(n: number) { return '₩' + n.toLocaleString('ko-KR'); }
+function fmtPrice(n: number) { return n.toLocaleString('ko-KR') + '원'; }
 
 function mapStatus(status: string, r: Record<string, unknown>): ActivityStatus {
   if (status === 'CANCELLED' || status === 'EXPIRED') return 'CANCELLED';
@@ -120,6 +123,8 @@ export default function MyOrdersPage() {
             const seller = offer?.seller as Record<string, unknown> | undefined;
             return {
               id: r.id as number,
+              deal_id: (r.deal_id as number) || (deal?.id as number) || undefined,
+              offer_id: (r.offer_id as number) || undefined,
               product_name: String(deal?.product_name ?? offer?.comment ?? `예약 #${r.id}`),
               seller_name: String(seller?.business_name ?? seller?.nickname ?? ''),
               price: (r.amount_goods as number) || undefined,
@@ -127,6 +132,7 @@ export default function MyOrdersPage() {
               amount_total: (r.amount_total as number) || 0,
               status: mapStatus(String(r.status ?? ''), r),
               created_at: String(r.created_at ?? '').split('T')[0],
+              paid_at: (r.paid_at as string) || undefined,
               tracking_number: (r.tracking_number as string) || undefined,
               shipping_carrier: (r.shipping_carrier as string) || undefined,
               is_disputed: r.is_disputed === true,
@@ -287,6 +293,25 @@ export default function MyOrdersPage() {
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
+                  {/* 예약번호 + 연결 번호 */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-blue)', background: 'rgba(0,176,255,0.08)', padding: '1px 6px', borderRadius: 4 }}>
+                      예약 #{item.id}
+                    </span>
+                    {item.deal_id && (
+                      <span
+                        onClick={e => { e.stopPropagation(); navigate(`/deal/${item.deal_id}`); }}
+                        style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent-blue)', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        딜 #{item.deal_id}
+                      </span>
+                    )}
+                    {item.offer_id && (
+                      <span style={{ fontSize: 10, color: C.textDim }}>
+                        오퍼 #{item.offer_id}
+                      </span>
+                    )}
+                  </div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>📦 {item.product_name}</div>
                   <div style={{ fontSize: 11, color: C.textSec, marginBottom: 4 }}>
                     {item.seller_name ? `${item.seller_name} · ` : ''}{item.qty}개{item.amount_total > 0 ? ` · ${fmtPrice(item.amount_total)}` : ''}
@@ -303,7 +328,10 @@ export default function MyOrdersPage() {
                     )}
                   </div>
                 </div>
-                <div style={{ fontSize: 10, color: C.textDim, flexShrink: 0 }}>{fmtDate(item.created_at)}</div>
+                <div style={{ fontSize: 10, color: C.textDim, flexShrink: 0, textAlign: 'right' }}>
+                  <div>{fmtDate(item.created_at)}</div>
+                  {item.paid_at && <div style={{ color: C.green, marginTop: 2 }}>결제 {fmtDate(item.paid_at)}</div>}
+                </div>
               </div>
 
               {/* 결제대기 */}

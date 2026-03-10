@@ -17,7 +17,7 @@ const C = {
   border: 'var(--border-subtle)', green: 'var(--accent-green)',
 };
 
-function fmtPrice(n: number) { return '₩' + n.toLocaleString('ko-KR'); }
+function fmtPrice(n: number) { return n.toLocaleString('ko-KR') + '원'; }
 
 export default function ReviewWritePage() {
   const navigate = useNavigate();

@@ -17,7 +17,7 @@ const TIER_COLORS: Record<string, string> = {
   PERFECT: '#ffd600', EXCELLENT: '#00e676', GOOD: '#00b0ff', FAIR: '#ff9100', MISS: '#757575',
 };
 
-function fmtP(n: number) { return '₩' + n.toLocaleString('ko-KR'); }
+function fmtP(n: number) { return n.toLocaleString('ko-KR') + '원'; }
 function fmtDate(s: string) { return (s ?? '').split('T')[0].replace(/-/g, '.'); }
 
 interface RankEntry {

@@ -48,13 +48,14 @@ export default function AdminSettlementsPage() {
           {['HOLD', 'READY', 'APPROVED', 'PAID'].map(s => <option key={s} value={s}>{s}</option>)}
         </select>
         <button onClick={load} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.cyan, color: '#000', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>새로고침</button>
+        <button onClick={async () => { const ready = filtered.filter(s => s.status === 'READY'); if (!ready.length) return alert('READY 상태 정산이 없습니다.'); if (!confirm(`${ready.length}건을 일괄 승인하시겠습니까?`)) return; for (const s of ready) { await approve(s.id); } }} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.green, color: '#000', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>일괄 승인</button>
       </div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
         <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
             <thead style={stickyHead}>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                {['정산ID', '예약ID', '판매자', '결제금액', 'PG수수료', '플랫폼수수료', '정산금액', '상태', ''].map(h => (
+                {['정산ID', '예약ID', '판매자', '결제금액', 'PG수수료', '플랫폼수수료', '정산금액', '상태', '생성일', ''].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -69,18 +70,19 @@ export default function AdminSettlementsPage() {
                   <td style={{ padding: '10px 8px', color: C.textSec }}>{(s.pg_fee || 0).toLocaleString()}</td>
                   <td style={{ padding: '10px 8px', color: C.textSec }}>{(s.platform_fee || 0).toLocaleString()}</td>
                   <td style={{ padding: '10px 8px', color: C.green, fontWeight: 600 }}>{(s.payout_amount || s.settlement_amount || 0).toLocaleString()}</td>
-                  <td style={{ padding: '10px 8px' }}><span style={{ color: statusColor[s.status] || C.textSec, fontWeight: 600 }}>{s.status}</span></td>
+                  <td style={{ padding: '10px 8px' }}><span style={{ color: statusColor[s.status] || C.textSec, fontWeight: 600 }}>{s.status}</span>{s.is_disputed && <span style={{ marginLeft: 6, padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700, background: 'rgba(255,82,82,0.15)', color: C.red }}>분쟁</span>}</td>
+                  <td style={{ padding: '10px 8px', color: C.textSec, fontSize: 12 }}>{s.created_at ? new Date(s.created_at).toLocaleDateString('ko-KR') : '-'}</td>
                   <td style={{ padding: '10px 8px' }}>
                     {(s.status === 'READY' || s.status === 'HOLD') && <button onClick={() => approve(s.id)} style={{ padding: '4px 10px', fontSize: 12, borderRadius: 6, border: 'none', cursor: 'pointer', background: 'rgba(0,229,255,0.15)', color: C.cyan }}>승인</button>}
                   </td>
                 </tr>
               ))}
-              {!filtered.length && <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>정산 없음</td></tr>}
+              {!filtered.length && <tr><td colSpan={10} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>정산 없음</td></tr>}
               {filtered.length > 0 && (
                 <tr style={{ borderTop: `2px solid ${C.border}`, fontWeight: 700 }}>
                   <td colSpan={6} style={{ padding: '10px 8px', color: C.textSec }}>합계</td>
                   <td style={{ padding: '10px 8px', color: C.green }}>{totalAmount.toLocaleString()}</td>
-                  <td colSpan={2} />
+                  <td colSpan={3} />
                 </tr>
               )}
             </tbody>

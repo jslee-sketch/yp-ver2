@@ -51,7 +51,7 @@ const CATEGORIES = [
 
 // ── 유틸 ─────────────────────────────────────────────
 
-function fmtPrice(n: number) { return '₩' + n.toLocaleString('ko-KR'); }
+function fmtPrice(n: number) { return n.toLocaleString('ko-KR') + '원'; }
 
 function daysLeft(deadline: string): number {
   const diff = new Date(deadline).getTime() - Date.now();

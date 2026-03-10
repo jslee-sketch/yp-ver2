@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchMyTaxInvoices, confirmTaxInvoice } from '../api/taxInvoiceApi';
 import type { TaxInvoice, TaxInvoiceStatus } from '../types/taxInvoice';
 
@@ -18,6 +19,7 @@ const STATUS_COLORS: Record<TaxInvoiceStatus, string> = {
 const fmt = (n: number) => n.toLocaleString('ko-KR');
 
 export default function SellerTaxInvoicesPage() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<TaxInvoice[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -79,6 +81,25 @@ export default function SellerTaxInvoicesPage() {
                   <span style={{ fontWeight: 700, color: C.cyan }}>합계: {fmt(inv.total_amount)}원</span>
                 </div>
                 <div>작성일: {inv.created_at?.slice(0, 10)}</div>
+                {inv.settlement_id && (
+                  <div>
+                    연결 정산:{' '}
+                    <span
+                      onClick={() => navigate('/seller/settlements')}
+                      style={{ color: C.cyan, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      #{inv.settlement_id}
+                    </span>
+                  </div>
+                )}
+                {((inv as Record<string, unknown>).payment_due_date || (inv as Record<string, unknown>).expected_payment_date) && (
+                  <div>
+                    지급 예정일:{' '}
+                    <span style={{ fontWeight: 700, color: C.green }}>
+                      {String((inv as Record<string, unknown>).payment_due_date ?? (inv as Record<string, unknown>).expected_payment_date).slice(0, 10)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {inv.status === 'PENDING' && (

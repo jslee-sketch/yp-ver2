@@ -99,6 +99,19 @@ export default function MyPage() {
     }
   }, [authUser]);
 
+  const [buyerSummary, setBuyerSummary] = useState<{ active_deals: number; completed_orders: number }>({ active_deals: 0, completed_orders: 0 });
+
+  useEffect(() => {
+    if (!authUser) return;
+    apiClient.get(`/dashboard/buyer/${authUser.id}`).then(res => {
+      const d = res.data as Record<string, unknown>;
+      setBuyerSummary({
+        active_deals: (d.active_deals as number) ?? (d.open_deals as number) ?? 0,
+        completed_orders: (d.completed_orders as number) ?? (d.total_orders as number) ?? 0,
+      });
+    }).catch(() => {});
+  }, [authUser]);
+
   const isSeller = authUser?.role === 'seller' || authUser?.role === 'both';
   // 판매자는 sellerProfile 우선, 바이어는 apiProfile 우선
   const primary = isSeller ? (sellerProfile ?? apiProfile) : apiProfile;
@@ -442,6 +455,8 @@ export default function MyPage() {
           <InfoRow label="레벨" value={`Lv.${u.level}`} valueColor={C.blue} />
           <InfoRow label="신뢰티어" value={u.trust_tier} valueColor="#c0c0c0" />
           <InfoRow label="포인트" value={`${u.points.toLocaleString()}P`} valueColor={C.yellow} />
+          <InfoRow label="진행 중 딜" value={`${buyerSummary.active_deals}건`} valueColor={C.green} />
+          <InfoRow label="완료 주문" value={`${buyerSummary.completed_orders}건`} valueColor={C.textSec} />
         </Card>
 
         {/* 판매자 정보 */}

@@ -138,6 +138,7 @@ export default function AdminTaxInvoicesPage() {
             <tr style={{ background: '#1a1a2e' }}>
               <th style={{ padding: 8 }}><input type="checkbox" checked={selected.size === items.length && items.length > 0} onChange={toggleAll} /></th>
               <th style={{ padding: 8, color: C.textSec, textAlign: 'left' }}>번호</th>
+              <th style={{ padding: 8, color: C.textSec, textAlign: 'left' }}>정산</th>
               <th style={{ padding: 8, color: C.textSec, textAlign: 'left' }}>판매자</th>
               <th style={{ padding: 8, color: C.textSec, textAlign: 'right' }}>공급가액</th>
               <th style={{ padding: 8, color: C.textSec, textAlign: 'right' }}>세액</th>
@@ -154,6 +155,7 @@ export default function AdminTaxInvoicesPage() {
                   <input type="checkbox" checked={selected.has(inv.id)} onChange={() => toggle(inv.id)} />
                 </td>
                 <td style={{ padding: 8, color: C.text }}>{inv.invoice_number}</td>
+                <td style={{ padding: 8 }}>{inv.settlement_id ? <span style={{ color: '#7c4dff', fontWeight: 600, fontSize: 12 }}>S-{inv.settlement_id}</span> : '-'}</td>
                 <td style={{ padding: 8, color: C.text }}>{inv.recipient_business_name || '-'}</td>
                 <td style={{ padding: 8, color: C.text, textAlign: 'right' }}>{fmt(inv.supply_amount)}</td>
                 <td style={{ padding: 8, color: C.text, textAlign: 'right' }}>{fmt(inv.tax_amount)}</td>
@@ -175,7 +177,7 @@ export default function AdminTaxInvoicesPage() {
               </tr>
             ))}
             {items.length === 0 && (
-              <tr><td colSpan={9} style={{ padding: 40, textAlign: 'center', color: C.textSec }}>세금계산서가 없습니다.</td></tr>
+              <tr><td colSpan={10} style={{ padding: 40, textAlign: 'center', color: C.textSec }}>세금계산서가 없습니다.</td></tr>
             )}
           </tbody>
         </table>
@@ -186,7 +188,8 @@ export default function AdminTaxInvoicesPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setDetail(null)}>
           <div style={{ background: C.card, borderRadius: 16, padding: 24, width: 520, maxHeight: '80vh', overflow: 'auto', color: C.text }} onClick={e => e.stopPropagation()}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>세금계산서 상세</h2>
-            <p style={{ fontSize: 13, color: C.textSec, marginBottom: 12 }}>{detail.invoice_number}</p>
+            <p style={{ fontSize: 13, color: C.textSec, marginBottom: 4 }}>{detail.invoice_number}</p>
+            {detail.settlement_id && <p style={{ fontSize: 12, color: '#7c4dff', fontWeight: 600, marginBottom: 12 }}>정산: S-{detail.settlement_id}</p>}
 
             <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, color: C.cyan }}>공급자</h3>
             <div style={{ fontSize: 13, marginBottom: 16, lineHeight: 1.8 }}>

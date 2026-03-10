@@ -12,6 +12,10 @@ const C = {
 
 function fmtP(n: number) { return '₩' + (n ?? 0).toLocaleString('ko-KR'); }
 
+const COMMISSION_BY_LEVEL: Record<number, number> = {
+  1: 7, 2: 6, 3: 5.5, 4: 5, 5: 4.5, 6: 4,
+};
+
 interface DashData {
   todayOrders: number;
   pendingShip: number;
@@ -19,6 +23,7 @@ interface DashData {
   avgRating: number;
   totalOffers: number;
   confirmedOffers: number;
+  sellerLevel: number;
 }
 
 export default function SellerDashboardPage() {
@@ -32,10 +37,11 @@ export default function SellerDashboardPage() {
     if (!sellerId) return;
     (async () => {
       try {
-        const [resvRes, reviewRes, offerRes] = await Promise.all([
+        const [resvRes, reviewRes, offerRes, sellerRes] = await Promise.all([
           apiClient.get(API.RESERVATIONS.LIST_SELLER(sellerId)).catch(() => ({ data: [] })),
           apiClient.get(API.REVIEWS.SUMMARY(sellerId)).catch(() => ({ data: null })),
           apiClient.get(API.OFFERS.LIST, { params: { seller_id: sellerId } }).catch(() => ({ data: [] })),
+          apiClient.get(`/sellers/me`).catch(() => ({ data: null })),
         ]);
         const resvs = Array.isArray(resvRes.data) ? resvRes.data : [];
         const offers = Array.isArray(offerRes.data) ? offerRes.data : [];
@@ -59,6 +65,7 @@ export default function SellerDashboardPage() {
           avgRating: reviewRes.data?.adjusted_rating ?? reviewRes.data?.raw_avg ?? 0,
           totalOffers: offers.length,
           confirmedOffers: offers.filter((o: Record<string, unknown>) => o.is_confirmed).length,
+          sellerLevel: sellerRes.data?.level ?? 1,
         });
       } catch (err) {
         console.error('대시보드 로드 실패:', err);
@@ -92,6 +99,29 @@ export default function SellerDashboardPage() {
           <div style={{ textAlign: 'center', padding: '40px 0', color: C.textDim }}>불러오는 중...</div>
         ) : data && (
           <>
+            {/* 판매자 레벨 & 수수료 */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14,
+              background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: '12px 16px',
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 10,
+                background: 'linear-gradient(135deg, #00e676, #00b0ff)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 16, fontWeight: 900, color: '#0a0a0f',
+              }}>
+                Lv.{data.sellerLevel}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                  판매자 등급 Lv.{data.sellerLevel}
+                </div>
+                <div style={{ fontSize: 11, color: C.textDim }}>
+                  수수료율 <span style={{ fontWeight: 700, color: C.orange }}>{COMMISSION_BY_LEVEL[data.sellerLevel] ?? 7}%</span>
+                </div>
+              </div>
+            </div>
+
             {/* 핵심 지표 카드 */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
               <div style={{ textAlign: 'center', padding: 16, background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14 }}>

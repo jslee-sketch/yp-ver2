@@ -29,6 +29,8 @@ interface RefundReservation {
   is_disputed?: boolean;
   created_at: string;
   cancelled_at?: string;
+  reason?: string;
+  refund_reason?: string;
   deal?: { product_name?: string };
   buyer?: { nickname?: string; name?: string };
 }
@@ -202,6 +204,21 @@ export default function SellerRefundsPage() {
               <div style={{ fontSize: 10, color: C.textDim, marginBottom: 6 }}>
                 구매자 #{r.buyer_id}{r.buyer?.nickname ? ` (${r.buyer.nickname})` : ''} · {fmtDate(r.created_at)}
               </div>
+
+              {(r.reason || r.refund_reason) && (
+                <div style={{
+                  borderLeft: '3px solid #ff9100',
+                  background: 'rgba(255,145,0,0.06)',
+                  borderRadius: '0 8px 8px 0',
+                  padding: '8px 12px',
+                  marginBottom: 6,
+                }}>
+                  <div style={{ fontSize: 10, color: C.textDim, marginBottom: 2 }}>환불 사유</div>
+                  <div style={{ fontSize: 12, color: C.text, fontStyle: 'italic', lineHeight: 1.5 }}>
+                    {r.reason ?? r.refund_reason}
+                  </div>
+                </div>
+              )}
 
               {st === '환불요청' && (
                 <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>

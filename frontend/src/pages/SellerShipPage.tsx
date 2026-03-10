@@ -14,13 +14,14 @@ const C = {
   border: 'var(--border-subtle)', green: 'var(--accent-green)', orange: 'var(--accent-orange)',
 };
 
-function fmtPrice(n: number) { return '₩' + n.toLocaleString('ko-KR'); }
+function fmtPrice(n: number) { return n.toLocaleString('ko-KR') + '원'; }
 function fmtDate(s: string) { return (s ?? '').split('T')[0].replace(/-/g, '.'); }
 
 type ShipStatus = 'PENDING_SHIP' | 'SHIPPED' | 'DELIVERED' | 'CONFIRMED';
 
 interface SellerOrder {
   id: number;
+  deal_id?: number;
   offer_id: number;
   product_name: string;
   buyer_name: string;
@@ -105,6 +106,7 @@ export default function SellerShipPage() {
             else if (r.shipped_at) status = 'SHIPPED';
             return {
               id: r.id as number,
+              deal_id: (r.deal_id as number) || (deal?.id as number) || undefined,
               offer_id: (r.offer_id as number) || 0,
               product_name: String(deal?.product_name ?? `예약 #${r.id}`),
               buyer_name: String(buyer?.nickname ?? buyer?.name ?? `구매자#${r.buyer_id}`),
@@ -207,7 +209,11 @@ export default function SellerShipPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>📦 {order.product_name}</div>
-                  <div style={{ fontSize: 11, color: C.textSec }}>오퍼 #{order.offer_id} · 예약 #{order.id} · {order.buyer_name}</div>
+                  <div style={{ fontSize: 11, color: C.textSec }}>
+                    예약 <span style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>#{order.id}</span>
+                    {order.deal_id ? <> · <span onClick={e => { e.stopPropagation(); navigate(`/deal/${order.deal_id}`); }} style={{ cursor: 'pointer', color: 'var(--accent-blue)', textDecoration: 'underline' }}>딜 #{order.deal_id}</span></> : null}
+                    {' · '}오퍼 #{order.offer_id} · {order.buyer_name}
+                  </div>
                   <div style={{ fontSize: 11, color: C.textSec }}>{order.qty}개 · {fmtPrice(order.amount_total)}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>

@@ -40,7 +40,7 @@ const C = {
 };
 
 function fmtDate(s: string) { return (s ?? '').split('T')[0].replace(/-/g, '.'); }
-function fmtP(n: number) { return '₩' + n.toLocaleString('ko-KR'); }
+function fmtP(n: number) { return n.toLocaleString('ko-KR') + '원'; }
 function daysLeft(deadline: string): number {
   if (!deadline) return 0;
   return Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000));
@@ -190,6 +190,10 @@ export default function MyDealsPage() {
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <span
+                      onClick={e => { e.stopPropagation(); navigate(`/deal/${deal.id}`); }}
+                      style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-blue)', background: 'rgba(0,176,255,0.08)', padding: '1px 6px', borderRadius: 4, cursor: 'pointer' }}
+                    >#{deal.id}</span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{deal.product_name}</span>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 6,
