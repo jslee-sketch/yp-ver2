@@ -8,6 +8,7 @@ import logging
 
 from fastapi import (
     APIRouter,
+    Body,
     Depends,
     HTTPException,
     Query,
@@ -347,7 +348,7 @@ def api_seed_notifications(
     summary="FCM 푸시 토큰 등록/갱신",
 )
 def register_fcm_token(
-    body: dict,
+    body: dict = Body(...),
     db: Session = Depends(get_db),
 ):
     """
