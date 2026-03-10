@@ -53,7 +53,7 @@ test.describe.serial('FCM + WebSocket 검증 (20건)', () => {
     const r = await api(page, 'POST', '/notifications/fcm-token', {
       token: `fake-fcm-token-${TS}`,
       user_type: 'buyer',
-      user_id: 1,
+      user_id: 9,
     });
     console.log(`F2 status=${r.status}, msg=${r.data?.message}`);
     expect(r.status).toBe(200);
@@ -97,7 +97,7 @@ test.describe.serial('FCM + WebSocket 검증 (20건)', () => {
     const r = await api(page, 'POST', '/notifications/fcm-token', {
       token: `fake-seller-fcm-${TS}`,
       user_type: 'seller',
-      user_id: 1,
+      user_id: 9,
     });
     console.log(`F6 status=${r.status}`);
     expect(r.status).toBe(200);
