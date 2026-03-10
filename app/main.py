@@ -125,7 +125,7 @@ _alter_cols = [
     ("actuators", "contract_agreed", "BOOLEAN DEFAULT FALSE"),
     ("actuators", "contract_agreed_at", "DATETIME"),
     ("actuators", "contract_version", "VARCHAR(20)"),
-    ("actuators", "withholding_tax_rate", "FLOAT DEFAULT 0.033"),
+    ("actuators", "withholding_tax_rate", "DOUBLE PRECISION DEFAULT 0.033"),
     ("actuators", "resident_id_last", "VARCHAR(10)"),
     # seller ERP 추가 컬럼
     ("sellers", "shipping_policy", "TEXT"),
@@ -191,8 +191,8 @@ try:
                 with engine.begin() as _conn:
                     _conn.execute(_sa.text(f"ALTER TABLE {_tbl} ADD COLUMN {_col} {_typ}"))
                 print(f"[DB_INIT] Added column {_tbl}.{_col}", flush=True)
-            except Exception:
-                pass
+            except Exception as _col_err:
+                print(f"[DB_INIT] Failed to add {_tbl}.{_col}: {_col_err}", flush=True)
     else:
         print("[DB_INIT] ALTER TABLE skipped — all columns exist", flush=True)
 except Exception as _ae:
