@@ -101,6 +101,7 @@ def _resolve_cooling_days_from_reservation_snapshot(resv: models.Reservation) ->
     """
     예약의 policy_snapshot_json에서 cancel_within_days를 쿨링으로 사용 (현재 너의 설계).
     - 없거나 파싱 실패하면 7일 fallback
+    - 0은 즉시 READY 전환 허용 (테스트/특수 정책용)
     """
     raw = getattr(resv, "policy_snapshot_json", None)
     if not raw:
@@ -109,7 +110,7 @@ def _resolve_cooling_days_from_reservation_snapshot(resv: models.Reservation) ->
     try:
         snap = json.loads(raw)
         cd = int(snap.get("cancel_within_days") or 0)
-        if cd <= 0:
+        if cd < 0:
             return 7
         return cd
     except Exception:
