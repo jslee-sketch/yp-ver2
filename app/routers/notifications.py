@@ -103,7 +103,33 @@ def create_notification(
     db.add(notif)
     db.commit()
     db.refresh(notif)
+
+    # FCM 푸시 발송 (best-effort)
+    try:
+        _send_fcm_for_user(db, user_id, title, message, meta)
+    except Exception:
+        pass  # FCM 실패해도 앱 내 알림은 정상 저장됨
+
     return notif
+
+
+def _send_fcm_for_user(db: Session, user_id: int, title: str, body: str, meta: Optional[Dict[str, Any]] = None):
+    """user_id로 Buyer/Seller/Actuator 중 fcm_token 찾아서 푸시."""
+    from app.services.fcm_push import send_push
+    role = (meta or {}).get("role", "")
+    token = None
+    if role == "seller":
+        row = db.query(models.Seller).get(user_id)
+        token = getattr(row, "fcm_token", None) if row else None
+    elif role == "actuator":
+        row = db.query(models.Actuator).get(user_id)
+        token = getattr(row, "fcm_token", None) if row else None
+    else:
+        row = db.query(models.Buyer).get(user_id)
+        token = getattr(row, "fcm_token", None) if row else None
+    if token:
+        data = {k: str(v) for k, v in (meta or {}).items()} if meta else {}
+        send_push(token, title, body, data)
 
 
 # -------------------------------------------------------
@@ -311,3 +337,43 @@ def api_seed_notifications(
         created_ids.append(notif.id)
 
     return {"created": created_ids}
+
+
+# -------------------------------------------------------
+# FCM 토큰 등록
+# -------------------------------------------------------
+@router.post(
+    "/fcm-token",
+    summary="FCM 푸시 토큰 등록/갱신",
+)
+def register_fcm_token(
+    body: dict,
+    db: Session = Depends(get_db),
+):
+    """
+    body: {"token": "...", "user_type": "buyer|seller|actuator", "user_id": 123}
+    """
+    token = (body.get("token") or "").strip()
+    if not token:
+        raise HTTPException(400, "token 필수")
+    user_type = (body.get("user_type") or "buyer").lower()
+    user_id = body.get("user_id")
+    if not user_id:
+        raise HTTPException(400, "user_id 필수")
+
+    now = datetime.now(timezone.utc)
+
+    if user_type == "seller":
+        row = db.query(models.Seller).get(int(user_id))
+    elif user_type == "actuator":
+        row = db.query(models.Actuator).get(int(user_id))
+    else:
+        row = db.query(models.Buyer).get(int(user_id))
+
+    if not row:
+        raise HTTPException(404, "사용자를 찾을 수 없습니다")
+
+    row.fcm_token = token
+    row.fcm_updated_at = now
+    db.commit()
+    return {"ok": True, "message": "FCM 토큰 등록 완료"}

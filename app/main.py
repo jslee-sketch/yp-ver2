@@ -176,6 +176,13 @@ _alter_cols = [
     ("actuators", "business_item", "VARCHAR(100)"),
     ("actuators", "tax_invoice_email", "VARCHAR(100)"),
     ("actuators", "business_verified", "BOOLEAN DEFAULT FALSE"),
+    # FCM 푸시 토큰
+    ("buyers", "fcm_token", "VARCHAR(500)"),
+    ("buyers", "fcm_updated_at", "DATETIME"),
+    ("sellers", "fcm_token", "VARCHAR(500)"),
+    ("sellers", "fcm_updated_at", "DATETIME"),
+    ("actuators", "fcm_token", "VARCHAR(500)"),
+    ("actuators", "fcm_updated_at", "DATETIME"),
 ]
 try:
     _insp = _sa.inspect(engine)
@@ -803,6 +810,11 @@ _include_router_safe("behavior", ("router",), label="behavior")
 # Delivery Tracking (SweetTracker)
 # --------------------------------------------------
 _include_router_safe("delivery_tracking", ("router",), label="delivery_tracking")
+
+# --------------------------------------------------
+# WebSocket 실시간 채팅
+# --------------------------------------------------
+_include_router_safe("deal_chat_ws", ("router",), label="deal_chat_ws")
 
 # --------------------------------------------------
 # 5️⃣ 플랫폼 필수 기능 (v2)

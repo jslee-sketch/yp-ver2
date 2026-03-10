@@ -76,6 +76,10 @@ class Buyer(Base):
     reset_token = Column(String(64), nullable=True, index=True)
     reset_token_expires_at = Column(DateTime, nullable=True)
 
+    # FCM 푸시 토큰
+    fcm_token = Column(String(500), nullable=True)
+    fcm_updated_at = Column(DateTime, nullable=True)
+
     participants = relationship("DealParticipant", back_populates="buyer")
     deals = relationship("Deal", back_populates="creator")
 
@@ -169,6 +173,10 @@ class Seller(Base):
     business_registered_at = Column(DateTime, nullable=True)   # 사업자 등록일
     business_updated_at = Column(DateTime, nullable=True)      # 사업자 정보 수정일
 
+    # FCM 푸시 토큰
+    fcm_token = Column(String(500), nullable=True)
+    fcm_updated_at = Column(DateTime, nullable=True)
+
     actuator = relationship("Actuator", back_populates="sellers")
 
     # (NEW) 이 Seller 거래로 발생한 Actuator 커미션들
@@ -231,6 +239,10 @@ class Actuator(Base):
     # 원천징수 (개인 액추에이터)
     withholding_tax_rate = Column(Float, default=0.033)
     resident_id_last = Column(String(10), nullable=True)
+
+    # FCM 푸시 토큰
+    fcm_token = Column(String(500), nullable=True)
+    fcm_updated_at = Column(DateTime, nullable=True)
 
     # ACTIVE / SUSPENDED / CLOSED
     status = Column(String(20), nullable=False, default="ACTIVE")

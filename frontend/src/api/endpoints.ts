@@ -77,6 +77,7 @@ export const API = {
     MESSAGES:          (dealId: number) => `/deals/${dealId}/chat/messages`,
     SEND:              (dealId: number) => `/deals/${dealId}/chat/messages`,
     DELETE:            (dealId: number, msgId: number) => `/deals/${dealId}/chat/messages/${msgId}`,
+    WS:                (dealId: number) => `/ws/chat/${dealId}`,
   },
 
   // ── 오퍼 (v3.5) ─────────────────────────────────────────────
@@ -154,6 +155,7 @@ export const API = {
     READ:              (id: number) => `/notifications/${id}/read`,
     READ_ALL:          '/notifications/read_all',
     UNREAD_COUNT:      '/notifications/unread_count',
+    FCM_TOKEN:         '/notifications/fcm-token',
   },
 
   // ── 리뷰 ────────────────────────────────────────────────────
