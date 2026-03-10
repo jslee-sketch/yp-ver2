@@ -242,7 +242,7 @@ def admin_list_reservations(
     if shipped is False:
         q = q.filter(models.Reservation.shipped_at.is_(None))
     if refund is True:
-        q = q.filter(models.Reservation.status.in_(["REFUNDED", "CANCELLED"]))
+        q = q.filter(models.Reservation.status.in_(["CANCELLED"]))
 
     items = q.order_by(models.Reservation.id.desc()).limit(limit).all()
 
