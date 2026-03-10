@@ -9,6 +9,7 @@ const sections = [
       { label: '대시보드', path: '/admin' },
       { label: '통계/KPI', path: '/admin/stats' },
       { label: '통합 검색', path: '/admin/search' },
+      { label: '커스텀 리포트', path: '/admin/custom-report' },
     ],
   },
   {

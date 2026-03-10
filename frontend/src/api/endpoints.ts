@@ -311,6 +311,10 @@ export const API = {
     POLICY_PROPOSALS:    '/admin/policy/proposals',
     POLICY_PROPOSAL:     (id: number) => `/admin/policy/proposals/${id}`,
     UNIFIED_SEARCH:      '/admin/unified-search',
+    CUSTOM_REPORT_FIELDS:    '/admin/custom-report/fields',
+    CUSTOM_REPORT_QUERY:     '/admin/custom-report/query',
+    CUSTOM_REPORT_TEMPLATES: '/admin/custom-report/templates',
+    CUSTOM_REPORT_TEMPLATE:  (id: number) => `/admin/custom-report/templates/${id}`,
   },
 
   // ── 세금계산서 ──────────────────────────────────────────

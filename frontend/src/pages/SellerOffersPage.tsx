@@ -165,7 +165,11 @@ export default function SellerOffersPage() {
                   borderRadius: 14, padding: 14, marginBottom: 8,
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>O-{String(offer.id).padStart(6,'0')} · D-{String(offer.deal_id).padStart(6,'0')}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                      <span style={{ color: C.green, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate(`/deal/${offer.deal_id}`)}>O-{String(offer.id).padStart(6,'0')}</span>
+                      {' · '}
+                      <span style={{ color: '#00b0ff', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate(`/deal/${offer.deal_id}`)}>D-{String(offer.deal_id).padStart(6,'0')}</span>
+                    </span>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
                       background: `${clr}22`, color: clr,

@@ -295,7 +295,10 @@ export default function MyOrdersPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {/* 예약번호 + 연결 번호 */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-blue)', background: 'rgba(0,176,255,0.08)', padding: '1px 6px', borderRadius: 4 }}>
+                    <span
+                      onClick={e => { e.stopPropagation(); if (item.deal_id) navigate(`/deal/${item.deal_id}`); }}
+                      style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-blue)', background: 'rgba(0,176,255,0.08)', padding: '1px 6px', borderRadius: 4, cursor: 'pointer', textDecoration: 'underline' }}
+                    >
                       예약 #{item.id}
                     </span>
                     {item.deal_id && (
@@ -307,7 +310,10 @@ export default function MyOrdersPage() {
                       </span>
                     )}
                     {item.offer_id && (
-                      <span style={{ fontSize: 10, color: C.textDim }}>
+                      <span
+                        onClick={e => { e.stopPropagation(); if (item.deal_id) navigate(`/deal/${item.deal_id}`); }}
+                        style={{ fontSize: 10, color: 'var(--accent-blue)', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
                         오퍼 #{item.offer_id}
                       </span>
                     )}

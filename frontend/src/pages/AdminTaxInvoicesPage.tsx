@@ -161,7 +161,7 @@ export default function AdminTaxInvoicesPage() {
                   <input type="checkbox" checked={selected.has(inv.id)} onChange={() => toggle(inv.id)} />
                 </td>
                 <td style={{ padding: 8, color: C.text }}>{inv.invoice_number}</td>
-                <td style={{ padding: 8 }}>{inv.settlement_id ? <span style={{ color: '#7c4dff', fontWeight: 600, fontSize: 12 }}>S-{inv.settlement_id}</span> : '-'}</td>
+                <td style={{ padding: 8 }} onClick={e => e.stopPropagation()}>{inv.settlement_id ? <span style={{ color: '#7c4dff', fontWeight: 600, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => window.open('/admin/settlements', '_blank')}>S-{inv.settlement_id}</span> : '-'}</td>
                 <td style={{ padding: 8, color: C.text, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={(inv as any).product_name || ''}>{(inv as any).product_name || '-'}</td>
                 <td style={{ padding: 8, color: C.textSec, textAlign: 'center' }}>{(inv as any).quantity ?? '-'}</td>
                 <td style={{ padding: 8, color: C.text }}>{inv.recipient_business_name || '-'}</td>

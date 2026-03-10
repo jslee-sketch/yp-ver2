@@ -68,8 +68,8 @@ export default function AdminSettlementsPage() {
             <tbody>
               {filtered.map(s => (
                 <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                  <td style={{ padding: '10px 8px', color: C.cyan }}>S-{s.id}</td>
-                  <td style={{ padding: '10px 8px', color: C.text }}>R-{s.reservation_id}</td>
+                  <td style={{ padding: '10px 8px', color: C.cyan, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { if (s.deal_id) window.open(`/deal/${s.deal_id}`, '_blank'); }}>S-{s.id}</td>
+                  <td style={{ padding: '10px 8px', color: '#60a5fa', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { if (s.deal_id) window.open(`/deal/${s.deal_id}`, '_blank'); }}>R-{s.reservation_id}</td>
                   <td style={{ padding: '10px 8px', color: C.text, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.product_name || ''}>{s.product_name || '-'}</td>
                   <td style={{ padding: '10px 8px', color: C.textSec }}>{s.quantity ?? '-'}</td>
                   <td style={{ padding: '10px 8px', color: C.text }}>{s.seller_business_name || s.seller_name || `S-${s.seller_id}`}</td>

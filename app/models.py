@@ -1391,3 +1391,17 @@ class BusinessInfoChangeLog(Base):
     __table_args__ = (
         Index("ix_biz_change_log_user", "user_type", "user_id"),
     )
+
+
+# -------------------------------------------------------
+# 📊 CustomReportTemplate — 커스텀 리포트 빌더 템플릿
+# -------------------------------------------------------
+class CustomReportTemplate(Base):
+    __tablename__ = "custom_report_templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    fields = Column(Text, nullable=False)  # JSON array of field keys
+    created_by = Column(String(50), nullable=True)  # admin email or "system"
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

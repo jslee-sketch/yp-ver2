@@ -76,9 +76,9 @@ export default function AdminReservationsPage() {
                 const st = cleanStatus(String(r.status || ''));
                 return (
                   <tr key={r.id} style={{ borderBottom: `1px solid ${C.border}`, cursor: 'pointer' }} onClick={() => setModal(r)}>
-                    <td style={{ padding: '10px 8px', color: C.cyan }}>R-{r.id}</td>
+                    <td style={{ padding: '10px 8px', color: C.cyan, cursor: 'pointer', textDecoration: 'underline' }} onClick={e => { e.stopPropagation(); window.open(`/deal/${r.deal_id}`, '_blank'); }}>R-{r.id}</td>
                     <td style={{ padding: '10px 8px', color: '#60a5fa', cursor: 'pointer', textDecoration: 'underline' }} onClick={e => { e.stopPropagation(); window.open(`/deal/${r.deal_id}`, '_blank'); }}>D-{r.deal_id}</td>
-                    <td style={{ padding: '10px 8px', color: C.textSec }}>O-{r.offer_id}</td>
+                    <td style={{ padding: '10px 8px', color: C.green, cursor: 'pointer', textDecoration: 'underline' }} onClick={e => { e.stopPropagation(); window.open(`/deal/${r.deal_id}`, '_blank'); }}>O-{r.offer_id}</td>
                     <td style={{ padding: '10px 8px', color: C.text, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.product_name || ''}>{r.product_name || '-'}</td>
                     <td style={{ padding: '10px 8px', color: C.textSec }}>{r.quantity ?? '-'}</td>
                     <td style={{ padding: '10px 8px', color: C.text }}>{r.buyer_name || `B-${r.buyer_id}`}</td>

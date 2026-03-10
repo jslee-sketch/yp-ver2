@@ -162,7 +162,9 @@ export default function SellerSettlementsPage() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: C.textSec }}>
-                  정산 #{s.id}{s.deal_id ? ` · 딜 #${s.deal_id}` : ''}{s.offer_id ? ` · 오퍼 #${s.offer_id}` : ''}
+                  정산 #{s.id}
+                  {s.deal_id ? <>{' · '}<span style={{ color: '#00b0ff', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate(`/deal/${s.deal_id}`)}>딜 #{s.deal_id}</span></> : ''}
+                  {s.offer_id ? <>{' · '}<span style={{ color: '#00e676', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate(`/deal/${s.deal_id}`)}>오퍼 #{s.offer_id}</span></> : ''}
                 </span>
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,

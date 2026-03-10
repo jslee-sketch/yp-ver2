@@ -58,6 +58,7 @@ from app.models import (  # noqa: F401
     Announcement,
     UserBehaviorLog, UserProfile,
     TaxInvoice, TaxInvoiceStatus, BusinessInfoChangeLog,
+    CustomReportTemplate,
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -831,6 +832,7 @@ _include_router_safe("admin_policy_proposals", ("router",), label="admin_policy_
 # Admin core / policy yaml / policy docs / announcements
 # --------------------------------------------------
 _include_router_safe("admin_core", ("router",), label="admin_core")
+_include_router_safe("admin_custom_report", ("router",), label="admin_custom_report")
 _include_router_safe("admin_policy_yaml", ("router",), label="admin_policy_yaml")
 _include_router_safe("admin_policy_docs", ("router",), label="admin_policy_docs")
 _include_router_safe("admin_announcements", ("router",), label="admin_announcements")
