@@ -178,11 +178,11 @@ _alter_cols = [
     ("actuators", "business_verified", "BOOLEAN DEFAULT FALSE"),
     # FCM 푸시 토큰
     ("buyers", "fcm_token", "VARCHAR(500)"),
-    ("buyers", "fcm_updated_at", "DATETIME"),
+    ("buyers", "fcm_updated_at", "TIMESTAMP"),
     ("sellers", "fcm_token", "VARCHAR(500)"),
-    ("sellers", "fcm_updated_at", "DATETIME"),
+    ("sellers", "fcm_updated_at", "TIMESTAMP"),
     ("actuators", "fcm_token", "VARCHAR(500)"),
-    ("actuators", "fcm_updated_at", "DATETIME"),
+    ("actuators", "fcm_updated_at", "TIMESTAMP"),
 ]
 try:
     _insp = _sa.inspect(engine)

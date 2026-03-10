@@ -147,34 +147,37 @@ def register_fcm_token(
     """
     body: {"token": "...", "user_type": "buyer|seller|actuator", "user_id": 123}
     """
-    token = (body.get("token") or "").strip()
-    if not token:
-        raise HTTPException(400, "token 필수")
-    user_type = (body.get("user_type") or "buyer").lower()
-    user_id = body.get("user_id")
-    if not user_id:
-        raise HTTPException(400, "user_id 필수")
-
-    now = datetime.now(timezone.utc)
-
-    if user_type == "seller":
-        row = db.query(models.Seller).get(int(user_id))
-    elif user_type == "actuator":
-        row = db.query(models.Actuator).get(int(user_id))
-    else:
-        row = db.query(models.Buyer).get(int(user_id))
-
-    if not row:
-        raise HTTPException(404, "사용자를 찾을 수 없습니다")
-
     try:
+        token = (body.get("token") or "").strip()
+        if not token:
+            raise HTTPException(400, "token 필수")
+        user_type = (body.get("user_type") or "buyer").lower()
+        user_id = body.get("user_id")
+        if not user_id:
+            raise HTTPException(400, "user_id 필수")
+
+        now = datetime.now(timezone.utc)
+
+        if user_type == "seller":
+            row = db.query(models.Seller).get(int(user_id))
+        elif user_type == "actuator":
+            row = db.query(models.Actuator).get(int(user_id))
+        else:
+            row = db.query(models.Buyer).get(int(user_id))
+
+        if not row:
+            raise HTTPException(404, "사용자를 찾을 수 없습니다")
+
         row.fcm_token = token
         row.fcm_updated_at = now
         db.commit()
+        return {"ok": True, "message": "FCM 토큰 등록 완료"}
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
+        logging.exception("register_fcm_token error")
         raise HTTPException(500, f"FCM 토큰 저장 실패: {e}")
-    return {"ok": True, "message": "FCM 토큰 등록 완료"}
 
 
 # -------------------------------------------------------
