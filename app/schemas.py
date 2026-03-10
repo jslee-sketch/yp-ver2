@@ -217,6 +217,7 @@ class ActuatorOut(ActuatorBase):
     company_phone: Optional[str] = None
     business_license_image: Optional[str] = None
     ecommerce_permit_image: Optional[str] = None
+    tax_invoice_email: Optional[str] = None
 
     class Config:
         from_attributes = True  # orm_mode 대신
