@@ -7,6 +7,7 @@ import { test, expect } from '@playwright/test';
 
 const BASE = 'https://web-production-defb.up.railway.app';
 const COUNT = 5;
+const TS = Date.now();
 
 // ── helpers ──────────────────────────────────────────────
 
@@ -79,17 +80,44 @@ test.describe.serial('풀 플로우 정산 E2E (5건)', () => {
     console.log(`T01 Buyer OK  id=${buyerId}`);
   });
 
-  test('T02 Seller 로그인', async ({ page }) => {
+  test('T02 Seller 생성 + 승인', async ({ page }) => {
     await page.goto(BASE);
-    // seller 로그인: /auth/seller/login 우선, 실패 시 /auth/login
-    sellerToken = await formLogin(page, '/auth/seller/login', 'seller@yeokping.com', 'seller1234');
-    if (!sellerToken) {
-      sellerToken = await formLogin(page, '/auth/login', 'seller@yeokping.com', 'seller1234');
-    }
+    // 새 셀러 소셜 가입 → 즉시 승인
+    const regR = await api(page, 'POST', '/auth/social/register', {
+      social_provider: 'kakao',
+      social_id: `settle_seller_${TS}`,
+      social_email: `settle_seller_${TS}@test.com`,
+      social_name: '정산테스트셀러',
+      role: 'seller',
+      nickname: `정산셀${TS % 100000}`,
+      business_name: '정산테스트상사',
+      business_number: `SET${TS % 1000000}`,
+      company_phone: '02-1234-5678',
+      bank_name: '국민은행',
+      account_number: '1234567890',
+      account_holder: '정산셀러',
+      tax_invoice_email: `settle_seller_${TS}@test.com`,
+    });
+    console.log(`  Seller register: status=${regR.status}`);
+    expect(regR.status).toBeLessThan(300);
+    sellerToken = regR.data?.access_token || '';
     expect(sellerToken).toBeTruthy();
     const jwt = parseJwt(sellerToken);
     sellerId = Number(jwt.seller_id || jwt.sub || 0);
     expect(sellerId).toBeGreaterThan(0);
+
+    // 관리자로 즉시 승인
+    const approveR = await page.evaluate(
+      async ({ base, sellerId }: any) => {
+        const r = await fetch(`${base}/sellers/${sellerId}/approve`, { method: 'PATCH' });
+        const text = await r.text();
+        try { return { status: r.status, data: JSON.parse(text) }; }
+        catch { return { status: r.status, data: text }; }
+      },
+      { base: BASE, sellerId },
+    );
+    console.log(`  Seller approve: status=${approveR.status}`);
+    expect(approveR.status).toBeLessThan(300);
     console.log(`T02 Seller OK  id=${sellerId}`);
   });
 
