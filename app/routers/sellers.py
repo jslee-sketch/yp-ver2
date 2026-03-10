@@ -5,6 +5,8 @@
 
 from datetime import datetime, timezone
 from typing import Optional
+import html
+import re
 
 import os
 import uuid
@@ -18,6 +20,29 @@ from app import models, crud, schemas
 from app.database import get_db
 
 import logging
+
+
+# ── 입력값 검증 유틸 ──────────────────────────────────
+def _sanitize(value: str) -> str:
+    """XSS 방지: HTML 특수문자 이스케이프."""
+    if not value:
+        return value
+    return html.escape(str(value).strip())
+
+
+def _validate_email_format(email: str) -> bool:
+    """간단한 이메일 형식 검증."""
+    if not email:
+        return False
+    return bool(re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email))
+
+
+def _validate_business_number(bn: str) -> bool:
+    """사업자등록번호 형식 검증 (숫자 10자리 또는 NNN-NN-NNNNN)."""
+    if not bn:
+        return False
+    digits = re.sub(r'[-\s]', '', bn)
+    return bool(re.match(r'^\d{10}$', digits))
 from app.routers.notifications import create_notification
 from datetime import datetime, timezone
 
@@ -409,10 +434,22 @@ def update_business_info(
         "address", "business_type", "business_item",
         "tax_invoice_email",
     }
+
+    # ── 입력값 검증 ──
+    if "tax_invoice_email" in body and body["tax_invoice_email"]:
+        if not _validate_email_format(body["tax_invoice_email"]):
+            raise HTTPException(400, "이메일 형식이 올바르지 않습니다")
+    if "business_number" in body and body["business_number"]:
+        if not _validate_business_number(body["business_number"]):
+            raise HTTPException(400, "사업자등록번호 형식이 올바르지 않습니다 (숫자 10자리)")
+
     changed = []
     for k, v in body.items():
         if k not in BIZ_FIELDS:
             continue
+        # XSS sanitize
+        if isinstance(v, str):
+            v = _sanitize(v)
         old_val = getattr(seller, k, None)
         if str(old_val or "") != str(v or ""):
             log = models.BusinessInfoChangeLog(

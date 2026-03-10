@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import html as _html
 from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime, timezone, timedelta
 from dataclasses import asdict, dataclass
@@ -748,7 +749,7 @@ def approve_seller(db: Session, seller_id: int) -> models.Seller:
 # =========================================================
 def create_deal(db: Session, deal: schemas.DealCreate):
     db_deal = models.Deal(
-        product_name=deal.product_name,
+        product_name=_html.escape(deal.product_name) if deal.product_name else deal.product_name,
         creator_id=deal.creator_id,
         desired_qty=deal.desired_qty,
         target_price=deal.target_price,
@@ -1318,6 +1319,19 @@ def create_offer(db: Session, offer: schemas.OfferCreate):
         raise NotFoundError("Deal not found")
 
     # ---------------------------------------------------------
+    # ✅ 판매자 상태 검증 (정지/비활성/미승인 차단)
+    # ---------------------------------------------------------
+    db_seller = db.query(models.Seller).filter(models.Seller.id == offer.seller_id).first()
+    if not db_seller:
+        raise NotFoundError("Seller not found")
+    if not getattr(db_seller, "is_active", True):
+        raise ConflictError("비활성 계정으로는 오퍼를 제출할 수 없습니다")
+    if getattr(db_seller, "is_banned", False):
+        raise ConflictError("정지된 계정으로는 오퍼를 제출할 수 없습니다")
+    if not getattr(db_seller, "verified_at", None):
+        raise ConflictError("승인되지 않은 판매자는 오퍼를 제출할 수 없습니다")
+
+    # ---------------------------------------------------------
     # ✅ 배송비 정책 저장(부분환불 자동배정의 전제)
     # ---------------------------------------------------------
     raw_mode = getattr(offer, "shipping_mode", None)
@@ -1352,7 +1366,7 @@ def create_offer(db: Session, offer: schemas.OfferCreate):
         price=offer.price,
         total_available_qty=offer.total_available_qty,
         delivery_days=getattr(offer, "delivery_days", None),
-        comment=getattr(offer, "comment", None) or getattr(offer, "free_text", None),
+        comment=_html.escape(getattr(offer, "comment", None) or getattr(offer, "free_text", None) or ""),
 
         shipping_mode=shipping_mode,
         shipping_fee_per_reservation=shipping_fee_per_reservation,

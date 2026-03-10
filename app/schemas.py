@@ -505,7 +505,7 @@ class DealChatMessageListOut(BaseModel):
 
 # -------- Offer --------
 class OfferBase(BaseModel):
-    price: float
+    price: float = Field(..., gt=0, le=999_999_999, description="오퍼 가격 (1원 이상)")
     total_available_qty: int = Field(..., ge=1)
     # 설명 텍스트: 모델에 comment/free_text 혼재 → 입력은 둘 다 수용
     free_text: Optional[str] = None

@@ -5,6 +5,7 @@
 """
 
 import secrets
+import html
 import requests as http_requests
 from datetime import timedelta
 
@@ -13,6 +14,13 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from .. import database, models
+
+
+def _sanitize(value: str) -> str:
+    """XSS 방지: HTML 특수문자 이스케이프."""
+    if not value:
+        return value
+    return html.escape(str(value).strip())
 from ..security import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash
 from ..config.oauth_config import PROVIDER_CONFIG
 
@@ -264,14 +272,14 @@ def social_register(body: SocialRegisterRequest, db: Session = Depends(database.
         user = models.Seller(
             email=email,
             password_hash=sentinel_hash,
-            business_name=body.business_name or display_name,
+            business_name=_sanitize(body.business_name or display_name),
             nickname=body.nickname,
             business_number=body.business_number or f"SOCIAL-{body.social_id[:10]}",
             social_provider=body.social_provider,
             social_id=body.social_id,
             phone=body.phone or None,
             company_phone=body.company_phone or None,
-            address=body.address or None,
+            address=_sanitize(body.address) if body.address else None,
             zip_code=body.zip_code or None,
             bank_name=body.bank_name or None,
             account_number=body.account_number or None,
