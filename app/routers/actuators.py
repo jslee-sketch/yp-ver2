@@ -1,8 +1,10 @@
 # app/routers/actuators.py
 
+import html as _html
+import re as _re
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -15,6 +17,25 @@ from app.security import SECRET_KEY, ALGORITHM, oauth2_scheme
 from jose import jwt as jose_jwt, JWTError
 
 import logging
+
+
+def _sanitize(v: str) -> str:
+    if not v:
+        return v
+    return _html.escape(str(v).strip())
+
+
+def _validate_email_format(email: str) -> bool:
+    if not email:
+        return False
+    return bool(_re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email))
+
+
+def _validate_business_number(bn: str) -> bool:
+    if not bn:
+        return False
+    digits = _re.sub(r'[-\s]', '', bn)
+    return bool(_re.match(r'^\d{10}$', digits))
 
 
 router = APIRouter(
@@ -603,3 +624,57 @@ def payout_preview(
         "net_amount": gross - withheld,
         "note": "개인 → 원천징수 3.3% (소득세 3% + 지방소득세 0.3%)",
     }
+
+
+# ── 사업자 액추에이터 사업자 정보 수정 ─────────────────
+@router.patch("/{actuator_id}/business-info", summary="액추에이터 사업자 정보 수정")
+def update_actuator_business_info(
+    actuator_id: int = Path(..., ge=1),
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+):
+    """사업자 액추에이터 사업자 정보 수정 + 변경 이력 기록."""
+    act = db.query(models.Actuator).filter(models.Actuator.id == actuator_id).first()
+    if not act:
+        raise HTTPException(404, "actuator not found")
+
+    BIZ_FIELDS = {
+        "business_name", "business_number", "representative_name",
+        "business_address", "business_type", "business_item",
+        "tax_invoice_email", "company_phone",
+    }
+
+    # 입력값 검증
+    if "tax_invoice_email" in body and body["tax_invoice_email"]:
+        if not _validate_email_format(body["tax_invoice_email"]):
+            raise HTTPException(400, "세금계산서 수신 이메일 형식이 올바르지 않습니다")
+    if "business_number" in body and body["business_number"]:
+        if not _validate_business_number(body["business_number"]):
+            raise HTTPException(400, "사업자등록번호 형식이 올바르지 않습니다 (숫자 10자리)")
+
+    changed = []
+    for k, v in body.items():
+        if k not in BIZ_FIELDS:
+            continue
+        if isinstance(v, str):
+            v = _sanitize(v)
+        old_val = getattr(act, k, None)
+        if str(old_val or "") != str(v or ""):
+            try:
+                log = models.BusinessInfoChangeLog(
+                    user_type="actuator",
+                    user_id=actuator_id,
+                    field_name=k,
+                    old_value=str(old_val) if old_val else None,
+                    new_value=str(v) if v else None,
+                    changed_by="self",
+                )
+                db.add(log)
+            except Exception:
+                pass
+            changed.append(k)
+        setattr(act, k, v)
+
+    db.commit()
+    db.refresh(act)
+    return {"ok": True, "actuator_id": act.id, "changed_fields": changed}

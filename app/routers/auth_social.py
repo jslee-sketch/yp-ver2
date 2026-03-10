@@ -76,6 +76,8 @@ class SocialRegisterRequest(BaseModel):
     ecommerce_permit_image: str | None = None
     bankbook_image: str | None = None
     external_ratings: str | None = None
+    # seller/actuator 세금계산서용
+    tax_invoice_email: str | None = None
     # actuator용
     is_business: bool = False
     ecommerce_permit_number: str | None = None
@@ -231,8 +233,11 @@ def social_register(body: SocialRegisterRequest, db: Session = Depends(database.
             raise HTTPException(400, "사업자등록번호 형식이 올바르지 않습니다 (숫자 10자리)")
 
     # ── 이메일 형식 검증 ──
-    if body.social_email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', body.social_email):
+    _email_re = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if body.social_email and not re.match(_email_re, body.social_email):
         raise HTTPException(400, "이메일 형식이 올바르지 않습니다")
+    if body.tax_invoice_email and not re.match(_email_re, body.tax_invoice_email):
+        raise HTTPException(400, "세금계산서 수신 이메일 형식이 올바르지 않습니다")
 
     sentinel_hash = get_password_hash(secrets.token_urlsafe(32))
     email = body.social_email or f"{body.social_provider}_{body.social_id}@social.yeokping.com"
@@ -299,6 +304,7 @@ def social_register(body: SocialRegisterRequest, db: Session = Depends(database.
             ecommerce_permit_image=body.ecommerce_permit_image or None,
             bankbook_image=body.bankbook_image or None,
             external_ratings=body.external_ratings or None,
+            tax_invoice_email=body.tax_invoice_email or None,
         )
         db.add(user)
         db.commit()
@@ -327,6 +333,7 @@ def social_register(body: SocialRegisterRequest, db: Session = Depends(database.
             company_phone=body.company_phone or None,
             business_license_image=body.business_license_image or None,
             ecommerce_permit_image=body.ecommerce_permit_image or None,
+            tax_invoice_email=body.tax_invoice_email or None,
         )
         db.add(user)
         db.commit()

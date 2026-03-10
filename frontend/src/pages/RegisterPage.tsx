@@ -765,7 +765,7 @@ function TermsStep({ termsAgreed, setTermsAgreed, privacyAgreed, setPrivacyAgree
 // ── Step 5: 사업자 정보 ───────────────────────────────────
 function BizStep({
   role,
-  bizName, setBizName, bizNum, setBizNum, ceoName, setCeoName,
+  bizName, setBizName, bizNum, setBizNum, ceoName, setCeoName, taxEmail, setTaxEmail,
   bankName, setBankName, accountNum, setAccountNum, accountHolder, setAccountHolder,
   actuatorCode, setActuatorCode, actuatorVerified, setActuatorVerified, setActuatorResolvedId,
   fromRef,
@@ -775,7 +775,7 @@ function BizStep({
   actBizName, setActBizName, actBizNum, setActBizNum, actEcommerceNum, setActEcommerceNum,
   actBizAddress, setActBizAddress, actBizZipCode, setActBizZipCode,
   actBizAddressDetail, setActBizAddressDetail,
-  actCompanyPhone, setActCompanyPhone,
+  actCompanyPhone, setActCompanyPhone, actTaxEmail, setActTaxEmail,
   actBizLicenseUrl, setActBizLicenseUrl, actEcommercePermitUrl, setActEcommercePermitUrl,
   externalRatings, setExternalRatings,
   onNext,
@@ -784,6 +784,7 @@ function BizStep({
   bizName: string; setBizName: (v: string) => void;
   bizNum: string; setBizNum: (v: string) => void;
   ceoName: string; setCeoName: (v: string) => void;
+  taxEmail: string; setTaxEmail: (v: string) => void;
   bankName: string; setBankName: (v: string) => void;
   accountNum: string; setAccountNum: (v: string) => void;
   accountHolder: string; setAccountHolder: (v: string) => void;
@@ -803,6 +804,7 @@ function BizStep({
   actBizZipCode: string; setActBizZipCode: (v: string) => void;
   actBizAddressDetail: string; setActBizAddressDetail: (v: string) => void;
   actCompanyPhone: string; setActCompanyPhone: (v: string) => void;
+  actTaxEmail: string; setActTaxEmail: (v: string) => void;
   actBizLicenseUrl: string; setActBizLicenseUrl: (v: string) => void;
   actEcommercePermitUrl: string; setActEcommercePermitUrl: (v: string) => void;
   externalRatings: { platform: string; score: string; maxScore: string; evidenceType: 'file' | 'url'; evidenceFile: string; evidenceUrl: string }[];
@@ -990,6 +992,7 @@ function BizStep({
               </div>
             </div>
             <InputField label="대표자 이름 *" value={ceoName} onChange={setCeoName} placeholder="대표자 성함" />
+            <InputField label="세금계산서 수신 이메일" value={taxEmail} onChange={setTaxEmail} placeholder="tax@example.com (로그인 이메일과 다를 경우)" type="email" />
 
             {/* 사업자등록증 OCR 자동 입력 */}
             <div style={{ padding: '12px 16px', background: '#1a237e20', border: `1px dashed #7c4dff`, borderRadius: 14, textAlign: 'center' }}>
@@ -1252,6 +1255,7 @@ function BizStep({
                       />
                     </div>
                     <InputField label="전화번호 (회사)" value={actCompanyPhone} onChange={setActCompanyPhone} placeholder="02-0000-0000" type="tel" />
+                    <InputField label="세금계산서 수신 이메일" value={actTaxEmail} onChange={setActTaxEmail} placeholder="tax@example.com (로그인 이메일과 다를 경우)" type="email" />
                   </div>
                 </div>
 
@@ -1454,6 +1458,7 @@ export default function RegisterPage() {
   const [bizName,       setBizName]       = useState('');
   const [bizNum,        setBizNum]        = useState('');
   const [ceoName,       setCeoName]       = useState('');
+  const [taxEmail,      setTaxEmail]      = useState('');  // 세금계산서 수신 이메일
   const [bankName,      setBankName]      = useState('');
   const [accountNum,    setAccountNum]    = useState('');
   const [accountHolder, setAccountHolder] = useState('');
@@ -1474,6 +1479,7 @@ export default function RegisterPage() {
   const [actBizZipCode, setActBizZipCode] = useState('');
   const [actBizAddressDetail, setActBizAddressDetail] = useState('');
   const [actCompanyPhone, setActCompanyPhone] = useState('');
+  const [actTaxEmail, setActTaxEmail] = useState('');  // 액추에이터 세금계산서 수신 이메일
   const [actBizLicenseUrl, setActBizLicenseUrl] = useState('');
   const [actEcommercePermitUrl, setActEcommercePermitUrl] = useState('');
 
@@ -1824,6 +1830,7 @@ export default function RegisterPage() {
                 ecommerce_permit_image: ecommercePermitUrl || undefined,
                 bankbook_image: bankbookUrl || undefined,
                 external_ratings: externalRatings.some(r => r.score) ? JSON.stringify(externalRatings.filter(r => r.score)) : undefined,
+                tax_invoice_email: taxEmail || undefined,
               };
             } else if (role === 'actuator') {
               const actFullBizAddr = actBizAddress
@@ -1844,6 +1851,7 @@ export default function RegisterPage() {
                   company_phone: actCompanyPhone || undefined,
                   business_license_image: actBizLicenseUrl || undefined,
                   ecommerce_permit_image: actEcommercePermitUrl || undefined,
+                  tax_invoice_email: actTaxEmail || undefined,
                 } : {}),
               };
             }
@@ -1880,6 +1888,7 @@ export default function RegisterPage() {
                 ecommerce_permit_image: ecommercePermitUrl || undefined,
                 bankbook_image: bankbookUrl || undefined,
                 external_ratings: externalRatings.some(r => r.score) ? JSON.stringify(externalRatings.filter(r => r.score)) : undefined,
+                tax_invoice_email: taxEmail || undefined,
               });
               // 이메일 seller 자동 로그인
               try {
@@ -1916,6 +1925,7 @@ export default function RegisterPage() {
                   company_phone: actCompanyPhone || undefined,
                   business_license_image: actBizLicenseUrl || undefined,
                   ecommerce_permit_image: actEcommercePermitUrl || undefined,
+                  tax_invoice_email: actTaxEmail || undefined,
                 } : {}),
               });
             }
@@ -2084,6 +2094,7 @@ export default function RegisterPage() {
                   bizName={bizName} setBizName={setBizName}
                   bizNum={bizNum} setBizNum={setBizNum}
                   ceoName={ceoName} setCeoName={setCeoName}
+                  taxEmail={taxEmail} setTaxEmail={setTaxEmail}
                   bankName={bankName} setBankName={setBankName}
                   accountNum={accountNum} setAccountNum={setAccountNum}
                   accountHolder={accountHolder} setAccountHolder={setAccountHolder}
@@ -2101,6 +2112,7 @@ export default function RegisterPage() {
                   actBizZipCode={actBizZipCode} setActBizZipCode={setActBizZipCode}
                   actBizAddressDetail={actBizAddressDetail} setActBizAddressDetail={setActBizAddressDetail}
                   actCompanyPhone={actCompanyPhone} setActCompanyPhone={setActCompanyPhone}
+                  actTaxEmail={actTaxEmail} setActTaxEmail={setActTaxEmail}
                   actBizLicenseUrl={actBizLicenseUrl} setActBizLicenseUrl={setActBizLicenseUrl}
                   actEcommercePermitUrl={actEcommercePermitUrl} setActEcommercePermitUrl={setActEcommercePermitUrl}
                   externalRatings={externalRatings} setExternalRatings={setExternalRatings}

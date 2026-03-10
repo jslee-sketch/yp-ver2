@@ -277,6 +277,7 @@ export const API = {
     AGREE_CONTRACT:    (id: number) => `/actuators/${id}/agree-contract`,
     CONTRACT_STATUS:   (id: number) => `/actuators/${id}/contract-status`,
     PAYOUT_PREVIEW:    (id: number) => `/actuators/${id}/payout-preview`,
+    BUSINESS_INFO:     (id: number) => `/actuators/${id}/business-info`,
   },
 
   // ── 관리자 ─────────────────────────────────────────────
