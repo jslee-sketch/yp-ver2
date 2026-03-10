@@ -129,9 +129,34 @@ def _kb_allowed_for_role(path_l: str, role: str) -> bool:
     # guide_actuator.md는 ACTUATOR/ADMIN만
     if "guide_actuator" in path_l:
         return role in ("ACTUATOR", "ADMIN", "")
+    # buyer.md는 BUYER/ADMIN만
+    if path_l.endswith("/buyer.md"):
+        return role in ("BUYER", "ADMIN", "")
+    # screens/ 디자인 문서는 BUYER/SELLER/ADMIN (ACTUATOR 제외 — 화면 설계 불필요)
+    if "/screens/" in path_l:
+        return role in ("BUYER", "SELLER", "ADMIN", "")
+    # spectators_public.md는 BUYER/ADMIN만 (관전 모드는 구매자 전용)
+    if "spectators_public" in path_l:
+        return role in ("BUYER", "ADMIN", "")
+    # buyer.md는 BUYER/ADMIN만
+    if path_l.endswith("/buyer.md"):
+        return role in ("BUYER", "ADMIN", "")
+    # openapi.json은 ADMIN만 (기술 문서)
+    if "openapi.json" in path_l:
+        return role in ("ADMIN", "")
+    # tiers.md는 BUYER/SELLER/ADMIN (등급은 구매자/판매자 전용)
+    if "tiers.md" in path_l:
+        return role in ("BUYER", "SELLER", "ADMIN", "")
     # 그 외(defaults.yaml, 공통 정책 등)는 모두 허용
     return True
 
+
+_ADMIN_QUERY_KEYWORDS = {"마이너리티", "이상 감지", "신고 관리", "정책 파라미터", "정책 문서",
+                         "정책제안", "정책 제안", "환불 시뮬레이터", "브로드캐스트",
+                         "관리자 대시보드", "관리자 배송", "관리자 딜", "관리자 오퍼"}
+_BUYER_QUERY_KEYWORDS = {"딜 생성", "가격 챌린지", "관전 모드", "관전자", "포인트 적립",
+                         "구매자 등급", "사진으로 찾기", "사진 검색", "음성 검색",
+                         "맞춰보기", "슬라이더"}
 
 def retrieve_kb_snippets(query: str, role: str = "") -> str:
     ql = (query or "").lower().strip()
@@ -141,6 +166,13 @@ def retrieve_kb_snippets(query: str, role: str = "") -> str:
     if not toks:
         return ""
     role_u = (role or "").upper()
+    # 역할별 쿼리 필터링 — 관리자/구매자 전용 질문을 다른 역할에서 차단
+    if role_u and role_u != "ADMIN":
+        if any(kw in ql for kw in _ADMIN_QUERY_KEYWORDS):
+            return ""
+    if role_u and role_u not in ("BUYER", "ADMIN"):
+        if any(kw in ql for kw in _BUYER_QUERY_KEYWORDS):
+            return ""
     scored: List[Tuple[float, KBItem]] = []
     for it in KB:
         path_l = it.path.lower()
@@ -238,6 +270,20 @@ _FAQ_DIRECT_MAP: Dict[str, Any] = {
     "원천징수": "개인 액츄에이터 커미션은 원천징수 3.3%(소득세 3% + 지방소득세 0.3%) 공제 후 지급됩니다. 예: 10만원 커미션 → 3,300원 공제 → 96,700원 수령.",
     "3.3%": "개인 액츄에이터 원천징수율: 소득세 3% + 지방소득세 0.3% = 총 3.3%. 사업자 액츄에이터는 원천징수 대신 세금계산서 발행.",
     "액츄에이터 세금": "개인: 원천징수 3.3% 공제 후 지급. 사업자: 세금계산서 발행 (VAT 별도). 원천징수 영수증은 매년 2월 말 교부.",
+    "커미션 정산": "모집한 판매자의 거래 성사 시 커미션이 발생합니다. 구매확정→쿨링7일→READY→승인→지급 순서로 진행돼요. 정산 내역: /actuator/settlements",
+    "최소 지급액": "최소 지급액은 10,000원입니다. 미달 시 다음 정산으로 이월됩니다.",
+    "계좌 등록": "개인 액츄에이터는 /actuator/bank-info에서 본인 명의 계좌를 등록해야 커미션을 받을 수 있어요.",
+    "원천징수영수증": "개인 액츄에이터는 /actuator/settlements에서 원천징수영수증 PDF를 다운로드할 수 있어요. 연간 합산 영수증은 매년 2월 말 교부.",
+    # ---- 공통 (새 기능) ----
+    "FCM": "브라우저 알림을 허용하면 오퍼 도착, 배송 완료, 정산 준비 등 중요 알림을 실시간으로 받을 수 있어요!",
+    "푸시 알림": "브라우저 알림을 허용하면 앱을 열지 않아도 중요 알림을 받을 수 있어요! 설정에서 알림 허용을 확인해주세요.",
+    "실시간 채팅": "딜방에서 실시간 채팅이 가능해요! 메시지를 보내면 바로 상대방에게 전달됩니다. 입력 중 표시도 나와요.",
+    "딜방 채팅": "딜방에서 실시간 채팅이 가능합니다 (WebSocket). 메시지를 보내면 즉시 전달되고, 입력 중 표시/온라인 목록도 지원해요.",
+    "추천인": "추천 코드를 공유하면 친구가 가입할 때 추천인 포인트(+20P)를 받을 수 있어요!",
+    "추천 코드": "추천 코드를 공유하면 친구가 가입할 때 추천인 포인트(+20P)를 받을 수 있어요! 마이페이지에서 확인하세요.",
+    "딜 검색": "딜 목록에서 키워드나 카테고리로 원하는 딜을 검색할 수 있어요. 경로: /deals, /search",
+    "포인트 사용": "적립된 포인트는 결제 시 사용할 수 있어요. 마이페이지에서 잔액을 확인하세요. 경로: /points",
+    "정산내역서": "판매자/액츄에이터는 정산 상세에서 [PDF 다운로드] 버튼으로 정산내역서를 받을 수 있어요.",
     # ---- 공통 / 역할별 분기 ----
     "핑퐁이": "핑퐁이는 역핑의 AI 어시스턴트입니다. 딜 생성, 오퍼 비교, 배송 추적, 환불 정책, 가격 질문 등 역핑 관련 모든 것을 도와드립니다. 현재 페이지에 맞는 바로가기 버튼도 제공해요!",
     "뭘 도와": {
@@ -261,7 +307,10 @@ _FAQ_BUYER_ONLY = {"사진으로 찾기", "사진 찍어서", "사진 검색", "
                    "음성으로 딜", "음성 검색", "음성으로 제품", "마이크",
                    "가격 챌린지", "맞춰보기", "신뢰도", "초록 노랑 빨강",
                    "유사 딜방", "비슷한 딜", "딜 생성 단계", "단계가 몇", "몇 단계",
-                   "목표가 슬라이더", "슬라이더 조정"}
+                   "목표가 슬라이더", "슬라이더 조정",
+                   "딜 검색", "포인트 사용", "추천인", "추천 코드"}
+_FAQ_ACTUATOR_ONLY = {"위탁계약서", "계약서 동의", "원천징수", "3.3%", "액츄에이터 세금",
+                      "커미션 정산", "최소 지급액", "계좌 등록", "원천징수영수증"}
 
 
 def _faq_direct_lookup(question: str, role: str) -> Optional[str]:
@@ -284,6 +333,8 @@ def _faq_direct_lookup(question: str, role: str) -> Optional[str]:
                 continue
             if key in _FAQ_BUYER_ONLY and role_u not in ("BUYER", "ADMIN"):
                 return "이 기능은 구매자 전용 기능입니다. 📍 구매자로 로그인하시면 이용 가능합니다."
+            if key in _FAQ_ACTUATOR_ONLY and role_u not in ("ACTUATOR", "ADMIN"):
+                return "이 기능은 액추에이터 전용 기능입니다. 📍 액추에이터로 로그인하시면 이용 가능합니다."
             best_match = answer
             best_len = len(key)
 
