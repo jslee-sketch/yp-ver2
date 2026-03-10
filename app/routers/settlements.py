@@ -518,35 +518,38 @@ def approve_settlement(
     }
     idem = f"settlement:{int(row.id)}:approve"
 
-    db.execute(
-        text(
-            """
-            INSERT OR IGNORE INTO event_logs (
-              event_type, actor_type, actor_id,
-              deal_id, offer_id, reservation_id, seller_id, buyer_id,
-              reason, idempotency_key, meta, created_at
-            ) VALUES (
-              :event_type, :actor_type, :actor_id,
-              :deal_id, :offer_id, :reservation_id, :seller_id, :buyer_id,
-              :reason, :idempotency_key, :meta, :created_at
-            )
-            """
-        ),
-        {
-            "event_type": "SETTLE_APPROVE",
-            "actor_type": "admin",
-            "actor_id": actor_id,
-            "deal_id": getattr(row, "deal_id", None),
-            "offer_id": getattr(row, "offer_id", None),
-            "reservation_id": getattr(row, "reservation_id", None),
-            "seller_id": getattr(row, "seller_id", None),
-            "buyer_id": getattr(row, "buyer_id", None),
-            "reason": "manual approve",
-            "idempotency_key": idem,
-            "meta": json.dumps(meta, ensure_ascii=False),
-            "created_at": now,
-        },
-    )
+    try:
+        db.execute(
+            text(
+                """
+                INSERT INTO event_logs (
+                  event_type, actor_type, actor_id,
+                  deal_id, offer_id, reservation_id, seller_id, buyer_id,
+                  reason, idempotency_key, meta, created_at
+                ) VALUES (
+                  :event_type, :actor_type, :actor_id,
+                  :deal_id, :offer_id, :reservation_id, :seller_id, :buyer_id,
+                  :reason, :idempotency_key, :meta, :created_at
+                )
+                """
+            ),
+            {
+                "event_type": "SETTLE_APPROVED",
+                "actor_type": "admin",
+                "actor_id": actor_id,
+                "deal_id": getattr(row, "deal_id", None),
+                "offer_id": getattr(row, "offer_id", None),
+                "reservation_id": getattr(row, "reservation_id", None),
+                "seller_id": getattr(row, "seller_id", None),
+                "buyer_id": getattr(row, "buyer_id", None),
+                "reason": "manual approve",
+                "idempotency_key": idem,
+                "meta": json.dumps(meta, ensure_ascii=False),
+                "created_at": now,
+            },
+        )
+    except Exception as _log_err:
+        logger.warning("event_log insert failed (settlement=%s): %s", row.id, _log_err)
 
     # 세금계산서 자동 생성 (판매자 + 사업자 액추에이터)
     try:

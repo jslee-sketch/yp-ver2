@@ -83,22 +83,19 @@ test.describe.serial('풀 플로우 정산 E2E (5건)', () => {
   test('T02 Seller 생성 + 승인', async ({ page }) => {
     await page.goto(BASE);
     // 새 셀러 소셜 가입 → 즉시 승인
+    const suffix = String(TS % 10000000).padStart(7, '0');
     const regR = await api(page, 'POST', '/auth/social/register', {
       social_provider: 'kakao',
-      social_id: `settle_seller_${TS}`,
-      social_email: `settle_seller_${TS}@test.com`,
-      social_name: '정산테스트셀러',
+      social_id: `settle_s_${TS}`,
+      social_email: `settle_s_${suffix}@test.com`,
+      social_name: 'SettleTestSeller',
       role: 'seller',
-      nickname: `정산셀${TS % 100000}`,
-      business_name: '정산테스트상사',
-      business_number: `SET${TS % 1000000}`,
-      company_phone: '02-1234-5678',
-      bank_name: '국민은행',
-      account_number: '1234567890',
-      account_holder: '정산셀러',
-      tax_invoice_email: `settle_seller_${TS}@test.com`,
+      nickname: `stl${suffix}`,
+      business_name: 'SettleTestCo',
+      business_number: `${String(TS % 10000000000).padStart(10, '0')}`,
+      tax_invoice_email: `settle_s_${suffix}@test.com`,
     });
-    console.log(`  Seller register: status=${regR.status}`);
+    console.log(`  Seller register: status=${regR.status}`, JSON.stringify(regR.data).substring(0, 200));
     expect(regR.status).toBeLessThan(300);
     sellerToken = regR.data?.access_token || '';
     expect(sellerToken).toBeTruthy();
@@ -249,16 +246,16 @@ test.describe.serial('풀 플로우 정산 E2E (5건)', () => {
 
   test('T10 정산 refresh-ready (cooling_days=0 → 즉시 READY)', async ({ page }) => {
     await page.goto(BASE);
-    const r = await api(page, 'POST', '/settlements/refresh-ready?limit=200', undefined, adminToken);
-    console.log(`T10 refresh-ready: status=${r.status}`, JSON.stringify(r.data));
+    // limit=2000 to reach our new settlements (many old PENDING/HOLD exist)
+    const r = await api(page, 'POST', '/settlements/refresh-ready?limit=2000', undefined, adminToken);
+    console.log(`T10 refresh-ready: status=${r.status} checked=${r.data?.checked} backfilled=${r.data?.backfilled} updated=${r.data?.updated}`);
     expect(r.status).toBeLessThan(300);
-    // cooling_days=0이므로 backfilled + updated 모두 즉시 전환
     const updated = r.data?.updated || 0;
-    console.log(`T10 updated=${updated}, backfilled=${r.data?.backfilled}`);
-    // updated가 0이면 한번 더 호출 (backfill 후 ready_at이 now 이하가 됨)
+    // cooling_days=0: backfill에서 ready_at = base + 0일 = 과거, 즉시 READY 전환
+    // 만약 첫 호출에서 backfill만 되고 READY 전환 안 됐으면 한번 더
     if (updated < COUNT) {
-      const r2 = await api(page, 'POST', '/settlements/refresh-ready?limit=200', undefined, adminToken);
-      console.log(`T10 retry: updated=${r2.data?.updated}`);
+      const r2 = await api(page, 'POST', '/settlements/refresh-ready?limit=2000', undefined, adminToken);
+      console.log(`T10 retry: checked=${r2.data?.checked} backfilled=${r2.data?.backfilled} updated=${r2.data?.updated}`);
     }
   });
 
@@ -294,7 +291,7 @@ test.describe.serial('풀 플로우 정산 E2E (5건)', () => {
         },
         { base: BASE, id: s.id, token: adminToken },
       );
-      console.log(`  Approve settlement ${s.id}: status=${appR.status} → ${appR.data?.status}`);
+      console.log(`  Approve settlement ${s.id}: status=${appR.status} → ${appR.data?.status || JSON.stringify(appR.data).substring(0, 100)}`);
       expect(appR.status).toBeLessThan(300);
       settlementIds.push(s.id);
     }
