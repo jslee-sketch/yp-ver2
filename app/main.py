@@ -198,6 +198,29 @@ try:
 except Exception as _ae:
     print(f"[DB_INIT] ALTER TABLE error: {_ae}", flush=True)
 
+# ── 긴급 수복: actuator 컬럼 직접 추가 (위 _alter_cols 실패 대비) ──
+_emergency_actuator_cols = [
+    ("contract_agreed", "BOOLEAN DEFAULT FALSE"),
+    ("contract_agreed_at", "TIMESTAMP"),
+    ("contract_version", "VARCHAR(20)"),
+    ("withholding_tax_rate", "DOUBLE PRECISION DEFAULT 0.033"),
+    ("resident_id_last", "VARCHAR(10)"),
+]
+try:
+    _insp2 = _sa.inspect(engine)
+    if _insp2.has_table("actuators"):
+        _existing2 = {c["name"] for c in _insp2.get_columns("actuators")}
+        for _ecol, _etyp in _emergency_actuator_cols:
+            if _ecol not in _existing2:
+                try:
+                    with engine.begin() as _conn:
+                        _conn.execute(_sa.text(f"ALTER TABLE actuators ADD COLUMN {_ecol} {_etyp}"))
+                    print(f"[DB_INIT] Emergency added actuators.{_ecol}", flush=True)
+                except Exception as _ee:
+                    print(f"[DB_INIT] Emergency fail actuators.{_ecol}: {_ee}", flush=True)
+except Exception as _e2:
+    print(f"[DB_INIT] Emergency migration error: {_e2}", flush=True)
+
 # ── ALTER COLUMN TYPE: VARCHAR→TEXT for base64 image columns ──
 _alter_type_sqls = [
     "ALTER TABLE sellers ALTER COLUMN business_license_image TYPE TEXT",
