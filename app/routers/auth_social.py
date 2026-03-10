@@ -224,6 +224,16 @@ def social_register(body: SocialRegisterRequest, db: Session = Depends(database.
     if not re.match(r'^[가-힣a-zA-Z0-9_]+$', nick):
         raise HTTPException(400, "닉네임은 한글/영문/숫자/_ 만 사용할 수 있습니다")
 
+    # ── 사업자번호 형식 검증 (seller/actuator 사업자) ──
+    if body.role in ("seller", "actuator") and body.business_number:
+        bn_digits = re.sub(r'[-\s]', '', body.business_number)
+        if not bn_digits.startswith("SOCIAL-") and not re.match(r'^\d{10}$', bn_digits):
+            raise HTTPException(400, "사업자등록번호 형식이 올바르지 않습니다 (숫자 10자리)")
+
+    # ── 이메일 형식 검증 ──
+    if body.social_email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', body.social_email):
+        raise HTTPException(400, "이메일 형식이 올바르지 않습니다")
+
     sentinel_hash = get_password_hash(secrets.token_urlsafe(32))
     email = body.social_email or f"{body.social_provider}_{body.social_id}@social.yeokping.com"
     display_name = body.social_name or nick
@@ -309,7 +319,7 @@ def social_register(body: SocialRegisterRequest, db: Session = Depends(database.
             account_holder=body.account_holder or None,
             bankbook_image=body.bankbook_image or None,
             is_business=body.is_business,
-            business_name=body.business_name or None,
+            business_name=_sanitize(body.business_name) if body.business_name else None,
             business_number=body.business_number or None,
             ecommerce_permit_number=body.ecommerce_permit_number or None,
             business_address=body.business_address or None,

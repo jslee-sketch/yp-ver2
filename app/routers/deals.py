@@ -201,6 +201,36 @@ def read_deals(
 
 
 # ---------------------------
+# 🔍 딜 검색 (키워드 + 카테고리 필터)
+# ---------------------------
+@router.get("/search")
+def search_deals(
+    q: str = Query("", description="검색어 (제품명)"),
+    category: Optional[str] = Query(None, description="카테고리 필터"),
+    min_price: Optional[int] = Query(None, ge=0),
+    max_price: Optional[int] = Query(None, ge=0),
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """딜 검색 엔드포인트 (GET /deals/ 의 keyword 검색 래퍼)."""
+    query = db.query(models.Deal)
+    if q:
+        query = query.filter(models.Deal.product_name.ilike(f"%{q}%"))
+    if category:
+        query = query.filter(models.Deal.category == category)
+    if min_price is not None:
+        query = query.filter(models.Deal.target_price >= min_price)
+    if max_price is not None:
+        query = query.filter(models.Deal.target_price <= max_price)
+
+    total = query.count()
+    items = query.order_by(models.Deal.created_at.desc()).offset((page - 1) * size).limit(size).all()
+    serialized = [schemas.DealOut.model_validate(item) for item in items]
+    return {"items": [i.model_dump() for i in serialized], "total": total, "page": page, "size": size}
+
+
+# ---------------------------
 # 🔍 유사 딜 찾기 (딜 생성 시 중복 방지)
 # ---------------------------
 def _normalize_for_matching(text: str) -> str:

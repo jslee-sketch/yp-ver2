@@ -1,4 +1,5 @@
 from __future__ import annotations
+import html as _html
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
@@ -241,7 +242,7 @@ def create_review(body: ReviewIn = Body(...), db: Session = Depends(get_db)):
         communication=body.communication,
         accuracy=body.accuracy,
         media_count=body.media_count,
-        comment=body.comment,
+        comment=_html.escape(body.comment) if body.comment else body.comment,
         verified=verified,
     )
     db.add(r)
