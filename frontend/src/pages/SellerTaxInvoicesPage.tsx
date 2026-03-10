@@ -74,6 +74,7 @@ export default function SellerTaxInvoicesPage() {
               </div>
 
               <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.8 }}>
+                {(inv as any).product_name && <div style={{ fontWeight: 600, color: C.text }}>품목: {(inv as any).product_name}{(inv as any).quantity ? ` × ${(inv as any).quantity}` : ''}</div>}
                 <div>공급자: {inv.supplier_business_name}</div>
                 <div style={{ display: 'flex', gap: 16 }}>
                   <span>공급가액: {fmt(inv.supply_amount)}원</span>

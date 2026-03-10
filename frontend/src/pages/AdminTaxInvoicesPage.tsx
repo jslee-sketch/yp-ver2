@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import DateRangeFilter from '../components/common/DateRangeFilter';
 import {
   fetchTaxInvoices,
   batchIssueTaxInvoices,
@@ -38,11 +39,12 @@ export default function AdminTaxInvoicesPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<TaxInvoice | null>(null);
+  const dateRef = useRef({ from: '', to: '' });
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetchTaxInvoices({ status: tab || undefined, limit: 200 });
+      const res = await fetchTaxInvoices({ status: tab || undefined, limit: 200, date_from: dateRef.current.from || undefined, date_to: dateRef.current.to || undefined } as any);
       setItems(res.items);
       setTotal(res.total);
     } catch (e) { console.error(e); }
@@ -117,6 +119,8 @@ export default function AdminTaxInvoicesPage() {
         ))}
       </div>
 
+      <DateRangeFilter onFilter={(f, t) => { dateRef.current = { from: f, to: t }; load(); }} style={{ marginBottom: 12 }} />
+
       {/* Actions */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <button onClick={handleBatchIssue} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.green, color: '#000', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
@@ -139,6 +143,8 @@ export default function AdminTaxInvoicesPage() {
               <th style={{ padding: 8 }}><input type="checkbox" checked={selected.size === items.length && items.length > 0} onChange={toggleAll} /></th>
               <th style={{ padding: 8, color: C.textSec, textAlign: 'left' }}>번호</th>
               <th style={{ padding: 8, color: C.textSec, textAlign: 'left' }}>정산</th>
+              <th style={{ padding: 8, color: C.textSec, textAlign: 'left' }}>품목명</th>
+              <th style={{ padding: 8, color: C.textSec, textAlign: 'center' }}>수량</th>
               <th style={{ padding: 8, color: C.textSec, textAlign: 'left' }}>판매자</th>
               <th style={{ padding: 8, color: C.textSec, textAlign: 'right' }}>공급가액</th>
               <th style={{ padding: 8, color: C.textSec, textAlign: 'right' }}>세액</th>
@@ -156,6 +162,8 @@ export default function AdminTaxInvoicesPage() {
                 </td>
                 <td style={{ padding: 8, color: C.text }}>{inv.invoice_number}</td>
                 <td style={{ padding: 8 }}>{inv.settlement_id ? <span style={{ color: '#7c4dff', fontWeight: 600, fontSize: 12 }}>S-{inv.settlement_id}</span> : '-'}</td>
+                <td style={{ padding: 8, color: C.text, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={(inv as any).product_name || ''}>{(inv as any).product_name || '-'}</td>
+                <td style={{ padding: 8, color: C.textSec, textAlign: 'center' }}>{(inv as any).quantity ?? '-'}</td>
                 <td style={{ padding: 8, color: C.text }}>{inv.recipient_business_name || '-'}</td>
                 <td style={{ padding: 8, color: C.text, textAlign: 'right' }}>{fmt(inv.supply_amount)}</td>
                 <td style={{ padding: 8, color: C.text, textAlign: 'right' }}>{fmt(inv.tax_amount)}</td>
@@ -177,7 +185,7 @@ export default function AdminTaxInvoicesPage() {
               </tr>
             ))}
             {items.length === 0 && (
-              <tr><td colSpan={10} style={{ padding: 40, textAlign: 'center', color: C.textSec }}>세금계산서가 없습니다.</td></tr>
+              <tr><td colSpan={12} style={{ padding: 40, textAlign: 'center', color: C.textSec }}>세금계산서가 없습니다.</td></tr>
             )}
           </tbody>
         </table>

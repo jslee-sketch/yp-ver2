@@ -223,6 +223,8 @@ def admin_list_reservations(
     is_disputed: Optional[bool] = None,
     shipped: Optional[bool] = None,
     refund: Optional[bool] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     limit: int = Query(100, le=500),
     db: Session = Depends(get_db),
 ):
@@ -243,6 +245,17 @@ def admin_list_reservations(
         q = q.filter(models.Reservation.shipped_at.is_(None))
     if refund is True:
         q = q.filter(models.Reservation.status.in_(["CANCELLED"]))
+
+    if date_from:
+        try:
+            q = q.filter(models.Reservation.created_at >= datetime.fromisoformat(date_from))
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            q = q.filter(models.Reservation.created_at <= datetime.fromisoformat(date_to))
+        except ValueError:
+            pass
 
     items = q.order_by(models.Reservation.id.desc()).limit(limit).all()
 
@@ -281,6 +294,7 @@ def admin_list_reservations(
             "deal_id": getattr(r, "deal_id", None),
             "offer_id": getattr(r, "offer_id", None),
             "product_name": deal_map.get(getattr(r, "deal_id", None), ""),
+            "quantity": getattr(r, "qty", None),
             "buyer_id": r.buyer_id,
             "buyer_name": buyer_map.get(r.buyer_id, ""),
             "seller_id": sid,
@@ -685,3 +699,169 @@ def refund_simulate(body: dict, db: Session = Depends(get_db)):
             decision.note,
         ],
     }
+
+
+# ── GET /admin/unified-search ────────────────────────────
+@router.get("/unified-search")
+def admin_unified_search(
+    keyword: str = Query("", description="검색어"),
+    category: Optional[str] = Query(None, description="카테고리 필터: deals/offers/reservations/settlements/users"),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    limit: int = Query(50, le=200),
+    db: Session = Depends(get_db),
+):
+    """관리자 통합 검색: 딜/오퍼/예약/정산/사용자를 키워드로 한번에 검색."""
+    from sqlalchemy import cast, String as SAString, or_
+
+    dt_from = None
+    dt_to = None
+    if date_from:
+        try:
+            dt_from = datetime.fromisoformat(date_from)
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            dt_to = datetime.fromisoformat(date_to)
+        except ValueError:
+            pass
+
+    kw = keyword.strip()
+    results: dict = {}
+    cats = [category] if category else ["deals", "offers", "reservations", "settlements", "users"]
+
+    # ── Deals ──
+    if "deals" in cats:
+        q = db.query(models.Deal)
+        if kw:
+            q = q.filter(or_(
+                models.Deal.product_name.ilike(f"%{kw}%"),
+                cast(models.Deal.id, SAString).ilike(f"%{kw}%"),
+            ))
+        if dt_from:
+            q = q.filter(models.Deal.created_at >= dt_from)
+        if dt_to:
+            q = q.filter(models.Deal.created_at <= dt_to)
+        items = q.order_by(models.Deal.id.desc()).limit(limit).all()
+        results["deals"] = [{
+            "id": d.id, "product_name": getattr(d, "product_name", ""),
+            "status": getattr(d, "status", ""), "target_price": getattr(d, "target_price", None),
+            "market_price": getattr(d, "market_price", None),
+            "created_at": str(getattr(d, "created_at", "")),
+        } for d in items]
+
+    # ── Offers ──
+    if "offers" in cats:
+        q = db.query(models.Offer)
+        if kw:
+            # search via deal product_name
+            deal_ids = [d.id for d in db.query(models.Deal.id).filter(models.Deal.product_name.ilike(f"%{kw}%")).limit(100).all()]
+            q = q.filter(or_(
+                models.Offer.deal_id.in_(deal_ids) if deal_ids else False,
+                cast(models.Offer.id, SAString).ilike(f"%{kw}%"),
+            ))
+        if dt_from:
+            q = q.filter(models.Offer.created_at >= dt_from)
+        if dt_to:
+            q = q.filter(models.Offer.created_at <= dt_to)
+        items = q.order_by(models.Offer.id.desc()).limit(limit).all()
+        # enrich with product_name
+        d_ids = list({o.deal_id for o in items if o.deal_id})
+        dm: dict = {}
+        if d_ids:
+            for d in db.query(models.Deal).filter(models.Deal.id.in_(d_ids)).all():
+                dm[d.id] = getattr(d, "product_name", "")
+        results["offers"] = [{
+            "id": o.id, "deal_id": o.deal_id, "product_name": dm.get(o.deal_id, ""),
+            "seller_id": o.seller_id, "price": getattr(o, "price", None),
+            "quantity": getattr(o, "quantity", None), "status": getattr(o, "status", ""),
+            "created_at": str(getattr(o, "created_at", "")),
+        } for o in items]
+
+    # ── Reservations ──
+    if "reservations" in cats:
+        q = db.query(models.Reservation)
+        if kw:
+            deal_ids = [d.id for d in db.query(models.Deal.id).filter(models.Deal.product_name.ilike(f"%{kw}%")).limit(100).all()]
+            filters = [cast(models.Reservation.id, SAString).ilike(f"%{kw}%")]
+            if deal_ids:
+                filters.append(models.Reservation.deal_id.in_(deal_ids))
+            q = q.filter(or_(*filters))
+        if dt_from:
+            q = q.filter(models.Reservation.created_at >= dt_from)
+        if dt_to:
+            q = q.filter(models.Reservation.created_at <= dt_to)
+        items = q.order_by(models.Reservation.id.desc()).limit(limit).all()
+        d_ids = list({getattr(r, "deal_id", None) for r in items if getattr(r, "deal_id", None)})
+        dm = {}
+        if d_ids:
+            for d in db.query(models.Deal).filter(models.Deal.id.in_(d_ids)).all():
+                dm[d.id] = getattr(d, "product_name", "")
+        results["reservations"] = [{
+            "id": r.id, "deal_id": getattr(r, "deal_id", None),
+            "product_name": dm.get(getattr(r, "deal_id", None), ""),
+            "quantity": getattr(r, "qty", None),
+            "buyer_id": r.buyer_id,
+            "amount": getattr(r, "amount_total", 0),
+            "status": getattr(r.status, "value", str(r.status)) if r.status else "",
+            "created_at": str(getattr(r, "created_at", "")),
+        } for r in items]
+
+    # ── Settlements ──
+    if "settlements" in cats:
+        RS = models.ReservationSettlement
+        q = db.query(RS)
+        if kw:
+            deal_ids = [d.id for d in db.query(models.Deal.id).filter(models.Deal.product_name.ilike(f"%{kw}%")).limit(100).all()]
+            filters = [cast(RS.id, SAString).ilike(f"%{kw}%")]
+            if deal_ids:
+                filters.append(RS.deal_id.in_(deal_ids))
+            q = q.filter(or_(*filters))
+        if dt_from:
+            q = q.filter(RS.created_at >= dt_from)
+        if dt_to:
+            q = q.filter(RS.created_at <= dt_to)
+        items = q.order_by(RS.id.desc()).limit(limit).all()
+        d_ids = list({r.deal_id for r in items if r.deal_id})
+        dm = {}
+        if d_ids:
+            for d in db.query(models.Deal).filter(models.Deal.id.in_(d_ids)).all():
+                dm[d.id] = getattr(d, "product_name", "")
+        results["settlements"] = [{
+            "id": r.id, "reservation_id": r.reservation_id,
+            "deal_id": r.deal_id, "product_name": dm.get(r.deal_id, ""),
+            "seller_id": r.seller_id,
+            "payout_amount": r.seller_payout_amount,
+            "status": r.status,
+            "created_at": str(r.created_at) if r.created_at else None,
+        } for r in items]
+
+    # ── Users (buyers + sellers) ──
+    if "users" in cats:
+        users_list = []
+        if kw:
+            buyers = db.query(models.Buyer).filter(or_(
+                models.Buyer.nickname.ilike(f"%{kw}%"),
+                cast(models.Buyer.id, SAString).ilike(f"%{kw}%"),
+            )).limit(limit).all()
+            for b in buyers:
+                users_list.append({
+                    "id": b.id, "type": "buyer",
+                    "nickname": getattr(b, "nickname", ""),
+                    "email": getattr(b, "email", ""),
+                })
+            sellers = db.query(models.Seller).filter(or_(
+                models.Seller.nickname.ilike(f"%{kw}%"),
+                models.Seller.business_name.ilike(f"%{kw}%"),
+                cast(models.Seller.id, SAString).ilike(f"%{kw}%"),
+            )).limit(limit).all()
+            for s in sellers:
+                users_list.append({
+                    "id": s.id, "type": "seller",
+                    "nickname": getattr(s, "nickname", ""),
+                    "business_name": getattr(s, "business_name", ""),
+                })
+        results["users"] = users_list
+
+    return results

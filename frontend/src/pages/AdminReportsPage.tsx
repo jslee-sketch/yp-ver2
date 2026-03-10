@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
+import DateRangeFilter from '../components/common/DateRangeFilter';
 
 const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252', card: 'var(--bg-elevated)', border: 'var(--border-subtle)', text: 'var(--text-primary)', textSec: 'var(--text-muted)' };
 const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' };
@@ -14,11 +15,15 @@ export default function AdminReportsPage() {
   const [actionPlan, setActionPlan] = useState('');
   const [error, setError] = useState('');
 
+  const dateRef = useRef({ from: '', to: '' });
+
   const load = async () => {
     setError('');
     try {
       const params: any = {};
       if (statusFilter) params.status = statusFilter;
+      if (dateRef.current.from) params.date_from = dateRef.current.from;
+      if (dateRef.current.to) params.date_to = dateRef.current.to;
       const r = await apiClient.get(API.ADMIN.REPORTS, { params });
       const data = r.data;
       const list = Array.isArray(data) ? data : (data?.items || data?.results || []);
@@ -47,6 +52,7 @@ export default function AdminReportsPage() {
   return (
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16 }}>신고 관리</h1>
+      <DateRangeFilter onFilter={(f, t) => { dateRef.current = { from: f, to: t }; load(); }} style={{ marginBottom: 12 }} />
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: '#1a1a2e', color: '#e0e0e0', fontSize: 13 }}>
           <option value="">전체 상태</option>

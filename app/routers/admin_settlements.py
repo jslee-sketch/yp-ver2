@@ -25,9 +25,13 @@ router = APIRouter(
 def api_admin_list_settlements(
     status: Optional[str] = Query(None, description="상태 필터 (HOLD/READY/APPROVED/PAID)"),
     seller_id: Optional[int] = Query(None, ge=1, description="판매자 ID 필터"),
+    date_from: Optional[str] = Query(None, description="시작일 (ISO)"),
+    date_to: Optional[str] = Query(None, description="종료일 (ISO)"),
     limit: int = Query(200, ge=1, le=1000),
     db: Session = Depends(get_db),
 ):
+    from datetime import datetime
+
     RS = models.ReservationSettlement
     S = models.Seller
 
@@ -36,6 +40,16 @@ def api_admin_list_settlements(
         q = q.filter(RS.status == status)
     if seller_id:
         q = q.filter(RS.seller_id == seller_id)
+    if date_from:
+        try:
+            q = q.filter(RS.created_at >= datetime.fromisoformat(date_from))
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            q = q.filter(RS.created_at <= datetime.fromisoformat(date_to))
+        except ValueError:
+            pass
 
     rows = q.order_by(RS.created_at.desc()).limit(limit).all()
 
@@ -45,6 +59,20 @@ def api_admin_list_settlements(
     if seller_ids:
         for s in db.query(S).filter(S.id.in_(seller_ids)).all():
             sellers[s.id] = s
+
+    # deal_id → product_name
+    deal_ids = list({r.deal_id for r in rows if r.deal_id})
+    deal_map: dict = {}
+    if deal_ids:
+        for d in db.query(models.Deal).filter(models.Deal.id.in_(deal_ids)).all():
+            deal_map[d.id] = getattr(d, "product_name", "")
+
+    # offer_id → quantity
+    offer_ids = list({r.offer_id for r in rows if r.offer_id})
+    offer_map: dict = {}
+    if offer_ids:
+        for o in db.query(models.Offer).filter(models.Offer.id.in_(offer_ids)).all():
+            offer_map[o.id] = getattr(o, "quantity", None)
 
     result = []
     for r in rows:
@@ -58,6 +86,8 @@ def api_admin_list_settlements(
             "buyer_id": r.buyer_id,
             "seller_name": getattr(seller, "nickname", None) or f"S-{r.seller_id}",
             "seller_business_name": getattr(seller, "business_name", None) or "",
+            "product_name": deal_map.get(r.deal_id, ""),
+            "quantity": offer_map.get(r.offer_id),
             "total_amount": r.buyer_paid_amount,
             "pg_fee": r.pg_fee_amount,
             "platform_fee": r.platform_commission_amount,

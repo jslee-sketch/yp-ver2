@@ -310,6 +310,7 @@ export const API = {
     POLICY_STATUS:       '/admin/policy/status',
     POLICY_PROPOSALS:    '/admin/policy/proposals',
     POLICY_PROPOSAL:     (id: number) => `/admin/policy/proposals/${id}`,
+    UNIFIED_SEARCH:      '/admin/unified-search',
   },
 
   // ── 세금계산서 ──────────────────────────────────────────

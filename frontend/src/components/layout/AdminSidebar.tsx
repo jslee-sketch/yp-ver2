@@ -8,6 +8,7 @@ const sections = [
     items: [
       { label: '대시보드', path: '/admin' },
       { label: '통계/KPI', path: '/admin/stats' },
+      { label: '통합 검색', path: '/admin/search' },
     ],
   },
   {

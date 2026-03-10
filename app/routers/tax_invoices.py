@@ -154,6 +154,42 @@ def batch_issue(body: BatchIssueRequest, db: Session = Depends(get_db)):
     return {"ok": True, "count": len(issued), "invoices": [_to_out(i) for i in issued]}
 
 
+# ── helper: settlement → product_name, quantity ─────────
+def _enrich_with_product(db: Session, invoices: list) -> list:
+    """Attach product_name + quantity to invoice dicts via settlement → deal/offer chain."""
+    sett_ids = list({inv["settlement_id"] for inv in invoices if inv.get("settlement_id")})
+    if not sett_ids:
+        return invoices
+
+    sett_rows = db.query(models.ReservationSettlement).filter(
+        models.ReservationSettlement.id.in_(sett_ids)
+    ).all()
+    sett_map = {s.id: s for s in sett_rows}
+
+    deal_ids = list({s.deal_id for s in sett_rows if s.deal_id})
+    offer_ids = list({s.offer_id for s in sett_rows if s.offer_id})
+
+    deal_map: dict = {}
+    if deal_ids:
+        for d in db.query(models.Deal).filter(models.Deal.id.in_(deal_ids)).all():
+            deal_map[d.id] = getattr(d, "product_name", "")
+
+    offer_map: dict = {}
+    if offer_ids:
+        for o in db.query(models.Offer).filter(models.Offer.id.in_(offer_ids)).all():
+            offer_map[o.id] = getattr(o, "quantity", None)
+
+    for inv in invoices:
+        sett = sett_map.get(inv.get("settlement_id"))
+        if sett:
+            inv["product_name"] = deal_map.get(sett.deal_id, "")
+            inv["quantity"] = offer_map.get(sett.offer_id)
+        else:
+            inv["product_name"] = ""
+            inv["quantity"] = None
+    return invoices
+
+
 # ── 5) 관리자 목록 ──────────────────────────────────────
 @router.get("", summary="[ADMIN] 세금계산서 목록")
 def list_invoices(
@@ -177,7 +213,8 @@ def list_invoices(
 
     total = q.count()
     rows = q.order_by(TaxInvoice.created_at.desc()).offset(skip).limit(limit).all()
-    return {"total": total, "items": [_to_out(r) for r in rows]}
+    items = [_to_out(r) for r in rows]
+    return {"total": total, "items": _enrich_with_product(db, items)}
 
 
 # ── 6) 판매자 본인 목록 ─────────────────────────────────
@@ -194,7 +231,8 @@ def my_invoices(
     )
     total = q.count()
     rows = q.order_by(TaxInvoice.created_at.desc()).offset(skip).limit(limit).all()
-    return {"total": total, "items": [_to_out(r) for r in rows]}
+    items = [_to_out(r) for r in rows]
+    return {"total": total, "items": _enrich_with_product(db, items)}
 
 
 # ── 7) ECOUNT XLSX 내보내기 ──────────────────────────────

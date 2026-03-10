@@ -101,11 +101,23 @@ def my_reports(
 @router.get("/admin/reports", response_model=List[ReportOut])
 def admin_reports(
     status: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
     q = db.query(Report)
     if status:
         q = q.filter(Report.status == status)
+    if date_from:
+        try:
+            q = q.filter(Report.created_at >= datetime.fromisoformat(date_from))
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            q = q.filter(Report.created_at <= datetime.fromisoformat(date_to))
+        except ValueError:
+            pass
     return q.order_by(Report.created_at.desc()).limit(200).all()
 
 

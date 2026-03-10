@@ -1165,27 +1165,66 @@ class SettlementOut(BaseModel):
 # ---------------------------------------------------------
 @router.get(
     "/seller/{seller_id}",
-    response_model=List[SettlementOut],
     summary="특정 Seller의 정산 목록 조회",
 )
 def api_list_settlements_for_seller(
     seller_id: int = Path(..., ge=1),
     status: Optional[str] = Query(None, description="필터용 정산 상태"),
+    date_from: Optional[str] = Query(None, description="시작일 (ISO)"),
+    date_to: Optional[str] = Query(None, description="종료일 (ISO)"),
     limit: int = Query(50, ge=1, le=200, description="최대 조회 개수"),
     db: Session = Depends(get_db),
 ):
-    q = db.query(models.ReservationSettlement).filter(
-        models.ReservationSettlement.seller_id == seller_id
-    )
+    RS = models.ReservationSettlement
+    q = db.query(RS).filter(RS.seller_id == seller_id)
     if status:
-        q = q.filter(models.ReservationSettlement.status == status)
+        q = q.filter(RS.status == status)
+    if date_from:
+        try:
+            q = q.filter(RS.created_at >= datetime.fromisoformat(date_from))
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            q = q.filter(RS.created_at <= datetime.fromisoformat(date_to))
+        except ValueError:
+            pass
 
-    rows = (
-        q.order_by(models.ReservationSettlement.created_at.desc())
-         .limit(limit)
-         .all()
-    )
-    return rows
+    rows = q.order_by(RS.created_at.desc()).limit(limit).all()
+
+    # product_name from Deal, quantity from Offer
+    deal_ids = list({r.deal_id for r in rows if r.deal_id})
+    offer_ids = list({r.offer_id for r in rows if r.offer_id})
+    deal_map: dict = {}
+    if deal_ids:
+        for d in db.query(models.Deal).filter(models.Deal.id.in_(deal_ids)).all():
+            deal_map[d.id] = getattr(d, "product_name", "")
+    offer_map: dict = {}
+    if offer_ids:
+        for o in db.query(models.Offer).filter(models.Offer.id.in_(offer_ids)).all():
+            offer_map[o.id] = getattr(o, "quantity", None)
+
+    result = []
+    for r in rows:
+        result.append({
+            "id": r.id,
+            "reservation_id": r.reservation_id,
+            "deal_id": r.deal_id,
+            "offer_id": r.offer_id,
+            "seller_id": r.seller_id,
+            "buyer_id": r.buyer_id,
+            "product_name": deal_map.get(r.deal_id, ""),
+            "quantity": offer_map.get(r.offer_id),
+            "buyer_paid_amount": r.buyer_paid_amount,
+            "pg_fee_amount": r.pg_fee_amount,
+            "platform_commission_amount": r.platform_commission_amount,
+            "seller_payout_amount": r.seller_payout_amount,
+            "status": r.status,
+            "currency": r.currency,
+            "created_at": str(r.created_at) if r.created_at else None,
+            "updated_at": str(r.updated_at) if r.updated_at else None,
+        })
+    return result
 
 
 # ---------------------------------------------------------

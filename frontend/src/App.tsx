@@ -74,6 +74,7 @@ import AdminSettingsPage from './pages/AdminSettingsPage';
 import AdminRefundSimulatorPage from './pages/AdminRefundSimulatorPage';
 import AdminMinorityReportPage from './pages/AdminMinorityReportPage';
 import AdminTaxInvoicesPage from './pages/AdminTaxInvoicesPage';
+import AdminUnifiedSearchPage from './pages/AdminUnifiedSearchPage';
 import SellerTaxInvoicesPage from './pages/SellerTaxInvoicesPage';
 import SellerBusinessInfoPage from './pages/SellerBusinessInfoPage';
 
@@ -115,6 +116,7 @@ function App() {
           <Route path="notifications"     element={<AdminNotificationsPage />} />
           <Route path="announcements"     element={<AdminAnnouncementsPage />} />
           <Route path="settings"          element={<AdminSettingsPage />} />
+          <Route path="search"           element={<AdminUnifiedSearchPage />} />
         </Route>
 
         {/* 레이아웃 공통 적용 */}

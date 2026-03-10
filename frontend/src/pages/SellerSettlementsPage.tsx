@@ -169,6 +169,11 @@ export default function SellerSettlementsPage() {
                   background: `${meta.color}22`, color: meta.color,
                 }}>{meta.label}</span>
               </div>
+              {(s as any).product_name && (
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 4 }}>
+                  {(s as any).product_name}{(s as any).quantity ? ` × ${(s as any).quantity}` : ''}
+                </div>
+              )}
               <div style={{ fontSize: 11, color: C.textDim, marginBottom: 6 }}>
                 예약 #{s.reservation_id} · {fmtDate(s.created_at)}
               </div>

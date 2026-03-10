@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 import { showToast } from '../components/common/Toast';
+import DateRangeFilter from '../components/common/DateRangeFilter';
 
 const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252', blue: '#3b82f6', purple: '#8b5cf6', card: 'var(--bg-elevated)', border: 'var(--border-subtle)', text: 'var(--text-primary)', textSec: 'var(--text-muted)' };
 const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' };
@@ -64,12 +65,15 @@ export default function AdminDeliveryPage() {
   const [summary, setSummary] = useState<DeliverySummary | null>(null);
   const [batchLoading, setBatchLoading] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
+  const dateRef = useRef({ from: '', to: '' });
 
   const load = async () => {
     try {
       const params: any = { limit: 300 };
       if (statusFilter) params.status = statusFilter;
       else params.shipped = true;
+      if (dateRef.current.from) params.date_from = dateRef.current.from;
+      if (dateRef.current.to) params.date_to = dateRef.current.to;
       const r = await apiClient.get(API.ADMIN.RESERVATIONS, { params });
       setItems(r.data?.items || []);
     } catch {}
@@ -161,6 +165,7 @@ export default function AdminDeliveryPage() {
         </button>
       </div>
 
+      <DateRangeFilter onFilter={(f, t) => { dateRef.current = { from: f, to: t }; load(); }} style={{ marginBottom: 12 }} />
       {/* 검색 & 필터 */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="R-#/판매자/구매자/운송장 검색" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }} />
@@ -175,7 +180,7 @@ export default function AdminDeliveryPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
             <thead style={stickyHead}>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                {['R-#', '판매자', '구매자', '택배사', '운송장', '배송단계', '상태', '소요일'].map(h => (
+                {['R-#', '품목명', '수량', '판매자', '구매자', '택배사', '운송장', '배송단계', '상태', '소요일'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -188,6 +193,8 @@ export default function AdminDeliveryPage() {
                 return (
                   <tr key={r.id} style={{ borderBottom: `1px solid ${C.border}`, background: overdue ? 'rgba(255,82,82,0.05)' : undefined }}>
                     <td style={{ padding: '10px 8px', color: C.cyan, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => window.open(`/reservation/${r.id}`, '_blank')}>R-{r.id}</td>
+                    <td style={{ padding: '10px 8px', color: C.text, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.product_name || ''}>{r.product_name || '-'}</td>
+                    <td style={{ padding: '10px 8px', color: C.textSec }}>{r.quantity ?? '-'}</td>
                     <td style={{ padding: '10px 8px', color: C.text }}>{r.seller_name || `S-${r.seller_id}`}</td>
                     <td style={{ padding: '10px 8px', color: C.text }}>{r.buyer_name || `B-${r.buyer_id}`}</td>
                     <td style={{ padding: '10px 8px', color: C.textSec }}>{displayCarrier(r.carrier)}</td>
@@ -198,7 +205,7 @@ export default function AdminDeliveryPage() {
                   </tr>
                 );
               })}
-              {!items.length && <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>배송 데이터 없음</td></tr>}
+              {!items.length && <tr><td colSpan={10} style={{ padding: 24, textAlign: 'center', color: C.textSec }}>배송 데이터 없음</td></tr>}
             </tbody>
           </table>
         </div>
