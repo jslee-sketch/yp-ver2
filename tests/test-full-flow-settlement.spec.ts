@@ -82,9 +82,9 @@ test.describe.serial('풀 플로우 정산 E2E (5건)', () => {
   test('T02 Seller 로그인', async ({ page }) => {
     await page.goto(BASE);
     // seller 로그인: /auth/seller/login 우선, 실패 시 /auth/login
-    sellerToken = await formLogin(page, '/auth/seller/login', 'seller@yeokping.com', 'seller1234!');
+    sellerToken = await formLogin(page, '/auth/seller/login', 'seller@yeokping.com', 'seller1234');
     if (!sellerToken) {
-      sellerToken = await formLogin(page, '/auth/login', 'seller@yeokping.com', 'seller1234!');
+      sellerToken = await formLogin(page, '/auth/login', 'seller@yeokping.com', 'seller1234');
     }
     expect(sellerToken).toBeTruthy();
     const jwt = parseJwt(sellerToken);
