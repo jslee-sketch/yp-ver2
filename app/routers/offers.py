@@ -1606,6 +1606,34 @@ def create_offer(db: Session, offer_in: schemas.OfferCreate):
     db.add(db_offer)
     db.commit()
     db.refresh(db_offer)
+
+    # ✅ 알림: OFFER_ARRIVED → 딜 참여자에게 알림
+    try:
+        from app.services.notification_service import send_notification
+        deal = db.query(models.Deal).get(db_offer.deal_id)
+        if deal:
+            product_name = getattr(deal, "product_name", "") or ""
+            seller_name = getattr(seller, "business_name", "") or getattr(seller, "nickname", "") or f"판매자#{db_offer.seller_id}"
+            buyer_id = getattr(deal, "buyer_id", None) or getattr(deal, "user_id", None)
+            if buyer_id:
+                send_notification(
+                    db, user_id=buyer_id, role="buyer",
+                    event_type="OFFER_ARRIVED",
+                    variables={"product_name": product_name, "seller_name": seller_name, "offer_price": str(int(db_offer.price))},
+                    deal_id=db_offer.deal_id, offer_id=db_offer.id,
+                )
+    except Exception as _notif_err:
+        logging.warning("[create_offer] notification skipped: %r", _notif_err)
+
+    # ✅ 오퍼 제출 시 관심 매칭 알림
+    try:
+        from app.services.interest_matcher import match_interests_for_offer
+        deal = deal if 'deal' in dir() else db.query(models.Deal).get(db_offer.deal_id)
+        if deal:
+            match_interests_for_offer(db_offer, deal, db)
+    except Exception as _match_err:
+        logging.warning("[create_offer] interest_match_offer skipped: %r", _match_err)
+
     return db_offer
 
 

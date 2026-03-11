@@ -586,6 +586,25 @@ def api_mark_reservation_shipped(
             tracking_number=getattr(body, "tracking_number", None),
         )
 
+        # ✅ 알림: SHIPPING_STARTED → 구매자
+        try:
+            from app.services.notification_service import send_notification
+            buyer_id = getattr(resv, "buyer_id", None)
+            if buyer_id:
+                from app import models as _models
+                _deal = db.query(_models.Deal).get(resv.deal_id) if getattr(resv, "deal_id", None) else None
+                product_name = getattr(_deal, "product_name", "") or "" if _deal else ""
+                courier = getattr(body, "shipping_carrier", "") or ""
+                tracking = getattr(body, "tracking_number", "") or ""
+                send_notification(
+                    db, user_id=buyer_id, role="buyer",
+                    event_type="SHIPPING_STARTED",
+                    variables={"product_name": product_name, "courier": courier, "tracking_number": tracking},
+                    reservation_id=reservation_id,
+                )
+        except Exception:
+            pass
+
         # ✅ 응답 품질: phase 채우기 (DB 영향 없음)
         try:
             resv = _attach_phase(resv)
@@ -624,6 +643,23 @@ def api_confirm_reservation_arrival(
         reservation_id=reservation_id,
         buyer_id=body.buyer_id,
         )
+
+        # ✅ 알림: PURCHASE_CONFIRMED → 구매자
+        try:
+            from app.services.notification_service import send_notification
+            b_id = getattr(resv, "buyer_id", None) or body.buyer_id
+            if b_id:
+                from app import models as _models
+                _deal = db.query(_models.Deal).get(resv.deal_id) if getattr(resv, "deal_id", None) else None
+                product_name = getattr(_deal, "product_name", "") or "" if _deal else ""
+                send_notification(
+                    db, user_id=b_id, role="buyer",
+                    event_type="PURCHASE_CONFIRMED",
+                    variables={"product_name": product_name},
+                    reservation_id=reservation_id,
+                )
+        except Exception:
+            pass
 
         try:
             resv = _attach_phase(resv)
@@ -687,6 +723,36 @@ def api_refund_reservation(
             shipping_refund_override_reason=shipping_refund_override_reason,
             refund_type=refund_type,
         )
+
+        # ✅ 알림: REFUND_REQUESTED → 판매자 + REFUND_COMPLETE → 구매자
+        try:
+            from app.services.notification_service import send_notification
+            from app import models as _models
+            # product_name, seller_id 조회
+            _resv = db.query(_models.Reservation).get(payload.reservation_id) if payload.reservation_id else None
+            _offer = db.query(_models.Offer).get(_resv.offer_id) if _resv and getattr(_resv, "offer_id", None) else None
+            _deal = db.query(_models.Deal).get(_resv.deal_id) if _resv and getattr(_resv, "deal_id", None) else None
+            _product_name = getattr(_deal, "product_name", "") or "" if _deal else ""
+            _seller_id = getattr(_offer, "seller_id", None) if _offer else None
+            _buyer_id = getattr(_resv, "buyer_id", None) if _resv else None
+
+            if _seller_id:
+                send_notification(
+                    db, user_id=_seller_id, role="seller",
+                    event_type="REFUND_REQUESTED",
+                    variables={"product_name": _product_name, "refund_reason": reason or "미지정"},
+                    reservation_id=payload.reservation_id,
+                )
+            if _buyer_id:
+                _refund_amt = getattr(result, "refunded_amount_total", 0) or getattr(result, "refund_amount", 0) or 0
+                send_notification(
+                    db, user_id=_buyer_id, role="buyer",
+                    event_type="REFUND_COMPLETE",
+                    variables={"product_name": _product_name, "refund_amount": str(int(_refund_amt))},
+                    reservation_id=payload.reservation_id,
+                )
+        except Exception:
+            pass
 
         # ✅ 응답용: phase 붙이기 (DB 영향 X)
         try:

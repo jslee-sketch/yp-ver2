@@ -250,6 +250,26 @@ def create_review(body: ReviewIn = Body(...), db: Session = Depends(get_db)):
     db.commit()
     db.refresh(r)
 
+    # ✅ 알림: NEW_REVIEW → 판매자
+    try:
+        from app.services.notification_service import send_notification
+        if body.seller_id:
+            # 상품명 조회
+            _product_name = ""
+            if body.reservation_id:
+                _resv = db.query(models.Reservation).get(body.reservation_id)
+                _product_name = getattr(_resv, "product_name", "") or "" if _resv else ""
+            _buyer = db.query(models.Buyer).get(body.buyer_id) if body.buyer_id else None
+            _buyer_name = getattr(_buyer, "nickname", "") or f"구매자#{body.buyer_id}" if _buyer else "구매자"
+            send_notification(
+                db, user_id=body.seller_id, role="seller",
+                event_type="NEW_REVIEW",
+                variables={"buyer_name": _buyer_name, "product_name": _product_name},
+                reservation_id=body.reservation_id,
+            )
+    except Exception:
+        pass
+
     # 🆕 3) 추천인 리워드 포인트 적립 시도 (에러 나도 리뷰 생성은 살려둔다)
     try:
         _maybe_reward_recommender_after_review(db, r)

@@ -432,6 +432,22 @@ def refresh_settlement_dispute_path_ready(
     if updated_ids:
         db.commit()
 
+    # ✅ 알림: S_SETTLEMENT_READY → 판매자 (각 정산건)
+    try:
+        from app.services.notification_service import send_notification
+        for s in rows:
+            seller_id = getattr(s, "seller_id", None)
+            if seller_id:
+                amount = int(getattr(s, "seller_payout_amount", 0) or 0)
+                send_notification(
+                    db, user_id=seller_id, role="seller",
+                    event_type="S_SETTLEMENT_READY",
+                    variables={"settlement_id": str(s.id), "amount": str(amount)},
+                    settlement_id=s.id,
+                )
+    except Exception:
+        pass
+
     return {
         "checked": len(rows),
         "updated": len(updated_ids),
@@ -569,6 +585,21 @@ def approve_settlement(
     db.add(row)
     db.commit()
     db.refresh(row)
+
+    # ✅ 알림: SETTLEMENT_APPROVED → 판매자
+    try:
+        from app.services.notification_service import send_notification
+        _seller_id_notif = getattr(row, "seller_id", None)
+        if _seller_id_notif:
+            _amount_notif = int(getattr(row, "seller_payout_amount", 0) or 0)
+            send_notification(
+                db, user_id=_seller_id_notif, role="seller",
+                event_type="SETTLEMENT_APPROVED",
+                variables={"settlement_id": str(row.id), "amount": str(_amount_notif)},
+                settlement_id=int(row.id),
+            )
+    except Exception:
+        pass
 
     # 이메일 알림 (best-effort, 실패해도 승인은 유지)
     try:
