@@ -1,0 +1,13 @@
+{
+  "name": "역핑 - 역경매 공동구매 플랫폼",
+  "short_name": "역핑",
+  "description": "소비자가 가격을 제안하는 역경매 플랫폼",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#4ade80",
+  "icons": [
+    {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
