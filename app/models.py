@@ -506,6 +506,11 @@ class UserNotification(Base):
     sent_push = Column(Boolean, default=False, server_default="false")
     sent_email = Column(Boolean, default=False, server_default="false")
 
+    __table_args__ = (
+        Index("ix_notif_user_read", "user_id", "is_read"),
+        Index("ix_notif_user_created", "user_id", "created_at"),
+    )
+
 #------------------------------------------------------
 # Deal 채팅방
 #------------------------------------------------------
@@ -847,9 +852,13 @@ class ReservationSettlement(Base):
 
     # ✅ 운영자가 지급일을 수정할 수 있게(선택)
     payout_override_reason = Column(String(200), nullable=True)
-    
-    
-    
+
+    __table_args__ = (
+        Index("ix_settlement_seller_status", "seller_id", "status"),
+        Index("ix_settlement_status_created", "status", "created_at"),
+    )
+
+
 #------------------------------------------
 # PG 트랜잭션 기록용
 #------------------------------------------

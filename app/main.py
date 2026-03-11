@@ -320,7 +320,9 @@ except Exception:
 builtins.ORMModel = _ORMModel
 
 
-DEV_DEBUG_ERRORS = False
+# 프로덕션에서는 상세 에러 숨김 (DEV_BYPASS=true일 때만 상세 노출)
+_dev_bypass_env = os.environ.get("DEV_BYPASS", "false").lower() == "true"
+DEV_DEBUG_ERRORS = _dev_bypass_env
 
 
 
@@ -653,6 +655,10 @@ async def http_exc_handler(request, exc: StarletteHTTPException):
 
 @app.exception_handler(Exception)
 async def unhandled_exc_handler(request, exc: Exception):
+    # 항상 서버 로그에 기록
+    print(f"[ERROR] {request.method} {request.url.path}: {exc.__class__.__name__}: {exc}", flush=True)
+    traceback.print_exc()
+
     if DEV_DEBUG_ERRORS:
         tb_tail = traceback.format_exc().splitlines()[-1]
         return JSONResponse(
@@ -666,11 +672,15 @@ async def unhandled_exc_handler(request, exc: Exception):
                 }
             },
         )
-    return JSONResponse(status_code=500, content={"detail": "Internal error"})
+    # 프로덕션: 상세 에러 숨김
+    return JSONResponse(status_code=500, content={"detail": "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."})
 
 
-# CORS — 환경변수 ALLOWED_ORIGINS 로 제어 (쉼표 구분, 기본값: 개발용 *)
-_allowed_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
+# CORS — 환경변수 ALLOWED_ORIGINS 로 제어 (쉼표 구분)
+# 프로덕션: ALLOWED_ORIGINS=https://web-production-defb.up.railway.app,https://yeokping.com,https://www.yeokping.com
+# 개발: ALLOWED_ORIGINS=* (기본값)
+_allowed_origins_raw = os.environ.get("ALLOWED_ORIGINS", "*")
+_allowed_origins = [o.strip() for o in _allowed_origins_raw.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
@@ -848,10 +858,18 @@ try:
 except Exception as _e:
     print(f"[warn] static files mount failed: {_e}")
 
+# Admin Auth 미들웨어 — /admin/* 엔드포인트 JWT+role=admin 필수
+try:
+    from app.middleware.admin_auth import AdminAuthMiddleware
+    app.add_middleware(AdminAuthMiddleware)
+    print("✅ AdminAuthMiddleware loaded")
+except Exception as _e:
+    print(f"[warn] AdminAuthMiddleware not loaded: {_e}")
+
 # Rate Limiting 미들웨어
 try:
     from app.middleware.rate_limit import RateLimitMiddleware
-    app.add_middleware(RateLimitMiddleware, default_rpm=int(__import__('os').environ.get('RATE_LIMIT_RPM', '600')))
+    app.add_middleware(RateLimitMiddleware, default_rpm=int(__import__('os').environ.get('RATE_LIMIT_RPM', '100')))
 except Exception as _e:
     print(f"[warn] RateLimitMiddleware not loaded: {_e}")
 
@@ -864,7 +882,21 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"ok": True}
+    from sqlalchemy import text as _htext
+    db_status = "ok"
+    try:
+        _hdb = next(database.get_db())
+        _hdb.execute(_htext("SELECT 1"))
+        _hdb.close()
+    except Exception:
+        db_status = "error"
+    return {
+        "ok": db_status == "ok",
+        "status": "ok" if db_status == "ok" else "degraded",
+        "db": db_status,
+        "version": "2.0.0",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 @app.get("/debug/dist")
 def debug_dist():

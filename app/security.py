@@ -24,11 +24,14 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 # 개발용 우회 모드 — 프로덕션에서는 반드시 false
+# 기본값 false → 환경변수 없으면 인증 강제
 DEV_BYPASS = os.environ.get("DEV_BYPASS", "false").lower() == "true"
 
 if DEV_BYPASS:
     print("⚠️  [SECURITY] DEV_BYPASS=True — 인증 우회 활성화. 프로덕션에서는 DEV_BYPASS=false로 설정하세요.")
 if SECRET_KEY == "dev-only-change-in-production":
+    import warnings
+    warnings.warn("SECRET_KEY 기본값 사용 중 — 프로덕션에서는 반드시 변경하세요!", stacklevel=1)
     print("⚠️  [SECURITY] SECRET_KEY 기본값 사용 중 — 프로덕션에서는 반드시 변경하세요.")
 
 # -----------------------------------------------------
