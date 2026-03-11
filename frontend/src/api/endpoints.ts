@@ -158,6 +158,17 @@ export const API = {
     FCM_TOKEN:         '/notifications/fcm-token',
   },
 
+  // ── 알림 설정 / 관심 상품 ──────────────────────────────────
+  NOTIFICATION_SETTINGS: {
+    EVENTS:            '/notification-settings/events',
+    USER_SETTINGS:     (userId: number) => `/notification-settings/${userId}`,
+    SAVE_SETTINGS:     (userId: number) => `/notification-settings/${userId}`,
+    BULK:              (userId: number) => `/notification-settings/${userId}/bulk`,
+    USER_INTERESTS:    (userId: number) => `/users/${userId}/interests`,
+    SAVE_INTERESTS:    (userId: number) => `/users/${userId}/interests`,
+    INTEREST_PRESETS:  '/interests/presets',
+  },
+
   // ── 리뷰 ────────────────────────────────────────────────────
   REVIEWS: {
     LIST:              '/reviews/',

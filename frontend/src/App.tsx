@@ -78,6 +78,8 @@ import AdminUnifiedSearchPage from './pages/AdminUnifiedSearchPage';
 import AdminCustomReportPage from './pages/AdminCustomReportPage';
 import SellerTaxInvoicesPage from './pages/SellerTaxInvoicesPage';
 import SellerBusinessInfoPage from './pages/SellerBusinessInfoPage';
+import NotificationSettingsPage from './pages/NotificationSettingsPage';
+import InterestSettingsPage from './pages/InterestSettingsPage';
 
 function App() {
   return (
@@ -162,6 +164,8 @@ function App() {
           <Route path="/seller/notifications"  element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
           <Route path="/seller/announcements"  element={<ProtectedRoute><SellerAnnouncementsPage /></ProtectedRoute>} />
           <Route path="/settings"    element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+          <Route path="/settings/notifications" element={<ProtectedRoute><NotificationSettingsPage /></ProtectedRoute>} />
+          <Route path="/settings/interests"     element={<ProtectedRoute><InterestSettingsPage /></ProtectedRoute>} />
 
           {/* 액추에이터 */}
           <Route path="/actuator/sellers"                    element={<ProtectedRoute><ActuatorSellersPage /></ProtectedRoute>} />

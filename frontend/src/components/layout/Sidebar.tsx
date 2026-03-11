@@ -322,6 +322,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     onClick={() => go('/notifications')} />
                 )}
                 <MenuItem icon="⚙️" label="설정"    onClick={() => go('/settings')} />
+                <MenuItem icon="🎯" label="관심 상품" onClick={() => go('/settings/interests')} />
+                <MenuItem icon="🔧" label="알림 설정" onClick={() => go('/settings/notifications')} />
                 <MenuItem icon="📋" label="이용약관" onClick={() => go('/terms')} />
                 <MenuItem icon="💬" label="고객센터" onClick={() => go('/support')} />
                 <MenuItem

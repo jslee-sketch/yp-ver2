@@ -187,3 +187,31 @@ spectator_grade:
     master:
       min_predictions: 100
       badge: "👑"
+
+# ✅ 알림 시스템 설정
+notifications:
+  buyer_max_interests: 3
+  seller_max_interests: 5
+  actuator_max_interests: 10
+  online_threshold_minutes: 5
+  email_daily_limit: 20
+  push_cooldown_minutes: 5
+  chat_bundle_seconds: 30
+
+# ✅ 관심 카테고리 프리셋
+interest_categories:
+  - 스마트폰
+  - 노트북
+  - 태블릿
+  - TV/모니터
+  - 가전
+  - 게임/콘솔
+  - 음향/이어폰
+  - 카메라
+  - 생활용품
+  - 식품
+  - 패션
+  - 뷰티
+  - 유아/키즈
+  - 스포츠/아웃도어
+  - 자동차용품

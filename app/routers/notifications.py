@@ -229,8 +229,12 @@ def list_notifications(
         False,
         description="true 이면 읽지 않은 알림만 조회",
     ),
+    title: Optional[str] = Query(None, description="제목 검색"),
+    content: Optional[str] = Query(None, description="내용 검색"),
+    date_from: Optional[str] = Query(None, description="시작일 (YYYY-MM-DD)"),
+    date_to: Optional[str] = Query(None, description="종료일 (YYYY-MM-DD)"),
     limit: int = Query(
-        50,
+        100,
         ge=1,
         le=200,
         description="가져올 최대 개수 (최대 200)",
@@ -242,6 +246,14 @@ def list_notifications(
     )
     if only_unread:
         q = q.filter(models.UserNotification.is_read == False)  # noqa: E712
+    if title:
+        q = q.filter(models.UserNotification.title.ilike(f"%{title}%"))
+    if content:
+        q = q.filter(models.UserNotification.message.ilike(f"%{content}%"))
+    if date_from:
+        q = q.filter(models.UserNotification.created_at >= date_from)
+    if date_to:
+        q = q.filter(models.UserNotification.created_at <= date_to + " 23:59:59")
 
     rows = (
         q.order_by(models.UserNotification.created_at.desc())

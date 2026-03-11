@@ -3,38 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchNotifications, markNotificationRead, markAllRead } from '../api/notificationApi';
 
-type NotiType = 'new_offer' | 'deadline' | 'shipped' | 'delivered' | 'points' | 'review' | 'deal_update' | 'payment';
-
 interface NotificationItem {
   id: number;
-  type: NotiType;
+  type: string;
   title: string;
   body: string;
   is_read: boolean;
   created_at: string;
   link_to?: string;
+  sent_app?: boolean;
+  sent_push?: boolean;
+  sent_email?: boolean;
 }
 
-const TYPE_ICON: Record<NotiType, string> = {
-  new_offer:   '🔔',
-  deadline:    '⏰',
-  shipped:     '📦',
-  delivered:   '✅',
-  points:      '💰',
-  review:      '⭐',
-  deal_update: '📊',
-  payment:     '💳',
+const TYPE_ICON: Record<string, string> = {
+  new_offer: '🔔', deadline: '⏰', shipped: '📦', delivered: '✅',
+  points: '💰', review: '⭐', deal_update: '📊', payment: '💳',
+  interest_match: '🎯', refund: '↩️', settlement: '💵', dispute: '⚠️',
 };
-
-const MOCK: NotificationItem[] = [
-  { id: 1, type: 'new_offer',   title: '에어팟 프로 딜에 새 오퍼!',    body: 'PREMIUM 오퍼가 도착했어요',           is_read: false, created_at: '2026-03-02T14:30:00', link_to: '/deal/15' },
-  { id: 2, type: 'deadline',    title: '갤럭시 S25 딜 마감 임박',       body: '23시간 남았어요',                    is_read: false, created_at: '2026-03-02T12:00:00', link_to: '/deal/17' },
-  { id: 3, type: 'shipped',     title: '에어팟 배송 출발!',              body: '운송장: 1234567890',                 is_read: true,  created_at: '2026-03-01T10:00:00', link_to: '/my-orders' },
-  { id: 4, type: 'delivered',   title: '다이슨 에어랩 배송 완료',         body: '수령 확인을 해주세요',               is_read: true,  created_at: '2026-02-28T15:00:00', link_to: '/my-orders' },
-  { id: 5, type: 'points',      title: '포인트 20P 적립',               body: '나이키 에어포스 구매 확정',           is_read: true,  created_at: '2026-02-27T09:00:00' },
-  { id: 6, type: 'deal_update', title: '에어팟 딜 목표가 변경',           body: '방장이 목표가를 ₩265,000으로 변경했어요', is_read: true, created_at: '2026-02-26T16:00:00', link_to: '/deal/15' },
-  { id: 7, type: 'payment',     title: '결제 시간 5분!',                 body: '에어팟 프로 오퍼가 확정됐어요. 지금 결제하세요!', is_read: true, created_at: '2026-02-25T11:00:00', link_to: '/my-orders' },
-];
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -62,31 +48,53 @@ function isToday(iso: string): boolean {
     d.getDate() === now.getDate();
 }
 
+const channelBadge = (label: string, sent: boolean) => (
+  <span style={{
+    fontSize: 9, padding: '1px 5px', borderRadius: 4, fontWeight: 600,
+    background: sent ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.05)',
+    color: sent ? '#4ade80' : '#555',
+    border: `1px solid ${sent ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`,
+  }}>{label}</span>
+);
+
 export default function NotificationsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [items, setItems] = useState<NotificationItem[]>(MOCK);
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTitle, setSearchTitle] = useState('');
+  const [filterRead, setFilterRead] = useState<'all' | 'unread' | 'read'>('all');
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
       const apiData = await fetchNotifications();
       if (apiData && Array.isArray(apiData) && apiData.length > 0) {
         setItems(apiData.map((n: Record<string, unknown>) => ({
           id:         typeof n.id === 'number' ? n.id : 0,
-          type:       (String(n.title ?? '').includes('오퍼') ? 'new_offer'
-                     : String(n.title ?? '').includes('배송') ? 'shipped'
-                     : String(n.title ?? '').includes('포인트') ? 'points'
-                     : 'deal_update') as NotiType,
+          type:       String(n.type ?? 'deal_update'),
           title:      String(n.title ?? ''),
-          body:       String(n.body ?? ''),
+          body:       String(n.body ?? n.message ?? ''),
           is_read:    Boolean(n.is_read),
           created_at: String(n.created_at ?? new Date().toISOString()),
-          link_to:    typeof n.link === 'string' ? n.link : (typeof n.link_to === 'string' ? n.link_to : undefined),
+          link_to:    typeof n.link === 'string' ? n.link : (typeof n.link_to === 'string' ? n.link_to : (typeof n.link_url === 'string' ? n.link_url : undefined)),
+          sent_app:   typeof n.sent_app === 'boolean' ? n.sent_app : undefined,
+          sent_push:  typeof n.sent_push === 'boolean' ? n.sent_push : undefined,
+          sent_email: typeof n.sent_email === 'boolean' ? n.sent_email : undefined,
         })));
       }
+      setLoading(false);
     };
     void load();
   }, [user]);
+
+  const filtered = items.filter(i => {
+    if (filterRead === 'unread' && i.is_read) return false;
+    if (filterRead === 'read' && !i.is_read) return false;
+    if (searchTitle && !i.title.toLowerCase().includes(searchTitle.toLowerCase()) &&
+        !i.body.toLowerCase().includes(searchTitle.toLowerCase())) return false;
+    return true;
+  });
 
   const unread = items.filter(i => !i.is_read).length;
 
@@ -104,8 +112,8 @@ export default function NotificationsPage() {
     if (item.link_to) navigate(item.link_to);
   };
 
-  const todayItems = items.filter(i => isToday(i.created_at));
-  const prevItems  = items.filter(i => !isToday(i.created_at));
+  const todayItems = filtered.filter(i => isToday(i.created_at));
+  const prevItems  = filtered.filter(i => !isToday(i.created_at));
 
   const renderItem = (item: NotificationItem) => (
     <button
@@ -119,19 +127,37 @@ export default function NotificationsPage() {
         transition: 'background 0.15s',
       }}
     >
-      <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>{TYPE_ICON[item.type]}</span>
+      <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>
+        {TYPE_ICON[item.type] || '📌'}
+      </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: item.is_read ? 500 : 700, color: C.text, marginBottom: 3 }}>
           {item.title}
         </div>
         <div style={{ fontSize: 12, color: C.textSec, marginBottom: 5 }}>{item.body}</div>
-        <div style={{ fontSize: 11, color: C.textDim }}>{relativeTime(item.created_at)}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, color: C.textDim }}>{relativeTime(item.created_at)}</span>
+          {item.sent_app !== undefined && (
+            <div style={{ display: 'flex', gap: 3, marginLeft: 4 }}>
+              {channelBadge('앱', !!item.sent_app)}
+              {channelBadge('푸시', !!item.sent_push)}
+              {channelBadge('이메일', !!item.sent_email)}
+            </div>
+          )}
+        </div>
       </div>
       {!item.is_read && (
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.blue, flexShrink: 0, marginTop: 4 }} />
       )}
     </button>
   );
+
+  const filterBtnStyle = (active: boolean): React.CSSProperties => ({
+    padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+    background: active ? 'rgba(74,222,128,0.15)' : 'transparent',
+    border: `1px solid ${active ? 'rgba(74,222,128,0.4)' : C.border}`,
+    color: active ? '#4ade80' : C.textDim,
+  });
 
   return (
     <div style={{ minHeight: '100dvh', background: C.bg, paddingBottom: 100 }}>
@@ -153,8 +179,31 @@ export default function NotificationsPage() {
       </div>
 
       <div style={{ padding: '14px 16px 0' }}>
-        {items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: C.textDim, fontSize: 15 }}>알림이 없어요 🔔</div>
+        {/* Search + Filter */}
+        <div style={{ marginBottom: 12 }}>
+          <input
+            value={searchTitle}
+            onChange={e => setSearchTitle(e.target.value)}
+            placeholder="알림 검색 (제목/내용)"
+            style={{
+              width: '100%', padding: '10px 14px', borderRadius: 10,
+              background: C.bgEl, color: C.text, border: `1px solid ${C.border}`,
+              fontSize: 13, marginBottom: 8, boxSizing: 'border-box',
+            }}
+          />
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button style={filterBtnStyle(filterRead === 'all')} onClick={() => setFilterRead('all')}>전체</button>
+            <button style={filterBtnStyle(filterRead === 'unread')} onClick={() => setFilterRead('unread')}>안읽음</button>
+            <button style={filterBtnStyle(filterRead === 'read')} onClick={() => setFilterRead('read')}>읽음</button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: C.textDim, fontSize: 14 }}>로딩 중...</div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: C.textDim, fontSize: 15 }}>
+            {searchTitle || filterRead !== 'all' ? '검색 결과가 없어요' : '알림이 없어요 🔔'}
+          </div>
         ) : (
           <>
             {todayItems.length > 0 && (

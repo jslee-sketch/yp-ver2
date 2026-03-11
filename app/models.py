@@ -495,6 +495,17 @@ class UserNotification(Base):
     # JSON 메타 문자열 (role, deal_id, offer_id 등)
     meta_json = Column(Text)
 
+    # 관련 엔티티 ID (검색/필터용)
+    deal_id = Column(Integer, nullable=True)
+    offer_id = Column(Integer, nullable=True)
+    reservation_id = Column(Integer, nullable=True)
+    settlement_id = Column(Integer, nullable=True)
+
+    # 채널별 발송 결과
+    sent_app = Column(Boolean, default=False, server_default="false")
+    sent_push = Column(Boolean, default=False, server_default="false")
+    sent_email = Column(Boolean, default=False, server_default="false")
+
 #------------------------------------------------------
 # Deal 채팅방
 #------------------------------------------------------
@@ -1390,6 +1401,45 @@ class BusinessInfoChangeLog(Base):
 
     __table_args__ = (
         Index("ix_biz_change_log_user", "user_type", "user_id"),
+    )
+
+
+# -------------------------------------------------------
+# 📌 UserInterest — 사용자 관심 카테고리/제품/모델
+# -------------------------------------------------------
+class UserInterest(Base):
+    __tablename__ = "user_interests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    role = Column(String(20), nullable=True)           # buyer / seller / actuator
+    level = Column(String(20), default="general")      # category / product / model / general
+    value = Column(String(200), nullable=False)
+    source = Column(String(10), default="custom")      # preset / custom
+    priority = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        Index("ix_user_interest_user", "user_id"),
+    )
+
+
+# -------------------------------------------------------
+# 🔔 NotificationSetting — 사용자별 알림 채널 설정
+# -------------------------------------------------------
+class NotificationSetting(Base):
+    __tablename__ = "notification_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    event_type = Column(String(50), nullable=False)
+    channel_app = Column(Boolean, default=True)
+    channel_push = Column(Boolean, default=False)
+    channel_email = Column(Boolean, default=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        Index("ix_notif_setting_user_event", "user_id", "event_type", unique=True),
     )
 
 
