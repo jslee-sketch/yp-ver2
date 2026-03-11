@@ -1,5 +1,9 @@
 # Notification System Final Report — 트리거 연결 + E2E 테스트
 
+## Commits
+- `e008cf2` — v3: notification triggers connected + E2E tests (40)
+- `2daa850` — v3 fix: E2E tests path prefix + JWT userId extraction → **40/40 PASS**
+
 ## Date: 2026-03-11
 
 ---
@@ -64,66 +68,66 @@ except Exception:
 ### 관심 등록 (5건)
 | # | 항목 | 상태 |
 |---|------|------|
-| 1 | 프리셋 카테고리 선택 → 저장 | TEST |
-| 2 | 카테고리 직접 입력 → 저장 | TEST |
-| 3 | 제품/모델 직접 입력 → 저장 | TEST |
-| 4 | 11개 등록 시도 → 차단 (최대 10개) | TEST |
-| 5 | 관심 수정/삭제 → 반영 | TEST |
+| 1 | 프리셋 카테고리 선택 → 저장 | PASS |
+| 2 | 카테고리 직접 입력 → 저장 | PASS |
+| 3 | 제품/모델 직접 입력 → 저장 | PASS |
+| 4 | 11개 등록 시도 → 차단 (최대 10개) | PASS |
+| 5 | 관심 수정/삭제 → 반영 | PASS |
 
 ### 알림 설정 (5건)
 | # | 항목 | 상태 |
 |---|------|------|
-| 6 | /settings/notifications → 이벤트 목록 표시 | TEST |
-| 7 | 앱/푸시/이메일 토글 → 저장 | TEST |
-| 8 | 저장 후 재접근 → 유지 | TEST |
-| 9 | 전체 ON/OFF | TEST |
-| 10 | 기본값 확인 | TEST |
+| 6 | /settings/notifications → 이벤트 목록 표시 | PASS |
+| 7 | 앱/푸시/이메일 토글 → 저장 | PASS |
+| 8 | 저장 후 재접근 → 유지 | PASS |
+| 9 | 전체 ON/OFF | PASS |
+| 10 | 기본값 확인 | PASS |
 
 ### 알림 발송 (10건)
 | # | 항목 | 상태 |
 |---|------|------|
-| 11 | 딜 생성 → 관심 판매자에게 DEAL_MATCH_INTEREST | TEST |
-| 12 | 오퍼 도착 → 구매자에게 OFFER_ARRIVED | TEST |
-| 13 | 오퍼 선택 → 판매자에게 OFFER_SELECTED | TEST |
-| 14 | 배송 완료 → 구매자에게 DELIVERY_COMPLETE | TEST |
-| 15 | 정산 준비 → 판매자에게 S_SETTLEMENT_READY | TEST |
-| 16 | 환불 요청 → 판매자에게 REFUND_REQUESTED | TEST |
-| 17 | 분쟁 접수 → 구매자에게 DISPUTE_FILED | TEST |
-| 18 | 딜 참여자 변경 → DEAL_NEW_PARTICIPANT | TEST |
-| 19 | 딜 정보 변경 → DEAL_INFO_CHANGED | TEST |
-| 20 | 채팅 → DEAL_NEW_CHAT | TEST |
+| 11 | 딜 생성 → 관심 판매자에게 DEAL_MATCH_INTEREST | PASS |
+| 12 | 오퍼 도착 → 구매자에게 OFFER_ARRIVED | PASS |
+| 13 | 오퍼 선택 → 판매자에게 OFFER_SELECTED | PASS |
+| 14 | 배송 완료 → 구매자에게 DELIVERY_COMPLETE | PASS |
+| 15 | 정산 준비 → 판매자에게 S_SETTLEMENT_READY | PASS |
+| 16 | 환불 요청 → 판매자에게 REFUND_REQUESTED | PASS |
+| 17 | 분쟁 접수 → 구매자에게 DISPUTE_FILED | PASS |
+| 18 | 딜 참여자 변경 → DEAL_NEW_PARTICIPANT | PASS |
+| 19 | 딜 정보 변경 → DEAL_INFO_CHANGED | PASS |
+| 20 | 채팅 → DEAL_NEW_CHAT | PASS |
 
 ### FCM (5건)
 | # | 항목 | 상태 |
 |---|------|------|
-| 21 | FCM 토큰 등록 → 200 | TEST |
-| 22 | 비접속 시 → FCM 발송 | TEST |
-| 23 | 접속 중 → FCM 안 보냄 | TEST |
-| 24 | Firebase 미설정 → graceful skip | TEST |
-| 25 | 잘못된 토큰 → 에러 핸들링 | TEST |
+| 21 | FCM 토큰 등록 → 200 | PASS |
+| 22 | 비접속 시 → FCM 발송 | PASS |
+| 23 | 접속 중 → FCM 안 보냄 | PASS |
+| 24 | Firebase 미설정 → graceful skip | PASS |
+| 25 | 잘못된 토큰 → 에러 핸들링 | PASS |
 
 ### 알림 목록 (10건)
 | # | 항목 | 상태 |
 |---|------|------|
-| 26 | /notifications 접근 → 알림 표시 | TEST |
-| 27 | 제목 검색 → 필터 | TEST |
-| 28 | 내용 검색 → 필터 | TEST |
-| 29 | 기간 검색 → 필터 | TEST |
-| 30 | 읽음 처리 → 스타일 변경 | TEST |
-| 31 | 전체 읽음 | TEST |
-| 32 | 알림 클릭 → 관련 페이지 이동 | TEST |
-| 33 | 🔔 읽지 않은 배지 | TEST |
-| 34 | 알림 문구 변수 치환 정확성 | TEST |
-| 35 | 카테고리 직접 입력 → 매칭 확인 | TEST |
+| 26 | /notifications 접근 → 알림 표시 | PASS |
+| 27 | 제목 검색 → 필터 | PASS |
+| 28 | 내용 검색 → 필터 | PASS |
+| 29 | 기간 검색 → 필터 | PASS |
+| 30 | 읽음 처리 → 스타일 변경 | PASS |
+| 31 | 전체 읽음 | PASS |
+| 32 | 알림 클릭 → 관련 페이지 이동 | PASS |
+| 33 | 🔔 읽지 않은 배지 | PASS |
+| 34 | 알림 문구 변수 치환 정확성 | PASS |
+| 35 | 카테고리 직접 입력 → 매칭 확인 | PASS |
 
 ### WebSocket (5건)
 | # | 항목 | 상태 |
 |---|------|------|
-| 36 | 채팅 연결 → 인증 | TEST |
-| 37 | 메시지 전송 → 수신 | TEST |
-| 38 | XSS 방어 | TEST |
-| 39 | 타이핑 인디케이터 | TEST |
-| 40 | 퇴장 시스템 메시지 | TEST |
+| 36 | 채팅 연결 → 인증 | PASS |
+| 37 | 메시지 전송 → 수신 | PASS |
+| 38 | XSS 방어 | PASS |
+| 39 | 타이핑 인디케이터 | PASS |
+| 40 | 퇴장 시스템 메시지 | PASS |
 
 ---
 
