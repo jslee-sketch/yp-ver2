@@ -1,0 +1,3637 @@
+[
+  {
+    "role": "BUYER",
+    "total": 100,
+    "pass": 97,
+    "fail": 3,
+    "details": [
+      {
+        "question": "역핑이 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(14)",
+          "app/policy/docs/public/00_overview.md(2)",
+          "app/policy/docs/public/buyer.md(2)"
+        ]
+      },
+      {
+        "question": "역경매가 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(10)",
+          "app/policy/docs/public/buyer.md(2)",
+          "app/policy/docs/public/tiers.md(2)"
+        ]
+      },
+      {
+        "question": "공동구매 어떻게 해?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(14)",
+          "app/policy/params/pricing.yaml(12)",
+          "app/policy/docs/public/00_overview.md(2)"
+        ]
+      },
+      {
+        "question": "기존 쇼핑이랑 뭐가 달라?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(18)",
+          "app/policy/docs/public/fees.md(4)",
+          "app/policy/docs/public/refund.md(4)"
+        ]
+      },
+      {
+        "question": "역핑 어떻게 시작해?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(14)",
+          "app/policy/docs/screens/buyer/home_feed.md(12)",
+          "app/policy/docs/public/00_overview.md(7)"
+        ]
+      },
+      {
+        "question": "회원가입 어떻게 해?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(14)"
+        ]
+      },
+      {
+        "question": "소셜 로그인 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(79)",
+          "app/policy/docs/public/spectators_public.md(26)"
+        ]
+      },
+      {
+        "question": "카카오 로그인 어떻게 해?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(50)",
+          "app/policy/docs/public/spectators_public.md(24)"
+        ]
+      },
+      {
+        "question": "네이버 로그인?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(50)",
+          "app/policy/docs/public/spectators_public.md(26)"
+        ]
+      },
+      {
+        "question": "구글 로그인?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(39)",
+          "app/policy/docs/public/spectators_public.md(24)"
+        ]
+      },
+      {
+        "question": "딜 만드는 법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/timeline.md(2)"
+        ]
+      },
+      {
+        "question": "딜 생성 무료야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(25)",
+          "app/policy/docs/public/spectators_public.md(19)"
+        ]
+      },
+      {
+        "question": "사진으로 딜 만들 수 있어?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(36)",
+          "app/policy/docs/screens/buyer/deal_detail.md(12)"
+        ]
+      },
+      {
+        "question": "음성으로 제품 검색?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(82)",
+          "app/policy/docs/screens/buyer/home_feed.md(19)",
+          "app/policy/docs/public/buyer.md(7)"
+        ]
+      },
+      {
+        "question": "AI 분석 어떻게 해?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(50)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)"
+        ]
+      },
+      {
+        "question": "제품 정보 확인 어떻게?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(86)",
+          "app/policy/docs/public/spectators_public.md(28)",
+          "app/policy/docs/public/buyer.md(7)"
+        ]
+      },
+      {
+        "question": "유사 딜방이 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(36)",
+          "app/policy/params/pricing.yaml(19)",
+          "app/policy/docs/public/buyer.md(2)"
+        ]
+      },
+      {
+        "question": "가격 챌린지가 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(46)",
+          "app/policy/docs/public/spectators_public.md(24)"
+        ]
+      },
+      {
+        "question": "시장가 어떻게 조사해?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(28)",
+          "app/policy/docs/screens/buyer/deal_detail.md(19)"
+        ]
+      },
+      {
+        "question": "신뢰도 등급이 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(43)",
+          "app/policy/docs/public/buyer.md(2)",
+          "app/policy/docs/public/tiers.md(2)"
+        ]
+      },
+      {
+        "question": "가격 소스 비교 패널?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(93)",
+          "app/policy/docs/screens/buyer/deal_detail.md(31)"
+        ]
+      },
+      {
+        "question": "할인율 슬라이더?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(10)",
+          "app/policy/docs/screens/buyer/deal_detail.md(2)"
+        ]
+      },
+      {
+        "question": "목표가 설정 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(61)",
+          "app/policy/docs/screens/buyer/deal_detail.md(26)"
+        ]
+      },
+      {
+        "question": "딜 마감 시간?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/screens/buyer/deal_detail.md(45)",
+          "app/policy/docs/screens/buyer/home_feed.md(38)"
+        ]
+      },
+      {
+        "question": "딜 삭제 가능?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(43)",
+          "app/policy/docs/public/spectators_public.md(26)",
+          "app/policy/docs/public/refund.md(12)"
+        ]
+      },
+      {
+        "question": "오퍼 비교 어떻게 해?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(64)",
+          "app/policy/docs/screens/buyer/deal_detail.md(31)"
+        ]
+      },
+      {
+        "question": "가격 여정 맵이 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(57)",
+          "app/policy/docs/public/spectators_public.md(24)"
+        ]
+      },
+      {
+        "question": "오퍼 선택 후 어떻게 돼?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(64)",
+          "app/policy/docs/screens/buyer/deal_detail.md(48)"
+        ]
+      },
+      {
+        "question": "예약 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(54)",
+          "app/policy/docs/public/buyer.md(12)",
+          "app/policy/docs/screens/buyer/deal_detail.md(12)"
+        ]
+      },
+      {
+        "question": "결제 시간 제한?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(57)",
+          "app/policy/docs/public/timeline.md(36)",
+          "app/policy/docs/screens/buyer/deal_detail.md(26)"
+        ]
+      },
+      {
+        "question": "결제 후 흐름?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(43)",
+          "app/policy/docs/public/timeline.md(14)",
+          "app/policy/docs/public/00_overview.md(4)"
+        ]
+      },
+      {
+        "question": "총 결제액 계산?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/params/defaults.yaml(7)",
+          "app/policy/docs/public/guide_buyer.md(7)",
+          "app/policy/docs/public/spectators_public.md(4)"
+        ]
+      },
+      {
+        "question": "배송 방식 종류?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(43)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)"
+        ]
+      },
+      {
+        "question": "오퍼 확인 포인트?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(108)",
+          "app/policy/docs/public/spectators_public.md(38)"
+        ]
+      },
+      {
+        "question": "결제 후 취소 가능?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(82)",
+          "app/policy/docs/public/spectators_public.md(28)",
+          "app/policy/docs/public/timeline.md(16)"
+        ]
+      },
+      {
+        "question": "내 주문 어디서 봐?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(21)"
+        ]
+      },
+      {
+        "question": "배송 조회 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(75)",
+          "app/policy/docs/screens/buyer/deal_detail.md(26)"
+        ]
+      },
+      {
+        "question": "배송 추적 가능?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(79)",
+          "app/policy/docs/screens/buyer/deal_detail.md(38)"
+        ]
+      },
+      {
+        "question": "배달 완료 후?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(64)",
+          "app/policy/docs/public/buyer.md(9)",
+          "app/policy/docs/screens/buyer/deal_detail.md(4)"
+        ]
+      },
+      {
+        "question": "자동 구매확정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(46)",
+          "app/policy/docs/public/spectators_public.md(4)"
+        ]
+      },
+      {
+        "question": "수취 확인 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(72)",
+          "app/policy/docs/public/spectators_public.md(16)"
+        ]
+      },
+      {
+        "question": "배송이 안 와요",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(7)",
+          "app/policy/docs/screens/buyer/deal_detail.md(4)"
+        ]
+      },
+      {
+        "question": "택배사 종류?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(3)",
+          "app/policy/docs/public/spectators_public.md(2)"
+        ]
+      },
+      {
+        "question": "배송 상태 종류?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(68)",
+          "app/policy/docs/screens/buyer/deal_detail.md(48)"
+        ]
+      },
+      {
+        "question": "운송장 번호 확인?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(61)",
+          "app/policy/docs/public/spectators_public.md(14)"
+        ]
+      },
+      {
+        "question": "환불 어떻게 해?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(39)",
+          "app/policy/docs/public/refund.md(24)",
+          "app/policy/docs/public/buyer.md(9)"
+        ]
+      },
+      {
+        "question": "환불 정책이 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(50)",
+          "app/policy/docs/public/refund.md(24)",
+          "app/policy/docs/public/buyer.md(12)"
+        ]
+      },
+      {
+        "question": "구매자 사유 환불?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(75)",
+          "app/policy/docs/public/refund.md(26)",
+          "app/policy/docs/public/spectators_public.md(26)"
+        ]
+      },
+      {
+        "question": "판매자 사유 환불?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(82)",
+          "app/policy/docs/public/refund.md(26)",
+          "app/policy/docs/public/fees.md(19)"
+        ]
+      },
+      {
+        "question": "배송 전 환불?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(72)",
+          "app/policy/docs/public/refund.md(36)",
+          "app/policy/params/pricing.yaml(24)"
+        ]
+      },
+      {
+        "question": "배송 후 환불?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(72)",
+          "app/policy/docs/public/refund.md(36)",
+          "app/policy/params/pricing.yaml(24)"
+        ]
+      },
+      {
+        "question": "분쟁 신청 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(79)",
+          "app/policy/params/defaults.yaml(19)",
+          "app/policy/docs/public/buyer.md(7)"
+        ]
+      },
+      {
+        "question": "분쟁 제기 기간?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(43)",
+          "app/policy/params/defaults.yaml(26)",
+          "app/policy/docs/public/overview.md(7)"
+        ]
+      },
+      {
+        "question": "반품 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(32)",
+          "app/policy/docs/screens/buyer/deal_detail.md(4)"
+        ]
+      },
+      {
+        "question": "교환 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(28)",
+          "app/policy/docs/public/spectators_public.md(4)"
+        ]
+      },
+      {
+        "question": "포인트 어떻게 쌓아?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(39)",
+          "app/policy/docs/public/spectators_public.md(24)"
+        ]
+      },
+      {
+        "question": "포인트 소멸 기간?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(46)",
+          "app/policy/docs/public/spectators_public.md(33)"
+        ]
+      },
+      {
+        "question": "등급 종류?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(25)",
+          "app/policy/docs/public/spectators_public.md(12)",
+          "app/policy/params/defaults.yaml(7)"
+        ]
+      },
+      {
+        "question": "브론즈 실버 골드?",
+        "expect_docs": true,
+        "has_docs": false,
+        "passed": false,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "추천인 보상?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(14)",
+          "app/policy/docs/public/recommender.md(9)",
+          "app/policy/docs/public/spectators_public.md(4)"
+        ]
+      },
+      {
+        "question": "내 포인트 얼마야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(39)",
+          "app/policy/docs/public/spectators_public.md(26)"
+        ]
+      },
+      {
+        "question": "등급 업그레이드 조건?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(50)",
+          "app/policy/params/pricing.yaml(24)"
+        ]
+      },
+      {
+        "question": "포인트 유효기간?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(39)",
+          "app/policy/docs/public/spectators_public.md(24)"
+        ]
+      },
+      {
+        "question": "관전 모드가 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/spectators_public.md(24)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)"
+        ]
+      },
+      {
+        "question": "예측하면 뭐가 좋아?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/tiers.md(7)",
+          "app/policy/params/pricing.yaml(4)",
+          "app/policy/docs/public/fees.md(2)"
+        ]
+      },
+      {
+        "question": "지난딜 가격조회?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(7)"
+        ]
+      },
+      {
+        "question": "완료된 딜 보기?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(10)",
+          "app/policy/docs/screens/buyer/deal_detail.md(7)"
+        ]
+      },
+      {
+        "question": "관전자 예측 어떻게?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/spectators_public.md(48)",
+          "app/policy/docs/screens/buyer/deal_detail.md(48)"
+        ]
+      },
+      {
+        "question": "핑퐁이가 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(10)",
+          "app/policy/docs/public/buyer.md(2)",
+          "app/policy/docs/public/spectators_public.md(2)"
+        ]
+      },
+      {
+        "question": "핑퐁이 어떻게 써?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/screens/buyer/deal_detail.md(24)",
+          "app/policy/docs/screens/shared/design_system.md(24)"
+        ]
+      },
+      {
+        "question": "빠른 질문 버튼?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(50)",
+          "app/policy/docs/screens/buyer/deal_detail.md(26)"
+        ]
+      },
+      {
+        "question": "3중 소스 검증?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(72)",
+          "app/policy/params/defaults.yaml(38)",
+          "app/policy/docs/public/spectators_public.md(26)"
+        ]
+      },
+      {
+        "question": "네이버쇼핑 가격?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(43)",
+          "app/policy/docs/public/spectators_public.md(24)"
+        ]
+      },
+      {
+        "question": "쿠팡 가격?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(46)",
+          "app/policy/docs/public/spectators_public.md(24)"
+        ]
+      },
+      {
+        "question": "GPT 가격 추정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(46)",
+          "app/policy/docs/public/spectators_public.md(24)"
+        ]
+      },
+      {
+        "question": "액세서리 자동 필터?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(50)",
+          "app/policy/docs/public/buyer.md(9)",
+          "app/policy/docs/public/spectators_public.md(9)"
+        ]
+      },
+      {
+        "question": "브랜드 필터링?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(28)",
+          "app/policy/docs/screens/buyer/deal_detail.md(4)"
+        ]
+      },
+      {
+        "question": "명품 경고?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(7)",
+          "app/policy/docs/screens/shared/design_system.md(4)"
+        ]
+      },
+      {
+        "question": "마이페이지 어디야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(7)",
+          "app/policy/docs/screens/README.md(2)",
+          "app/policy/docs/screens/shared/design_system.md(2)"
+        ]
+      },
+      {
+        "question": "프로필 수정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(14)",
+          "app/policy/docs/public/spectators_public.md(9)",
+          "app/policy/docs/public/seller.md(2)"
+        ]
+      },
+      {
+        "question": "알림 확인 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(97)",
+          "app/policy/docs/public/spectators_public.md(40)"
+        ]
+      },
+      {
+        "question": "소셜 연동 상태?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(64)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)"
+        ]
+      },
+      {
+        "question": "알림 설정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(54)",
+          "app/policy/docs/public/spectators_public.md(26)"
+        ]
+      },
+      {
+        "question": "갤럭시 S25 검색하면?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(32)",
+          "app/policy/docs/screens/shared/design_system.md(24)"
+        ]
+      },
+      {
+        "question": "세트 상품 필터?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(50)",
+          "app/policy/docs/screens/buyer/home_feed.md(9)",
+          "app/policy/docs/public/buyer.md(7)"
+        ]
+      },
+      {
+        "question": "중고 제외?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(21)",
+          "app/policy/docs/public/spectators_public.md(2)"
+        ]
+      },
+      {
+        "question": "온라인 미판매 제품?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(43)",
+          "app/policy/docs/public/buyer.md(2)",
+          "app/policy/docs/screens/buyer/home_feed.md(2)"
+        ]
+      },
+      {
+        "question": "모델 정확 매칭?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(21)",
+          "app/policy/docs/public/spectators_public.md(21)",
+          "app/policy/params/spectator.yaml(2)"
+        ]
+      },
+      {
+        "question": "마이너리티 리포트가 뭐야?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "환불 시뮬레이터?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "이상 감지 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "신고 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "정책 파라미터 수정?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "판매자 승인 처리?",
+        "expect_docs": false,
+        "has_docs": true,
+        "passed": false,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(46)",
+          "app/policy/docs/public/buyer.md(16)",
+          "app/policy/docs/public/fees.md(16)"
+        ]
+      },
+      {
+        "question": "관리자 대시보드?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "정산 HOLD READY?",
+        "expect_docs": false,
+        "has_docs": true,
+        "passed": false,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/params/defaults.yaml(23)",
+          "app/policy/docs/public/guide_buyer.md(7)",
+          "app/policy/docs/screens/shared/design_system.md(7)"
+        ]
+      },
+      {
+        "question": "정책 문서 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "핑퐁이 정책제안?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "관리자 딜 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "관리자 배송 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      }
+    ]
+  },
+  {
+    "role": "SELLER",
+    "total": 100,
+    "pass": 96,
+    "fail": 4,
+    "details": [
+      {
+        "question": "역핑이 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(3)",
+          "app/policy/docs/public/00_overview.md(2)",
+          "app/policy/docs/public/overview.md(2)"
+        ]
+      },
+      {
+        "question": "판매자 등록 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(75)",
+          "app/policy/docs/public/fees.md(14)",
+          "app/policy/docs/public/overview.md(12)"
+        ]
+      },
+      {
+        "question": "판매자 회원가입?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(46)",
+          "app/policy/docs/public/fees.md(14)",
+          "app/policy/docs/public/overview.md(12)"
+        ]
+      },
+      {
+        "question": "사업자 정보 입력?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(86)",
+          "app/policy/docs/screens/shared/design_system.md(14)"
+        ]
+      },
+      {
+        "question": "서류 업로드?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(10)"
+        ]
+      },
+      {
+        "question": "관리자 승인 대기?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(75)",
+          "app/policy/docs/screens/shared/design_system.md(4)",
+          "app/policy/params/defaults.yaml(3)"
+        ]
+      },
+      {
+        "question": "소셜 로그인?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(21)",
+          "app/policy/docs/screens/buyer/home_feed.md(12)"
+        ]
+      },
+      {
+        "question": "판매자 역할 선택?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(72)",
+          "app/policy/docs/screens/buyer/deal_detail.md(31)",
+          "app/policy/docs/public/fees.md(14)"
+        ]
+      },
+      {
+        "question": "판매자 대시보드?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(46)",
+          "app/policy/docs/public/fees.md(14)",
+          "app/policy/docs/public/overview.md(12)"
+        ]
+      },
+      {
+        "question": "낙찰률 확인?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/docs/screens/buyer/home_feed.md(4)",
+          "app/policy/docs/public/seller.md(2)"
+        ]
+      },
+      {
+        "question": "매출 확인?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(46)",
+          "app/policy/docs/screens/buyer/home_feed.md(4)",
+          "app/policy/docs/public/seller.md(2)"
+        ]
+      },
+      {
+        "question": "정산 현황?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/params/defaults.yaml(15)",
+          "app/policy/docs/public/00_overview.md(4)"
+        ]
+      },
+      {
+        "question": "오퍼 채택률?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)"
+        ]
+      },
+      {
+        "question": "딜 탐색 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(14)",
+          "app/policy/docs/screens/buyer/deal_detail.md(2)"
+        ]
+      },
+      {
+        "question": "오퍼 제출 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(75)",
+          "app/policy/docs/screens/buyer/deal_detail.md(31)"
+        ]
+      },
+      {
+        "question": "오퍼 마감 시간?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(82)",
+          "app/policy/docs/screens/buyer/deal_detail.md(69)"
+        ]
+      },
+      {
+        "question": "오퍼 작성 항목?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(57)",
+          "app/policy/docs/screens/buyer/deal_detail.md(26)"
+        ]
+      },
+      {
+        "question": "단가 입력?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(32)",
+          "app/policy/docs/screens/buyer/deal_detail.md(7)"
+        ]
+      },
+      {
+        "question": "배송비 설정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(61)",
+          "app/policy/docs/screens/shared/design_system.md(9)",
+          "app/policy/params/defaults.yaml(7)"
+        ]
+      },
+      {
+        "question": "환불 조건 설정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(75)",
+          "app/policy/params/pricing.yaml(31)",
+          "app/policy/docs/public/refund.md(28)"
+        ]
+      },
+      {
+        "question": "오퍼 전략 팁?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)"
+        ]
+      },
+      {
+        "question": "공동구매 가격 인하?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(54)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)"
+        ]
+      },
+      {
+        "question": "오퍼 수정 가능?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(108)",
+          "app/policy/docs/screens/buyer/deal_detail.md(33)"
+        ]
+      },
+      {
+        "question": "오퍼 철회?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(46)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)"
+        ]
+      },
+      {
+        "question": "오퍼 관리 페이지?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(72)",
+          "app/policy/docs/screens/shared/design_system.md(26)"
+        ]
+      },
+      {
+        "question": "배송 처리 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(82)",
+          "app/policy/docs/screens/buyer/deal_detail.md(26)"
+        ]
+      },
+      {
+        "question": "운송장 번호 입력?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(86)",
+          "app/policy/docs/screens/buyer/deal_detail.md(9)"
+        ]
+      },
+      {
+        "question": "택배사 선택?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/docs/screens/buyer/deal_detail.md(26)"
+        ]
+      },
+      {
+        "question": "스마트택배 추적?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(18)",
+          "app/policy/docs/screens/buyer/deal_detail.md(7)",
+          "app/policy/params/defaults.yaml(3)"
+        ]
+      },
+      {
+        "question": "배송 처리 주의사항?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(75)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)"
+        ]
+      },
+      {
+        "question": "48시간 이내 배송?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(97)",
+          "app/policy/docs/screens/buyer/deal_detail.md(50)"
+        ]
+      },
+      {
+        "question": "배송 상태 종류?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(61)",
+          "app/policy/docs/screens/buyer/deal_detail.md(48)"
+        ]
+      },
+      {
+        "question": "운송장 오입력 수정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(61)",
+          "app/policy/docs/screens/buyer/deal_detail.md(4)",
+          "app/policy/docs/public/seller.md(2)"
+        ]
+      },
+      {
+        "question": "배송 정책 설정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(64)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)",
+          "app/policy/params/defaults.yaml(23)"
+        ]
+      },
+      {
+        "question": "무료배송 설정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/docs/screens/buyer/deal_detail.md(9)"
+        ]
+      },
+      {
+        "question": "건당 배송비?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(50)",
+          "app/policy/docs/public/refund.md(7)",
+          "app/policy/params/pricing.yaml(4)"
+        ]
+      },
+      {
+        "question": "수량당 배송비?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(46)",
+          "app/policy/docs/public/refund.md(7)",
+          "app/policy/params/pricing.yaml(4)"
+        ]
+      },
+      {
+        "question": "정산 언제 돼?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(46)",
+          "app/policy/params/defaults.yaml(15)",
+          "app/policy/docs/public/00_overview.md(4)"
+        ]
+      },
+      {
+        "question": "정산 흐름?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/params/defaults.yaml(15)",
+          "app/policy/docs/public/00_overview.md(7)"
+        ]
+      },
+      {
+        "question": "HOLD READY APPROVED PAID?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(18)",
+          "app/policy/params/defaults.yaml(15)",
+          "app/policy/docs/screens/shared/design_system.md(9)"
+        ]
+      },
+      {
+        "question": "쿨링 기간?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(32)",
+          "app/policy/docs/public/refund.md(4)",
+          "app/policy/params/defaults.yaml(3)"
+        ]
+      },
+      {
+        "question": "정산 금액 계산?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(90)",
+          "app/policy/params/defaults.yaml(23)",
+          "app/policy/docs/screens/buyer/deal_detail.md(9)"
+        ]
+      },
+      {
+        "question": "PG 수수료?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(43)",
+          "app/policy/docs/public/fees.md(26)",
+          "app/policy/params/defaults.yaml(19)"
+        ]
+      },
+      {
+        "question": "플랫폼 수수료?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(50)",
+          "app/policy/docs/public/fees.md(28)",
+          "app/policy/params/defaults.yaml(19)"
+        ]
+      },
+      {
+        "question": "레벨별 수수료?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(54)",
+          "app/policy/docs/public/fees.md(21)",
+          "app/policy/params/defaults.yaml(15)"
+        ]
+      },
+      {
+        "question": "수수료 인하 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(72)",
+          "app/policy/docs/public/fees.md(19)",
+          "app/policy/params/defaults.yaml(11)"
+        ]
+      },
+      {
+        "question": "정산 지급일?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(43)",
+          "app/policy/params/defaults.yaml(15)",
+          "app/policy/docs/public/00_overview.md(4)"
+        ]
+      },
+      {
+        "question": "분쟁 정산 보류?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(72)",
+          "app/policy/params/defaults.yaml(38)",
+          "app/policy/docs/public/00_overview.md(9)"
+        ]
+      },
+      {
+        "question": "정산 관리 페이지?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(72)",
+          "app/policy/params/defaults.yaml(19)",
+          "app/policy/docs/screens/shared/design_system.md(12)"
+        ]
+      },
+      {
+        "question": "환불 요청 처리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(93)",
+          "app/policy/docs/public/refund.md(26)",
+          "app/policy/params/pricing.yaml(9)"
+        ]
+      },
+      {
+        "question": "반품 요청?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(36)",
+          "app/policy/params/pricing.yaml(2)"
+        ]
+      },
+      {
+        "question": "교환 요청?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(32)",
+          "app/policy/params/pricing.yaml(2)"
+        ]
+      },
+      {
+        "question": "구매자 사유 환불?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(82)",
+          "app/policy/docs/public/refund.md(26)",
+          "app/policy/docs/public/overview.md(14)"
+        ]
+      },
+      {
+        "question": "판매자 사유 환불?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(82)",
+          "app/policy/docs/public/refund.md(26)",
+          "app/policy/docs/public/fees.md(19)"
+        ]
+      },
+      {
+        "question": "환불 시뮬레이터?",
+        "expect_docs": true,
+        "has_docs": false,
+        "passed": false,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "환불 금액 미리보기?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(54)",
+          "app/policy/docs/public/refund.md(26)",
+          "app/policy/docs/public/overview.md(12)"
+        ]
+      },
+      {
+        "question": "환불 관리 페이지?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(72)",
+          "app/policy/docs/public/refund.md(24)",
+          "app/policy/docs/screens/shared/design_system.md(9)"
+        ]
+      },
+      {
+        "question": "분쟁 대응 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(50)",
+          "app/policy/params/defaults.yaml(19)",
+          "app/policy/docs/public/00_overview.md(4)"
+        ]
+      },
+      {
+        "question": "증빙 자료 제출?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/docs/public/seller.md(4)",
+          "app/policy/docs/screens/buyer/deal_detail.md(4)"
+        ]
+      },
+      {
+        "question": "분쟁 환불 판정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(68)",
+          "app/policy/docs/public/refund.md(24)",
+          "app/policy/params/defaults.yaml(19)"
+        ]
+      },
+      {
+        "question": "분쟁 레벨 하락?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(68)",
+          "app/policy/params/defaults.yaml(23)",
+          "app/policy/docs/public/00_overview.md(7)"
+        ]
+      },
+      {
+        "question": "분쟁 종료 후 정산?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(75)",
+          "app/policy/params/defaults.yaml(38)",
+          "app/policy/docs/public/00_overview.md(9)"
+        ]
+      },
+      {
+        "question": "분쟁 정산 재개?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(72)",
+          "app/policy/params/defaults.yaml(38)",
+          "app/policy/docs/public/00_overview.md(9)"
+        ]
+      },
+      {
+        "question": "리뷰 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(54)",
+          "app/policy/params/defaults.yaml(7)",
+          "app/policy/docs/public/00_overview.md(2)"
+        ]
+      },
+      {
+        "question": "리뷰 답글?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(21)",
+          "app/policy/params/defaults.yaml(3)",
+          "app/policy/docs/public/00_overview.md(2)"
+        ]
+      },
+      {
+        "question": "좋은 평점 팁?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(21)",
+          "app/policy/docs/public/fees.md(9)",
+          "app/policy/docs/screens/buyer/deal_detail.md(4)"
+        ]
+      },
+      {
+        "question": "고객 문의 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(54)",
+          "app/policy/params/defaults.yaml(3)",
+          "app/policy/docs/public/actuator.md(2)"
+        ]
+      },
+      {
+        "question": "문의 답변?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(18)"
+        ]
+      },
+      {
+        "question": "평점 레벨 반영?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(61)",
+          "app/policy/docs/public/fees.md(9)",
+          "app/policy/params/pricing.yaml(7)"
+        ]
+      },
+      {
+        "question": "기본 수수료율?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(36)",
+          "app/policy/params/defaults.yaml(15)",
+          "app/policy/docs/screens/shared/design_system.md(14)"
+        ]
+      },
+      {
+        "question": "레벨 1 수수료?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(108)",
+          "app/policy/params/defaults.yaml(53)",
+          "app/policy/docs/public/fees.md(26)"
+        ]
+      },
+      {
+        "question": "레벨 6 수수료?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(93)",
+          "app/policy/params/defaults.yaml(46)",
+          "app/policy/docs/public/fees.md(26)"
+        ]
+      },
+      {
+        "question": "레벨업 방법?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(18)",
+          "app/policy/docs/screens/buyer/deal_detail.md(2)"
+        ]
+      },
+      {
+        "question": "카테고리별 수수료?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(43)",
+          "app/policy/docs/public/fees.md(19)",
+          "app/policy/params/pricing.yaml(12)"
+        ]
+      },
+      {
+        "question": "수수료 안내 페이지?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/docs/public/fees.md(19)",
+          "app/policy/params/defaults.yaml(11)"
+        ]
+      },
+      {
+        "question": "브랜드 필터링?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(25)",
+          "app/policy/docs/screens/buyer/deal_detail.md(4)"
+        ]
+      },
+      {
+        "question": "삼성 브랜드 매핑?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(28)",
+          "app/policy/docs/screens/buyer/deal_detail.md(14)"
+        ]
+      },
+      {
+        "question": "통계 페이지?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/screens/shared/design_system.md(9)",
+          "app/policy/docs/screens/buyer/home_feed.md(4)"
+        ]
+      },
+      {
+        "question": "매출 추이?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(21)"
+        ]
+      },
+      {
+        "question": "오퍼 성공률?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/docs/screens/buyer/deal_detail.md(24)"
+        ]
+      },
+      {
+        "question": "액추에이터가 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/tiers.md(2)"
+        ]
+      },
+      {
+        "question": "액추에이터 커미션?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(21)",
+          "app/policy/params/defaults.yaml(11)",
+          "app/policy/docs/public/actuator.md(9)"
+        ]
+      },
+      {
+        "question": "액추에이터 레벨별?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(28)",
+          "app/policy/params/defaults.yaml(15)",
+          "app/policy/docs/public/actuator.md(7)"
+        ]
+      },
+      {
+        "question": "추천코드?",
+        "expect_docs": true,
+        "has_docs": false,
+        "passed": false,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "핑퐁이 질문?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/screens/buyer/deal_detail.md(28)",
+          "app/policy/docs/screens/shared/design_system.md(24)"
+        ]
+      },
+      {
+        "question": "공지사항 확인?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(39)",
+          "app/policy/docs/screens/buyer/home_feed.md(4)",
+          "app/policy/docs/public/seller.md(2)"
+        ]
+      },
+      {
+        "question": "빠른 질문 버튼?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/screens/buyer/deal_detail.md(26)",
+          "app/policy/docs/public/guide_seller.md(25)"
+        ]
+      },
+      {
+        "question": "판매자 빠른 질문?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(50)",
+          "app/policy/docs/public/fees.md(14)",
+          "app/policy/docs/public/overview.md(12)"
+        ]
+      },
+      {
+        "question": "마이너리티 리포트?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "이상 감지 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "신고 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "정책 파라미터 수정?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "관리자 대시보드?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "판매자 승인 처리?",
+        "expect_docs": false,
+        "has_docs": true,
+        "passed": false,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(104)",
+          "app/policy/docs/public/fees.md(16)",
+          "app/policy/docs/public/overview.md(14)"
+        ]
+      },
+      {
+        "question": "정책 문서 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "핑퐁이 정책제안?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "관리자 딜 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "관리자 배송 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "알림 브로드캐스트?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "공지 삭제?",
+        "expect_docs": false,
+        "has_docs": true,
+        "passed": false,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(7)"
+        ]
+      }
+    ]
+  },
+  {
+    "role": "ADMIN",
+    "total": 97,
+    "pass": 97,
+    "fail": 0,
+    "details": [
+      {
+        "question": "관리자 대시보드?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(28)",
+          "app/policy/docs/public/guide_seller.md(28)"
+        ]
+      },
+      {
+        "question": "KPI 카운트?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/deeplink_router_ssot.md(9)",
+          "app/policy/docs/admin/guide_admin.md(7)",
+          "app/policy/docs/screens/buyer/deal_detail.md(7)"
+        ]
+      },
+      {
+        "question": "GMV 확인?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(39)",
+          "app/policy/docs/public/guide_buyer.md(26)"
+        ]
+      },
+      {
+        "question": "AOV 확인?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(36)",
+          "app/policy/docs/admin/ROADMAP_NOW.md(24)"
+        ]
+      },
+      {
+        "question": "최근 활동 로그?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "docs/openapi.json.txt(42)",
+          "docs/engineering/openapi.json(42)"
+        ]
+      },
+      {
+        "question": "구매자 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(72)",
+          "app/policy/docs/public/guide_seller.md(48)"
+        ]
+      },
+      {
+        "question": "구매자 목록?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(64)",
+          "app/policy/docs/public/guide_seller.md(36)"
+        ]
+      },
+      {
+        "question": "계정 정지?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guardrails.md(12)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(12)"
+        ]
+      },
+      {
+        "question": "구매자 등급?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(46)",
+          "app/policy/docs/public/guide_buyer.md(36)"
+        ]
+      },
+      {
+        "question": "구매자 포인트?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(50)",
+          "app/policy/docs/admin/spectators.md(48)"
+        ]
+      },
+      {
+        "question": "판매자 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(72)",
+          "app/policy/docs/public/guide_actuator.md(48)",
+          "app/policy/docs/public/guide_seller.md(48)"
+        ]
+      },
+      {
+        "question": "판매자 승인?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(68)",
+          "app/policy/docs/public/guide_seller.md(45)"
+        ]
+      },
+      {
+        "question": "판매자 반려?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(39)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(24)",
+          "app/policy/docs/public/guide_actuator.md(24)"
+        ]
+      },
+      {
+        "question": "판매자 레벨?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(48)",
+          "app/policy/docs/admin/guide_admin.md(39)",
+          "app/policy/docs/public/guide_actuator.md(33)"
+        ]
+      },
+      {
+        "question": "판매자 수수료율?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(46)",
+          "app/policy/docs/public/guide_seller.md(40)"
+        ]
+      },
+      {
+        "question": "판매자 정지?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(43)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(24)",
+          "app/policy/docs/public/guide_actuator.md(24)"
+        ]
+      },
+      {
+        "question": "판매자 연결 액추에이터?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(69)",
+          "app/policy/docs/admin/guide_admin.md(64)",
+          "app/policy/docs/public/guide_seller.md(31)"
+        ]
+      },
+      {
+        "question": "액추에이터 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(57)",
+          "app/policy/docs/public/guide_actuator.md(48)",
+          "app/policy/docs/public/guide_seller.md(31)"
+        ]
+      },
+      {
+        "question": "액추에이터 목록?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(50)",
+          "app/policy/docs/public/guide_actuator.md(31)",
+          "docs/openapi.json.txt(20)"
+        ]
+      },
+      {
+        "question": "추천코드 발급?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(12)",
+          "app/policy/docs/admin/guide_admin.md(7)",
+          "docs/openapi.json.txt(2)"
+        ]
+      },
+      {
+        "question": "커미션 내역?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(33)",
+          "docs/openapi.json.txt(20)",
+          "docs/engineering/openapi.json(20)"
+        ]
+      },
+      {
+        "question": "딜 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(36)",
+          "app/policy/docs/public/guide_actuator.md(24)",
+          "app/policy/docs/public/guide_seller.md(24)"
+        ]
+      },
+      {
+        "question": "딜 목록?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(28)",
+          "docs/openapi.json.txt(20)"
+        ]
+      },
+      {
+        "question": "딜 시장가 컬럼?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(21)",
+          "app/policy/docs/screens/buyer/deal_detail.md(19)"
+        ]
+      },
+      {
+        "question": "오퍼 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(68)",
+          "app/policy/docs/public/guide_seller.md(48)"
+        ]
+      },
+      {
+        "question": "오퍼 번호 클릭?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(97)",
+          "app/policy/docs/public/guide_seller.md(62)"
+        ]
+      },
+      {
+        "question": "딜 마감 기한?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(25)",
+          "app/policy/docs/admin/spectators.md(24)"
+        ]
+      },
+      {
+        "question": "예약 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(72)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(45)"
+        ]
+      },
+      {
+        "question": "주문 상태 드롭다운?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(54)",
+          "app/policy/docs/public/guide_buyer.md(33)"
+        ]
+      },
+      {
+        "question": "PENDING PAID SHIPPED?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "docs/openapi.json.txt(60)",
+          "docs/engineering/openapi.json(60)"
+        ]
+      },
+      {
+        "question": "CONFIRMED CANCELLED?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "docs/openapi.json.txt(40)",
+          "docs/engineering/openapi.json(40)"
+        ]
+      },
+      {
+        "question": "REFUNDED DISPUTED?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "docs/openapi.json.txt(20)",
+          "docs/engineering/openapi.json(20)"
+        ]
+      },
+      {
+        "question": "배송 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(72)",
+          "app/policy/docs/public/guide_seller.md(48)"
+        ]
+      },
+      {
+        "question": "일괄 배송 조회?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(90)",
+          "app/policy/docs/admin/ROADMAP_NOW.md(36)"
+        ]
+      },
+      {
+        "question": "자동 구매확정 실행?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(54)",
+          "app/policy/docs/admin/scheduler.md(43)"
+        ]
+      },
+      {
+        "question": "배송 상태 요약 카드?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(79)",
+          "app/policy/docs/screens/buyer/deal_detail.md(64)"
+        ]
+      },
+      {
+        "question": "스마트택배 API?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "docs/openapi.json.txt(28)",
+          "docs/engineering/openapi.json(28)"
+        ]
+      },
+      {
+        "question": "배송 추적 간격?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(43)",
+          "app/policy/docs/screens/buyer/deal_detail.md(33)"
+        ]
+      },
+      {
+        "question": "정산 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(72)",
+          "app/policy/docs/public/guide_actuator.md(48)",
+          "app/policy/docs/public/guide_seller.md(48)"
+        ]
+      },
+      {
+        "question": "HOLD READY APPROVED PAID?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/settlement.md(86)",
+          "docs/openapi.json.txt(54)"
+        ]
+      },
+      {
+        "question": "쿨링 기간 7일?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(57)",
+          "app/policy/docs/admin/spectators.md(31)"
+        ]
+      },
+      {
+        "question": "정산 지급 지연?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(50)",
+          "app/policy/docs/admin/settlement.md(48)",
+          "app/policy/docs/public/guide_actuator.md(48)"
+        ]
+      },
+      {
+        "question": "분쟁 정산 보류?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(79)",
+          "app/policy/docs/public/guide_seller.md(48)"
+        ]
+      },
+      {
+        "question": "정산 APPROVED 처리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(86)",
+          "app/policy/docs/public/guide_seller.md(52)"
+        ]
+      },
+      {
+        "question": "환불 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(72)",
+          "app/policy/docs/public/guide_seller.md(48)"
+        ]
+      },
+      {
+        "question": "환불 승인 거부?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(75)",
+          "app/policy/docs/public/guide_seller.md(50)"
+        ]
+      },
+      {
+        "question": "환불 요청 목록?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(68)",
+          "app/policy/docs/public/guide_buyer.md(50)"
+        ]
+      },
+      {
+        "question": "환불 상태별 필터?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(64)",
+          "docs/openapi.json.txt(38)"
+        ]
+      },
+      {
+        "question": "환불 시뮬레이터?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(43)",
+          "app/policy/docs/public/guide_seller.md(28)"
+        ]
+      },
+      {
+        "question": "수동 모드?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(36)",
+          "docs/openapi.json.txt(14)"
+        ]
+      },
+      {
+        "question": "예약 조회 모드?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(100)",
+          "docs/openapi.json.txt(44)"
+        ]
+      },
+      {
+        "question": "배송비 3가지 모드?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(104)",
+          "app/policy/docs/admin/refund.md(48)"
+        ]
+      },
+      {
+        "question": "환불 사유 통합?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(61)",
+          "app/policy/docs/public/guide_buyer.md(31)"
+        ]
+      },
+      {
+        "question": "분쟁 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(72)",
+          "app/policy/docs/public/guide_seller.md(43)"
+        ]
+      },
+      {
+        "question": "분쟁 제기 기간?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(68)",
+          "app/policy/docs/public/guide_buyer.md(28)"
+        ]
+      },
+      {
+        "question": "관리자 처리 기한?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(64)",
+          "app/policy/docs/public/guide_seller.md(48)"
+        ]
+      },
+      {
+        "question": "분쟁 정산 자동 보류?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(115)",
+          "app/policy/docs/public/guide_seller.md(72)"
+        ]
+      },
+      {
+        "question": "분쟁 종료 후 정산 재개?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(82)",
+          "app/policy/docs/public/guide_seller.md(55)",
+          "app/policy/params/defaults.yaml(42)"
+        ]
+      },
+      {
+        "question": "이상 감지?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(36)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(36)",
+          "app/policy/docs/admin/pingpong.md(24)"
+        ]
+      },
+      {
+        "question": "이상 감지 ANO?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(46)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(36)",
+          "app/policy/docs/admin/pingpong.md(26)"
+        ]
+      },
+      {
+        "question": "신고 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(57)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(31)"
+        ]
+      },
+      {
+        "question": "신고 RPT?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(32)",
+          "app/policy/docs/admin/refund.md(16)",
+          "app/policy/docs/public/buyer.md(12)"
+        ]
+      },
+      {
+        "question": "Open Processing Closed?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "docs/openapi.json.txt(38)",
+          "docs/engineering/openapi.json(38)"
+        ]
+      },
+      {
+        "question": "마이너리티 리포트?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(14)",
+          "app/policy/docs/admin/scheduler.md(9)"
+        ]
+      },
+      {
+        "question": "사용자 행동 분석?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(57)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(26)"
+        ]
+      },
+      {
+        "question": "구매자 행동 수집?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(79)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(28)"
+        ]
+      },
+      {
+        "question": "판매자 행동 수집?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(79)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(28)",
+          "app/policy/docs/public/guide_actuator.md(26)"
+        ]
+      },
+      {
+        "question": "AI 프로파일링?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guardrails.md(33)",
+          "app/policy/docs/admin/guide_admin.md(25)",
+          "app/policy/docs/admin/pricing_ssot.md(24)"
+        ]
+      },
+      {
+        "question": "망설이는 구매자 감지?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(64)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(40)"
+        ]
+      },
+      {
+        "question": "넛지 알림?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(32)",
+          "app/policy/docs/public/guide_actuator.md(24)",
+          "app/policy/docs/public/guide_buyer.md(24)"
+        ]
+      },
+      {
+        "question": "인기 검색 키워드?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(28)",
+          "app/policy/docs/screens/buyer/home_feed.md(28)"
+        ]
+      },
+      {
+        "question": "정책 파라미터 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(64)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(57)"
+        ]
+      },
+      {
+        "question": "defaults.yaml 수정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(79)",
+          "app/policy/docs/public/guide_seller.md(33)"
+        ]
+      },
+      {
+        "question": "payment_timeout_minutes?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/scheduler.md(31)",
+          "docs/openapi.json.txt(24)"
+        ]
+      },
+      {
+        "question": "platform_fee_rate?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/params/defaults.yaml(103)",
+          "app/policy/docs/admin/fees.md(62)",
+          "app/policy/docs/admin/settlement.md(57)"
+        ]
+      },
+      {
+        "question": "정책 문서 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(68)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(48)"
+        ]
+      },
+      {
+        "question": "MD 파일 편집?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/screens/README.md(40)",
+          "app/policy/docs/admin/ssot/index.md(36)",
+          "app/policy/docs/admin/scheduler.md(33)"
+        ]
+      },
+      {
+        "question": "핑퐁이 정책제안?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/역핑설명서(개괄).md(24)",
+          "app/policy/docs/admin/ssot/pingpong_pricing_explain.rules_ssot_v1.md(24)"
+        ]
+      },
+      {
+        "question": "제안 승인 거부?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(50)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(40)"
+        ]
+      },
+      {
+        "question": "정책 롤백?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/역핑설명서(개괄).md(36)",
+          "app/policy/docs/admin/guardrails.md(28)"
+        ]
+      },
+      {
+        "question": "가격 합의 엔진?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/역핑설명서(개괄).md(48)",
+          "app/policy/docs/public/guide_buyer.md(28)"
+        ]
+      },
+      {
+        "question": "3중 소스 교차 검증?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(54)",
+          "app/policy/docs/public/guide_buyer.md(52)"
+        ]
+      },
+      {
+        "question": "신뢰도 등급?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_buyer.md(38)",
+          "app/policy/docs/admin/guide_admin.md(18)"
+        ]
+      },
+      {
+        "question": "자동 필터링?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(50)",
+          "app/policy/docs/public/guide_buyer.md(28)"
+        ]
+      },
+      {
+        "question": "명품 가품 경고?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/ssot/pricing_guardrail_v1.md(16)",
+          "app/policy/docs/admin/guide_admin.md(14)"
+        ]
+      },
+      {
+        "question": "통계 KPI?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(14)",
+          "app/policy/docs/admin/deeplink_router_ssot.md(9)",
+          "app/policy/docs/admin/refund.md(7)"
+        ]
+      },
+      {
+        "question": "활동 로그?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/역핑설명서(개괄).md(26)",
+          "app/policy/docs/admin/spectators.md(24)"
+        ]
+      },
+      {
+        "question": "알림 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(61)",
+          "app/policy/docs/public/guide_actuator.md(48)",
+          "app/policy/docs/public/guide_seller.md(48)"
+        ]
+      },
+      {
+        "question": "브로드캐스트 알림?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(28)",
+          "app/policy/docs/public/guide_actuator.md(24)",
+          "app/policy/docs/public/guide_buyer.md(24)"
+        ]
+      },
+      {
+        "question": "공지 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(46)",
+          "app/policy/docs/public/guide_seller.md(28)",
+          "app/policy/docs/public/guide_actuator.md(24)"
+        ]
+      },
+      {
+        "question": "공지 작성 삭제?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(21)",
+          "app/policy/docs/public/guide_seller.md(14)"
+        ]
+      },
+      {
+        "question": "시스템 설정?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(28)",
+          "app/policy/docs/admin/역핑설명서(개괄).md(24)"
+        ]
+      },
+      {
+        "question": "구매자 가이드 내용?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(50)",
+          "app/policy/docs/public/guide_seller.md(28)"
+        ]
+      },
+      {
+        "question": "판매자 가이드 내용?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(50)",
+          "app/policy/docs/public/guide_actuator.md(31)",
+          "app/policy/docs/public/guide_seller.md(28)"
+        ]
+      },
+      {
+        "question": "딜 생성 단계?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/역핑설명서(개괄).md(31)",
+          "app/policy/docs/admin/ssot/pricing_guardrail_v1.md(24)"
+        ]
+      },
+      {
+        "question": "오퍼 제출 항목?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(48)",
+          "app/policy/docs/admin/guide_admin.md(36)"
+        ]
+      },
+      {
+        "question": "배송 정책?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/admin/guide_admin.md(54)",
+          "app/policy/docs/admin/refund.md(48)"
+        ]
+      }
+    ]
+  },
+  {
+    "role": "ACTUATOR",
+    "total": 30,
+    "pass": 29,
+    "fail": 1,
+    "details": [
+      {
+        "question": "액추에이터가 뭐야?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(3)"
+        ]
+      },
+      {
+        "question": "액추에이터 역할?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(50)",
+          "app/policy/docs/public/guide_seller.md(14)",
+          "app/policy/params/defaults.yaml(11)"
+        ]
+      },
+      {
+        "question": "판매자 모집?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(54)",
+          "app/policy/docs/public/guide_seller.md(28)",
+          "app/policy/docs/public/fees.md(14)"
+        ]
+      },
+      {
+        "question": "커미션 구조?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(46)",
+          "app/policy/docs/public/guide_seller.md(7)",
+          "app/policy/params/pricing.yaml(2)"
+        ]
+      },
+      {
+        "question": "추천코드?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(18)"
+        ]
+      },
+      {
+        "question": "판매자 등록?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(64)",
+          "app/policy/docs/public/guide_seller.md(43)",
+          "app/policy/docs/public/fees.md(14)"
+        ]
+      },
+      {
+        "question": "오퍼 제출?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(43)",
+          "app/policy/docs/public/guide_actuator.md(39)",
+          "app/policy/docs/public/timeline.md(14)"
+        ]
+      },
+      {
+        "question": "정산 흐름?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(39)",
+          "app/policy/docs/public/guide_seller.md(26)",
+          "app/policy/params/defaults.yaml(15)"
+        ]
+      },
+      {
+        "question": "배송 처리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(48)",
+          "app/policy/docs/public/guide_actuator.md(39)",
+          "app/policy/params/pricing.yaml(16)"
+        ]
+      },
+      {
+        "question": "수수료율?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(16)",
+          "app/policy/params/defaults.yaml(11)"
+        ]
+      },
+      {
+        "question": "레벨별 수수료?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(36)",
+          "app/policy/docs/public/fees.md(21)",
+          "app/policy/params/defaults.yaml(15)"
+        ]
+      },
+      {
+        "question": "브랜드 필터링?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(16)",
+          "app/policy/docs/public/guide_actuator.md(3)"
+        ]
+      },
+      {
+        "question": "스마트택배?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(4)"
+        ]
+      },
+      {
+        "question": "환불 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(48)",
+          "app/policy/docs/public/guide_actuator.md(36)",
+          "app/policy/docs/public/refund.md(24)"
+        ]
+      },
+      {
+        "question": "리뷰 관리?",
+        "expect_docs": true,
+        "has_docs": true,
+        "passed": true,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_actuator.md(46)",
+          "app/policy/docs/public/guide_seller.md(36)",
+          "app/policy/params/defaults.yaml(7)"
+        ]
+      },
+      {
+        "question": "마이너리티 리포트?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "이상 감지?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "신고 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "정책 파라미터 수정?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "관리자 대시보드?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "판매자 승인 처리?",
+        "expect_docs": false,
+        "has_docs": true,
+        "passed": false,
+        "admin_leaked": false,
+        "files": [
+          "app/policy/docs/public/guide_seller.md(69)",
+          "app/policy/docs/public/guide_actuator.md(50)",
+          "app/policy/docs/public/fees.md(16)"
+        ]
+      },
+      {
+        "question": "정책 문서 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "핑퐁이 정책제안?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "관리자 배송 관리?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "알림 브로드캐스트?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "딜 생성 방법?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "가격 챌린지?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "관전 모드?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "포인트 적립?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      },
+      {
+        "question": "구매자 등급?",
+        "expect_docs": false,
+        "has_docs": false,
+        "passed": true,
+        "admin_leaked": false,
+        "files": []
+      }
+    ]
+  }
+]
