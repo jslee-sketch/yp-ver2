@@ -19,6 +19,55 @@ router = APIRouter(tags=["notification-settings"])
 
 
 # ───────────────────────────────────────────────────
+# /users/me/interests (현재 사용자 편의 엔드포인트)
+# ───────────────────────────────────────────────────
+
+from app.security import get_current_user
+
+
+@router.get("/users/me/interests")
+def get_my_interests(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    uid = getattr(current_user, "id", 0)
+    items = db.query(UserInterest).filter(
+        UserInterest.user_id == uid
+    ).order_by(UserInterest.priority).all()
+    return [
+        {"value": i.value, "level": i.level, "source": i.source}
+        for i in items
+    ]
+
+
+@router.post("/users/me/interests")
+def set_my_interests(
+    body: "InterestsBody",
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    uid = getattr(current_user, "id", 0)
+    if len(body.interests) > 10:
+        raise HTTPException(400, "최대 10개까지 등록 가능합니다")
+
+    db.query(UserInterest).filter(UserInterest.user_id == uid).delete()
+    for i, item in enumerate(body.interests):
+        val = item.value.strip()
+        if not val:
+            continue
+        db.add(UserInterest(
+            user_id=uid,
+            role=body.role,
+            level=item.level,
+            value=val,
+            source=item.source,
+            priority=i,
+        ))
+    db.commit()
+    return {"count": len(body.interests)}
+
+
+# ───────────────────────────────────────────────────
 # 관심 카테고리/제품/모델
 # ───────────────────────────────────────────────────
 
@@ -47,8 +96,7 @@ def get_interests(user_id: int, db: Session = Depends(get_db)):
 @router.post("/users/{user_id}/interests")
 def set_interests(user_id: int, body: InterestsBody, db: Session = Depends(get_db)):
     role = body.role
-    max_counts = {"buyer": 3, "seller": 5, "actuator": 10}
-    max_count = max_counts.get(role, 3)
+    max_count = 10  # 전 역할 최대 10개
 
     if len(body.interests) > max_count:
         raise HTTPException(400, f"최대 {max_count}개까지 등록 가능합니다 ({role})")

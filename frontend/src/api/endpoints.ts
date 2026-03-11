@@ -166,6 +166,8 @@ export const API = {
     BULK:              (userId: number) => `/notification-settings/${userId}/bulk`,
     USER_INTERESTS:    (userId: number) => `/users/${userId}/interests`,
     SAVE_INTERESTS:    (userId: number) => `/users/${userId}/interests`,
+    MY_INTERESTS:      '/users/me/interests',
+    SAVE_MY_INTERESTS: '/users/me/interests',
     INTEREST_PRESETS:  '/interests/presets',
   },
 

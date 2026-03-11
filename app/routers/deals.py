@@ -97,6 +97,13 @@ def create_deal(deal_in: schemas.DealCreate, db: Session = Depends(get_db)):
         apply_guardrail_to_deal(db, db_deal, result)
         log_guardrail_evidence(db, deal_id=int(db_deal.id), result=result, anchor_version="S1_CREATE")
 
+        # ✅ 관심 상품 매칭 알림 발송
+        try:
+            from app.services.interest_matcher import match_interests_for_deal
+            match_interests_for_deal(db_deal, db)
+        except Exception as match_err:
+            logging.warning("[create_deal] interest_match skipped: %r", match_err)
+
         return db_deal
 
     except Exception as e:

@@ -123,39 +123,9 @@ def send_notification(
 
 
 def notify_interest_match_on_deal_create(deal, db: Session):
-    """새 딜 생성 시 → 관심 등록된 사용자에게 알림"""
-    product = (deal.product_name or "").lower()
-    if not product:
-        return
-
-    interests = db.query(models.UserInterest).all()
-
-    for interest in interests:
-        val = (interest.value or "").lower()
-        if val not in product and product not in val:
-            continue
-
-        role = interest.role or "buyer"
-        event_map = {
-            "seller": "DEAL_MATCH_INTEREST",
-            "actuator": "INTEREST_DEAL_CREATED",
-            "buyer": "NUDGE_INTEREST_DEAL",
-        }
-        event_type = event_map.get(role, "NUDGE_INTEREST_DEAL")
-
-        send_notification(
-            db,
-            user_id=interest.user_id,
-            role=role,
-            event_type=event_type,
-            variables={
-                "matched_interest": interest.value,
-                "product_name": deal.product_name,
-                "deal_id": str(deal.id),
-                "target_price": f"{deal.target_price:,.0f}" if deal.target_price else "",
-            },
-            deal_id=deal.id,
-        )
+    """새 딜 생성 시 → 관심 등록된 사용자에게 알림 (interest_matcher로 위임)"""
+    from app.services.interest_matcher import match_interests_for_deal
+    return match_interests_for_deal(deal, db)
 
 
 def _get_fcm_token(db: Session, user_id: int, role: str) -> Optional[str]:

@@ -16,7 +16,7 @@ export default function InterestSettingsPage() {
   const { user } = useAuth();
   const userId = user?.id || 0;
   const role = user?.role === 'seller' || user?.role === 'both' ? 'seller' : user?.role === 'actuator' ? 'actuator' : 'buyer';
-  const maxCount = role === 'actuator' ? 10 : role === 'seller' ? 5 : 3;
+  const maxCount = 10; // 전 역할 최대 10개
 
   const [interests, setInterests] = useState<InterestEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,7 @@ export default function InterestSettingsPage() {
 
   if (loading) return <div style={{ padding: 40, color: C.textDim }}>로딩 중...</div>;
 
-  const roleLabel = role === 'seller' ? '주요 판매 품목' : role === 'actuator' ? '관심 카테고리/제품/모델' : '관심 상품';
+  const roleLabel = role === 'seller' ? '주요 판매 품목' : '관심 상품';
 
   return (
     <div style={{ minHeight: '100dvh', background: C.bg, paddingBottom: 100 }}>
@@ -67,7 +67,7 @@ export default function InterestSettingsPage() {
           </div>
           <div style={{ fontSize: 12, color: C.textDim, marginBottom: 14, lineHeight: 1.6 }}>
             {role === 'seller'
-              ? '등록하시면 관련 딜이 생성될 때 자동으로 알려드려요! 판매 기회를 놓치지 마세요!'
+              ? '등록하시면 관련 딜이 생성될 때 자동으로 알려드려요! 판매 기회를 놓치지 마세요! (강력 권장!)'
               : '관련 딜이 생성되면 알림을 받을 수 있어요!'}
           </div>
 

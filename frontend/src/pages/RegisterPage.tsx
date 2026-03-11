@@ -6,6 +6,8 @@ import apiClient, { loginApi } from '../api/client';
 import { API } from '../api/endpoints';
 import { FEATURES } from '../config';
 import { showToast } from '../components/common/Toast';
+import InterestTagInput from '../components/common/InterestTagInput';
+import type { InterestEntry } from '../components/common/InterestTagInput';
 
 // ── Daum Postcode 타입 ───────────────────────────────────────
 declare global {
@@ -1293,6 +1295,59 @@ function BizStep({
 const METHOD_LABELS: Record<string, string> = { kakao: '카카오', naver: '네이버', google: 'Google', phone: '전화번호', email: '이메일' };
 const ROLE_LABELS: Record<string, string> = { buyer: '구매자', seller: '판매자', actuator: '액추에이터' };
 
+// ── Step 6: 관심 상품 등록 ─────────────────────────────────
+function InterestStep({
+  role, interests, onChange, onNext, onSkip,
+}: {
+  role: string; interests: InterestEntry[]; onChange: (v: InterestEntry[]) => void;
+  onNext: () => void; onSkip: () => void;
+}) {
+  const isSeller = role === 'seller';
+  return (
+    <div style={{ padding: '20px 24px 60px' }}>
+      <div style={{ fontSize: 22, fontWeight: 900, color: '#e8eaed', marginBottom: 6 }}>
+        {isSeller ? '주요 판매 품목' : '관심 상품'}
+      </div>
+      <div style={{ fontSize: 13, color: '#78909c', marginBottom: 20, lineHeight: 1.7 }}>
+        {isSeller
+          ? '판매 품목을 등록하면 관련 딜이 생성될 때 알림을 받을 수 있어요! (강력 권장!)'
+          : '관심 상품을 등록하면 관련 딜이 생성될 때 알림을 받을 수 있어요. (선택사항)'}
+      </div>
+
+      <div style={{
+        background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 14, padding: 16, marginBottom: 20,
+      }}>
+        <InterestTagInput
+          interests={interests}
+          onChange={onChange}
+          maxCount={10}
+          showPresets={true}
+        />
+      </div>
+
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          onClick={onSkip}
+          style={{
+            flex: 1, padding: '14px', borderRadius: 12, fontSize: 14, fontWeight: 600,
+            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+            color: '#78909c', cursor: 'pointer',
+          }}
+        >건너뛰기</button>
+        <button
+          onClick={onNext}
+          style={{
+            flex: 2, padding: '14px', borderRadius: 12, fontSize: 14, fontWeight: 800,
+            background: 'linear-gradient(135deg, #00e676, #00e5ff)',
+            color: '#0a0a0f', cursor: 'pointer',
+          }}
+        >{interests.length > 0 ? `${interests.length}개 등록하고 계속` : '계속'}</button>
+      </div>
+    </div>
+  );
+}
+
 function CompleteStep({ method, role, nickname, onFinish, navigate }: {
   method: string; role: string; nickname: string; onFinish: () => void;
   navigate: (path: string, opts?: { state?: Record<string, string> }) => void;
@@ -1411,6 +1466,8 @@ export default function RegisterPage() {
 
   // step 1 — role
   const [role, setRole] = useState<'buyer' | 'seller' | 'actuator' | ''>('');
+  // step 6 — interests
+  const [regInterests, setRegInterests] = useState<InterestEntry[]>([]);
 
   // step 2 — email / password
   const [email,            setEmailRaw]          = useState('');
@@ -1972,7 +2029,7 @@ export default function RegisterPage() {
   return (
     <div style={{ minHeight: '100dvh', background: C.bgDeep, overflow: 'hidden' }}>
       {/* TopBar */}
-      {step < 6 && (
+      {step < 7 && step !== 6 && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, height: 56,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -2005,7 +2062,7 @@ export default function RegisterPage() {
       )}
 
       {/* 콘텐츠 */}
-      <div style={{ paddingTop: step < 6 ? 60 : 0, minHeight: '100dvh' }}>
+      <div style={{ paddingTop: (step < 7 && step !== 6) ? 60 : 0, minHeight: '100dvh' }}>
         <AnimatePresence mode="wait" custom={dir}>
           <motion.div
             key={step}
@@ -2131,6 +2188,25 @@ export default function RegisterPage() {
               </div>
             )}
             {step === 6 && (
+              <InterestStep
+                role={role}
+                interests={regInterests}
+                onChange={setRegInterests}
+                onNext={async () => {
+                  // 관심 상품 저장 (로그인 상태면)
+                  if (regInterests.length > 0) {
+                    try {
+                      await apiClient.post(API.NOTIFICATION_SETTINGS.MY_INTERESTS, {
+                        interests: regInterests, role: role || 'buyer',
+                      });
+                    } catch { /* ignore — user can set later */ }
+                  }
+                  goTo(7);
+                }}
+                onSkip={() => goTo(7)}
+              />
+            )}
+            {step === 7 && (
               <CompleteStep
                 method={method}
                 role={role}
