@@ -1464,3 +1464,14 @@ class CustomReportTemplate(Base):
     created_by = Column(String(50), nullable=True)  # admin email or "system"
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+# -------------------------------------------------------
+# 📧 PreRegister — 사전 등록 이메일 (출시 전 랜딩)
+# -------------------------------------------------------
+class PreRegister(Base):
+    __tablename__ = "pre_registers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(200), unique=True, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

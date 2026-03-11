@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { Layout } from './components/layout/Layout';
 import AdminLayout from './components/layout/AdminLayout';
 import PingpongFloat from './components/layout/PingpongFloat';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import MaintenancePage from './components/MaintenancePage';
 import HomePage from './pages/HomePage';
 import DealsListPage from './pages/DealsListPage';
 import DealCreatePage from './pages/DealCreatePage';
@@ -81,7 +83,34 @@ import SellerBusinessInfoPage from './pages/SellerBusinessInfoPage';
 import NotificationSettingsPage from './pages/NotificationSettingsPage';
 import InterestSettingsPage from './pages/InterestSettingsPage';
 
+const MAINTENANCE_KEY = 'yeokping2026';
+
+function checkAccess(): boolean {
+  // URL 파라미터 체크
+  const params = new URLSearchParams(window.location.search);
+  const key = params.get('access');
+  if (key === MAINTENANCE_KEY) {
+    document.cookie = `yp_access=${MAINTENANCE_KEY}; max-age=86400; path=/`;
+    // URL에서 파라미터 제거
+    window.history.replaceState({}, '', window.location.pathname);
+    return true;
+  }
+  // 쿠키 체크
+  return document.cookie.includes(`yp_access=${MAINTENANCE_KEY}`);
+}
+
 function App() {
+  const [accessGranted, setAccessGranted] = useState(checkAccess);
+
+  if (!accessGranted) {
+    return (
+      <MaintenancePage onAccessGranted={() => {
+        document.cookie = `yp_access=${MAINTENANCE_KEY}; max-age=86400; path=/`;
+        setAccessGranted(true);
+      }} />
+    );
+  }
+
   return (
     <AuthProvider>
     <BrowserRouter>
