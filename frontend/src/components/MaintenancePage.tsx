@@ -28,7 +28,7 @@ export default function MaintenancePage({ onAccessGranted }: { onAccessGranted: 
                 padding: '40px', maxWidth: '500px', width: '100%',
                 textAlign: 'center', border: '1px solid #2a2a4a',
             }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚀</div>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏓</div>
                 <h2 style={{ color: '#e0e0e0', fontSize: '24px', marginBottom: '12px' }}>
                     서비스 준비 중입니다
                 </h2>
