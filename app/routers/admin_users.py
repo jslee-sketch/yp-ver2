@@ -6,6 +6,7 @@ GET  /admin/users/banned  — 차단 목록
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import List, Optional
 
@@ -15,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app import models
+from app.models import Offer, Deal
 
 router = APIRouter(prefix="/admin/users", tags=["admin-users"])
 
@@ -237,6 +239,8 @@ def get_user_conditions(user_id: int, db: Session = Depends(get_db)):
         "has_override": override is not None,
         "modified_by": override.modified_by if override else None,
         "modified_at": override.modified_at.isoformat() if (override and override.modified_at) else None,
+        "pending": json.loads(override.pending_changes) if (override and override.pending_changes) else None,
+        "effective_after": override.effective_after if override else None,
     }
 
 
@@ -249,6 +253,21 @@ def update_user_conditions(
 ):
     from app.models import UserConditionOverride
 
+    # Count active offers by this seller
+    active_offers = db.query(Offer).filter(
+        Offer.seller_id == user_id,
+        Offer.is_active == True
+    ).count()
+
+    # Count open deals where this seller has active offers
+    active_deal_ids = db.query(Offer.deal_id).filter(
+        Offer.seller_id == user_id,
+        Offer.is_active == True
+    ).distinct().all()
+    active_deals = len(active_deal_ids)
+
+    has_active = active_offers > 0
+
     override = db.query(UserConditionOverride).filter(
         UserConditionOverride.user_id == user_id
     ).first()
@@ -257,22 +276,83 @@ def update_user_conditions(
         override = UserConditionOverride(user_id=user_id)
         db.add(override)
 
-    if body.fee_rate_override is not None:
-        override.fee_rate_override = body.fee_rate_override
-    if body.cooling_days_override is not None:
-        override.cooling_days_override = body.cooling_days_override
-    if body.settlement_days_override is not None:
-        override.settlement_days_override = body.settlement_days_override
-    if body.shipping_support is not None:
-        override.shipping_support = body.shipping_support
-    if body.level_override is not None:
-        override.level_override = body.level_override
+    if has_active:
+        # Store changes as pending — apply after all active offers close
+        changes = {}
+        if body.fee_rate_override is not None:
+            changes["fee_rate_override"] = body.fee_rate_override
+        if body.cooling_days_override is not None:
+            changes["cooling_days_override"] = body.cooling_days_override
+        if body.settlement_days_override is not None:
+            changes["settlement_days_override"] = body.settlement_days_override
+        if body.shipping_support is not None:
+            changes["shipping_support"] = body.shipping_support
+        if body.level_override is not None:
+            changes["level_override"] = body.level_override
 
-    override.modified_by = admin_id
+        override.pending_changes = json.dumps(changes)
+        override.effective_after = "all_active_offers_closed"
+        override.modified_by = admin_id
+        db.commit()
+        db.refresh(override)
+
+        return {
+            "ok": True,
+            "status": "pending",
+            "active_offers": active_offers,
+            "active_deals": active_deals,
+            "message": "진행 중 딜이 있어 종료 후 적용됩니다.",
+        }
+    else:
+        # Apply immediately
+        if body.fee_rate_override is not None:
+            override.fee_rate_override = body.fee_rate_override
+        if body.cooling_days_override is not None:
+            override.cooling_days_override = body.cooling_days_override
+        if body.settlement_days_override is not None:
+            override.settlement_days_override = body.settlement_days_override
+        if body.shipping_support is not None:
+            override.shipping_support = body.shipping_support
+        if body.level_override is not None:
+            override.level_override = body.level_override
+
+        override.pending_changes = None
+        override.effective_after = None
+        override.modified_by = admin_id
+        db.commit()
+        db.refresh(override)
+
+        return {
+            "ok": True,
+            "status": "applied",
+            "message": "조건이 즉시 적용되었습니다.",
+        }
+
+
+def apply_pending_conditions(user_id: int, db: Session):
+    """딜/오퍼 종료 시 호출 — pending 조건 자동 적용"""
+    from app.models import UserConditionOverride
+
+    override = db.query(UserConditionOverride).filter(
+        UserConditionOverride.user_id == user_id
+    ).first()
+
+    if not override or not override.pending_changes:
+        return False
+
+    try:
+        changes = json.loads(override.pending_changes)
+    except Exception:
+        return False
+
+    for key, val in changes.items():
+        if hasattr(override, key) and val is not None:
+            setattr(override, key, val)
+
+    override.pending_changes = None
+    override.effective_after = None
     db.commit()
-    db.refresh(override)
-
-    return {"ok": True, "user_id": user_id, "message": "조건이 수정되었습니다."}
+    return True
 
 
 @router.delete("/{user_id}/conditions", summary="참여자 조건 초기화 (기본값 복원)")

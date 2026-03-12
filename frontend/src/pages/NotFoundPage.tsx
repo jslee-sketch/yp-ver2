@@ -13,8 +13,8 @@ export default function NotFoundPage() {
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       padding: '0 24px', textAlign: 'center',
     }}>
-      <div style={{ fontSize: 64, marginBottom: 16 }}>🔍</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8 }}>404</div>
+      <div style={{ fontSize: 64, marginBottom: 16 }}>🏓</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8 }}>404 — 아웃!</div>
       <div style={{ fontSize: 14, color: C.textDim, marginBottom: 24 }}>
         페이지를 찾을 수 없어요
       </div>

@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import BottomNav from './BottomNav';
 import NotificationBadge from '../common/NotificationBadge';
+import OnboardingGuide from '../OnboardingGuide';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const Layout: React.FC = () => {
@@ -20,6 +21,15 @@ export const Layout: React.FC = () => {
   // 알림 배지를 보여줄 페이지 (글로벌 헤더가 없는 페이지 대응)
   const showBadge = user && !hideNav && !location.pathname.startsWith('/admin');
 
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return user && !localStorage.getItem('onboarding_done');
+  });
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('onboarding_done', 'true');
+    setShowOnboarding(false);
+  };
+
   return (
     <div style={{ minHeight: '100dvh', position: 'relative' }}>
       <Sidebar
@@ -36,6 +46,12 @@ export const Layout: React.FC = () => {
         <Outlet />
       </main>
       {!hideNav && <BottomNav onMenuClick={() => setSidebarOpen(true)} />}
+      {showOnboarding && (
+        <OnboardingGuide
+          role={user?.role === 'seller' ? 'seller' : 'buyer'}
+          onComplete={handleOnboardingComplete}
+        />
+      )}
     </div>
   );
 };

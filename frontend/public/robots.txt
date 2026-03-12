@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /seller/
+Disallow: /actuator/
+Disallow: /api/
+
+Sitemap: https://www.yeokping.com/sitemap.xml

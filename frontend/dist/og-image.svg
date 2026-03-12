@@ -1,0 +1,7 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0f0f1a"/>
+  <text x="600" y="250" text-anchor="middle" fill="#4ade80" font-size="120" font-weight="bold" font-family="sans-serif">역핑</text>
+  <text x="600" y="320" text-anchor="middle" fill="#60a5fa" font-size="36" font-family="sans-serif" letter-spacing="4">YEOKPING</text>
+  <text x="600" y="420" text-anchor="middle" fill="#a0a0a0" font-size="32" font-family="sans-serif">소비자가 가격을 제안하는 역경매 플랫폼</text>
+  <text x="600" y="480" text-anchor="middle" fill="#666" font-size="24" font-family="sans-serif">AI 시장가 분석 · 판매자 경쟁 입찰 · 공동구매 할인</text>
+</svg>

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func as sa_func
 
@@ -865,3 +865,24 @@ def admin_unified_search(
         results["users"] = users_list
 
     return results
+
+
+# ── POST /admin/test-email ───────────────────────────────
+@router.post("/test-email", summary="테스트 이메일 발송")
+def send_test_email(body: dict = Body(...), db: Session = Depends(get_db)):
+    to = body.get("to", "")
+    subject = body.get("subject", "[역핑] 테스트 이메일")
+    content = body.get("body", "<p>테스트 이메일입니다.</p>")
+    if not to or "@" not in to:
+        raise HTTPException(422, "유효한 이메일 주소가 필요합니다")
+    from app.services.email_sender import send_email
+    result = send_email(to=to, subject=subject, body_html=content)
+    return {"ok": result, "to": to, "message": "발송 완료" if result else "SMTP 미설정 또는 발송 실패"}
+
+
+# ── POST /admin/verify-business ──────────────────────────
+@router.post("/verify-business", summary="사업자 진위확인 (NTS)")
+def verify_business(body: dict = Body(...)):
+    biz_number = body.get("biz_number", "")
+    from app.services.business_verify import verify_business_number
+    return verify_business_number(biz_number)

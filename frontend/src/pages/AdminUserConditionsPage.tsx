@@ -17,6 +17,8 @@ interface Conditions {
   has_override: boolean;
   modified_by: number | null;
   modified_at: string | null;
+  pending: Record<string, any> | null;
+  effective_after: string | null;
 }
 
 const FIELDS = [
@@ -132,6 +134,23 @@ export default function AdminUserConditionsPage() {
       <p style={{ fontSize: 12, color: C.orange, marginTop: 12 }}>
         ⚠️ 변경된 조건은 현재 진행 중인 딜/오퍼 종료 후 적용됩니다.
       </p>
+
+      {data.pending && (
+        <div style={{
+          marginTop: 12, padding: '12px 16px', borderRadius: 10,
+          background: 'rgba(255,145,0,0.12)', border: '1px solid #ff9100',
+        }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#ff9100', margin: 0 }}>
+            ⏳ 대기 중인 변경사항이 있습니다
+          </p>
+          <p style={{ fontSize: 12, color: '#ccc', margin: '4px 0 0' }}>
+            {Object.entries(data.pending).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+          </p>
+          <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>
+            적용 조건: {data.effective_after === 'all_active_offers_closed' ? '진행 중 딜/오퍼 종료 후 자동 적용' : data.effective_after}
+          </p>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
         <button onClick={handleSave} disabled={saving}
