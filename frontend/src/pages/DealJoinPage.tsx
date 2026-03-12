@@ -6,6 +6,9 @@ import { fetchDeal } from '../api/dealApi';
 import { fetchOffersByDeal, createReservation, payReservation } from '../api/reservationApi';
 import { showToast } from '../components/common/Toast';
 import { trackBehavior } from '../utils/behaviorTracker';
+import PaymentSuccess from '../components/effects/PaymentSuccess';
+import Confetti from '../components/Confetti';
+import { soundEffects } from '../services/soundEffects';
 
 const C = {
   bgDeep: '#0a0e1a', bgCard: '#111827', bgSurface: '#1a2236', bgInput: '#0f1625',
@@ -146,6 +149,7 @@ export default function DealJoinPage() {
       const total = (reservationData.amount_total as number) || selectedOffer.price * qty + calcShipping(selectedOffer, qty);
       await payReservation(resId, user.id, total);
       setStep('done');
+      soundEffects.playCelebration();
       showToast('결제가 완료되었어요!', 'success');
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: unknown } } };
@@ -176,12 +180,13 @@ export default function DealJoinPage() {
 
   // Done state
   if (step === 'done') {
+    const paidAmount = reservationData ? (reservationData.amount_total as number) : (selectedOffer ? selectedOffer.price * qty : 0);
     return (
       <div style={{ minHeight: '100dvh', background: C.bgDeep, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+        <Confetti active={true} duration={4000} />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
-          <div style={{ fontSize: 64, marginBottom: 20 }}>🎉</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: C.textPri, marginBottom: 8 }}>결제가 완료되었어요!</div>
-          <div style={{ fontSize: 14, color: C.textSec, marginBottom: 32 }}>판매자가 상품을 준비합니다.</div>
+          <PaymentSuccess amount={paidAmount} />
+          <div style={{ fontSize: 14, color: C.textSec, marginBottom: 32, marginTop: 16 }}>판매자가 상품을 준비합니다.</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button onClick={() => navigate('/my-orders')} style={{ padding: '15px', borderRadius: 14, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg, ${C.cyan}, ${C.green})`, color: '#0a0e1a', cursor: 'pointer' }}>
               내 주문 확인하기

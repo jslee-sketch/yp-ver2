@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { aiDealHelper, aiRecalcPrice, aiImageRecognize } from '../api/aiApi';
 import { FEATURES } from '../config';
 import { showToast } from '../components/common/Toast';
+import MatrixCodeRain from '../components/effects/MatrixCodeRain';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
@@ -1879,6 +1880,12 @@ export default function DealCreatePage() {
                     }}
                   >{isAnalyzing ? loadingMsg || '분석 중...' : '맞춰보기! 🎯'}</button>
                 </div>
+
+                {/* 매트릭스 코드 레인 애니메이션 */}
+                <MatrixCodeRain
+                  active={isAnalyzing}
+                  finalPrice={marketPrice || 0}
+                />
 
                 {/* 분석 결과 */}
                 {marketChecked && marketPrice && (

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { askPingpong } from '../../api/pingpongApi';
 import { trackBehavior } from '../../utils/behaviorTracker';
+import PingpongBallAnimation from '../effects/PingpongBallAnimation';
 
 interface ChatMessage {
   id: number;
@@ -375,6 +376,13 @@ export default function PingpongFloat() {
                     </div>
                   </div>
                 ))}
+
+                {/* 핑퐁이 탁구 로딩 애니메이션 */}
+                {isSending && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                    <PingpongBallAnimation active={true} size={40} />
+                  </div>
+                )}
 
                 {/* 빠른 질문 */}
                 {messages.length === 1 && (
