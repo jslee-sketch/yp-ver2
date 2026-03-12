@@ -43,6 +43,10 @@ export default function Footer() {
           onClick={() => navigate('/privacy')}
           style={{ fontSize: 11, color: 'var(--text-secondary)', cursor: 'pointer', background: 'none', border: 'none', padding: 0, textDecoration: 'underline' }}
         >개인정보처리방침</button>
+        <button
+          onClick={() => navigate('/faq')}
+          style={{ fontSize: 11, color: 'var(--text-secondary)', cursor: 'pointer', background: 'none', border: 'none', padding: 0, textDecoration: 'underline' }}
+        >자주 묻는 질문</button>
       </div>
 
       <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>

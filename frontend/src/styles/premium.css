@@ -1,0 +1,83 @@
+/* Premium UI Effects */
+
+/* Glow effects */
+.glow-green { box-shadow: 0 0 20px rgba(74, 222, 128, 0.3); }
+.glow-blue { box-shadow: 0 0 20px rgba(96, 165, 250, 0.3); }
+.glow-gold { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+
+/* Glassmorphism */
+.glass {
+  background: rgba(26, 26, 46, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(74, 222, 128, 0.15);
+}
+
+/* Gradient background animation */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.gradient-bg {
+  background: linear-gradient(-45deg, #0f0f1a, #1a1a2e, #0f2027, #1a1a2e);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+/* Count up */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.count-up { animation: countUp 0.6s ease-out forwards; }
+
+/* Premium card hover */
+.premium-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(74, 222, 128, 0.1);
+}
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(74, 222, 128, 0.15);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+/* Pulse */
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+/* Slide in */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.slide-in { animation: slideIn 0.4s ease-out forwards; }
+
+/* Fade in up */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+
+/* Confetti particle fall */
+@keyframes confettiFall {
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* Progress bar glow */
+@keyframes progressGlow {
+  0% { box-shadow: 0 0 5px #4ade80; }
+  50% { box-shadow: 0 0 20px #4ade80, 0 0 40px rgba(74, 222, 128, 0.3); }
+  100% { box-shadow: 0 0 5px #4ade80; }
+}
+.progress-glow { animation: progressGlow 2s ease-in-out infinite; }
+
+/* Timer urgency */
+@keyframes urgentPulse {
+  0%, 100% { color: #ef4444; transform: scale(1); }
+  50% { color: #f59e0b; transform: scale(1.05); }
+}
+.urgent { animation: urgentPulse 1s ease-in-out infinite; }

@@ -305,6 +305,8 @@ export const API = {
     RESERVATIONS:        '/admin/reservations',
     STATS:               '/admin/stats',
     STATS_COUNTS:        '/admin/stats/counts',
+    STATS_DAILY:         '/admin/stats/daily',
+    STATS_STATUS:        '/admin/stats/status-summary',
     POLICY_YAML:         '/admin/policy/yaml',
     POLICY_YAML_HISTORY: '/admin/policy/yaml/history',
     POLICY_DOCS:         '/admin/policy/docs',

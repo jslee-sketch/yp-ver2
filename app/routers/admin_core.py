@@ -480,6 +480,102 @@ def admin_stats(
     }
 
 
+# ── GET /admin/stats/daily — 일별 트렌드 ──────────────────
+@router.get("/stats/daily")
+def admin_stats_daily(
+    days: int = Query(14, le=90),
+    db: Session = Depends(get_db),
+):
+    """최근 N일 일별 딜/오퍼/예약 생성 수 + 매출."""
+    from sqlalchemy import cast, String as SAString, func as f
+    from datetime import timedelta
+    cutoff = _utcnow() - timedelta(days=days)
+    result = []
+
+    # SQLite date() / PostgreSQL DATE cast 호환
+    try:
+        # deals per day
+        deal_rows = (
+            db.query(
+                f.substr(cast(models.Deal.created_at, SAString), 1, 10).label("day"),
+                f.count(models.Deal.id),
+            )
+            .filter(models.Deal.created_at >= cutoff)
+            .group_by("day").all()
+        )
+        deal_map = {r[0]: r[1] for r in deal_rows}
+
+        offer_rows = (
+            db.query(
+                f.substr(cast(models.Offer.created_at, SAString), 1, 10).label("day"),
+                f.count(models.Offer.id),
+            )
+            .filter(models.Offer.created_at >= cutoff)
+            .group_by("day").all()
+        )
+        offer_map = {r[0]: r[1] for r in offer_rows}
+
+        resv_rows = (
+            db.query(
+                f.substr(cast(models.Reservation.created_at, SAString), 1, 10).label("day"),
+                f.count(models.Reservation.id),
+                f.coalesce(f.sum(models.Reservation.amount_total), 0),
+            )
+            .filter(models.Reservation.created_at >= cutoff)
+            .group_by("day").all()
+        )
+        resv_map = {r[0]: {"count": r[1], "revenue": int(r[2])} for r in resv_rows}
+
+        all_days = sorted(set(list(deal_map.keys()) + list(offer_map.keys()) + list(resv_map.keys())))
+        for day in all_days:
+            result.append({
+                "date": day,
+                "deals": deal_map.get(day, 0),
+                "offers": offer_map.get(day, 0),
+                "reservations": resv_map.get(day, {}).get("count", 0),
+                "revenue": resv_map.get(day, {}).get("revenue", 0),
+            })
+    except Exception:
+        pass
+
+    return result
+
+
+# ── GET /admin/stats/status-summary — 상태 분포 ──────────
+@router.get("/stats/status-summary")
+def admin_stats_status_summary(db: Session = Depends(get_db)):
+    """딜/예약/정산 상태 분포 (파이차트용)."""
+    from sqlalchemy import cast, String as SAString
+    result: dict = {}
+
+    try:
+        rows = db.query(
+            models.Deal.status, sa_func.count(models.Deal.id)
+        ).group_by(models.Deal.status).all()
+        result["deal_status"] = [{"name": str(r[0] or "UNKNOWN"), "value": r[1]} for r in rows]
+    except Exception:
+        result["deal_status"] = []
+
+    try:
+        status_str = cast(models.Reservation.status, SAString)
+        rows = db.query(
+            status_str, sa_func.count(models.Reservation.id)
+        ).group_by(status_str).all()
+        result["reservation_status"] = [{"name": str(r[0] or "UNKNOWN"), "value": r[1]} for r in rows]
+    except Exception:
+        result["reservation_status"] = []
+
+    try:
+        rows = db.query(
+            models.ReservationSettlement.status, sa_func.count(models.ReservationSettlement.id)
+        ).group_by(models.ReservationSettlement.status).all()
+        result["settlement_status"] = [{"name": str(r[0] or "UNKNOWN"), "value": r[1]} for r in rows]
+    except Exception:
+        result["settlement_status"] = []
+
+    return result
+
+
 # ── GET /admin/notifications/all ─────────────────────────
 @router.get("/notifications/all")
 def admin_list_notifications(

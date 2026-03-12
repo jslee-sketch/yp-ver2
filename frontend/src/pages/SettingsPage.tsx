@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { soundEffects } from '../services/soundEffects';
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -54,6 +55,9 @@ export default function SettingsPage() {
   const [priceAlerts, setPriceAlerts] = useState(() =>
     localStorage.getItem('yp_price_alerts') !== 'false'
   );
+  const [soundEnabled, setSoundEnabled] = useState(() =>
+    soundEffects.isEnabled()
+  );
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDark ? '' : 'light');
@@ -63,6 +67,7 @@ export default function SettingsPage() {
   useEffect(() => { localStorage.setItem('yp_push_enabled', String(pushEnabled)); }, [pushEnabled]);
   useEffect(() => { localStorage.setItem('yp_deal_alerts', String(dealAlerts)); }, [dealAlerts]);
   useEffect(() => { localStorage.setItem('yp_price_alerts', String(priceAlerts)); }, [priceAlerts]);
+  useEffect(() => { soundEffects.setEnabled(soundEnabled); }, [soundEnabled]);
 
   return (
     <div style={{ minHeight: '100dvh', background: C.bg, paddingBottom: 100 }}>
@@ -106,6 +111,16 @@ export default function SettingsPage() {
             desc="관심 딜의 가격 변동 알림"
             value={priceAlerts}
             onChange={setPriceAlerts}
+          />
+        </div>
+
+        <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: '4px 16px', marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, paddingTop: 14, marginBottom: 4 }}>효과음</div>
+          <ToggleRow
+            label="효과음"
+            desc="결제, 알림 등에 효과음을 재생합니다 (기본: 꺼짐)"
+            value={soundEnabled}
+            onChange={v => { setSoundEnabled(v); if (v) soundEffects.playClick(); }}
           />
         </div>
 

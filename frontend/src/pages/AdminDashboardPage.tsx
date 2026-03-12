@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const C = {
   cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252',
@@ -15,6 +16,8 @@ export default function AdminDashboardPage() {
   const [counts, setCounts] = useState<any>(null);
   const [alerts, setAlerts] = useState<any>({});
   const [recent, setRecent] = useState<any[]>([]);
+  const [dailyData, setDailyData] = useState<any[]>([]);
+  const [statusData, setStatusData] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rawJson, setRawJson] = useState('');
@@ -45,6 +48,14 @@ export default function AdminDashboardPage() {
       });
       const rd = recentR.status === 'fulfilled' ? recentR.value.data : [];
       setRecent(Array.isArray(rd) ? rd.slice(0, 8) : []);
+
+      // 3) 차트 데이터 (실패해도 무시)
+      const [dailyR, statusR] = await Promise.allSettled([
+        apiClient.get(API.ADMIN.STATS_DAILY, { params: { days: 14 } }),
+        apiClient.get(API.ADMIN.STATS_STATUS),
+      ]);
+      if (dailyR.status === 'fulfilled' && Array.isArray(dailyR.value.data)) setDailyData(dailyR.value.data);
+      if (statusR.status === 'fulfilled') setStatusData(statusR.value.data || {});
     } catch (e: any) {
       console.error('Dashboard load error:', e);
       setError(e?.response?.data?.detail || e?.message || '데이터 로딩 실패');
@@ -170,6 +181,73 @@ export default function AdminDashboardPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* 일별 트렌드 차트 */}
+      {dailyData.length > 0 && (
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, marginBottom: 24 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>일별 트렌드 (최근 14일)</h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="date" tick={{ fill: '#78909c', fontSize: 10 }} tickFormatter={v => v?.slice(5)} />
+              <YAxis tick={{ fill: '#78909c', fontSize: 10 }} />
+              <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Line type="monotone" dataKey="deals" stroke="#e040fb" strokeWidth={2} dot={false} name="딜" />
+              <Line type="monotone" dataKey="offers" stroke={C.orange} strokeWidth={2} dot={false} name="오퍼" />
+              <Line type="monotone" dataKey="reservations" stroke={C.cyan} strokeWidth={2} dot={false} name="예약" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* 매출 바 차트 */}
+      {dailyData.length > 0 && dailyData.some(d => d.revenue > 0) && (
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, marginBottom: 24 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>일별 매출</h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="date" tick={{ fill: '#78909c', fontSize: 10 }} tickFormatter={v => v?.slice(5)} />
+              <YAxis tick={{ fill: '#78909c', fontSize: 10 }} tickFormatter={v => `${(v / 10000).toFixed(0)}만`} />
+              <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`${v.toLocaleString()}원`, '매출']} />
+              <Bar dataKey="revenue" fill={C.green} radius={[4, 4, 0, 0]} name="매출" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* 상태 분포 파이차트 */}
+      {(statusData.deal_status?.length > 0 || statusData.settlement_status?.length > 0) && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 24 }}>
+          {statusData.deal_status?.length > 0 && (
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8, textAlign: 'center' }}>딜 상태</h3>
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={statusData.deal_status} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                    {statusData.deal_status.map((_: any, i: number) => <Cell key={i} fill={['#00e676', '#00b0ff', '#e040fb', '#ff9100', '#ff5252', '#ffea00'][i % 6]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          {statusData.settlement_status?.length > 0 && (
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8, textAlign: 'center' }}>정산 상태</h3>
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={statusData.settlement_status} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                    {statusData.settlement_status.map((_: any, i: number) => <Cell key={i} fill={['#ff9100', '#00e5ff', '#4fc3f7', '#00e676'][i % 4]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
       )}
 

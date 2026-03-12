@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './styles/theme.css';
 import './index.css';
 import './mobile.css';
+import './styles/premium.css';
 import App from './App.tsx';
 
 // 테마 초기화 (다크 기본, localStorage 우선)

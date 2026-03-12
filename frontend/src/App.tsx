@@ -32,6 +32,7 @@ import SettingsPage from './pages/SettingsPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import SupportPage from './pages/SupportPage';
+import FAQPage from './pages/FAQPage';
 import NotFoundPage from './pages/NotFoundPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
@@ -167,6 +168,7 @@ function App() {
           <Route path="/terms"        element={<TermsPage />} />
           <Route path="/privacy"      element={<PrivacyPage />} />
           <Route path="/support"      element={<SupportPage />} />
+          <Route path="/faq"          element={<FAQPage />} />
 
           {/* 로그인 필요 */}
           <Route path="/deal/create"  element={<ProtectedRoute><DealCreatePage /></ProtectedRoute>} />
