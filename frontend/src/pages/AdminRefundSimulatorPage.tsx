@@ -93,7 +93,7 @@ export default function AdminRefundSimulatorPage() {
 
       {/* Mode tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {[{ v: 'manual' as const, l: '수동 시뮬레이션' }, { v: 'by_reservation' as const, l: '예약 조회' }].map(t => (
+        {[{ v: 'manual' as const, l: '수동 시뮬레이션' }, { v: 'by_reservation' as const, l: '주문 조회' }].map(t => (
           <button key={t.v} onClick={() => { setMode(t.v); setResult(null); setError(''); }} style={{
             padding: '8px 20px', borderRadius: 8, border: `1px solid ${mode === t.v ? C.cyan : C.border}`,
             background: mode === t.v ? 'rgba(0,229,255,0.1)' : 'transparent',
@@ -106,7 +106,7 @@ export default function AdminRefundSimulatorPage() {
         {/* ═══ Left: Inputs ═══ */}
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 16 }}>
-            {mode === 'manual' ? '조건 입력' : '예약 조회'}
+            {mode === 'manual' ? '조건 입력' : '주문 조회'}
           </h3>
 
           {mode === 'manual' ? (
@@ -229,9 +229,9 @@ export default function AdminRefundSimulatorPage() {
             /* ─── By reservation ─── */
             <>
               <div style={{ marginBottom: 12 }}>
-                <label style={labelStyle}>예약 번호 (R-###)</label>
+                <label style={labelStyle}>주문번호 (R-###)</label>
                 <input value={reservationId} onChange={e => setReservationId(e.target.value.replace(/[^0-9]/g, ''))}
-                  placeholder="예약 ID 숫자만 입력" style={{ ...numInput, textAlign: 'left' }} />
+                  placeholder="주문 ID 숫자만 입력" style={{ ...numInput, textAlign: 'left' }} />
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={labelStyle}>환불 사유</label>
@@ -330,7 +330,7 @@ export default function AdminRefundSimulatorPage() {
             <>
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan, marginBottom: 8 }}>예약 정보</div>
-                <Row label="예약 ID" value={`R-${result.reservation_id}`} color={C.cyan} />
+                <Row label="주문번호" value={result.order_number || `R-${result.reservation_id}`} color={C.cyan} />
                 <Row label="상태" value={result.reservation_info.status} color={C.text} />
                 <Row label="결제 총액" value={`${result.reservation_info.amount_total?.toLocaleString()}원`} color={C.text} />
                 <Row label="상품금액" value={`${result.reservation_info.amount_goods?.toLocaleString()}원`} color={C.textSec} />

@@ -17,7 +17,7 @@ BUYER_EVENTS = {
     "OFFER_ARRIVED":            {"title": "새 오퍼 도착! 📩",             "message": "'{product_name}' 딜에 {seller_name}님이 {offer_price}원에 오퍼를 제출했어요!", "link": "/deal/{deal_id}", "default": {"app": True, "push": True, "email": False}, "group": "오퍼"},
     "OFFER_DEADLINE_SOON":      {"title": "오퍼 마감 임박 ⏰",            "message": "'{product_name}' 딜 오퍼 마감까지 {remaining_time} 남았어요!", "link": "/deal/{deal_id}", "default": {"app": True, "push": True, "email": False}, "group": "오퍼"},
 
-    "PAYMENT_COMPLETE":         {"title": "결제 완료! ✅",                "message": "'{product_name}' {amount}원 결제가 완료되었습니다. 예약번호: R-{reservation_id}", "link": "/my-orders", "default": {"app": True, "push": False, "email": True}, "group": "예약/결제"},
+    "PAYMENT_COMPLETE":         {"title": "결제 완료! ✅",                "message": "'{product_name}' {amount}원 결제가 완료되었습니다. 주문번호: {order_number}", "link": "/my-orders", "default": {"app": True, "push": False, "email": True}, "group": "예약/결제"},
     "RESERVATION_CONFIRMED":    {"title": "예약이 확정되었어요! 🎊",       "message": "{seller_name}님이 '{product_name}' 예약을 확정했습니다.", "link": "/my-orders", "default": {"app": True, "push": True, "email": False}, "group": "예약/결제"},
 
     "SHIPPING_STARTED":         {"title": "배송이 시작되었어요! 🚚",       "message": "'{product_name}' 상품이 발송되었습니다. 택배사: {courier}, 운송장: {tracking_number}", "link": "/my-orders", "default": {"app": True, "push": True, "email": False}, "group": "배송"},

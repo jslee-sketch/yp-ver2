@@ -96,7 +96,7 @@ export default function SettlementsPage() {
                   <span
                     onClick={() => navigate(`/my-orders`)}
                     style={{ fontSize: 11, color: C.blue, cursor: 'pointer', textDecoration: 'underline' }}
-                  >예약 #{s.reservation_id}</span>
+                  >주문번호 {(s as any).order_number || `#${s.reservation_id}`}</span>
                   {s.deal_id && (
                     <span
                       onClick={() => navigate(`/deal/${s.deal_id}`)}

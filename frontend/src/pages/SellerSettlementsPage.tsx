@@ -177,7 +177,7 @@ export default function SellerSettlementsPage() {
                 </div>
               )}
               <div style={{ fontSize: 11, color: C.textDim, marginBottom: 6 }}>
-                예약 #{s.reservation_id} · {fmtDate(s.created_at)}
+                주문번호 {(s as any).order_number || `#${s.reservation_id}`} · {fmtDate(s.created_at)}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 6 }}>
                 <div><div style={{ fontSize: 10, color: C.textDim }}>결제액</div><div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{fmtP(paid(s))}</div></div>

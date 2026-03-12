@@ -356,7 +356,7 @@ export default function DealJoinPage() {
               <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 16, marginBottom: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, marginBottom: 12 }}>결제 정보</div>
                 {[
-                  { label: '예약 번호', value: `#${reservationData.id}` },
+                  { label: '주문번호', value: (reservationData.order_number as string) || `#${reservationData.id}` },
                   { label: '상품', value: deal.product_name },
                   { label: '판매자', value: selectedOffer.seller_name },
                   { label: '수량', value: `${reservationData.qty ?? qty}개` },

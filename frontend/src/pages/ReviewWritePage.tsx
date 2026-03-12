@@ -33,7 +33,7 @@ export default function ReviewWritePage() {
         const res = await apiClient.get(API.RESERVATIONS.DETAIL(Number(reservationId)));
         const r = res.data as Record<string, unknown>;
         setOrder({
-          product_name: String(r.product_name ?? r.deal_title ?? `예약 #${reservationId}`),
+          product_name: String(r.product_name ?? r.deal_title ?? `주문 #${reservationId}`),
           seller_name: String(r.seller_name ?? r.seller_business_name ?? '판매자'),
           price: Number(r.amount_total ?? r.price ?? 0),
           qty: Number(r.qty ?? 1),
@@ -101,7 +101,7 @@ export default function ReviewWritePage() {
             background: C.bgCard, border: `1px solid ${C.border}`,
             borderRadius: 14, padding: '14px 16px', marginBottom: 24,
           }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>📦 예약 #{reservationId}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>📦 주문 #{reservationId}</div>
           </div>
         )}
 

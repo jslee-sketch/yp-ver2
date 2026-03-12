@@ -384,7 +384,7 @@ def open_dispute(
         raise HTTPException(status_code=404, detail="Reservation not found")
 
     if getattr(resv, "is_disputed", False):
-        return {"reservation_id": reservation_id, "is_disputed": True, "message": "이미 분쟁 중입니다"}
+        return {"reservation_id": reservation_id, "order_number": getattr(resv, "order_number", None), "is_disputed": True, "message": "이미 분쟁 중입니다"}
 
     now = datetime.now(timezone.utc)
     resv.is_disputed = True
@@ -444,6 +444,7 @@ def open_dispute(
 
     return {
         "reservation_id": reservation_id,
+        "order_number": getattr(resv, "order_number", None),
         "is_disputed": True,
         "dispute_opened_at": resv.dispute_opened_at,
         "dispute_reason": resv.dispute_reason,
@@ -469,7 +470,7 @@ def close_dispute(
         raise HTTPException(status_code=404, detail="Reservation not found")
 
     if not getattr(resv, "is_disputed", False):
-        return {"reservation_id": reservation_id, "is_disputed": False, "message": "분쟁 상태가 아닙니다"}
+        return {"reservation_id": reservation_id, "order_number": getattr(resv, "order_number", None), "is_disputed": False, "message": "분쟁 상태가 아닙니다"}
 
     now = datetime.now(timezone.utc)
     resv.is_disputed = False
@@ -522,6 +523,7 @@ def close_dispute(
 
     return {
         "reservation_id": reservation_id,
+        "order_number": getattr(resv, "order_number", None),
         "is_disputed": False,
         "dispute_closed_at": resv.dispute_closed_at,
         "dispute_resolution": resv.dispute_resolution,

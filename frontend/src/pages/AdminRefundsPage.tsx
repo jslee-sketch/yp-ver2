@@ -42,7 +42,7 @@ export default function AdminRefundsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
             <thead style={stickyHead}>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                {['R-#', '품목명', '수량', '구매자', '판매자', '원금액', '환불금액', '환불유형', '환불사유', '상태', '환불일'].map(h => (
+                {['주문번호', '품목명', '수량', '구매자', '판매자', '원금액', '환불금액', '환불유형', '환불사유', '상태', '환불일'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -50,7 +50,7 @@ export default function AdminRefundsPage() {
             <tbody>
               {items.filter(r => { const q = search.toLowerCase(); return !q || [String(r.id), r.buyer_name, r.seller_name, r.product_name].some(v => v && String(v).toLowerCase().includes(q)); }).map(r => (
                 <tr key={r.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                  <td style={{ padding: '10px 8px', color: C.cyan, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { if (r.deal_id) window.open(`/deal/${r.deal_id}`, '_blank'); }}>R-{r.id}</td>
+                  <td style={{ padding: '10px 8px', color: C.cyan, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { if (r.deal_id) window.open(`/deal/${r.deal_id}`, '_blank'); }}>{r.order_number || `R-${r.id}`}</td>
                   <td style={{ padding: '10px 8px', color: C.text, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.product_name || ''}>{r.product_name || '-'}</td>
                   <td style={{ padding: '10px 8px', color: C.textSec }}>{r.quantity ?? '-'}</td>
                   <td style={{ padding: '10px 8px', color: C.text }}>{r.buyer_name || `B-${r.buyer_id}`}</td>

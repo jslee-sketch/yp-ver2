@@ -11,7 +11,7 @@ const C = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   seller: '판매자', buyer: '구매자', actuator: '액추에이터',
-  deal: '딜', offer: '오퍼', reservation: '예약',
+  deal: '딜', offer: '오퍼', reservation: '주문',
   settlement: '정산', tax: '세금계산서', review: '리뷰',
 };
 

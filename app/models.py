@@ -752,6 +752,9 @@ class Reservation(Base):
 
     idempotency_key = Column(String, unique=True, index=True, nullable=True)
 
+    # 주문번호 (YP-YYYYMMDD-NNNN)
+    order_number = Column(String(20), unique=True, nullable=True, index=True)
+
 # 🔹 배송/도착 관련 타임스탬프
 
 

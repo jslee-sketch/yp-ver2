@@ -924,8 +924,15 @@ def admin_unified_search(
         if d_ids:
             for d in db.query(models.Deal).filter(models.Deal.id.in_(d_ids)).all():
                 dm[d.id] = getattr(d, "product_name", "")
+        # order_number lookup
+        _s_rids = list({r.reservation_id for r in items if r.reservation_id})
+        _s_onm: dict = {}
+        if _s_rids:
+            for _rv in db.query(models.Reservation.id, models.Reservation.order_number).filter(models.Reservation.id.in_(_s_rids)).all():
+                _s_onm[_rv.id] = _rv.order_number
         results["settlements"] = [{
             "id": r.id, "reservation_id": r.reservation_id,
+            "order_number": _s_onm.get(r.reservation_id),
             "deal_id": r.deal_id, "product_name": dm.get(r.deal_id, ""),
             "seller_id": r.seller_id,
             "payout_amount": r.seller_payout_amount,

@@ -82,7 +82,7 @@ export default function AdminDisputePage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
           <thead style={stickyHead}>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-              {['R-#', 'D-#', '구매자', '판매자', '금액', '사유', tab === 'open' ? '접수일' : '종료일', '상태', ''].map(h => (
+              {['주문번호', 'D-#', '구매자', '판매자', '금액', '사유', tab === 'open' ? '접수일' : '종료일', '상태', ''].map(h => (
                 <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
@@ -90,7 +90,7 @@ export default function AdminDisputePage() {
           <tbody>
             {filtered.map(r => (
               <tr key={r.id} style={{ borderBottom: `1px solid ${C.border}`, cursor: 'pointer' }} onClick={() => { setModal(r); setResolution(r.dispute_resolution || ''); }}>
-                <td style={{ padding: '10px 8px', color: C.red, fontWeight: 600 }}>R-{r.id}</td>
+                <td style={{ padding: '10px 8px', color: C.red, fontWeight: 600 }}>{r.order_number || `R-${r.id}`}</td>
                 <td style={{ padding: '10px 8px', color: C.textSec }}>D-{r.deal_id}</td>
                 <td style={{ padding: '10px 8px', color: C.text }}>{r.buyer_name || `B-${r.buyer_id}`}</td>
                 <td style={{ padding: '10px 8px', color: C.text }}>{r.seller_name || `S-${r.seller_id}`}</td>
@@ -119,7 +119,7 @@ export default function AdminDisputePage() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setModal(null)}>
           <div style={{ background: C.card, borderRadius: 16, padding: 24, minWidth: 500, maxWidth: 600, border: `1px solid ${C.border}`, maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: C.red, marginBottom: 16 }}>
-              분쟁 상세 R-{modal.id} {modal.is_disputed ? '(진행 중)' : '(종료됨)'}
+              분쟁 상세 {modal.order_number || `R-${modal.id}`} {modal.is_disputed ? '(진행 중)' : '(종료됨)'}
             </h3>
 
             {/* 정보 */}

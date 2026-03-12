@@ -80,7 +80,7 @@ export default function AdminDashboardPage() {
     { label: '판매자', value: counts.sellers ?? 0, color: C.cyan, path: '/admin/sellers' },
     { label: '딜', value: counts.deals ?? 0, color: '#e040fb', path: '/admin/deals' },
     { label: '오퍼', value: counts.offers ?? 0, color: C.orange, path: '/admin/offers' },
-    { label: '예약/주문', value: counts.reservations ?? 0, color: '#4fc3f7', path: '/admin/reservations' },
+    { label: '주문', value: counts.reservations ?? 0, color: '#4fc3f7', path: '/admin/reservations' },
     { label: '액추에이터', value: counts.actuators ?? 0, color: '#ba68c8', path: '/admin/actuators' },
     { label: '승인대기', value: counts.pending_sellers ?? 0, color: C.red, path: '/admin/sellers' },
     { label: '정산대기', value: counts.pending_settlement ?? 0, color: '#ffab40', path: '/admin/settlements' },
@@ -197,7 +197,7 @@ export default function AdminDashboardPage() {
               <Legend wrapperStyle={{ fontSize: 11 }} />
               <Line type="monotone" dataKey="deals" stroke="#e040fb" strokeWidth={2} dot={false} name="딜" />
               <Line type="monotone" dataKey="offers" stroke={C.orange} strokeWidth={2} dot={false} name="오퍼" />
-              <Line type="monotone" dataKey="reservations" stroke={C.cyan} strokeWidth={2} dot={false} name="예약" />
+              <Line type="monotone" dataKey="reservations" stroke={C.cyan} strokeWidth={2} dot={false} name="주문" />
             </LineChart>
           </ResponsiveContainer>
         </div>

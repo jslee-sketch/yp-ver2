@@ -180,7 +180,7 @@ export default function AdminDeliveryPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 800 }}>
             <thead style={stickyHead}>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                {['R-#', '품목명', '수량', '판매자', '구매자', '택배사', '운송장', '배송단계', '상태', '소요일'].map(h => (
+                {['주문번호', '품목명', '수량', '판매자', '구매자', '택배사', '운송장', '배송단계', '상태', '소요일'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -192,7 +192,7 @@ export default function AdminDeliveryPage() {
                 const overdue = days !== null && days > 3 && !['ARRIVED', 'CONFIRMED', 'ARRIVAL_CONFIRMED', 'DELIVERED'].includes(st);
                 return (
                   <tr key={r.id} style={{ borderBottom: `1px solid ${C.border}`, background: overdue ? 'rgba(255,82,82,0.05)' : undefined }}>
-                    <td style={{ padding: '10px 8px', color: C.cyan, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => window.open(`/reservation/${r.id}`, '_blank')}>R-{r.id}</td>
+                    <td style={{ padding: '10px 8px', color: C.cyan, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => window.open(`/reservation/${r.id}`, '_blank')}>{r.order_number || `R-${r.id}`}</td>
                     <td style={{ padding: '10px 8px', color: C.text, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.product_name || ''}>{r.product_name || '-'}</td>
                     <td style={{ padding: '10px 8px', color: C.textSec }}>{r.quantity ?? '-'}</td>
                     <td style={{ padding: '10px 8px', color: C.text }}>{r.seller_name || `S-${r.seller_id}`}</td>

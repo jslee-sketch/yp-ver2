@@ -74,12 +74,20 @@ def api_admin_list_settlements(
         for o in db.query(models.Offer).filter(models.Offer.id.in_(offer_ids)).all():
             offer_map[o.id] = getattr(o, "quantity", None)
 
+    # order_number 매핑
+    resv_ids = list({r.reservation_id for r in rows if r.reservation_id})
+    on_map: dict = {}
+    if resv_ids:
+        for rv in db.query(models.Reservation.id, models.Reservation.order_number).filter(models.Reservation.id.in_(resv_ids)).all():
+            on_map[rv.id] = rv.order_number
+
     result = []
     for r in rows:
         seller = sellers.get(r.seller_id)
         result.append({
             "id": r.id,
             "reservation_id": r.reservation_id,
+            "order_number": on_map.get(r.reservation_id),
             "deal_id": r.deal_id,
             "offer_id": r.offer_id,
             "seller_id": r.seller_id,

@@ -170,14 +170,14 @@ export default function AdminUnifiedSearchPage() {
         <ResultSection title="예약" color={C.orange} count={results.reservations.length}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead><tr style={{ background: '#1a1a2e' }}>
-              {['R-#', 'D-#', '품목명', '수량', '금액', '상태', '생성일'].map(h => (
+              {['주문번호', 'D-#', '품목명', '수량', '금액', '상태', '생성일'].map(h => (
                 <th key={h} style={{ padding: 8, color: C.textSec, textAlign: 'left', fontWeight: 600 }}>{h}</th>
               ))}
             </tr></thead>
             <tbody>
               {results.reservations.map((r: any) => (
                 <tr key={r.id} style={{ borderTop: `1px solid ${C.border}` }}>
-                  <td style={{ padding: 8, color: C.orange }}>R-{r.id}</td>
+                  <td style={{ padding: 8, color: C.orange }}>{r.order_number || `R-${r.id}`}</td>
                   <td style={{ padding: 8, color: C.cyan, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate(`/deal/${r.deal_id}/journey`)}>D-{r.deal_id}</td>
                   <td style={{ padding: 8, color: C.text }}>{r.product_name || '-'}</td>
                   <td style={{ padding: 8, color: C.textSec }}>{r.quantity ?? '-'}</td>
@@ -196,7 +196,7 @@ export default function AdminUnifiedSearchPage() {
         <ResultSection title="정산" color={C.purple} count={results.settlements.length}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead><tr style={{ background: '#1a1a2e' }}>
-              {['S-#', 'R-#', '품목명', '정산액', '상태', '생성일'].map(h => (
+              {['S-#', '주문번호', '품목명', '정산액', '상태', '생성일'].map(h => (
                 <th key={h} style={{ padding: 8, color: C.textSec, textAlign: 'left', fontWeight: 600 }}>{h}</th>
               ))}
             </tr></thead>
@@ -204,7 +204,7 @@ export default function AdminUnifiedSearchPage() {
               {results.settlements.map((s: any) => (
                 <tr key={s.id} style={{ borderTop: `1px solid ${C.border}` }}>
                   <td style={{ padding: 8, color: C.purple }}>S-{s.id}</td>
-                  <td style={{ padding: 8, color: C.orange }}>R-{s.reservation_id}</td>
+                  <td style={{ padding: 8, color: C.orange }}>{s.order_number || `R-${s.reservation_id}`}</td>
                   <td style={{ padding: 8, color: C.text }}>{s.product_name || '-'}</td>
                   <td style={{ padding: 8, color: C.green }}>{s.payout_amount?.toLocaleString() || '-'}</td>
                   <td style={{ padding: 8 }}><StatusBadge status={s.status} /></td>

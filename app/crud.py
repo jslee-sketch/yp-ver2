@@ -2328,6 +2328,7 @@ def create_reservation(
 
     amount_total = int(amount_goods + amount_shipping)
 
+    from app.services.order_number import generate_order_number as _gen_on
     resv = Reservation(
         deal_id=deal_id,
         offer_id=offer_id,
@@ -2346,6 +2347,7 @@ def create_reservation(
         amount_goods=amount_goods,
         amount_shipping=amount_shipping,
         amount_total=amount_total,
+        order_number=_gen_on(db),
     )
 
     offer.reserved_qty = int(offer.reserved_qty or 0) + qty

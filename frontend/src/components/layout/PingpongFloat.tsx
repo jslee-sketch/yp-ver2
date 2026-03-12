@@ -61,7 +61,7 @@ function deeplinkToRoute(entity: string, id: string, topic?: string): { path: st
   if (entity === 'reservation') {
     const t = topic || 'summary';
     const labels: Record<string, string> = { refund: '환불 확인', payment: '결제 확인', shipping: '배송 확인', summary: '예약 상세' };
-    return { path: `/my-orders`, label: `R-${id} ${labels[t] || '상세'}` };
+    return { path: `/my-orders`, label: `주문 #${id} ${labels[t] || '상세'}` };
   }
   if (entity === 'offer') return { path: `/deal/${id}`, label: `오퍼 #${id} 보기` };
   if (entity === 'dealroom') return { path: `/deal/${id}`, label: `딜 #${id} 보기` };

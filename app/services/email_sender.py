@@ -118,12 +118,12 @@ def send_tax_invoice_notification(to: str, invoice_number: str, total_amount: in
 
 def send_refund_notification(to: str, buyer_name: str, reservation_id: int, refund_amount: int) -> bool:
     """환불 완료 알림 이메일."""
-    subject = f"[역핑] 환불 처리 완료 (예약번호: {reservation_id})"
+    subject = f"[역핑] 환불 처리 완료 (주문번호: {reservation_id})"
     body = f"""
     <div style="font-family: 'Malgun Gothic', sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2563eb;">환불 처리 완료</h2>
         <p>안녕하세요 <strong>{buyer_name}</strong>님,</p>
-        <p>예약번호 <strong>{reservation_id}</strong>의 환불이 처리되었습니다.</p>
+        <p>주문번호 <strong>{reservation_id}</strong>의 환불이 처리되었습니다.</p>
         <p>환불 금액: <strong>{refund_amount:,}원</strong></p>
         <hr style="margin: 20px 0;">
         <p style="color: #6b7280; font-size: 12px;">

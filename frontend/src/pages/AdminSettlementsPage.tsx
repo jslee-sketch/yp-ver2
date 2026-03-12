@@ -60,7 +60,7 @@ export default function AdminSettlementsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
             <thead style={stickyHead}>
               <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                {['정산ID', '예약ID', '품목명', '수량', '판매자', '결제금액', 'PG수수료', '플랫폼수수료', '정산금액', '상태', '생성일', ''].map(h => (
+                {['정산ID', '주문번호', '품목명', '수량', '판매자', '결제금액', 'PG수수료', '플랫폼수수료', '정산금액', '상태', '생성일', ''].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '10px 8px', color: C.textSec, fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -69,7 +69,7 @@ export default function AdminSettlementsPage() {
               {filtered.map(s => (
                 <tr key={s.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                   <td style={{ padding: '10px 8px', color: C.cyan, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { if (s.deal_id) window.open(`/deal/${s.deal_id}`, '_blank'); }}>S-{s.id}</td>
-                  <td style={{ padding: '10px 8px', color: '#60a5fa', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { if (s.deal_id) window.open(`/deal/${s.deal_id}`, '_blank'); }}>R-{s.reservation_id}</td>
+                  <td style={{ padding: '10px 8px', color: '#60a5fa', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { if (s.deal_id) window.open(`/deal/${s.deal_id}`, '_blank'); }}>{s.order_number || `R-${s.reservation_id}`}</td>
                   <td style={{ padding: '10px 8px', color: C.text, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.product_name || ''}>{s.product_name || '-'}</td>
                   <td style={{ padding: '10px 8px', color: C.textSec }}>{s.quantity ?? '-'}</td>
                   <td style={{ padding: '10px 8px', color: C.text }}>{s.seller_business_name || s.seller_name || `S-${s.seller_id}`}</td>

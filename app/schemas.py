@@ -763,6 +763,7 @@ class ReservationOut(ORMModel):
     offer_id: int
     buyer_id: int
     qty: int
+    order_number: Optional[str] = None
 
     status: ReservationStatus
     created_at: datetime
@@ -952,6 +953,7 @@ class ReservationOutLite(ORMModel):
     offer_id: int
     buyer_id: int
     qty: int
+    order_number: Optional[str] = None
     status: ReservationStatus
     created_at: datetime
     expires_at: Optional[datetime] = None
@@ -982,6 +984,7 @@ class ReservationOutLite(ORMModel):
 class ReservationSettlementOut(BaseModel):
     id: int
     reservation_id: int
+    order_number: Optional[str] = None
 
     deal_id: int
     offer_id: int

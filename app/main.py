@@ -157,6 +157,7 @@ _alter_cols = [
     ("reservations", "dispute_resolution", "VARCHAR(500)"),
     ("reservations", "dispute_admin_id", "INTEGER"),
     # 배송 추적 확장 컬럼
+    ("reservations", "order_number", "VARCHAR(20)"),
     ("reservations", "delivery_status", "VARCHAR(30)"),
     ("reservations", "delivery_last_detail", "TEXT"),
     ("reservations", "delivery_last_checked_at", "TIMESTAMP"),
@@ -630,6 +631,19 @@ async def lifespan(app: FastAPI):
             _pol_db.close()
     except Exception as _pe:
         print(f"[warn] policy seed failed: {_pe}")
+
+    # ✅ 주문번호 backfill (order_number가 없는 기존 예약에 자동 부여)
+    try:
+        _on_db = database.SessionLocal()
+        try:
+            from app.services.order_number import backfill_order_numbers
+            _filled = backfill_order_numbers(_on_db)
+            if _filled:
+                print(f"[migration] Backfilled {_filled} order_numbers")
+        finally:
+            _on_db.close()
+    except Exception as _one:
+        print(f"[warn] order_number backfill failed: {_one}")
 
     # ✅ 워커 시작
     try:
