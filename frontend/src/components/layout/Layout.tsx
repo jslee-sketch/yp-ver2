@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import BottomNav from './BottomNav';
+import Footer from './Footer';
 import NotificationBadge from '../common/NotificationBadge';
 import OnboardingGuide from '../OnboardingGuide';
 import { useAuth } from '../../contexts/AuthContext';
@@ -44,6 +45,7 @@ export const Layout: React.FC = () => {
       )}
       <main style={{ minHeight: '100dvh' }}>
         <Outlet />
+        <Footer />
       </main>
       {!hideNav && <BottomNav onMenuClick={() => setSidebarOpen(true)} />}
       {showOnboarding && (

@@ -36,8 +36,8 @@ def validate_policy(bundle: PolicyBundle) -> None:
     # cooling_days는 전역 기본값(fallback)일 뿐이고,
     # 실제 쿨링은 offer_policies.cancel_within_days를 우선 사용한다.
     # 그래도 전역값은 운영상 말도 안 되게 큰 값만 막는다.
-    if t.cooling_days < 0 or t.cooling_days > 365:
-        raise PolicyValidationError(f"cooling_days must be 0~365, got={t.cooling_days}")
+    if t.cooling_days < 7 or t.cooling_days > 365:
+        raise PolicyValidationError(f"cooling_days must be 7~365 (전자상거래법 제17조 최소 7일), got={t.cooling_days}")
 
 
 

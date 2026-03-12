@@ -402,6 +402,11 @@ export default function PingpongFloat() {
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* AI 면책 */}
+              <div style={{ padding: '4px 12px', fontSize: 10, color: '#888', lineHeight: 1.4, borderTop: '1px solid var(--border-subtle)' }}>
+                핑퐁이는 AI 기반 안내로, 답변의 정확성을 보장하지 않습니다. 중요한 결정은 고객센터를 이용해 주세요.
+              </div>
+
               {/* 입력 */}
               <div style={{
                 display: 'flex', gap: 8,

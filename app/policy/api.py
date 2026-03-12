@@ -277,6 +277,8 @@ def _fallback_compute_cooling_state(
 
     delivered_base = min(candidates)
     days = int(cooling_days_override if cooling_days_override is not None else cooling_days())
+    if days < 7:
+        days = 7  # 전자상거래법 제17조 최소 7일
     cooling_ends_at = delivered_base + timedelta(days=days)
     return "WITHIN_COOLING" if now <= cooling_ends_at else "AFTER_COOLING"
 

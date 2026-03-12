@@ -433,6 +433,17 @@ export default function PriceJourneyPage() {
         onSelectOffer={setSelectedOffer}
       />
 
+      {/* 통신판매중개 면책 */}
+      {offers.length > 0 && (
+        <div style={{
+          margin: '0 16px', padding: '10px 14px',
+          background: 'rgba(255,165,0,0.08)', border: '1px solid rgba(255,165,0,0.2)',
+          borderRadius: 10, fontSize: 11, color: '#b0b0b0', lineHeight: 1.5,
+        }}>
+          역핑은 통신판매중개자로서 거래 당사자가 아닙니다. 각 오퍼의 상품 정보 및 거래 조건에 대한 책임은 해당 판매자에게 있습니다.
+        </div>
+      )}
+
       {/* ── ③ 공동구매 기대가격 곡선 ── */}
       <GroupCurveSection
         anchor={pAnchor}

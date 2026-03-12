@@ -30,6 +30,7 @@ import SellerOffersPage from './pages/SellerOffersPage';
 import SellerReviewsPage from './pages/SellerReviewsPage';
 import SettingsPage from './pages/SettingsPage';
 import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
 import SupportPage from './pages/SupportPage';
 import NotFoundPage from './pages/NotFoundPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
@@ -164,6 +165,7 @@ function App() {
           <Route path="/completed-deals/:id" element={<CompletedDealDetailPage />} />
           <Route path="/spectating"   element={<SpectatingPage />} />
           <Route path="/terms"        element={<TermsPage />} />
+          <Route path="/privacy"      element={<PrivacyPage />} />
           <Route path="/support"      element={<SupportPage />} />
 
           {/* 로그인 필요 */}
