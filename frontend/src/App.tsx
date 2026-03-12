@@ -85,6 +85,7 @@ import SellerBusinessInfoPage from './pages/SellerBusinessInfoPage';
 import NotificationSettingsPage from './pages/NotificationSettingsPage';
 import InterestSettingsPage from './pages/InterestSettingsPage';
 import AdminUserConditionsPage from './pages/AdminUserConditionsPage';
+import DonzzulMainPage from './pages/donzzul/DonzzulMainPage';
 
 const MAINTENANCE_KEY = 'yeokping2026';
 
@@ -201,6 +202,10 @@ function App() {
           <Route path="/settings"    element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/settings/notifications" element={<ProtectedRoute><NotificationSettingsPage /></ProtectedRoute>} />
           <Route path="/settings/interests"     element={<ProtectedRoute><InterestSettingsPage /></ProtectedRoute>} />
+
+          {/* 돈쭐 */}
+          <Route path="/donzzul" element={<DonzzulMainPage />} />
+          <Route path="/donzzul/*" element={<DonzzulMainPage />} />
 
           {/* 액추에이터 */}
           <Route path="/actuator/sellers"                    element={<ProtectedRoute><ActuatorSellersPage /></ProtectedRoute>} />

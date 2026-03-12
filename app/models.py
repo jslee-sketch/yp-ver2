@@ -1515,3 +1515,225 @@ class EcountMapping(Base):
     ecount_code = Column(String(50), nullable=True)
     name = Column(String(200), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# ============================================================
+# 돈쭐 (착한 가게 응원 시스템)
+# ============================================================
+
+class DonzzulActuator(Base):
+    """돈쭐 히어로 (착한 가게 발굴 액츄에이터)"""
+    __tablename__ = "donzzul_actuators"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("buyers.id"), nullable=False)
+    actuator_id = Column(Integer, ForeignKey("actuators.id"), nullable=True)
+
+    hero_level = Column(String(20), default="sprout")
+    total_stores = Column(Integer, default=0)
+    total_points = Column(Integer, default=0)
+
+    status = Column(String(20), default="ACTIVE")
+    banned_reason = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class DonzzulStore(Base):
+    """돈쭐 가게 (착한 가게)"""
+    __tablename__ = "donzzul_stores"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    store_name = Column(String(200), nullable=False)
+    store_address = Column(String(500), nullable=False)
+    store_phone = Column(String(20), nullable=False)
+    store_lat = Column(Float, nullable=True)
+    store_lng = Column(Float, nullable=True)
+    store_photos = Column(Text, nullable=True)
+    store_category = Column(String(50), nullable=True)
+
+    owner_name = Column(String(50), nullable=False)
+    owner_phone = Column(String(20), nullable=False)
+    owner_consent = Column(Boolean, default=False)
+    owner_consent_at = Column(DateTime, nullable=True)
+    owner_consent_method = Column(String(20), nullable=True)
+    owner_consent_revoked = Column(Boolean, default=False)
+    owner_consent_revoked_at = Column(DateTime, nullable=True)
+
+    business_number = Column(String(20), nullable=True)
+    business_cert_image = Column(String(500), nullable=True)
+
+    bank_name = Column(String(50), nullable=False)
+    account_number = Column(String(50), nullable=False)
+    account_holder = Column(String(50), nullable=False)
+    account_verified = Column(Boolean, default=False)
+
+    store_pin_hash = Column(String(200), nullable=True)
+    store_pin_set_at = Column(DateTime, nullable=True)
+
+    story_text = Column(Text, nullable=False)
+    youtube_url = Column(String(500), nullable=True)
+
+    registered_by = Column(Integer, ForeignKey("donzzul_actuators.id"), nullable=True)
+    verified_by = Column(Integer, nullable=True)
+    verified_at = Column(DateTime, nullable=True)
+    verification_notes = Column(Text, nullable=True)
+
+    status = Column(String(20), default="REVIEWING")
+
+    vote_attempts = Column(Integer, default=0)
+    consecutive_fails = Column(Integer, default=0)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class DonzzulDeal(Base):
+    """돈쭐 딜 (착한 가게 응원 캠페인)"""
+    __tablename__ = "donzzul_deals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    store_id = Column(Integer, ForeignKey("donzzul_stores.id"), nullable=False)
+    week_id = Column(Integer, ForeignKey("donzzul_vote_weeks.id"), nullable=True)
+
+    title = Column(String(200), nullable=False)
+    rank = Column(Integer, nullable=True)
+
+    target_amount = Column(Integer, nullable=True)
+    current_amount = Column(Integer, default=0)
+    voucher_count = Column(Integer, default=0)
+
+    starts_at = Column(DateTime, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+
+    status = Column(String(20), default="OPEN")
+
+    created_by = Column(Integer, ForeignKey("donzzul_actuators.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class DonzzulVoucher(Base):
+    """돈쭐 상품권"""
+    __tablename__ = "donzzul_vouchers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String(20), unique=True, nullable=False, index=True)
+
+    deal_id = Column(Integer, ForeignKey("donzzul_deals.id"), nullable=False)
+    store_id = Column(Integer, ForeignKey("donzzul_stores.id"), nullable=False)
+    buyer_id = Column(Integer, ForeignKey("buyers.id"), nullable=False)
+
+    amount = Column(Integer, nullable=False)
+    remaining_amount = Column(Integer, nullable=False)
+
+    pin_hash = Column(String(200), nullable=False)
+    pin_attempts = Column(Integer, default=0)
+    pin_locked_until = Column(DateTime, nullable=True)
+
+    cheer_message = Column(String(200), nullable=True)
+
+    gifted_to = Column(Integer, ForeignKey("buyers.id"), nullable=True)
+    gifted_at = Column(DateTime, nullable=True)
+
+    status = Column(String(20), default="ACTIVE")
+
+    used_at = Column(DateTime, nullable=True)
+    used_location_lat = Column(Float, nullable=True)
+    used_location_lng = Column(Float, nullable=True)
+
+    expires_at = Column(DateTime, nullable=False)
+
+    pg_transaction_id = Column(String(100), nullable=True)
+    pg_fee = Column(Integer, default=0)
+
+    refunded_at = Column(DateTime, nullable=True)
+    refund_reason = Column(String(100), nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class DonzzulVoteWeek(Base):
+    """돈쭐 주간 투표"""
+    __tablename__ = "donzzul_vote_weeks"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    week_label = Column(String(20), nullable=False)
+    vote_start = Column(DateTime, nullable=False)
+    vote_end = Column(DateTime, nullable=False)
+
+    candidates = Column(Text, nullable=True)
+
+    rank_1_store_id = Column(Integer, nullable=True)
+    rank_2_store_id = Column(Integer, nullable=True)
+    rank_3_store_id = Column(Integer, nullable=True)
+
+    total_votes = Column(Integer, default=0)
+    status = Column(String(20), default="UPCOMING")
+
+    announced_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class DonzzulVote(Base):
+    """돈쭐 투표"""
+    __tablename__ = "donzzul_votes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    week_id = Column(Integer, ForeignKey("donzzul_vote_weeks.id"), nullable=False)
+    voter_id = Column(Integer, ForeignKey("buyers.id"), nullable=False)
+    store_id = Column(Integer, ForeignKey("donzzul_stores.id"), nullable=False)
+
+    voted_at = Column(DateTime, default=datetime.utcnow)
+
+
+class DonzzulSettlement(Base):
+    """돈쭐 정산"""
+    __tablename__ = "donzzul_settlements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    store_id = Column(Integer, ForeignKey("donzzul_stores.id"), nullable=False)
+
+    period_start = Column(DateTime, nullable=False)
+    period_end = Column(DateTime, nullable=False)
+
+    total_sales = Column(Integer, default=0)
+    total_vouchers = Column(Integer, default=0)
+    used_vouchers = Column(Integer, default=0)
+    expired_donated = Column(Integer, default=0)
+    pg_fee_total = Column(Integer, default=0)
+    platform_fee = Column(Integer, default=0)
+    net_amount = Column(Integer, default=0)
+
+    top_cheer_messages = Column(Text, nullable=True)
+
+    settled_at = Column(DateTime, nullable=True)
+    bank_name = Column(String(50), nullable=True)
+    account_number = Column(String(50), nullable=True)
+    account_holder = Column(String(50), nullable=True)
+
+    notified_via = Column(String(20), nullable=True)
+    notified_at = Column(DateTime, nullable=True)
+
+    tax_notice_included = Column(Boolean, default=True)
+
+    status = Column(String(20), default="PENDING")
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class DonzzulChatMessage(Base):
+    """돈쭐 응원방 채팅"""
+    __tablename__ = "donzzul_chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    deal_id = Column(Integer, ForeignKey("donzzul_deals.id"), nullable=False)
+    sender_id = Column(Integer, ForeignKey("buyers.id"), nullable=True)
+
+    message_type = Column(String(20), default="CHEER")
+    content = Column(Text, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)

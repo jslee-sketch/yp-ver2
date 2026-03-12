@@ -62,6 +62,8 @@ from app.models import (  # noqa: F401
     UserInterest, NotificationSetting,
     PreRegister,
     UserConditionOverride, EcountMapping,
+    DonzzulActuator, DonzzulStore, DonzzulDeal, DonzzulVoucher,
+    DonzzulVoteWeek, DonzzulVote, DonzzulSettlement, DonzzulChatMessage,
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -865,6 +867,9 @@ _include_router_safe("admin_policy_yaml", ("router",), label="admin_policy_yaml"
 _include_router_safe("admin_policy_docs", ("router",), label="admin_policy_docs")
 _include_router_safe("admin_announcements", ("router",), label="admin_announcements")
 _include_router_safe("preregister", ("router",), label="preregister")
+
+# 돈쭐 (착한 가게 응원 시스템)
+_include_router_safe("donzzul", ("router",), label="donzzul")
 
 # 정적 파일 (이미지 업로드)
 try:

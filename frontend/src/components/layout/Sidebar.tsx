@@ -309,6 +309,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="📦" label="참여/결제/배송"   onClick={() => go('/my-orders')} />
                     <MenuItem icon="👀" label="관전 모드"       onClick={() => go('/spectating')} />
 
+                    <MenuItem icon="💚" label="돈쭐"           onClick={() => go('/donzzul')} />
+
                     <SectionTitle>탐색</SectionTitle>
                     <MenuItem icon="📊" label="지난딜 가격조회" onClick={() => go('/completed-deals')} />
                   </>

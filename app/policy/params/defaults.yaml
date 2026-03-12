@@ -213,3 +213,61 @@ interest_categories:
   - 유아/키즈
   - 스포츠/아웃도어
   - 자동차용품
+
+# ============================================================
+# 돈쭐 (착한 가게 응원 시스템)
+# ============================================================
+donzzul:
+  # 수수료
+  platform_fee_rate: 0.0
+  pg_fee_bearer: "buyer"
+
+  # 상품권
+  voucher_amounts: [10000, 20000, 50000]
+  voucher_expiry_days: 90
+  voucher_expiry_warning_days: [14, 7, 1]
+  voucher_pin_length: 4
+  voucher_pin_max_attempts: 5
+  voucher_pin_lock_minutes: 30
+  voucher_code_prefix: "DONZZUL"
+  voucher_giftable: true
+  voucher_partial_use: true
+
+  # 만료
+  expired_action: "donate_to_store"
+  store_closure_refund: true
+
+  # 딜
+  deal_duration_days: 7
+  deal_min_story_length: 50
+  deal_max_photos: 10
+  deal_min_photos: 1
+  deal_video_required: false
+  deal_video_bonus_points: 200
+
+  # 투표 (Phase 2에서 활성화)
+  vote_enabled: false
+  vote_min_account_age_days: 7
+  vote_min_deal_usage: 1
+  vote_min_threshold: 50
+  vote_self_recommend_blocked: true
+  vote_top_n: 3
+  max_consecutive_fail: 3
+
+  # 정산
+  settlement_cycle: "weekly"
+  settlement_day: "monday"
+  settlement_notify: "kakaotalk"
+  settlement_include_cheer_messages: true
+
+  # 히어로
+  hero_commission_rate: 0.0
+  hero_points_per_store: 500
+  hero_levels:
+    sprout: { min_stores: 1, badge: "🌱", title: "새싹 히어로" }
+    good: { min_stores: 5, badge: "🌿", title: "착한 히어로" }
+    super: { min_stores: 10, badge: "🌳", title: "슈퍼 히어로" }
+    legend: { min_stores: 25, badge: "🏆", title: "레전드 히어로" }
+
+  # 세금
+  tax_notice_in_settlement: true
