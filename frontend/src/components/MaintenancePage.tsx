@@ -104,8 +104,8 @@ export default function MaintenancePage({ onAccessGranted }: { onAccessGranted: 
             {/* 하단 사업자 정보 */}
             <div style={{ marginTop: '40px', textAlign: 'center', fontSize: '11px', color: '#555', lineHeight: 1.8 }}>
                 <div style={{ fontWeight: 'bold', color: '#666', marginBottom: '4px' }}>(주)텔러스테크</div>
-                <div>사업자등록번호: 000-00-00000 | 통신판매업 신고번호: 제0000-서울강남-00000호</div>
-                <div>이메일: support@yeokping.com</div>
+                <div>대표: 이정상 | 사업자등록번호: 113-86-39805</div>
+                <div>서울시 금천구 두산로 70, 에이동 811호 | sales@tellustech.co.kr</div>
                 <div style={{ marginTop: '8px', fontSize: '10px', color: '#444' }}>
                     역핑은 통신판매중개자로서 거래 당사자가 아니며, 판매자가 등록한 상품 정보 및 거래에 대한 책임은 각 판매자에게 있습니다.
                 </div>

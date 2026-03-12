@@ -404,7 +404,7 @@ export default function PingpongFloat() {
 
               {/* AI 면책 */}
               <div style={{ padding: '4px 12px', fontSize: 10, color: '#888', lineHeight: 1.4, borderTop: '1px solid var(--border-subtle)' }}>
-                핑퐁이는 AI 기반 안내로, 답변의 정확성을 보장하지 않습니다. 중요한 결정은 고객센터를 이용해 주세요.
+                핑퐁이의 답변은 일반적인 안내이며, 법적·전문적 조언이 아닙니다.
               </div>
 
               {/* 입력 */}

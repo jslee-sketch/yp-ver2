@@ -26,11 +26,11 @@ export default function Footer() {
       {/* 사업자 정보 */}
       <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.8, marginBottom: 12 }}>
         <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--text-secondary)' }}>(주)텔러스테크</div>
-        <div>대표: 대표자명</div>
-        <div>사업자등록번호: 000-00-00000</div>
-        <div>통신판매업 신고번호: 제0000-서울강남-00000호</div>
-        <div>주소: 서울특별시</div>
-        <div>이메일: support@yeokping.com</div>
+        <div>대표: 이정상</div>
+        <div>사업자등록번호: 113-86-39805</div>
+        <div>통신판매업 신고번호: [신고 후 기입]</div>
+        <div>주소: 서울시 금천구 두산로 70, 에이동 811호</div>
+        <div>이메일: sales@tellustech.co.kr</div>
       </div>
 
       {/* 링크 */}

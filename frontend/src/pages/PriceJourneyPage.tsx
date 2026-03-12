@@ -440,7 +440,7 @@ export default function PriceJourneyPage() {
           background: 'rgba(255,165,0,0.08)', border: '1px solid rgba(255,165,0,0.2)',
           borderRadius: 10, fontSize: 11, color: '#b0b0b0', lineHeight: 1.5,
         }}>
-          역핑은 통신판매중개자로서 거래 당사자가 아닙니다. 각 오퍼의 상품 정보 및 거래 조건에 대한 책임은 해당 판매자에게 있습니다.
+          역핑은 통신판매중개자로서 판매자와 구매자 간 거래를 중개하며, 상품의 품질 및 거래 이행에 대한 책임은 판매자에게 있습니다.
         </div>
       )}
 

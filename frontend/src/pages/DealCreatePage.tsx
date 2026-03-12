@@ -2038,7 +2038,7 @@ export default function DealCreatePage() {
                       border: '1px solid rgba(255,165,0,0.2)', borderRadius: 10,
                       fontSize: 11, color: '#b0b0b0', lineHeight: 1.5,
                     }}>
-                      * AI 시장가 분석은 참고용 정보이며, 실제 거래 가격을 보장하지 않습니다. 외부 데이터 기반으로 정확성을 100% 보장하지 않으며, 이로 인한 손해에 대해 회사는 책임을 지지 않습니다.
+                      AI 시장가 분석은 참고용이며, 실제 가격과 다를 수 있습니다. 거래 결정은 이용자 본인의 책임입니다.
                     </div>
 
                     {/* 목표가 설정 */}
