@@ -86,6 +86,9 @@ import NotificationSettingsPage from './pages/NotificationSettingsPage';
 import InterestSettingsPage from './pages/InterestSettingsPage';
 import AdminUserConditionsPage from './pages/AdminUserConditionsPage';
 import DonzzulMainPage from './pages/donzzul/DonzzulMainPage';
+import DonzzulRecommendPage from './pages/donzzul/DonzzulRecommendPage';
+import DonzzulMyStoresPage from './pages/donzzul/DonzzulMyStoresPage';
+import AdminDonzzulStoresPage from './pages/admin/AdminDonzzulStoresPage';
 
 const MAINTENANCE_KEY = 'yeokping2026';
 
@@ -155,6 +158,7 @@ function App() {
           <Route path="search"           element={<AdminUnifiedSearchPage />} />
           <Route path="custom-report"   element={<AdminCustomReportPage />} />
           <Route path="users/:userId/conditions" element={<AdminUserConditionsPage />} />
+          <Route path="donzzul/stores" element={<AdminDonzzulStoresPage />} />
         </Route>
 
         {/* 레이아웃 공통 적용 */}
@@ -205,6 +209,8 @@ function App() {
 
           {/* 돈쭐 */}
           <Route path="/donzzul" element={<DonzzulMainPage />} />
+          <Route path="/donzzul/hero/recommend" element={<DonzzulRecommendPage />} />
+          <Route path="/donzzul/hero/my-stores" element={<DonzzulMyStoresPage />} />
           <Route path="/donzzul/*" element={<DonzzulMainPage />} />
 
           {/* 액추에이터 */}

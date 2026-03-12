@@ -14,8 +14,22 @@ export default function DonzzulMainPage() {
                 padding: '16px', borderRadius: '12px',
                 background: '#f472b610', border: '1px solid #f472b630',
                 color: '#f472b6', fontSize: '14px',
+                marginBottom: '24px',
             }}>
                 곧 오픈합니다! 기대해주세요!
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+                <a href="/donzzul/hero/recommend" style={{
+                    flex: 1, padding: '14px', borderRadius: '12px',
+                    background: '#f472b620', border: '1px solid #f472b6',
+                    color: '#f472b6', textAlign: 'center', textDecoration: 'none',
+                    fontWeight: 'bold',
+                }}>가게 추천하기</a>
+                <a href="/donzzul/hero/my-stores" style={{
+                    flex: 1, padding: '14px', borderRadius: '12px',
+                    background: '#1a1a2e', border: '1px solid #2a2a4a',
+                    color: '#888', textAlign: 'center', textDecoration: 'none',
+                }}>내가 추천한 가게</a>
             </div>
         </div>
     )

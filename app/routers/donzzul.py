@@ -5,7 +5,8 @@ from app.models import (
     DonzzulActuator, DonzzulStore, DonzzulDeal, DonzzulVoucher,
     DonzzulVoteWeek, DonzzulVote, DonzzulSettlement, DonzzulChatMessage
 )
-from datetime import datetime
+from datetime import datetime, timedelta
+import json
 
 router = APIRouter(prefix="/donzzul", tags=["donzzul"])
 
@@ -16,21 +17,61 @@ router = APIRouter(prefix="/donzzul", tags=["donzzul"])
 @router.post("/stores")
 def create_store(body: dict, db: Session = Depends(get_db)):
     """가게 추천 등록 (돈쭐 히어로)"""
+    # 유효성 검증
+    required = ["store_name", "store_address", "store_phone",
+                "owner_name", "owner_phone",
+                "bank_name", "account_number", "account_holder",
+                "story_text"]
+    for field in required:
+        if not str(body.get(field, "")).strip():
+            raise HTTPException(400, f"{field}은(는) 필수입니다")
+
+    # 사연 최소 길이
+    story = body.get("story_text", "")
+    min_length = 50
+    try:
+        from app.policy.runtime import load_defaults
+        policy = load_defaults()
+        min_length = policy.get("donzzul", {}).get("deal_min_story_length", 50)
+    except Exception:
+        pass
+    if len(story.strip()) < min_length:
+        raise HTTPException(400, f"사연은 최소 {min_length}자 이상 작성해주세요")
+
+    # 중복 체크 (주소 + 전화번호)
+    existing = db.query(DonzzulStore).filter(
+        DonzzulStore.store_address == body["store_address"],
+        DonzzulStore.store_phone == body["store_phone"],
+        DonzzulStore.status.notin_(["REJECTED", "CLOSED"]),
+    ).first()
+    if existing:
+        raise HTTPException(409, "이미 등록된 가게입니다")
+
+    # 히어로 확인
+    hero = db.query(DonzzulActuator).filter(
+        DonzzulActuator.user_id == body.get("registered_by_user_id")
+    ).first()
+
+    photos = body.get("store_photos", [])
+
     store = DonzzulStore(
-        store_name=body.get("store_name"),
-        store_address=body.get("store_address"),
-        store_phone=body.get("store_phone"),
+        store_name=body["store_name"].strip(),
+        store_address=body["store_address"].strip(),
+        store_phone=body["store_phone"].strip(),
         store_lat=body.get("store_lat"),
         store_lng=body.get("store_lng"),
-        store_category=body.get("store_category"),
-        owner_name=body.get("owner_name"),
-        owner_phone=body.get("owner_phone"),
-        bank_name=body.get("bank_name"),
-        account_number=body.get("account_number"),
-        account_holder=body.get("account_holder"),
-        story_text=body.get("story_text", ""),
-        youtube_url=body.get("youtube_url"),
-        registered_by=body.get("registered_by"),
+        store_photos=json.dumps(photos) if isinstance(photos, list) else photos,
+        store_category=body.get("store_category", ""),
+        owner_name=body["owner_name"].strip(),
+        owner_phone=body["owner_phone"].strip(),
+        owner_consent=body.get("owner_consent", False),
+        bank_name=body["bank_name"].strip(),
+        account_number=body["account_number"].strip(),
+        account_holder=body["account_holder"].strip(),
+        business_number=str(body.get("business_number", "")).strip() or None,
+        story_text=story.strip(),
+        youtube_url=str(body.get("youtube_url", "")).strip() or None,
+        registered_by=hero.id if hero else None,
         status="REVIEWING",
     )
     db.add(store)
@@ -55,6 +96,100 @@ def get_store(store_id: int, db: Session = Depends(get_db)):
     if not store:
         raise HTTPException(404, "가게를 찾을 수 없습니다")
     return store
+
+
+@router.put("/stores/{store_id}/verify")
+def verify_store(store_id: int, body: dict, db: Session = Depends(get_db)):
+    """가게 검증 — 승인/거절 (관리자)"""
+    store = db.query(DonzzulStore).filter(DonzzulStore.id == store_id).first()
+    if not store:
+        raise HTTPException(404, "가게를 찾을 수 없습니다")
+
+    action = body.get("action")  # "approve" or "reject"
+
+    if action == "approve":
+        store.status = "APPROVED"
+        store.verified_at = datetime.utcnow()
+        store.verified_by = body.get("admin_id")
+        store.verification_notes = body.get("notes", "")
+        store.owner_consent = True
+        store.owner_consent_at = datetime.utcnow()
+        store.owner_consent_method = body.get("consent_method", "phone")
+        store.account_verified = body.get("account_verified", False)
+
+        # 히어로 포인트 적립
+        hero = db.query(DonzzulActuator).filter(
+            DonzzulActuator.id == store.registered_by
+        ).first()
+        if hero:
+            points = 500
+            levels = {}
+            try:
+                from app.policy.runtime import load_defaults
+                policy = load_defaults()
+                donzzul = policy.get("donzzul", {})
+                points = donzzul.get("hero_points_per_store", 500)
+                levels = donzzul.get("hero_levels", {})
+            except Exception:
+                pass
+
+            hero.total_stores = (hero.total_stores or 0) + 1
+            hero.total_points = (hero.total_points or 0) + points
+
+            # 레벨 체크
+            for level_key in ["legend", "super", "good", "sprout"]:
+                level_info = levels.get(level_key, {})
+                if hero.total_stores >= level_info.get("min_stores", 999):
+                    hero.hero_level = level_key
+                    break
+
+        # 돈쭐 딜 자동 생성 (Phase 1: 투표 없이 바로 오픈)
+        deal_duration = 7
+        try:
+            from app.policy.runtime import load_defaults
+            policy = load_defaults()
+            deal_duration = policy.get("donzzul", {}).get("deal_duration_days", 7)
+        except Exception:
+            pass
+
+        deal = DonzzulDeal(
+            store_id=store.id,
+            title=f"{store.store_name} 응원하기",
+            starts_at=datetime.utcnow(),
+            expires_at=datetime.utcnow() + timedelta(days=deal_duration),
+            status="OPEN",
+            created_by=store.registered_by,
+        )
+        db.add(deal)
+
+    elif action == "reject":
+        store.status = "REJECTED"
+        store.verification_notes = body.get("notes", "거절 사유 미입력")
+    else:
+        raise HTTPException(400, "action은 'approve' 또는 'reject'이어야 합니다")
+
+    db.commit()
+    db.refresh(store)
+    return store
+
+
+@router.put("/stores/{store_id}/set-pin")
+def set_store_pin(store_id: int, body: dict, db: Session = Depends(get_db)):
+    """사장님 비밀번호 설정 (관리자 — 전화 후)"""
+    store = db.query(DonzzulStore).filter(DonzzulStore.id == store_id).first()
+    if not store:
+        raise HTTPException(404, "가게를 찾을 수 없습니다")
+
+    pin = str(body.get("pin", ""))
+    if len(pin) != 4 or not pin.isdigit():
+        raise HTTPException(400, "비밀번호는 4자리 숫자여야 합니다")
+
+    from hashlib import sha256
+    store.store_pin_hash = sha256(pin.encode()).hexdigest()
+    store.store_pin_set_at = datetime.utcnow()
+
+    db.commit()
+    return {"ok": True, "message": "비밀번호 설정 완료"}
 
 
 # ============================================================

@@ -57,6 +57,12 @@ const sections = [
     ],
   },
   {
+    title: '돈쭐',
+    items: [
+      { label: '💚 가게 관리', path: '/admin/donzzul/stores' },
+    ],
+  },
+  {
     title: '시스템',
     items: [
       { label: '알림', path: '/admin/notifications' },
