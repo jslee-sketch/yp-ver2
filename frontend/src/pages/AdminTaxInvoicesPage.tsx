@@ -5,7 +5,8 @@ import {
   batchIssueTaxInvoices,
   issueTaxInvoice,
   cancelTaxInvoice,
-  exportEcountXlsx,
+  exportSalesXlsx,
+  exportPurchaseXlsx,
 } from '../api/taxInvoiceApi';
 import type { TaxInvoice, TaxInvoiceStatus } from '../types/taxInvoice';
 
@@ -85,18 +86,25 @@ export default function AdminTaxInvoicesPage() {
     try { await cancelTaxInvoice(id); load(); } catch { alert('취소 실패'); }
   };
 
-  const handleExport = async () => {
-    const ids = selected.size > 0 ? [...selected] : items.map(i => i.id);
-    if (ids.length === 0) return;
+  const handleExportSales = async () => {
+    const ids = selected.size > 0 ? [...selected].join(',') : undefined;
     try {
-      const blob = await exportEcountXlsx(ids);
+      const blob = await exportSalesXlsx({ invoice_ids: ids, status: tab || undefined, date_from: dateRef.current.from || undefined, date_to: dateRef.current.to || undefined });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'tax_invoices_ecount.xlsx';
-      a.click();
+      a.href = url; a.download = `ecount_sales_${new Date().toISOString().slice(0,10)}.xlsx`; a.click();
       URL.revokeObjectURL(url);
-    } catch { alert('내보내기 실패'); }
+    } catch { alert('매출 엑셀 내보내기 실패'); }
+  };
+
+  const handleExportPurchase = async () => {
+    try {
+      const blob = await exportPurchaseXlsx({ date_from: dateRef.current.from || undefined, date_to: dateRef.current.to || undefined });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `ecount_purchase_${new Date().toISOString().slice(0,10)}.xlsx`; a.click();
+      URL.revokeObjectURL(url);
+    } catch { alert('매입 엑셀 내보내기 실패'); }
   };
 
   if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
@@ -126,8 +134,11 @@ export default function AdminTaxInvoicesPage() {
         <button onClick={handleBatchIssue} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.green, color: '#000', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
           일괄 발행 ({selected.size})
         </button>
-        <button onClick={handleExport} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#7c4dff', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
-          ECOUNT 내보내기
+        <button onClick={handleExportSales} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#7c4dff', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+          매출 엑셀
+        </button>
+        <button onClick={handleExportPurchase} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#e040fb', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+          매입 엑셀
         </button>
         <button onClick={load} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.cyan, color: '#000', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
           새로고침

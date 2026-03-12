@@ -1475,3 +1475,40 @@ class PreRegister(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(200), unique=True, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+# -------------------------------------------------------
+# UserConditionOverride — 참여자별 예외 조건 (관리자 설정)
+# -------------------------------------------------------
+class UserConditionOverride(Base):
+    __tablename__ = "user_condition_overrides"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+
+    fee_rate_override = Column(Float, nullable=True)
+    cooling_days_override = Column(Integer, nullable=True)
+    settlement_days_override = Column(Integer, nullable=True)
+    shipping_support = Column(Boolean, default=False)
+    level_override = Column(Integer, nullable=True)
+
+    pending_changes = Column(Text, nullable=True)
+    effective_after = Column(String(50), nullable=True)
+
+    modified_by = Column(Integer, nullable=True)
+    modified_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# -------------------------------------------------------
+# EcountMapping — ECOUNT 거래처/품목 코드 매핑 (추후 API용)
+# -------------------------------------------------------
+class EcountMapping(Base):
+    __tablename__ = "ecount_mappings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    mapping_type = Column(String(20), nullable=False)  # 'partner' | 'item'
+    internal_id = Column(Integer, nullable=False)
+    ecount_code = Column(String(50), nullable=True)
+    name = Column(String(200), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

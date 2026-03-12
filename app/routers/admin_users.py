@@ -170,3 +170,120 @@ def list_banned_users(
         )
 
     return result
+
+
+# ── 참여자 조건 관리 ─────────────────────────────────────
+class UserConditionsUpdate(BaseModel):
+    fee_rate_override: float | None = None
+    cooling_days_override: int | None = None
+    settlement_days_override: int | None = None
+    shipping_support: bool | None = None
+    level_override: int | None = None
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/{user_id}/conditions", summary="참여자 조건 조회")
+def get_user_conditions(user_id: int, db: Session = Depends(get_db)):
+    from app.models import UserConditionOverride, Seller, Actuator
+    from app.policy.api import policy_time, policy_money
+
+    # 기본값
+    defaults = {
+        "fee_rate": policy_money("platform_fee_rate") * 100 if policy_money("platform_fee_rate") else 3.0,
+        "cooling_days": policy_time("cooling_period_days") or 7,
+        "settlement_days": policy_time("settlement_days") or 7,
+        "shipping_support": False,
+        "level": None,
+    }
+
+    # 사용자 정보
+    seller = db.query(Seller).filter(Seller.id == user_id).first()
+    actuator = db.query(Actuator).filter(Actuator.id == user_id).first()
+
+    user_info = {}
+    if seller:
+        user_info = {
+            "type": "seller",
+            "name": seller.business_name or seller.nickname or f"Seller-{user_id}",
+            "level": seller.level,
+        }
+        defaults["level"] = seller.level
+    elif actuator:
+        user_info = {
+            "type": "actuator",
+            "name": getattr(actuator, "business_name", None) or getattr(actuator, "nickname", None) or f"Actuator-{user_id}",
+        }
+
+    # 오버라이드
+    override = db.query(UserConditionOverride).filter(
+        UserConditionOverride.user_id == user_id
+    ).first()
+
+    current = {
+        "fee_rate": override.fee_rate_override if (override and override.fee_rate_override is not None) else defaults["fee_rate"],
+        "cooling_days": override.cooling_days_override if (override and override.cooling_days_override is not None) else defaults["cooling_days"],
+        "settlement_days": override.settlement_days_override if (override and override.settlement_days_override is not None) else defaults["settlement_days"],
+        "shipping_support": override.shipping_support if (override and override.shipping_support is not None) else defaults["shipping_support"],
+        "level": override.level_override if (override and override.level_override is not None) else defaults["level"],
+    }
+
+    return {
+        "user_id": user_id,
+        "user_info": user_info,
+        "defaults": defaults,
+        "current": current,
+        "has_override": override is not None,
+        "modified_by": override.modified_by if override else None,
+        "modified_at": override.modified_at.isoformat() if (override and override.modified_at) else None,
+    }
+
+
+@router.put("/{user_id}/conditions", summary="참여자 조건 수정 (관리자 전용)")
+def update_user_conditions(
+    user_id: int,
+    body: UserConditionsUpdate,
+    admin_id: int = Query(0, description="관리자 ID"),
+    db: Session = Depends(get_db),
+):
+    from app.models import UserConditionOverride
+
+    override = db.query(UserConditionOverride).filter(
+        UserConditionOverride.user_id == user_id
+    ).first()
+
+    if not override:
+        override = UserConditionOverride(user_id=user_id)
+        db.add(override)
+
+    if body.fee_rate_override is not None:
+        override.fee_rate_override = body.fee_rate_override
+    if body.cooling_days_override is not None:
+        override.cooling_days_override = body.cooling_days_override
+    if body.settlement_days_override is not None:
+        override.settlement_days_override = body.settlement_days_override
+    if body.shipping_support is not None:
+        override.shipping_support = body.shipping_support
+    if body.level_override is not None:
+        override.level_override = body.level_override
+
+    override.modified_by = admin_id
+    db.commit()
+    db.refresh(override)
+
+    return {"ok": True, "user_id": user_id, "message": "조건이 수정되었습니다."}
+
+
+@router.delete("/{user_id}/conditions", summary="참여자 조건 초기화 (기본값 복원)")
+def reset_user_conditions(user_id: int, db: Session = Depends(get_db)):
+    from app.models import UserConditionOverride
+
+    override = db.query(UserConditionOverride).filter(
+        UserConditionOverride.user_id == user_id
+    ).first()
+    if override:
+        db.delete(override)
+        db.commit()
+
+    return {"ok": True, "user_id": user_id, "message": "기본값으로 초기화되었습니다."}

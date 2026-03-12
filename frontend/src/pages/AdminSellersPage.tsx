@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 
@@ -6,6 +7,7 @@ const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252'
 const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' };
 
 export default function AdminSellersPage() {
+  const navigate = useNavigate();
   const [sellers, setSellers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -105,8 +107,11 @@ export default function AdminSellersPage() {
                   <td style={{ padding: '10px 8px' }}>
                     {!s.verified_at ? <span style={{ color: C.orange, fontWeight: 600 }}>미승인</span> : s.is_banned ? <span style={{ color: C.red, fontWeight: 600 }}>정지</span> : <span style={{ color: C.green, fontWeight: 600 }}>활성</span>}
                   </td>
-                  <td style={{ padding: '10px 8px' }}>
-                    {!s.verified_at && <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: C.orange, marginRight: 4 }} title="승인 필요" />}
+                  <td style={{ padding: '10px 8px' }} onClick={e => e.stopPropagation()}>
+                    <button onClick={() => navigate(`/admin/users/${s.user_id || s.id}/conditions`)} title="거래 조건 관리" style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontSize: 13, color: C.cyan }}>
+                      ⚙️
+                    </button>
+                    {!s.verified_at && <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: C.orange, marginLeft: 4 }} title="승인 필요" />}
                   </td>
                 </tr>
               ))}

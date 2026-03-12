@@ -516,6 +516,33 @@ export default function MyPage() {
           );
         })()}
 
+        {/* 판매자 거래 조건 */}
+        {isSeller && sellerProfile && (
+          <Card>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 12 }}>나의 거래 조건</div>
+            {[
+              { label: '판매자 등급', value: `Lv.${sellerProfile.level ?? 6}`, locked: true },
+              { label: '수수료율', value: `${sellerProfile.fee_rate ?? 3.0}%`, locked: true, note: '등급별 자동 적용' },
+              { label: '무상환불기간', value: `${sellerProfile.cooling_days ?? 7}일`, locked: false },
+              { label: '기본 배송료', value: `${(Number(sellerProfile.default_shipping_fee) || 0).toLocaleString()}원`, locked: false },
+              { label: '정산 주기', value: `확정 후 ${sellerProfile.settlement_days ?? 7}일`, locked: true },
+              { label: '세금계산서', value: sellerProfile.business_number ? '자동 발행' : '미등록', locked: true },
+              { label: '사업자 유형', value: (sellerProfile as any).business_type || '미등록', locked: true },
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 0', borderBottom: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 13, color: C.textSec }}>{item.label}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{item.value}</span>
+                  <span style={{ fontSize: 11, color: item.locked ? C.textDim : C.green }}>
+                    {item.locked ? '\uD83D\uDD12' : '\u270F\uFE0F'}
+                  </span>
+                </div>
+              </div>
+            ))}
+            <div style={{ fontSize: 11, color: C.textDim, marginTop: 8 }}>{'\uD83D\uDD12'} 역핑 정책 (변경 불가) / {'\u270F\uFE0F'} 판매자 변경 가능</div>
+          </Card>
+        )}
+
         {/* 계정 관리 */}
         <Card>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.textDim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>계정 관리</div>

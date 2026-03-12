@@ -82,6 +82,7 @@ import SellerTaxInvoicesPage from './pages/SellerTaxInvoicesPage';
 import SellerBusinessInfoPage from './pages/SellerBusinessInfoPage';
 import NotificationSettingsPage from './pages/NotificationSettingsPage';
 import InterestSettingsPage from './pages/InterestSettingsPage';
+import AdminUserConditionsPage from './pages/AdminUserConditionsPage';
 
 const MAINTENANCE_KEY = 'yeokping2026';
 
@@ -150,6 +151,7 @@ function App() {
           <Route path="settings"          element={<AdminSettingsPage />} />
           <Route path="search"           element={<AdminUnifiedSearchPage />} />
           <Route path="custom-report"   element={<AdminCustomReportPage />} />
+          <Route path="users/:userId/conditions" element={<AdminUserConditionsPage />} />
         </Route>
 
         {/* 레이아웃 공통 적용 */}

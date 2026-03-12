@@ -61,6 +61,7 @@ from app.models import (  # noqa: F401
     CustomReportTemplate,
     UserInterest, NotificationSetting,
     PreRegister,
+    UserConditionOverride, EcountMapping,
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -859,6 +860,27 @@ try:
     app.mount("/uploads", _StaticFiles(directory="uploads"), name="uploads")
 except Exception as _e:
     print(f"[warn] static files mount failed: {_e}")
+
+# WWW 리다이렉트: yeokping.com → www.yeokping.com
+try:
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.responses import RedirectResponse as _RedirectResponse
+
+    class WwwRedirectMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            host = request.headers.get("host", "")
+            if host.split(":")[0] == "yeokping.com":
+                url = request.url
+                new_url = str(url).replace("://yeokping.com", "://www.yeokping.com")
+                if not new_url.startswith("https"):
+                    new_url = new_url.replace("http://", "https://")
+                return _RedirectResponse(new_url, status_code=301)
+            return await call_next(request)
+
+    app.add_middleware(WwwRedirectMiddleware)
+    print("✅ WwwRedirectMiddleware loaded")
+except Exception as _e:
+    print(f"[warn] WwwRedirectMiddleware not loaded: {_e}")
 
 # Admin Auth 미들웨어 — /admin/* 엔드포인트 JWT+role=admin 필수
 try:

@@ -65,6 +65,18 @@ export async function exportEcountXlsx(invoiceIds: number[]) {
   return data;
 }
 
+/** ECOUNT 매출 엑셀 다운로드 */
+export async function exportSalesXlsx(params?: { invoice_ids?: string; status?: string; date_from?: string; date_to?: string }) {
+  const { data } = await apiClient.get(API.TAX_INVOICES.EXPORT_ECOUNT_SALES, { params, responseType: 'blob' });
+  return data;
+}
+
+/** ECOUNT 매입 엑셀 다운로드 */
+export async function exportPurchaseXlsx(params?: { date_from?: string; date_to?: string }) {
+  const { data } = await apiClient.get(API.TAX_INVOICES.EXPORT_ECOUNT_PURCHASE, { params, responseType: 'blob' });
+  return data;
+}
+
 /** 사업자등록증 OCR */
 export async function ocrBusinessRegistration(file: File): Promise<OcrBusinessResult> {
   const form = new FormData();

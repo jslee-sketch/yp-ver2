@@ -257,6 +257,43 @@ def export_ecount(
     )
 
 
+# ── 7-2) ECOUNT 매출 엑셀 ─────────────────────────────────
+@router.get("/export-ecount-sales", summary="[ADMIN] ECOUNT 매출 엑셀 (플랫폼 수수료)")
+def export_ecount_sales(
+    invoice_ids: str = Query(None, description="콤마 구분 invoice ID (없으면 전체)"),
+    status: str = Query(None),
+    date_from: str = Query(None),
+    date_to: str = Query(None),
+    db: Session = Depends(get_db),
+):
+    from app.services.ecount_service import export_sales_excel
+    ids = [int(x.strip()) for x in invoice_ids.split(",") if x.strip().isdigit()] if invoice_ids else None
+    xlsx_bytes = export_sales_excel(db, invoice_ids=ids, status=status, date_from=date_from, date_to=date_to)
+    filename = f"ecount_sales_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    return StreamingResponse(
+        BytesIO(xlsx_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+# ── 7-3) ECOUNT 매입 엑셀 ─────────────────────────────────
+@router.get("/export-ecount-purchase", summary="[ADMIN] ECOUNT 매입 엑셀 (액츄에이터 커미션)")
+def export_ecount_purchase(
+    date_from: str = Query(None),
+    date_to: str = Query(None),
+    db: Session = Depends(get_db),
+):
+    from app.services.ecount_service import export_purchase_excel
+    xlsx_bytes = export_purchase_excel(db, date_from=date_from, date_to=date_to)
+    filename = f"ecount_purchase_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    return StreamingResponse(
+        BytesIO(xlsx_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 # ── 8) 취소 (admin) ─────────────────────────────────────
 @router.post("/{invoice_id}/cancel", summary="[ADMIN] 세금계산서 취소")
 def cancel_tax_invoice(invoice_id: int = Path(..., ge=1), db: Session = Depends(get_db)):

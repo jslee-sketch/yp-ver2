@@ -340,6 +340,8 @@ export const API = {
     BATCH_ISSUE:       '/v3_6/tax-invoices/batch-issue',
     SELLER_ME:         '/v3_6/tax-invoices/seller/me',
     EXPORT_ECOUNT:     '/v3_6/tax-invoices/export-ecount',
+    EXPORT_ECOUNT_SALES: '/v3_6/tax-invoices/export-ecount-sales',
+    EXPORT_ECOUNT_PURCHASE: '/v3_6/tax-invoices/export-ecount-purchase',
   },
 
   // ── 판매자 OCR / 사업자 정보 ──────────────────────────
@@ -362,6 +364,13 @@ export const API = {
     MATCH_SELLERS:       '/behavior/match-deals-for-sellers',
     HESITATING:          '/behavior/hesitating',
     SELLER_SKIP_PATTERNS: '/behavior/seller-skip-patterns',
+  },
+
+  // ── 참여자 조건 관리 ──────────────────────────────────
+  USER_CONDITIONS: {
+    GET:    (userId: number) => `/admin/users/${userId}/conditions`,
+    UPDATE: (userId: number) => `/admin/users/${userId}/conditions`,
+    RESET:  (userId: number) => `/admin/users/${userId}/conditions`,
   },
 
 } as const;
