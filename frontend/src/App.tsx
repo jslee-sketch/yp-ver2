@@ -93,6 +93,7 @@ import DonzzulVouchersPage from './pages/donzzul/DonzzulVouchersPage';
 import DonzzulVoucherUsePage from './pages/donzzul/DonzzulVoucherUsePage';
 import DonzzulChatPage from './pages/donzzul/DonzzulChatPage';
 import DonzzulVotePage from './pages/donzzul/DonzzulVotePage';
+import DonzzulHeroProfilePage from './pages/donzzul/DonzzulHeroProfilePage';
 import AdminDonzzulStoresPage from './pages/admin/AdminDonzzulStoresPage';
 import AdminDonzzulSettlementsPage from './pages/admin/AdminDonzzulSettlementsPage';
 
@@ -221,6 +222,7 @@ function App() {
           <Route path="/donzzul/vouchers/:code/use" element={<DonzzulVoucherUsePage />} />
           <Route path="/donzzul/deals/:dealId/chat" element={<DonzzulChatPage />} />
           <Route path="/donzzul/vote" element={<DonzzulVotePage />} />
+          <Route path="/donzzul/hero/:heroId" element={<DonzzulHeroProfilePage />} />
           <Route path="/donzzul/hero/recommend" element={<DonzzulRecommendPage />} />
           <Route path="/donzzul/hero/my-stores" element={<DonzzulMyStoresPage />} />
           <Route path="/donzzul/*" element={<DonzzulMainPage />} />

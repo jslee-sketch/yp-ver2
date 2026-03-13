@@ -438,6 +438,38 @@ def my_vouchers(buyer_id: int = Query(...), db: Session = Depends(get_db)):
 # 히어로
 # ============================================================
 
+# ============================================================
+# 통계 (Sprint 7)
+# ============================================================
+
+@router.get("/stats")
+def donzzul_stats(db: Session = Depends(get_db)):
+    """돈쭐 전체 통계"""
+    from sqlalchemy import func
+
+    total_stores = db.query(func.count(DonzzulStore.id)).filter(DonzzulStore.status == "APPROVED").scalar() or 0
+    total_heroes = db.query(func.count(DonzzulActuator.id)).filter(DonzzulActuator.status == "ACTIVE").scalar() or 0
+    total_vouchers = db.query(func.count(DonzzulVoucher.id)).scalar() or 0
+    total_amount = db.query(func.coalesce(func.sum(DonzzulVoucher.amount), 0)).scalar() or 0
+    total_used = db.query(func.count(DonzzulVoucher.id)).filter(DonzzulVoucher.status == "USED").scalar() or 0
+    total_donated = db.query(func.count(DonzzulVoucher.id)).filter(DonzzulVoucher.status == "DONATED").scalar() or 0
+    open_deals = db.query(func.count(DonzzulDeal.id)).filter(DonzzulDeal.status == "OPEN").scalar() or 0
+
+    return {
+        "total_stores": total_stores,
+        "total_heroes": total_heroes,
+        "total_vouchers": total_vouchers,
+        "total_amount": total_amount,
+        "total_used": total_used,
+        "total_donated": total_donated,
+        "open_deals": open_deals,
+    }
+
+
+# ============================================================
+# 히어로
+# ============================================================
+
 @router.post("/actuators/register")
 def register_hero(body: dict, db: Session = Depends(get_db)):
     """돈쭐 히어로 등록"""
@@ -465,15 +497,72 @@ def my_hero_info(user_id: int = Query(...), db: Session = Depends(get_db)):
     ).first()
     if not hero:
         raise HTTPException(404, "돈쭐 히어로로 등록되지 않았습니다")
-    return hero
+    return _hero_profile(hero, db)
+
+
+@router.get("/actuators/{hero_id}/profile")
+def hero_profile(hero_id: int, db: Session = Depends(get_db)):
+    """히어로 프로필 상세"""
+    hero = db.query(DonzzulActuator).filter(DonzzulActuator.id == hero_id).first()
+    if not hero:
+        raise HTTPException(404, "히어로를 찾을 수 없습니다")
+    return _hero_profile(hero, db)
 
 
 @router.get("/actuators/ranking")
 def hero_ranking(db: Session = Depends(get_db)):
-    """히어로 랭킹"""
-    return db.query(DonzzulActuator).filter(
+    """히어로 랭킹 (가게 수 기준)"""
+    heroes = db.query(DonzzulActuator).filter(
         DonzzulActuator.status == "ACTIVE"
     ).order_by(DonzzulActuator.total_stores.desc()).limit(20).all()
+
+    policy = _load_donzzul_policy()
+    levels = policy.get("hero_levels", {})
+
+    result = []
+    for i, hero in enumerate(heroes):
+        level_info = levels.get(hero.hero_level or "sprout", {})
+        result.append({
+            "rank": i + 1,
+            "hero_id": hero.id,
+            "user_id": hero.user_id,
+            "hero_level": hero.hero_level,
+            "badge": level_info.get("badge", "🌱"),
+            "title": level_info.get("title", "새싹 히어로"),
+            "total_stores": hero.total_stores or 0,
+            "total_points": hero.total_points or 0,
+        })
+
+    return result
+
+
+def _hero_profile(hero, db):
+    """히어로 프로필 응답 구성"""
+    policy = _load_donzzul_policy()
+    levels = policy.get("hero_levels", {})
+    level_info = levels.get(hero.hero_level or "sprout", {})
+
+    # 이 히어로가 추천한 가게 목록
+    stores = db.query(DonzzulStore).filter(
+        DonzzulStore.registered_by == hero.id,
+    ).order_by(DonzzulStore.created_at.desc()).all()
+
+    return {
+        "hero_id": hero.id,
+        "user_id": hero.user_id,
+        "hero_level": hero.hero_level,
+        "badge": level_info.get("badge", "🌱"),
+        "title": level_info.get("title", "새싹 히어로"),
+        "total_stores": hero.total_stores or 0,
+        "total_points": hero.total_points or 0,
+        "status": hero.status,
+        "stores": [{
+            "id": s.id,
+            "store_name": s.store_name,
+            "status": s.status,
+            "created_at": str(s.created_at),
+        } for s in stores],
+    }
 
 
 # ============================================================
