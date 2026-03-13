@@ -462,6 +462,16 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass
 
+    # ✅ donzzul_settlements period_start/period_end nullable 변경 (PostgreSQL)
+    for _col in ["period_start", "period_end"]:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE donzzul_settlements ALTER COLUMN {_col} DROP NOT NULL"))
+                _conn.commit()
+                print(f"[migration] ALTER TABLE donzzul_settlements ALTER COLUMN {_col} DROP NOT NULL OK")
+        except Exception:
+            pass
+
     # ✅ donzzul_settlements 신규 컬럼 마이그레이션
     _SETTLEMENT_NEW_COLS = [
         ("total_amount", "INTEGER DEFAULT 0"),

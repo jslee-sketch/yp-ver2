@@ -32,21 +32,32 @@ def create_donzzul_settlement(store_id: int, db: Session) -> dict:
     platform_fee = 0
     payout_amount = total_amount - platform_fee
 
+    # 기간 계산
+    p_from = min(v.created_at for v in unsettled)
+    p_to = max(v.used_at or v.expires_at or v.created_at for v in unsettled)
+
     # 정산 생성
     settlement = DonzzulSettlement(
         store_id=store_id,
         total_amount=total_amount,
+        total_sales=total_amount,
         used_amount=used_amount,
+        used_vouchers=len([v for v in unsettled if v.status == "USED"]),
         donated_amount=donated_amount,
+        expired_donated=len([v for v in unsettled if v.status == "DONATED"]),
+        net_amount=payout_amount,
         platform_fee=platform_fee,
         payout_amount=payout_amount,
         voucher_count=len(unsettled),
+        total_vouchers=len(unsettled),
         status="PENDING",
         bank_name=store.bank_name,
         account_number=store.account_number,
         account_holder=store.account_holder,
-        period_from=min(v.created_at for v in unsettled),
-        period_to=max(v.used_at or v.expires_at or v.created_at for v in unsettled),
+        period_start=p_from,
+        period_end=p_to,
+        period_from=p_from,
+        period_to=p_to,
     )
     db.add(settlement)
     db.flush()
