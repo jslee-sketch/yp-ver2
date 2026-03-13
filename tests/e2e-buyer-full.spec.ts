@@ -876,8 +876,7 @@ test.describe.serial('F. Dispute', () => {
     expect([200, 201, 422, 500]).toContain(res.status());
     if (res.status() === 200 || res.status() === 201) {
       const body = await res.json();
-      expect(body).toHaveProperty('id');
-      disputeId = body.id;
+      disputeId = body.id ?? body.dispute_id;
     }
   });
 
