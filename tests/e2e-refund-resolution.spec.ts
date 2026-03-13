@@ -638,6 +638,8 @@ test.describe('Refund Stress', () => {
 test.describe('Inspection & Deduction', () => {
 
   test('R46: 감가 15% → 정확한 금액', async ({ request }) => {
+    // Wait for rate limit to cool down after stress tests
+    await new Promise(r => setTimeout(r, 2000));
     const res = await request.get(`${BASE}/v3_6/refund-simulator/calculate?amount=100000&shipping_mode=free&delivery_status=delivered&inspection_deduction_rate=0.15&role=admin`);
     expect(res.status()).toBe(200);
     const body = await res.json();
