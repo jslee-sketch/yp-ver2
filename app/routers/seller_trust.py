@@ -214,22 +214,22 @@ def api_kpi_advanced(period: str = Query("30d"), db: Session = Depends(get_db)):
     days_map = {"7d": 7, "30d": 30, "90d": 90, "all": 9999}
     since = now - timedelta(days=days_map.get(period, 30))
 
-    gmv = db.query(func.sum(Reservation.total_amount)).filter(
+    gmv = db.query(func.sum(Reservation.amount_total)).filter(
         Reservation.created_at >= since,
-        Reservation.status.in_(["CONFIRMED", "COMPLETED"]),
+        Reservation.status.in_(["PAID"]),
     ).scalar() or 0
 
     order_count = db.query(Reservation).filter(
         Reservation.created_at >= since,
-        Reservation.status.in_(["CONFIRMED", "COMPLETED"]),
+        Reservation.status.in_(["PAID"]),
     ).count()
     aov = round(gmv / order_count) if order_count > 0 else 0
 
     total_offers = db.query(Offer).filter(Offer.created_at >= since).count()
-    accepted_offers = db.query(Offer).filter(
-        Offer.created_at >= since, Offer.status == "ACCEPTED",
+    confirmed_offers = db.query(Offer).filter(
+        Offer.created_at >= since, Offer.is_confirmed == True,
     ).count()
-    conversion_rate = round(accepted_offers / total_offers * 100, 1) if total_offers > 0 else 0
+    conversion_rate = round(confirmed_offers / total_offers * 100, 1) if total_offers > 0 else 0
 
     mau = db.query(func.count(func.distinct(Reservation.buyer_id))).filter(
         Reservation.created_at >= now - timedelta(days=30),
@@ -255,7 +255,7 @@ def api_kpi_advanced(period: str = Query("30d"), db: Session = Depends(get_db)):
         "aov": aov,
         "order_count": order_count,
         "total_offers": total_offers,
-        "accepted_offers": accepted_offers,
+        "accepted_offers": confirmed_offers,
         "conversion_rate": conversion_rate,
         "mau": mau,
         "retention_rate": retention_rate,
@@ -294,7 +294,7 @@ def api_insights_trends(db: Session = Depends(get_db)):
         ).count()
         price_ranges.append({"label": label, "count": count})
 
-    recent_deals = db.query(Deal.title).filter(
+    recent_deals = db.query(Deal.product_name).filter(
         Deal.created_at >= now - timedelta(days=7)
     ).all()
 

@@ -8,7 +8,13 @@ from app.models import Seller, SellerExternalRating, SellerVerificationScore
 def calculate_seller_score(seller_id: int, db: Session) -> dict:
     seller = db.query(Seller).filter(Seller.id == seller_id).first()
     if not seller:
-        return {"error": "판매자를 찾을 수 없습니다"}
+        # seller가 없어도 기본 점수 계산 가능
+        class _FakeSeller:
+            created_at = None
+            ecommerce_permit_image = None
+            bankbook_image = None
+            business_license_image = None
+        seller = _FakeSeller()
 
     now = datetime.utcnow()
     reasons = []
