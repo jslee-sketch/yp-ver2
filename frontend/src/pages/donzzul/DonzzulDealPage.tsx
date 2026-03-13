@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 
 const API = import.meta.env.VITE_API_URL || ''
 
@@ -196,6 +196,16 @@ export default function DonzzulDealPage() {
                     </div>
                 </div>
             )}
+
+            {/* 응원 채팅방 링크 */}
+            <Link to={`/donzzul/deals/${id}/chat`} style={{
+                display: 'block', textAlign: 'center', padding: '14px', borderRadius: '12px',
+                background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)',
+                color: '#4ade80', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px',
+                marginBottom: '16px',
+            }}>
+                💬 응원 채팅방 입장
+            </Link>
 
             {/* 응원 메시지 */}
             {cheer_messages.length > 0 && (

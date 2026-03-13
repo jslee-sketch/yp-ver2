@@ -583,23 +583,87 @@ def get_settlement(settlement_id: int, db: Session = Depends(get_db)):
 # ============================================================
 
 @router.get("/deals/{deal_id}/chat/messages")
-def get_chat_messages(deal_id: int, limit: int = Query(50), db: Session = Depends(get_db)):
-    """채팅 기록"""
-    return db.query(DonzzulChatMessage).filter(
-        DonzzulChatMessage.deal_id == deal_id
-    ).order_by(DonzzulChatMessage.created_at.desc()).limit(limit).all()
+def get_chat_messages(
+    deal_id: int,
+    limit: int = Query(50),
+    offset: int = Query(0),
+    db: Session = Depends(get_db),
+):
+    """채팅 기록 (is_deleted=False만, 페이지네이션)"""
+    q = db.query(DonzzulChatMessage).filter(
+        DonzzulChatMessage.deal_id == deal_id,
+        DonzzulChatMessage.is_deleted == False,
+    ).order_by(DonzzulChatMessage.created_at.desc())
+
+    total = q.count()
+    messages = q.offset(offset).limit(limit).all()
+
+    return {
+        "messages": [
+            {
+                "id": m.id,
+                "deal_id": m.deal_id,
+                "sender_id": m.sender_id,
+                "sender_nickname": m.sender_nickname or "익명",
+                "message_type": m.message_type,
+                "content": m.content,
+                "created_at": str(m.created_at),
+            }
+            for m in messages
+        ],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @router.post("/deals/{deal_id}/chat/messages")
 def post_chat_message(deal_id: int, body: dict, db: Session = Depends(get_db)):
     """메시지 전송"""
+    content = str(body.get("content", "")).strip()
+    if not content:
+        raise HTTPException(400, "메시지 내용을 입력해주세요")
+    if len(content) > 500:
+        raise HTTPException(400, "메시지는 500자 이내로 작성해주세요")
+
+    # 딜 존재 확인
+    deal = db.query(DonzzulDeal).filter(DonzzulDeal.id == deal_id).first()
+    if not deal:
+        raise HTTPException(404, "딜을 찾을 수 없습니다")
+
     msg = DonzzulChatMessage(
         deal_id=deal_id,
         sender_id=body.get("sender_id"),
+        sender_nickname=str(body.get("sender_nickname", "익명"))[:50],
         message_type=body.get("message_type", "CHEER"),
-        content=body.get("content", ""),
+        content=content[:500],
     )
     db.add(msg)
     db.commit()
     db.refresh(msg)
-    return msg
+    return {
+        "id": msg.id,
+        "deal_id": msg.deal_id,
+        "sender_id": msg.sender_id,
+        "sender_nickname": msg.sender_nickname or "익명",
+        "message_type": msg.message_type,
+        "content": msg.content,
+        "created_at": str(msg.created_at),
+    }
+
+
+@router.delete("/chat/messages/{message_id}")
+def delete_chat_message(message_id: int, body: dict = {}, db: Session = Depends(get_db)):
+    """메시지 삭제 (soft delete)"""
+    msg = db.query(DonzzulChatMessage).filter(DonzzulChatMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(404, "메시지를 찾을 수 없습니다")
+
+    # 본인 확인 (sender_id가 있는 경우)
+    requester_id = body.get("sender_id")
+    if msg.sender_id and requester_id and msg.sender_id != requester_id:
+        raise HTTPException(403, "본인의 메시지만 삭제할 수 있습니다")
+
+    msg.is_deleted = True
+    db.commit()
+    return {"ok": True, "message": "삭제되었습니다"}

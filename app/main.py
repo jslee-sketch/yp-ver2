@@ -494,6 +494,29 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass
 
+    # ✅ 돈쭐 채팅 컬럼 마이그레이션
+    _CHAT_NEW_COLS = [
+        ("sender_nickname", "VARCHAR(50)"),
+        ("is_deleted", "BOOLEAN DEFAULT FALSE"),
+    ]
+    for _col, _type in _CHAT_NEW_COLS:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE donzzul_chat_messages ADD COLUMN {_col} {_type}"))
+                _conn.commit()
+                print(f"[migration] ALTER TABLE donzzul_chat_messages ADD COLUMN {_col} OK")
+        except Exception:
+            pass
+
+    # FK constraint drop for donzzul_chat_messages.sender_id (buyers table may not have the row)
+    try:
+        with engine.connect() as _conn:
+            _conn.execute(_text("ALTER TABLE donzzul_chat_messages DROP CONSTRAINT IF EXISTS donzzul_chat_messages_sender_id_fkey"))
+            _conn.commit()
+            print("[migration] donzzul_chat_messages sender_id FK dropped")
+    except Exception:
+        pass
+
     # ✅ 돈쭐 배치 스케줄러 시작 (매 1시간)
     import threading, time as _time
     def _donzzul_batch_scheduler():

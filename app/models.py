@@ -1746,8 +1746,10 @@ class DonzzulChatMessage(Base):
     id = Column(Integer, primary_key=True, index=True)
     deal_id = Column(Integer, ForeignKey("donzzul_deals.id"), nullable=False)
     sender_id = Column(Integer, ForeignKey("buyers.id"), nullable=True)
+    sender_nickname = Column(String(50), nullable=True)
 
     message_type = Column(String(20), default="CHEER")
     content = Column(Text, nullable=False)
+    is_deleted = Column(Boolean, default=False)
 
     created_at = Column(DateTime, default=datetime.utcnow)
