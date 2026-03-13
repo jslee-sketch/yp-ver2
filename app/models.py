@@ -1688,8 +1688,9 @@ class DonzzulVote(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     week_id = Column(Integer, ForeignKey("donzzul_vote_weeks.id"), nullable=False)
-    voter_id = Column(Integer, ForeignKey("buyers.id"), nullable=False)
-    store_id = Column(Integer, ForeignKey("donzzul_stores.id"), nullable=False)
+    voter_id = Column(Integer, nullable=True)
+    store_id = Column(Integer, nullable=True)
+    weight = Column(Integer, default=1)
 
     voted_at = Column(DateTime, default=datetime.utcnow)
 

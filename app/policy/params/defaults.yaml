@@ -245,13 +245,20 @@ donzzul:
   deal_video_required: false
   deal_video_bonus_points: 200
 
-  # 투표 (Phase 2에서 활성화)
-  vote_enabled: false
+  # 투표
+  vote_enabled: true
+  vote_duration_days: 7
   vote_min_account_age_days: 7
   vote_min_deal_usage: 1
   vote_min_threshold: 50
   vote_self_recommend_blocked: true
   vote_top_n: 3
+  vote_auto_deal_top_n: 1
+  vote_weights:
+    sprout: 1
+    good: 2
+    super: 3
+    legend: 5
   max_consecutive_fail: 3
 
   # 정산

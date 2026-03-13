@@ -517,6 +517,29 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
 
+    # ✅ 돈쭐 투표 컬럼 마이그레이션
+    _VOTE_NEW_COLS = [
+        ("weight", "INTEGER DEFAULT 1"),
+    ]
+    for _col, _type in _VOTE_NEW_COLS:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE donzzul_votes ADD COLUMN {_col} {_type}"))
+                _conn.commit()
+                print(f"[migration] ALTER TABLE donzzul_votes ADD COLUMN {_col} OK")
+        except Exception:
+            pass
+
+    # FK constraint drops for donzzul_votes
+    for _fk_name in ["donzzul_votes_voter_id_fkey", "donzzul_votes_store_id_fkey"]:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE donzzul_votes DROP CONSTRAINT IF EXISTS {_fk_name}"))
+                _conn.commit()
+                print(f"[migration] donzzul_votes {_fk_name} dropped")
+        except Exception:
+            pass
+
     # ✅ 돈쭐 배치 스케줄러 시작 (매 1시간)
     import threading, time as _time
     def _donzzul_batch_scheduler():

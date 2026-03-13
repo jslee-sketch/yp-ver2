@@ -477,16 +477,242 @@ def hero_ranking(db: Session = Depends(get_db)):
 
 
 # ============================================================
-# 투표 (Phase 2용 — 현재 비활성)
+# 투표
 # ============================================================
 
 @router.get("/votes/current-week")
 def current_vote(db: Session = Depends(get_db)):
-    """이번 주 투표"""
+    """이번 주 투표 (VOTING 상태 우선, 없으면 UPCOMING)"""
     week = db.query(DonzzulVoteWeek).filter(
         DonzzulVoteWeek.status.in_(["VOTING", "UPCOMING"])
     ).order_by(DonzzulVoteWeek.created_at.desc()).first()
-    return week
+    if not week:
+        return None
+    return _vote_week_response(week, db)
+
+
+@router.get("/votes/weeks")
+def list_vote_weeks(status: str = Query(None), db: Session = Depends(get_db)):
+    """투표 주차 목록"""
+    q = db.query(DonzzulVoteWeek)
+    if status:
+        q = q.filter(DonzzulVoteWeek.status == status)
+    weeks = q.order_by(DonzzulVoteWeek.created_at.desc()).limit(20).all()
+    return [_vote_week_response(w, db) for w in weeks]
+
+
+@router.get("/votes/weeks/{week_id}")
+def get_vote_week(week_id: int, db: Session = Depends(get_db)):
+    """투표 주차 상세"""
+    week = db.query(DonzzulVoteWeek).filter(DonzzulVoteWeek.id == week_id).first()
+    if not week:
+        raise HTTPException(404, "투표 주차를 찾을 수 없습니다")
+    return _vote_week_response(week, db)
+
+
+@router.post("/votes/weeks")
+def create_vote_week(body: dict, db: Session = Depends(get_db)):
+    """투표 주차 생성 (관리자)"""
+    week_label = body.get("week_label", "")
+    if not week_label:
+        raise HTTPException(400, "week_label은 필수입니다")
+
+    # 후보 가게 ID 목록
+    candidate_ids = body.get("candidate_store_ids", [])
+    if len(candidate_ids) < 2:
+        raise HTTPException(400, "최소 2개 이상의 후보 가게가 필요합니다")
+
+    # 후보 가게 존재 확인
+    for sid in candidate_ids:
+        store = db.query(DonzzulStore).filter(DonzzulStore.id == sid, DonzzulStore.status == "APPROVED").first()
+        if not store:
+            raise HTTPException(400, f"가게 ID {sid}는 승인된 가게가 아닙니다")
+
+    # 투표 기간
+    policy = _load_donzzul_policy()
+    vote_duration = policy.get("vote_duration_days", 7)
+    vote_start = datetime.utcnow()
+    vote_end = vote_start + timedelta(days=vote_duration)
+
+    week = DonzzulVoteWeek(
+        week_label=week_label,
+        vote_start=vote_start,
+        vote_end=vote_end,
+        candidates=json.dumps(candidate_ids),
+        status="VOTING",
+        total_votes=0,
+    )
+    db.add(week)
+    db.commit()
+    db.refresh(week)
+    return _vote_week_response(week, db)
+
+
+@router.post("/votes/cast")
+def cast_vote(body: dict, db: Session = Depends(get_db)):
+    """투표하기"""
+    week_id = body.get("week_id")
+    voter_id = body.get("voter_id")
+    store_id = body.get("store_id")
+
+    if not week_id or not store_id:
+        raise HTTPException(400, "week_id와 store_id는 필수입니다")
+
+    week = db.query(DonzzulVoteWeek).filter(DonzzulVoteWeek.id == week_id).first()
+    if not week:
+        raise HTTPException(404, "투표 주차를 찾을 수 없습니다")
+    if week.status != "VOTING":
+        raise HTTPException(400, "현재 투표 중이 아닙니다")
+
+    # 후보 확인
+    candidates = json.loads(week.candidates or "[]")
+    if store_id not in candidates:
+        raise HTTPException(400, "해당 가게는 이번 주 후보가 아닙니다")
+
+    # 중복 투표 확인
+    if voter_id:
+        existing = db.query(DonzzulVote).filter(
+            DonzzulVote.week_id == week_id,
+            DonzzulVote.voter_id == voter_id,
+        ).first()
+        if existing:
+            raise HTTPException(409, "이미 이번 주에 투표하셨습니다")
+
+    # 가중치 계산 (히어로 레벨에 따라)
+    weight = 1
+    if voter_id:
+        hero = db.query(DonzzulActuator).filter(DonzzulActuator.user_id == voter_id).first()
+        if hero:
+            policy = _load_donzzul_policy()
+            vote_weights = policy.get("vote_weights", {})
+            weight = vote_weights.get(hero.hero_level or "sprout", 1)
+
+    vote = DonzzulVote(
+        week_id=week_id,
+        voter_id=voter_id,
+        store_id=store_id,
+        weight=weight,
+    )
+    db.add(vote)
+
+    week.total_votes = (week.total_votes or 0) + weight
+    db.commit()
+    db.refresh(vote)
+
+    return {
+        "vote_id": vote.id,
+        "week_id": week_id,
+        "store_id": store_id,
+        "weight": weight,
+        "message": f"투표 완료! (가중치: {weight}표)",
+    }
+
+
+@router.post("/votes/weeks/{week_id}/close")
+def close_vote_week(week_id: int, body: dict = {}, db: Session = Depends(get_db)):
+    """투표 마감 + 결과 집계 + 자동 딜 생성 (관리자)"""
+    week = db.query(DonzzulVoteWeek).filter(DonzzulVoteWeek.id == week_id).first()
+    if not week:
+        raise HTTPException(404, "투표 주차를 찾을 수 없습니다")
+    if week.status not in ("VOTING", "UPCOMING"):
+        raise HTTPException(400, "이미 마감된 투표입니다")
+
+    # 투표 집계
+    votes = db.query(DonzzulVote).filter(DonzzulVote.week_id == week_id).all()
+    store_scores: dict = {}
+    for v in votes:
+        store_scores[v.store_id] = store_scores.get(v.store_id, 0) + (v.weight or 1)
+
+    # 정렬
+    ranked = sorted(store_scores.items(), key=lambda x: x[1], reverse=True)
+
+    # 상위 3개 저장
+    if len(ranked) >= 1:
+        week.rank_1_store_id = ranked[0][0]
+    if len(ranked) >= 2:
+        week.rank_2_store_id = ranked[1][0]
+    if len(ranked) >= 3:
+        week.rank_3_store_id = ranked[2][0]
+
+    week.status = "CLOSED"
+    week.announced_at = datetime.utcnow()
+
+    # 1위 가게에 자동 딜 생성
+    created_deals = []
+    policy = _load_donzzul_policy()
+    top_n = body.get("auto_deal_count", policy.get("vote_auto_deal_top_n", 1))
+
+    for i in range(min(top_n, len(ranked))):
+        store_id = ranked[i][0]
+        store = db.query(DonzzulStore).filter(DonzzulStore.id == store_id).first()
+        if not store:
+            continue
+
+        # 이미 OPEN 딜이 있으면 스킵
+        existing_deal = db.query(DonzzulDeal).filter(
+            DonzzulDeal.store_id == store_id,
+            DonzzulDeal.status == "OPEN",
+        ).first()
+        if existing_deal:
+            created_deals.append({"store_id": store_id, "deal_id": existing_deal.id, "status": "already_open"})
+            continue
+
+        deal_duration = policy.get("deal_duration_days", 7)
+        deal = DonzzulDeal(
+            store_id=store_id,
+            title=f"{store.store_name} 응원하기 (투표 선정)",
+            starts_at=datetime.utcnow(),
+            expires_at=datetime.utcnow() + timedelta(days=deal_duration),
+            status="OPEN",
+        )
+        db.add(deal)
+        db.flush()
+        created_deals.append({"store_id": store_id, "deal_id": deal.id, "status": "created"})
+
+    db.commit()
+
+    return {
+        "week_id": week_id,
+        "status": "CLOSED",
+        "total_votes": week.total_votes,
+        "ranking": [{"store_id": sid, "score": score, "rank": i+1} for i, (sid, score) in enumerate(ranked)],
+        "created_deals": created_deals,
+    }
+
+
+def _vote_week_response(week, db):
+    """투표 주차 응답 구성"""
+    candidates = json.loads(week.candidates or "[]")
+    candidate_stores = []
+    for sid in candidates:
+        store = db.query(DonzzulStore).filter(DonzzulStore.id == sid).first()
+        # 해당 가게 득표수
+        votes = db.query(DonzzulVote).filter(
+            DonzzulVote.week_id == week.id,
+            DonzzulVote.store_id == sid,
+        ).all()
+        score = sum(v.weight or 1 for v in votes)
+
+        candidate_stores.append({
+            "store_id": sid,
+            "store_name": store.store_name if store else "알 수 없음",
+            "story_text": (store.story_text[:100] + "...") if store and store.story_text and len(store.story_text) > 100 else (store.story_text if store else ""),
+            "score": score,
+        })
+
+    return {
+        "id": week.id,
+        "week_label": week.week_label,
+        "vote_start": str(week.vote_start),
+        "vote_end": str(week.vote_end),
+        "status": week.status,
+        "total_votes": week.total_votes,
+        "candidates": candidate_stores,
+        "rank_1_store_id": week.rank_1_store_id,
+        "rank_2_store_id": week.rank_2_store_id,
+        "rank_3_store_id": week.rank_3_store_id,
+        "announced_at": str(week.announced_at) if week.announced_at else None,
+    }
 
 
 # ============================================================
