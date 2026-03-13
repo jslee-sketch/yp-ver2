@@ -584,6 +584,7 @@ test.describe.serial('D. Review', () => {
         creator_id: buyerId,
         desired_qty: 5,
         target_price: 20000,
+        anchor_price: 25000,
       },
     });
     if (![200, 201].includes(dealRes.status())) {
@@ -597,7 +598,7 @@ test.describe.serial('D. Review', () => {
       headers: auth(sellerToken),
       data: { price: 18000, total_available_qty: 10, deal_id: tmpDealId, seller_id: sellerId, delivery_days: 2, shipping_mode: 'INCLUDED' },
     });
-    if (![200, 201].includes(offerRes.status())) { test.skip(); return; }
+    if (![200, 201].includes(offerRes.status())) { console.log('[D-04] offer failed:', offerRes.status()); test.skip(); return; }
     const tmpOfferId = (await offerRes.json()).id;
 
     const rsvRes = await request.post(`${BASE}/v3_6/reservations`, {
