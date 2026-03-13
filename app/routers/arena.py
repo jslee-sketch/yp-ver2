@@ -9,9 +9,16 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
-from app.database import get_db
+from app.database import get_db, engine
 from app.security import get_current_user
 from app.models import ArenaPlayer, ArenaGame, ArenaRegionStats
+from app.database import Base
+
+# 아레나 테이블 자동 생성
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as _e:
+    print(f"[arena] create_all: {_e}")
 
 router = APIRouter(prefix="/arena", tags=["arena"])
 
