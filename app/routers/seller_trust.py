@@ -315,64 +315,25 @@ def api_insights_trends(db: Session = Depends(get_db)):
     }
 
 
-# ═══════════ 환불 시뮬레이터 (구매자/판매자 확장) ═══════════
+# ═══════════ 환불 시뮬레이터 v2 (12시나리오 완전 커버) ═══════════
 
 @router.get("/refund-simulator/calculate")
 def api_refund_simulate(
     amount: int = Query(...),
-    reason: str = Query("buyer_change_mind"),
-    delivery_status: str = Query("before"),
+    shipping_fee: int = Query(0),
     shipping_mode: str = Query("free"),
-    shipping_cost: int = Query(3000),
+    reason: str = Query("buyer_change_mind"),
+    delivery_status: str = Query("delivered"),
     days_since_delivery: int = Query(0),
+    inspection_deduction_rate: float = Query(0.0),
     role: str = Query("buyer"),
-    db: Session = Depends(get_db),
+    # legacy params (ignored but accepted for backward compat)
+    shipping_cost: int = Query(None),
 ):
-    cooling = 7
-    can_refund = days_since_delivery <= cooling
-
-    refund_amount = amount
-    deductions = []
-
-    if reason == "buyer_change_mind":
-        if delivery_status in ("in_transit", "delivered"):
-            if shipping_mode == "free":
-                refund_amount -= shipping_cost
-                deductions.append(f"왕복 배송비 차감: -{shipping_cost:,}원")
-            elif shipping_mode == "buyer_paid":
-                refund_amount -= shipping_cost
-                deductions.append(f"반품 배송비 차감: -{shipping_cost:,}원")
-
-    usage_deduction = 0
-    if days_since_delivery > 3 and reason == "buyer_change_mind":
-        usage_rate = min(days_since_delivery * 2, 20)
-        usage_deduction = int(amount * usage_rate / 100)
-        refund_amount -= usage_deduction
-        deductions.append(f"사용 차감 ({usage_rate}%): -{usage_deduction:,}원")
-
-    refund_amount = max(0, refund_amount)
-
-    result = {
-        "can_refund": can_refund,
-        "original_amount": amount,
-        "refund_amount": refund_amount,
-        "deductions": deductions,
-        "reason": reason,
-        "delivery_status": delivery_status,
-        "days_since_delivery": days_since_delivery,
-        "cooling_period": cooling,
-    }
-
-    if role in ("seller", "admin"):
-        platform_fee_rate = 0.05
-        original_settlement = int(amount * (1 - platform_fee_rate))
-        after_refund_settlement = int((amount - refund_amount) * (1 - platform_fee_rate))
-
-        result["settlement_impact"] = {
-            "before_refund": original_settlement,
-            "after_refund": after_refund_settlement,
-            "settlement_loss": original_settlement - after_refund_settlement,
-            "platform_fee_rate": platform_fee_rate,
-        }
-
-    return result
+    from app.services.refund_calculator import calculate_refund
+    return calculate_refund(
+        original_amount=amount, shipping_fee=shipping_fee,
+        shipping_mode=shipping_mode, reason=reason,
+        delivery_status=delivery_status, days_since_delivery=days_since_delivery,
+        inspection_deduction_rate=inspection_deduction_rate, role=role,
+    )
