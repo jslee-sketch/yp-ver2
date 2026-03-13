@@ -5,7 +5,7 @@ import math
 from datetime import datetime, date
 from typing import Optional, List
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
@@ -244,12 +244,16 @@ GAME_HANDLERS = {
 # ─────────────────────────────────────────────
 
 @router.post("/register")
-def arena_register(
-    body: dict = Body(default={}),
+async def arena_register(
+    request: Request,
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
     """아레나 플레이어 등록/조회"""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
     player = _get_or_create_player(db, user)
     player.country = body.get("country", player.country or "KR")
     player.region = body.get("region", player.region)
@@ -273,12 +277,16 @@ def arena_register(
 
 
 @router.post("/play")
-def arena_play(
-    body: dict = Body(default={}),
+async def arena_play(
+    request: Request,
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
     """통합 게임 플레이 API"""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
     game_type = body.get("game_type", "").lower()
     if game_type not in GAME_TYPES:
         raise HTTPException(status_code=422, detail=f"Invalid game_type. Must be one of: {', '.join(sorted(GAME_TYPES))}")
