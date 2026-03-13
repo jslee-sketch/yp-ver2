@@ -1927,3 +1927,114 @@ class ActuatorSellerDisconnection(Base):
     agreement_accepted_at = Column(DateTime, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# -------------------------------------------------------
+# 🎮 Arena Models (배틀 아레나 미니게임)
+# -------------------------------------------------------
+
+class ArenaPlayer(Base):
+    """통합 플레이어 프로필 — 유저당 1행"""
+    __tablename__ = "arena_players"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, unique=True, index=True, nullable=False)
+    nickname = Column(String(30), nullable=True)
+
+    # 위치/인구통계
+    country = Column(String(10), default="KR")
+    region = Column(String(50), nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    age_group = Column(String(10), nullable=True)  # 10s, 20s, 30s ...
+    gender = Column(String(10), nullable=True)
+
+    # 통합 점수
+    total_points = Column(Integer, default=0)
+    arena_level = Column(String(20), default="rookie")  # rookie/fighter/champion/legend
+    total_games = Column(Integer, default=0)
+
+    # 가위바위보
+    rps_wins = Column(Integer, default=0)
+    rps_losses = Column(Integer, default=0)
+    rps_draws = Column(Integer, default=0)
+    rps_streak_best = Column(Integer, default=0)
+
+    # 묵찌빠
+    mjb_wins = Column(Integer, default=0)
+    mjb_losses = Column(Integer, default=0)
+
+    # 윷놀이
+    yut_wins = Column(Integer, default=0)
+    yut_losses = Column(Integer, default=0)
+
+    # 수학배틀
+    math_best_score = Column(Integer, default=0)
+    math_games = Column(Integer, default=0)
+
+    # 상식퀴즈
+    quiz_best_score = Column(Integer, default=0)
+    quiz_games = Column(Integer, default=0)
+
+    # 반응속도
+    reaction_best_ms = Column(Integer, default=0)
+    reaction_games = Column(Integer, default=0)
+
+    # 일일 제한
+    daily_game_count = Column(Integer, default=0)
+    daily_reset_date = Column(String(10), nullable=True)  # YYYY-MM-DD
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ArenaGame(Base):
+    """개별 게임 기록"""
+    __tablename__ = "arena_games"
+
+    id = Column(Integer, primary_key=True, index=True)
+    player_id = Column(Integer, ForeignKey("arena_players.id"), index=True, nullable=False)
+    game_type = Column(String(20), nullable=False)  # rps, mjb, yut, math, quiz, reaction
+    result = Column(String(10), nullable=False)  # win, lose, draw, score
+    score = Column(Integer, default=0)
+    detail = Column(JSON().with_variant(JSONB(), "postgresql"), nullable=True)
+    points_earned = Column(Integer, default=0)
+
+    # 위치 (게임 시점 스냅샷)
+    country = Column(String(10), nullable=True)
+    region = Column(String(50), nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+
+    played_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    player = relationship("ArenaPlayer", backref="games")
+
+
+class ArenaRegionStats(Base):
+    """지역별 집계 통계"""
+    __tablename__ = "arena_region_stats"
+
+    id = Column(Integer, primary_key=True, index=True)
+    level = Column(String(20), nullable=False)  # country, region
+    country = Column(String(10), nullable=False, index=True)
+    region = Column(String(50), nullable=True)
+
+    total_games = Column(Integer, default=0)
+    total_players = Column(Integer, default=0)
+
+    # 게임별 승률
+    rps_win_rate = Column(Float, default=0.0)
+    mjb_win_rate = Column(Float, default=0.0)
+    yut_win_rate = Column(Float, default=0.0)
+    math_avg_score = Column(Float, default=0.0)
+    quiz_avg_score = Column(Float, default=0.0)
+    reaction_avg_ms = Column(Float, default=0.0)
+
+    composite_score = Column(Float, default=0.0)
+
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("level", "country", "region", name="uq_arena_region"),
+    )

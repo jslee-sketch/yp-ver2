@@ -53,6 +53,9 @@ import SellerShippingPolicyPage from './pages/SellerShippingPolicyPage';
 import SellerFeesPage from './pages/SellerFeesPage';
 import SellerAnnouncementsPage from './pages/SellerAnnouncementsPage';
 
+// Arena pages
+import { ArenaPage, ArenaRpsPage, ArenaMukjjippaPage, ArenaYutPage, ArenaMathPage, ArenaQuizPage, ArenaReactionPage, ArenaRankingsPage, ArenaMapPage } from './pages/arena';
+
 // Admin pages
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminSellersPage from './pages/AdminSellersPage';
@@ -244,6 +247,17 @@ function App() {
           <Route path="/actuator/commissions"                element={<ProtectedRoute><ActuatorCommissionsPage /></ProtectedRoute>} />
           <Route path="/actuator/invite"                     element={<ProtectedRoute><ActuatorInvitePage /></ProtectedRoute>} />
           <Route path="/actuator/contract"                   element={<ProtectedRoute><ActuatorContractPage /></ProtectedRoute>} />
+
+          {/* 아레나 */}
+          <Route path="/arena" element={<ArenaPage />} />
+          <Route path="/arena/rps" element={<ArenaRpsPage />} />
+          <Route path="/arena/mukjjippa" element={<ArenaMukjjippaPage />} />
+          <Route path="/arena/yut" element={<ArenaYutPage />} />
+          <Route path="/arena/math" element={<ArenaMathPage />} />
+          <Route path="/arena/quiz" element={<ArenaQuizPage />} />
+          <Route path="/arena/reaction" element={<ArenaReactionPage />} />
+          <Route path="/arena/rankings" element={<ArenaRankingsPage />} />
+          <Route path="/arena/map" element={<ArenaMapPage />} />
 
           {/* 404 catch-all */}
           <Route path="*" element={<NotFoundPage />} />
