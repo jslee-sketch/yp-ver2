@@ -327,7 +327,11 @@ def purchase_voucher(body: dict, db: Session = Depends(get_db)):
     deal.current_amount = (deal.current_amount or 0) + amount
     deal.voucher_count = (deal.voucher_count or 0) + 1
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(500, f"DB 오류: {e}")
     db.refresh(voucher)
 
     store = db.query(DonzzulStore).filter(DonzzulStore.id == deal.store_id).first()
