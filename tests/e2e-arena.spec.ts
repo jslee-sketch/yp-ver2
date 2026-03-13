@@ -10,41 +10,31 @@ let arenaPlayerId = 0;
 
 async function ensureBuyerToken(request: any) {
   if (buyerToken) return;
-  // 회원가입 시도
   const ts = Date.now();
-  const regRes = await request.post(`${BASE}/buyers/register`, {
-    data: {
-      email: `arena_test_${ts}@example.com`,
-      password: 'Test1234!',
-      name: `ArenaBot${ts}`,
-      nickname: `ab${ts}`,
-      phone: '010-0000-0000',
-      address: '서울시 강남구',
-      zip_code: '06000',
-    },
+  const email = `arena_${ts}@test.com`;
+  const pw = 'Test1234!';
+
+  // 회원가입: POST /buyers/
+  await request.post(`${BASE}/buyers/`, {
+    data: { email, name: `ArenaBot${ts}`, nickname: `ab${ts}`, password: pw },
   });
-  if (regRes.ok()) {
-    const d = await regRes.json();
-    buyerUserId = d.id || d.buyer_id || 0;
-  }
-  // 로그인
+
+  // 로그인: POST /auth/login (form-urlencoded)
+  const form = new URLSearchParams();
+  form.append('username', email);
+  form.append('password', pw);
   const loginRes = await request.post(`${BASE}/auth/login`, {
-    form: { username: `arena_test_${ts}@example.com`, password: 'Test1234!' },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    data: form.toString(),
   });
   if (loginRes.ok()) {
     const d = await loginRes.json();
     buyerToken = d.access_token || '';
-    if (d.user_id) buyerUserId = d.user_id;
-  }
-  // fallback: 기존 계정
-  if (!buyerToken) {
-    const fallback = await request.post(`${BASE}/auth/login`, {
-      form: { username: 'buyer@test.com', password: 'test1234' },
-    });
-    if (fallback.ok()) {
-      const d = await fallback.json();
-      buyerToken = d.access_token || '';
-      buyerUserId = d.user_id || 0;
+    if (buyerToken) {
+      try {
+        const payload = JSON.parse(Buffer.from(buyerToken.split('.')[1], 'base64url').toString());
+        buyerUserId = Number(payload.sub) || 0;
+      } catch {}
     }
   }
 }

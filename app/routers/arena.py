@@ -5,7 +5,7 @@ import math
 from datetime import datetime, date
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
@@ -245,7 +245,7 @@ GAME_HANDLERS = {
 
 @router.post("/register")
 def arena_register(
-    body: dict = {},
+    body: dict = Body(default={}),
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
@@ -274,7 +274,7 @@ def arena_register(
 
 @router.post("/play")
 def arena_play(
-    body: dict = {},
+    body: dict = Body(default={}),
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
