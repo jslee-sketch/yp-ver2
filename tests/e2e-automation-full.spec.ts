@@ -173,6 +173,10 @@ test.describe.serial('A. Delivery Automation', () => {
         const body = await res.json();
         sellerId = body.id ?? body.seller_id ?? body.user_id;
         expect(sellerId).toBeGreaterThan(0);
+        // Approve seller so they can create offers
+        if (sellerId) {
+          await request.post(`${BASE}/sellers/${sellerId}/approve`);
+        }
     });
 
     test('A03: Deal + Offer + Reservation + Pay → PAID state', async ({ request }) => {
