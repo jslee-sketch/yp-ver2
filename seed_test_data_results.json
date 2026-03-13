@@ -1,0 +1,55 @@
+{
+  "seed_date": "2026-03-13T20:07:38.382105+00:00",
+  "endpoint": "https://www.yeokping.com",
+  "results": [
+    {
+      "check": "deals",
+      "count": "?",
+      "status": 200
+    },
+    {
+      "check": "disputes",
+      "count": 254,
+      "status": 200
+    },
+    {
+      "check": "resolution-actions",
+      "count": 0,
+      "status": 200
+    },
+    {
+      "check": "refund-requests",
+      "count": 0,
+      "status": 200
+    },
+    {
+      "check": "settlements",
+      "count": "?",
+      "status": 200
+    },
+    {
+      "action": "dispute_create",
+      "status": 500
+    },
+    {
+      "action": "refund_request",
+      "status": 500
+    },
+    {
+      "batch": "settlement refresh",
+      "status": 405
+    },
+    {
+      "batch": "timeout batch",
+      "status": 200
+    },
+    {
+      "batch": "clawback batch",
+      "status": 200
+    },
+    {
+      "batch": "resolution timeout",
+      "status": 200
+    }
+  ]
+}
