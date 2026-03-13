@@ -55,7 +55,11 @@ def create_donzzul_settlement(store_id: int, db: Session) -> dict:
     for v in unsettled:
         v.settlement_id = settlement.id
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return {"error": f"DB 오류: {e}"}
     db.refresh(settlement)
 
     return {
