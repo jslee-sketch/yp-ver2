@@ -447,6 +447,68 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass
 
+    # ✅ donzzul_vouchers 신규 컬럼 마이그레이션
+    _VOUCHER_NEW_COLS = [
+        ("settlement_id", "INTEGER"),
+        ("donated_at", "TIMESTAMP"),
+        ("last_warning_days", "INTEGER"),
+    ]
+    for _col, _type in _VOUCHER_NEW_COLS:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE donzzul_vouchers ADD COLUMN {_col} {_type}"))
+                _conn.commit()
+                print(f"[migration] ALTER TABLE donzzul_vouchers ADD COLUMN {_col} OK")
+        except Exception:
+            pass
+
+    # ✅ donzzul_settlements 신규 컬럼 마이그레이션
+    _SETTLEMENT_NEW_COLS = [
+        ("total_amount", "INTEGER DEFAULT 0"),
+        ("voucher_count", "INTEGER DEFAULT 0"),
+        ("used_amount", "INTEGER DEFAULT 0"),
+        ("donated_amount", "INTEGER DEFAULT 0"),
+        ("payout_amount", "INTEGER DEFAULT 0"),
+        ("approved_by", "INTEGER"),
+        ("approved_at", "TIMESTAMP"),
+        ("paid_at", "TIMESTAMP"),
+        ("period_from", "TIMESTAMP"),
+        ("period_to", "TIMESTAMP"),
+    ]
+    for _col, _type in _SETTLEMENT_NEW_COLS:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE donzzul_settlements ADD COLUMN {_col} {_type}"))
+                _conn.commit()
+                print(f"[migration] ALTER TABLE donzzul_settlements ADD COLUMN {_col} OK")
+        except Exception:
+            pass
+
+    # ✅ 돈쭐 배치 스케줄러 시작 (매 1시간)
+    import threading, time as _time
+    def _donzzul_batch_scheduler():
+        while True:
+            try:
+                _time.sleep(3600)
+                _db = SessionLocal()
+                try:
+                    from app.services.donzzul_batch import (
+                        run_donzzul_expiry_batch,
+                        run_donzzul_expiry_warning_batch,
+                        run_donzzul_deal_expiry_batch,
+                    )
+                    r1 = run_donzzul_expiry_batch(_db)
+                    r2 = run_donzzul_expiry_warning_batch(_db)
+                    r3 = run_donzzul_deal_expiry_batch(_db)
+                    if r1["donated_count"] or r2["warnings_sent"] or r3["closed_deals"]:
+                        print(f"[DONZZUL BATCH] expired={r1['donated_count']} warned={r2['warnings_sent']} closed={r3['closed_deals']}", flush=True)
+                finally:
+                    _db.close()
+            except Exception as e:
+                print(f"[DONZZUL BATCH ERROR] {e}", flush=True)
+    threading.Thread(target=_donzzul_batch_scheduler, daemon=True).start()
+    print("[DONZZUL] Batch scheduler started (hourly)", flush=True)
+
     # ✅ seller 서류 컬럼 마이그레이션 (기존 DB 호환, SQLite + PostgreSQL)
     _SELLER_NEW_COLS = [
         ("ecommerce_permit_number", "VARCHAR(50)"),

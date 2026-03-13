@@ -92,6 +92,7 @@ import DonzzulDealPage from './pages/donzzul/DonzzulDealPage';
 import DonzzulVouchersPage from './pages/donzzul/DonzzulVouchersPage';
 import DonzzulVoucherUsePage from './pages/donzzul/DonzzulVoucherUsePage';
 import AdminDonzzulStoresPage from './pages/admin/AdminDonzzulStoresPage';
+import AdminDonzzulSettlementsPage from './pages/admin/AdminDonzzulSettlementsPage';
 
 const MAINTENANCE_KEY = 'yeokping2026';
 
@@ -162,6 +163,7 @@ function App() {
           <Route path="custom-report"   element={<AdminCustomReportPage />} />
           <Route path="users/:userId/conditions" element={<AdminUserConditionsPage />} />
           <Route path="donzzul/stores" element={<AdminDonzzulStoresPage />} />
+          <Route path="donzzul/settlements" element={<AdminDonzzulSettlementsPage />} />
         </Route>
 
         {/* 레이아웃 공통 적용 */}

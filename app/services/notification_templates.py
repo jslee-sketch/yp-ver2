@@ -99,7 +99,19 @@ ADMIN_EVENTS = {
     "TAX_INVOICE_BATCH_READY":  {"title": "세금계산서 일괄 발행 🧾",     "message": "{count}건의 세금계산서 발행 대기 중입니다.", "link": "/admin/tax-invoices"},
     "ANOMALY_DETECTED":         {"title": "이상 감지! 🔴",               "message": "{anomaly_desc}", "link": "/admin/anomalies"},
     "SYSTEM_ERROR":             {"title": "시스템 오류 🔧",              "message": "{error_summary}", "link": "/admin"},
+    "DONZZUL_STORE_PENDING_REVIEW": {"title": "새 돈쭐 가게 검증 대기 🔍", "message": "'{store_name}' 가게가 검증 대기 중입니다. 확인해주세요.", "link": "/admin/donzzul/stores"},
 }
+
+# ── 돈쭐 이벤트 ──
+DONZZUL_EVENTS = {
+    "DONZZUL_VOUCHER_ISSUED":       {"title": "💚 상품권 발급 완료!", "message": "'{store_name}' 상품권 {amount}원이 발급되었어요. 코드: {code}", "link": "/donzzul/vouchers", "default": {"app": True, "push": True, "email": False}, "group": "돈쭐"},
+    "DONZZUL_VOUCHER_USED":         {"title": "상품권 사용 완료 ✅", "message": "'{store_name}' 상품권 {amount}원이 사용되었습니다.", "link": "/donzzul/vouchers", "default": {"app": True, "push": False, "email": False}, "group": "돈쭐"},
+    "DONZZUL_VOUCHER_EXPIRY_WARNING": {"title": "상품권 만료 임박 ⏰", "message": "'{store_name}' 상품권 {amount}원이 {days_left}일 후 만료돼요! 서둘러 사용하세요.", "link": "/donzzul/vouchers", "default": {"app": True, "push": True, "email": False}, "group": "돈쭐"},
+    "DONZZUL_VOUCHER_EXPIRED_DONATED": {"title": "상품권이 가게에 기부되었어요 💚", "message": "'{store_name}' 상품권 {amount}원이 만료되어 가게에 자동 기부되었습니다. 감사합니다!", "link": "/donzzul/vouchers", "default": {"app": True, "push": True, "email": False}, "group": "돈쭐"},
+    "DONZZUL_DEAL_ACHIEVED":        {"title": "🎉 목표 달성!", "message": "'{store_name}' 딜이 목표 금액을 달성했어요! 모두의 응원이 모였습니다.", "link": "/donzzul/deals/{deal_id}", "default": {"app": True, "push": True, "email": False}, "group": "돈쭐"},
+    "DONZZUL_STORE_APPROVED":       {"title": "가게가 승인되었어요! 💚", "message": "추천하신 '{store_name}'이(가) 승인되었습니다. 500포인트 적립!", "link": "/donzzul/hero/my-stores", "default": {"app": True, "push": True, "email": False}, "group": "돈쭐"},
+    "DONZZUL_STORE_REJECTED":       {"title": "가게 승인 거절 😢", "message": "'{store_name}' 가게가 거절되었습니다. 사유: {reason}", "link": "/donzzul/hero/my-stores", "default": {"app": True, "push": False, "email": False}, "group": "돈쭐"},
+    "DONZZUL_HERO_LEVEL_UP":        {"title": "🌿 히어로 레벨 UP!", "message": "{old_level} → {new_level}(으)로 레벨업! {total_stores}개 가게 추천 감사합니다.", "link": "/donzzul/hero", "default": {"app": True, "push": True, "email": False}, "group": "돈쭐"},
 
 # ── 역할별 이벤트 맵 ──
 ALL_EVENTS_BY_ROLE = {
@@ -110,7 +122,7 @@ ALL_EVENTS_BY_ROLE = {
 }
 
 # ── 모든 이벤트 합쳐진 맵 ──
-ALL_EVENTS = {**BUYER_EVENTS, **SELLER_EVENTS, **ACTUATOR_EVENTS, **ADMIN_EVENTS}
+ALL_EVENTS = {**BUYER_EVENTS, **SELLER_EVENTS, **ACTUATOR_EVENTS, **ADMIN_EVENTS, **DONZZUL_EVENTS}
 
 
 def get_event_defaults(event_type: str, role: str = "buyer") -> dict:

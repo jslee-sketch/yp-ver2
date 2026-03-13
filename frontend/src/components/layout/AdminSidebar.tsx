@@ -60,6 +60,7 @@ const sections = [
     title: '돈쭐',
     items: [
       { label: '💚 가게 관리', path: '/admin/donzzul/stores' },
+      { label: '💰 돈쭐 정산', path: '/admin/donzzul/settlements' },
     ],
   },
   {

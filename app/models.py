@@ -1649,6 +1649,10 @@ class DonzzulVoucher(Base):
     pg_transaction_id = Column(String(100), nullable=True)
     pg_fee = Column(Integer, default=0)
 
+    settlement_id = Column(Integer, ForeignKey("donzzul_settlements.id"), nullable=True)
+    donated_at = Column(DateTime, nullable=True)
+    last_warning_days = Column(Integer, nullable=True)
+
     refunded_at = Column(DateTime, nullable=True)
     refund_reason = Column(String(100), nullable=True)
 
@@ -1697,20 +1701,30 @@ class DonzzulSettlement(Base):
     id = Column(Integer, primary_key=True, index=True)
     store_id = Column(Integer, ForeignKey("donzzul_stores.id"), nullable=False)
 
-    period_start = Column(DateTime, nullable=False)
-    period_end = Column(DateTime, nullable=False)
+    period_start = Column(DateTime, nullable=True)
+    period_end = Column(DateTime, nullable=True)
+    period_from = Column(DateTime, nullable=True)
+    period_to = Column(DateTime, nullable=True)
 
+    total_amount = Column(Integer, default=0)
     total_sales = Column(Integer, default=0)
     total_vouchers = Column(Integer, default=0)
+    voucher_count = Column(Integer, default=0)
     used_vouchers = Column(Integer, default=0)
+    used_amount = Column(Integer, default=0)
     expired_donated = Column(Integer, default=0)
+    donated_amount = Column(Integer, default=0)
     pg_fee_total = Column(Integer, default=0)
     platform_fee = Column(Integer, default=0)
     net_amount = Column(Integer, default=0)
+    payout_amount = Column(Integer, default=0)
 
     top_cheer_messages = Column(Text, nullable=True)
 
     settled_at = Column(DateTime, nullable=True)
+    approved_by = Column(Integer, nullable=True)
+    approved_at = Column(DateTime, nullable=True)
+    paid_at = Column(DateTime, nullable=True)
     bank_name = Column(String(50), nullable=True)
     account_number = Column(String(50), nullable=True)
     account_holder = Column(String(50), nullable=True)

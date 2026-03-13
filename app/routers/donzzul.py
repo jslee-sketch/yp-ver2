@@ -490,15 +490,92 @@ def current_vote(db: Session = Depends(get_db)):
 
 
 # ============================================================
+# 배치
+# ============================================================
+
+@router.post("/batch/expiry")
+def batch_expiry(db: Session = Depends(get_db)):
+    """상품권 만료 처리 배치 (매일 자정)"""
+    from app.services.donzzul_batch import run_donzzul_expiry_batch
+    return run_donzzul_expiry_batch(db)
+
+
+@router.post("/batch/expiry-warning")
+def batch_expiry_warning(db: Session = Depends(get_db)):
+    """만료 임박 알림 배치 (매일 오전 9시)"""
+    from app.services.donzzul_batch import run_donzzul_expiry_warning_batch
+    return run_donzzul_expiry_warning_batch(db)
+
+
+@router.post("/batch/deal-expiry")
+def batch_deal_expiry(db: Session = Depends(get_db)):
+    """딜 마감 배치 (매일)"""
+    from app.services.donzzul_batch import run_donzzul_deal_expiry_batch
+    return run_donzzul_deal_expiry_batch(db)
+
+
+# ============================================================
 # 정산
 # ============================================================
 
+@router.post("/settlements/create")
+def create_settlement_endpoint(body: dict, db: Session = Depends(get_db)):
+    """가게 정산 생성 (관리자)"""
+    from app.services.donzzul_settlement import create_donzzul_settlement
+    store_id = body.get("store_id")
+    return create_donzzul_settlement(store_id, db)
+
+
+@router.put("/settlements/{settlement_id}/process")
+def process_settlement_endpoint(settlement_id: int, body: dict, db: Session = Depends(get_db)):
+    """정산 승인/지급/거절 (관리자)"""
+    from app.services.donzzul_settlement import process_donzzul_settlement
+    action = body.get("action")
+    admin_id = body.get("admin_id")
+    return process_donzzul_settlement(settlement_id, action, db, admin_id)
+
+
 @router.get("/settlements")
-def list_settlements(db: Session = Depends(get_db)):
-    """정산 목록 (관리자)"""
-    return db.query(DonzzulSettlement).order_by(
-        DonzzulSettlement.created_at.desc()
+def list_settlements(
+    store_id: int = Query(None),
+    status: str = Query(None),
+    db: Session = Depends(get_db),
+):
+    """정산 목록"""
+    query = db.query(DonzzulSettlement)
+    if store_id:
+        query = query.filter(DonzzulSettlement.store_id == store_id)
+    if status:
+        query = query.filter(DonzzulSettlement.status == status)
+    return query.order_by(DonzzulSettlement.created_at.desc()).all()
+
+
+@router.get("/settlements/{settlement_id}")
+def get_settlement(settlement_id: int, db: Session = Depends(get_db)):
+    """정산 상세 (포함된 상품권 목록)"""
+    settlement = db.query(DonzzulSettlement).filter(DonzzulSettlement.id == settlement_id).first()
+    if not settlement:
+        raise HTTPException(404, "정산을 찾을 수 없습니다")
+
+    vouchers = db.query(DonzzulVoucher).filter(
+        DonzzulVoucher.settlement_id == settlement_id
     ).all()
+
+    store = db.query(DonzzulStore).filter(DonzzulStore.id == settlement.store_id).first()
+
+    return {
+        "settlement": settlement,
+        "store": store,
+        "vouchers": [{
+            "id": v.id,
+            "code": v.code,
+            "amount": v.amount,
+            "status": v.status,
+            "buyer_id": v.buyer_id,
+            "used_at": str(v.used_at) if v.used_at else None,
+            "donated_at": str(v.donated_at) if v.donated_at else None,
+        } for v in vouchers],
+    }
 
 
 # ============================================================
