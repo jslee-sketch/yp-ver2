@@ -96,6 +96,9 @@ import DonzzulVotePage from './pages/donzzul/DonzzulVotePage';
 import DonzzulHeroProfilePage from './pages/donzzul/DonzzulHeroProfilePage';
 import AdminDonzzulStoresPage from './pages/admin/AdminDonzzulStoresPage';
 import AdminDonzzulSettlementsPage from './pages/admin/AdminDonzzulSettlementsPage';
+import DisputeDetailPage from './pages/DisputeDetailPage';
+import RefundSimulatorPage from './pages/RefundSimulatorPage';
+import AdminInsightsPage from './pages/admin/AdminInsightsPage';
 
 const MAINTENANCE_KEY = 'yeokping2026';
 
@@ -167,6 +170,7 @@ function App() {
           <Route path="users/:userId/conditions" element={<AdminUserConditionsPage />} />
           <Route path="donzzul/stores" element={<AdminDonzzulStoresPage />} />
           <Route path="donzzul/settlements" element={<AdminDonzzulSettlementsPage />} />
+          <Route path="insights" element={<AdminInsightsPage />} />
         </Route>
 
         {/* 레이아웃 공통 적용 */}
@@ -214,6 +218,11 @@ function App() {
           <Route path="/settings"    element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/settings/notifications" element={<ProtectedRoute><NotificationSettingsPage /></ProtectedRoute>} />
           <Route path="/settings/interests"     element={<ProtectedRoute><InterestSettingsPage /></ProtectedRoute>} />
+
+          {/* 분쟁 */}
+          <Route path="/disputes/:id" element={<DisputeDetailPage />} />
+          <Route path="/buyer/refund-simulator" element={<RefundSimulatorPage role="buyer" />} />
+          <Route path="/seller/refund-simulator" element={<RefundSimulatorPage role="seller" />} />
 
           {/* 돈쭐 */}
           <Route path="/donzzul" element={<DonzzulMainPage />} />

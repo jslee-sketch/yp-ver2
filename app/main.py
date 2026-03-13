@@ -64,6 +64,7 @@ from app.models import (  # noqa: F401
     UserConditionOverride, EcountMapping,
     DonzzulActuator, DonzzulStore, DonzzulDeal, DonzzulVoucher,
     DonzzulVoteWeek, DonzzulVote, DonzzulSettlement, DonzzulChatMessage,
+    Dispute, SellerExternalRating, SellerVerificationScore, ActuatorSellerDisconnection,
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -1017,6 +1018,12 @@ _include_router_safe("preregister", ("router",), label="preregister")
 
 # 돈쭐 (착한 가게 응원 시스템)
 _include_router_safe("donzzul", ("router",), label="donzzul")
+
+# 분쟁 프로세스 v3
+_include_router_safe("disputes", ("router",), label="disputes")
+
+# 판매자 신뢰 엔진 v2
+_include_router_safe("seller_trust", ("router",), label="seller_trust")
 
 # 정적 파일 (이미지 업로드)
 try:

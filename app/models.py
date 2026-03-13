@@ -1754,3 +1754,176 @@ class DonzzulChatMessage(Base):
     is_deleted = Column(Boolean, default=False)
 
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# -------------------------------------------------------
+# ⚖️ Dispute (2라운드 AI 중재)
+# -------------------------------------------------------
+class Dispute(Base):
+    __tablename__ = "disputes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reservation_id = Column(Integer, nullable=False)
+
+    initiator_id = Column(Integer, nullable=False)
+    respondent_id = Column(Integer, nullable=False)
+    initiator_role = Column(String(20))
+
+    category = Column(String(50))
+    title = Column(String(200))
+    description = Column(Text)
+    evidence_urls = Column(Text, default="[]")
+    requested_resolution = Column(String(50))
+    requested_amount = Column(Integer, nullable=True)
+
+    status = Column(String(30), default="FILED")
+    current_round = Column(Integer, default=1)
+
+    r1_respondent_reply = Column(Text, nullable=True)
+    r1_respondent_evidence_urls = Column(Text, default="[]")
+    r1_respondent_proposal_type = Column(String(50), nullable=True)
+    r1_respondent_proposal_amount = Column(Integer, nullable=True)
+    r1_respondent_proposal_text = Column(Text, nullable=True)
+    r1_respondent_at = Column(DateTime, nullable=True)
+    r1_respondent_deadline = Column(DateTime, nullable=True)
+
+    r1_ai_opinion = Column(Text, nullable=True)
+    r1_ai_recommendation = Column(String(50), nullable=True)
+    r1_ai_recommendation_amount = Column(Integer, nullable=True)
+    r1_ai_explanation = Column(Text, nullable=True)
+    r1_ai_mediated_at = Column(DateTime, nullable=True)
+
+    r1_initiator_decision = Column(String(20), nullable=True)
+    r1_initiator_decision_at = Column(DateTime, nullable=True)
+    r1_initiator_deadline = Column(DateTime, nullable=True)
+    r1_respondent_decision = Column(String(20), nullable=True)
+    r1_respondent_decision_at = Column(DateTime, nullable=True)
+    r1_respondent_review_deadline = Column(DateTime, nullable=True)
+
+    r2_rebuttal_by = Column(String(20), nullable=True)
+    r2_initiator_rebuttal = Column(Text, nullable=True)
+    r2_initiator_evidence_urls = Column(Text, default="[]")
+    r2_initiator_proposal_type = Column(String(50), nullable=True)
+    r2_initiator_proposal_amount = Column(Integer, nullable=True)
+    r2_respondent_rebuttal = Column(Text, nullable=True)
+    r2_respondent_evidence_urls = Column(Text, default="[]")
+    r2_respondent_proposal_type = Column(String(50), nullable=True)
+    r2_respondent_proposal_amount = Column(Integer, nullable=True)
+    r2_rebuttal_deadline = Column(DateTime, nullable=True)
+    r2_rebuttal_at = Column(DateTime, nullable=True)
+
+    r2_ai_opinion = Column(Text, nullable=True)
+    r2_ai_recommendation = Column(String(50), nullable=True)
+    r2_ai_recommendation_amount = Column(Integer, nullable=True)
+    r2_ai_explanation = Column(Text, nullable=True)
+    r2_ai_mediated_at = Column(DateTime, nullable=True)
+
+    r2_initiator_decision = Column(String(20), nullable=True)
+    r2_initiator_decision_at = Column(DateTime, nullable=True)
+    r2_initiator_deadline = Column(DateTime, nullable=True)
+    r2_respondent_decision = Column(String(20), nullable=True)
+    r2_respondent_decision_at = Column(DateTime, nullable=True)
+    r2_respondent_deadline = Column(DateTime, nullable=True)
+
+    resolution = Column(Text, nullable=True)
+    resolution_amount = Column(Integer, nullable=True)
+    closed_at = Column(DateTime, nullable=True)
+    closed_reason = Column(String(50), nullable=True)
+
+    legal_guidance_sent = Column(Boolean, default=False)
+    legal_guidance_sent_at = Column(DateTime, nullable=True)
+    timeout_warned = Column(Boolean, default=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# -------------------------------------------------------
+# 🏪 SellerExternalRating
+# -------------------------------------------------------
+class SellerExternalRating(Base):
+    __tablename__ = "seller_external_ratings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    seller_id = Column(Integer, nullable=False)
+    platform_name = Column(String(50))
+    platform_url = Column(String(500), nullable=False)
+
+    claimed_rating = Column(Float, nullable=True)
+    claimed_review_count = Column(Integer, nullable=True)
+    verified_rating = Column(Float, nullable=True)
+    verified_review_count = Column(Integer, nullable=True)
+    verification_status = Column(String(20), default="PENDING")
+    verification_raw_response = Column(Text, nullable=True)
+    verified_at = Column(DateTime, nullable=True)
+
+    rating_gap = Column(Float, nullable=True)
+    is_trusted = Column(Boolean, default=False)
+
+    last_auto_check_at = Column(DateTime, nullable=True)
+    next_auto_check_at = Column(DateTime, nullable=True)
+    auto_check_fail_count = Column(Integer, default=0)
+
+    url_dead_detected_at = Column(DateTime, nullable=True)
+    url_dead_grace_deadline = Column(DateTime, nullable=True)
+    url_dead_notified = Column(Boolean, default=False)
+
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# -------------------------------------------------------
+# 🏆 SellerVerificationScore
+# -------------------------------------------------------
+class SellerVerificationScore(Base):
+    __tablename__ = "seller_verification_scores"
+
+    id = Column(Integer, primary_key=True, index=True)
+    seller_id = Column(Integer, nullable=False)
+
+    score_age = Column(Float, default=0)
+    score_rating = Column(Float, default=0)
+    score_reviews = Column(Float, default=0)
+    score_sentiment = Column(Float, default=0)
+    score_trade_cert = Column(Float, default=0)
+    score_account = Column(Float, default=0)
+    score_biz = Column(Float, default=0)
+
+    total_score = Column(Float, default=0)
+    auto_decision = Column(String(30), nullable=True)
+    reasons = Column(Text, default="[]")
+
+    seller_message = Column(Text, nullable=True)
+    admin_message = Column(Text, nullable=True)
+    admin_notes = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# -------------------------------------------------------
+# 🔗 ActuatorSellerDisconnection
+# -------------------------------------------------------
+class ActuatorSellerDisconnection(Base):
+    __tablename__ = "actuator_seller_disconnections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    actuator_id = Column(Integer, nullable=False)
+    seller_id = Column(Integer, nullable=False)
+
+    requested_by = Column(String(20))
+    reason = Column(String(50))
+    reason_detail = Column(Text, nullable=True)
+
+    status = Column(String(20), default="PENDING")
+    grace_period_ends = Column(DateTime, nullable=True)
+    cooldown_ends = Column(DateTime, nullable=True)
+
+    confirmed_at = Column(DateTime, nullable=True)
+    cancelled_at = Column(DateTime, nullable=True)
+
+    agreement_accepted = Column(Boolean, default=False)
+    agreement_accepted_at = Column(DateTime, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)

@@ -94,16 +94,34 @@ review:
   review_window_days: 30
   verified_purchase_only: true
 
-# ✅ 분쟁(Dispute) 정책 SSOT
+# ✅ 분쟁(Dispute) 정책 SSOT — v3 (2라운드 AI 중재)
 dispute:
-  # 분쟁 제기 가능 기간 (배송완료 후 n일 이내)
   open_window_days: 7
-  # 관리자 처리 기한 (분쟁 접수 후 n일)
   resolution_deadline_days: 14
-  # 분쟁 중 정산 자동 보류
   auto_hold_settlement: true
-  # 분쟁 종료 후 정산 재개 지연일
   post_resolution_cooling_days: 3
+  # v3: 2라운드 AI 중재
+  round1_response_days: 3
+  round1_review_days: 1
+  round2_rebuttal_days: 2
+  round2_review_days: 1
+  max_rounds: 2
+
+# ✅ 액츄에이터-판매자 해지
+actuator_seller:
+  disconnect_reasons:
+    - key: "trust_issue"
+      label: "신뢰 문제 (소통 불량, 약속 미이행)"
+    - key: "performance"
+      label: "성과 부진 (판매/중개 실적 미달)"
+    - key: "policy_violation"
+      label: "정책 위반 (허위 정보, 부당 행위)"
+    - key: "mutual_agreement"
+      label: "상호 합의에 의한 해지"
+    - key: "personal_reason"
+      label: "개인 사정 (사업 방향 변경 등)"
+  grace_period_days: 7
+  cooldown_days: 30
 
 # ✅ 정산 지급 지연일 SSOT (필요하면 운영에서 조정)
 settlement:
