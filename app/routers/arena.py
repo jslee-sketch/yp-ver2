@@ -269,49 +269,7 @@ GAME_HANDLERS = {
 
 # ─────────────────────────────────────────────
 # 엔드포인트
-
-@router.get("/debug-tables")
-def arena_debug_tables(db: Session = Depends(get_db)):
-    """디버그: 아레나 테이블 상태 확인"""
-    import sqlalchemy as sa
-    inspector = sa.inspect(db.bind)
-    all_tables = inspector.get_table_names()
-    arena_tables = [t for t in all_tables if "arena" in t]
-    return {"all_tables_count": len(all_tables), "arena_tables": arena_tables, "all_tables": sorted(all_tables)}
 # ─────────────────────────────────────────────
-
-@router.post("/debug-register")
-async def arena_debug_register(request: Request, db: Session = Depends(get_db)):
-    """디버그: 인증 없이 테스트"""
-    import traceback
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
-    try:
-        player = db.query(ArenaPlayer).first()
-        return {"status": "ok", "body": body, "player_count": db.query(ArenaPlayer).count(),
-                "first_player": player.id if player else None}
-    except Exception as e:
-        return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
-
-@router.post("/debug-auth")
-async def arena_debug_auth(request: Request, db: Session = Depends(get_db)):
-    """디버그: 인증 테스트"""
-    import traceback
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
-    try:
-        user = _get_arena_user(request, db)
-        player = _get_or_create_player(db, user)
-        db.commit()
-        db.refresh(player)
-        return {"status": "ok", "user_id": user.id, "player_id": player.id}
-    except Exception as e:
-        db.rollback()
-        return {"status": "error", "error": str(e), "tb": traceback.format_exc()[-500:]}
 
 @router.post("/register")
 async def arena_register(
