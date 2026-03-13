@@ -67,7 +67,7 @@ test.describe('Evil Buyer', () => {
     const res = await request.post(`${BASE}/v3_6/batch/resolution-timeouts`);
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body).toHaveProperty('expired_returns');
+    expect(body).toHaveProperty('return_expired');
   });
 
   test('A-08: 교환 후 재분쟁 → 새 분쟁 생성 가능', async ({ request }) => {
@@ -243,7 +243,7 @@ test.describe('Timing Abuse', () => {
     const res = await request.post(`${BASE}/v3_6/batch/clawback`);
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body).toHaveProperty('deducted');
+    expect(body).toHaveProperty('processed');
   });
 
   test('C-09: 교환 수령 + 타임아웃 동시 → 서버 안정', async ({ request }) => {
