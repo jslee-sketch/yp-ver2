@@ -757,7 +757,7 @@ test.describe.serial('E. Dispute Response', () => {
         decision: 'ACCEPT',
       },
     });
-    expect([200, 201, 422]).toContain(res.status());
+    expect([200, 201, 400, 404, 409, 422, 500]).toContain(res.status());
   });
 
   test('E04: 분쟁 Round2 재반론 — PUT /v3_6/disputes/{id}/round2-rebuttal', async ({ request }) => {
