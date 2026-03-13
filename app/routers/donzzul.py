@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query  # Sprint5 채팅
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import (
