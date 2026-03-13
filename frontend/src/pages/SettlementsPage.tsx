@@ -15,10 +15,15 @@ const C = {
 };
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  HOLD:     { label: '보류',   color: '#ff9100' },
-  READY:    { label: '정산가능', color: '#00b0ff' },
-  APPROVED: { label: '승인',   color: '#00e676' },
-  PAID:     { label: '지급완료', color: '#78909c' },
+  HOLD:             { label: '보류',       color: '#ff9100' },
+  READY:            { label: '정산가능',   color: '#00b0ff' },
+  APPROVED:         { label: '승인',       color: '#00e676' },
+  PAID:             { label: '지급완료',   color: '#78909c' },
+  LEGAL_HOLD:       { label: '법적보류',   color: '#ff5252' },
+  CANCELLED:        { label: '취소',       color: '#9e9e9e' },
+  ADJUSTED:         { label: '조정완료',   color: '#ab47bc' },
+  CLAWBACK_PENDING: { label: '환수대기',   color: '#ff6e40' },
+  ADMIN_PENDING:    { label: '관리자확인', color: '#ff5252' },
 };
 
 function fmtP(n: number) { return n.toLocaleString('ko-KR') + '원'; }

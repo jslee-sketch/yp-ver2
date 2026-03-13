@@ -38,7 +38,7 @@ export default function AdminSettlementsPage() {
 
   const approve = async (id: number) => { try { await apiClient.post(API.SETTLEMENTS.ADMIN_APPROVE(id)); load(); } catch {} };
 
-  const statusColor: Record<string, string> = { HOLD: C.orange, READY: C.cyan, APPROVED: '#4fc3f7', PAID: C.green };
+  const statusColor: Record<string, string> = { HOLD: C.orange, READY: C.cyan, APPROVED: '#4fc3f7', PAID: C.green, LEGAL_HOLD: '#ff5252', CANCELLED: '#78909c', ADJUSTED: '#ab47bc', CLAWBACK_PENDING: '#ff6e40', ADMIN_PENDING: '#ff5252' };
 
   if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
 
@@ -50,7 +50,7 @@ export default function AdminSettlementsPage() {
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="정산ID/예약ID/판매자/품목명 검색" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }} />
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: '#1a1a2e', color: '#e0e0e0', fontSize: 13 }}>
           <option value="">전체 상태</option>
-          {['HOLD', 'READY', 'APPROVED', 'PAID'].map(s => <option key={s} value={s}>{s}</option>)}
+          {['HOLD', 'READY', 'APPROVED', 'PAID', 'LEGAL_HOLD', 'CANCELLED', 'ADJUSTED', 'CLAWBACK_PENDING', 'ADMIN_PENDING'].map(s => <option key={s} value={s}>{s}</option>)}
         </select>
         <button onClick={load} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.cyan, color: '#000', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>새로고침</button>
         <button onClick={async () => { const ready = filtered.filter(s => s.status === 'READY'); if (!ready.length) return alert('READY 상태 정산이 없습니다.'); if (!confirm(`${ready.length}건을 일괄 승인하시겠습니까?`)) return; for (const s of ready) { await approve(s.id); } }} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.green, color: '#000', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>일괄 승인</button>
