@@ -437,6 +437,16 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass  # 이미 존재하면 무시
 
+    # ✅ donzzul_vouchers FK 제거 (PostgreSQL only)
+    for _fk_name in ["donzzul_vouchers_buyer_id_fkey", "donzzul_vouchers_gifted_to_fkey"]:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE donzzul_vouchers DROP CONSTRAINT IF EXISTS {_fk_name}"))
+                _conn.commit()
+                print(f"[migration] DROP CONSTRAINT {_fk_name} OK")
+        except Exception:
+            pass
+
     # ✅ seller 서류 컬럼 마이그레이션 (기존 DB 호환, SQLite + PostgreSQL)
     _SELLER_NEW_COLS = [
         ("ecommerce_permit_number", "VARCHAR(50)"),
