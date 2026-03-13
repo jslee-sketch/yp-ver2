@@ -85,17 +85,20 @@ def create_deal(deal_in: schemas.DealCreate, db: Session = Depends(get_db)):
                 logging.warning("[create_deal] AI helper auto-call skipped: %r", ai_err)
 
         # ✅ S1: 딜 생성 직후 guardrail 평가/적용/로그 (SSOT: pricing_guardrail_hook)
-        result = run_pricing_guardrail(
-            deal_id=int(db_deal.id),
-            category=getattr(db_deal, "category", None),
-            target_price=getattr(db_deal, "target_price", None),
-            anchor_price=getattr(db_deal, "anchor_price", None),  # AI Helper가 채워줄 수 있음
-            evidence_score=getattr(db_deal, "evidence_score", 0) or 0,
-            anchor_confidence=getattr(db_deal, "anchor_confidence", 1.0) or 1.0,
-        )
+        try:
+            result = run_pricing_guardrail(
+                deal_id=int(db_deal.id),
+                category=getattr(db_deal, "category", None),
+                target_price=getattr(db_deal, "target_price", None),
+                anchor_price=getattr(db_deal, "anchor_price", None),  # AI Helper가 채워줄 수 있음
+                evidence_score=getattr(db_deal, "evidence_score", 0) or 0,
+                anchor_confidence=getattr(db_deal, "anchor_confidence", 1.0) or 1.0,
+            )
 
-        apply_guardrail_to_deal(db, db_deal, result)
-        log_guardrail_evidence(db, deal_id=int(db_deal.id), result=result, anchor_version="S1_CREATE")
+            apply_guardrail_to_deal(db, db_deal, result)
+            log_guardrail_evidence(db, deal_id=int(db_deal.id), result=result, anchor_version="S1_CREATE")
+        except Exception as guardrail_err:
+            logging.warning("[create_deal] guardrail skipped: %r", guardrail_err)
 
         # ✅ 관심 상품 매칭 알림 발송
         try:

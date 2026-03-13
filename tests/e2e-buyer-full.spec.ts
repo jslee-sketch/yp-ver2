@@ -196,6 +196,12 @@ test.describe.serial('A. Registration & Profile', () => {
     const body = await res.json();
     sellerId = body.id ?? sellerId;
 
+    // Approve seller so they can create offers
+    if (sellerId) {
+      const appr = await request.post(`${BASE}/sellers/${sellerId}/approve`);
+      console.log(`[A-10] seller ${sellerId} approve → ${appr.status()}`);
+    }
+
     // Also login to get seller token
     const { token, userId } = await apiLogin(request as any, SELLER_EMAIL, SELLER_PW);
     sellerToken = token;

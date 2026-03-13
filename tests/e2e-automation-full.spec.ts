@@ -52,6 +52,10 @@ async function ensureSeller(request: any): Promise<number> {
     });
     const body = await res.json();
     sellerId = body.id ?? body.seller_id ?? body.user_id;
+    // Approve seller so they can create offers
+    if (sellerId) {
+      await request.post(`${BASE}/sellers/${sellerId}/approve`);
+    }
     return sellerId;
 }
 

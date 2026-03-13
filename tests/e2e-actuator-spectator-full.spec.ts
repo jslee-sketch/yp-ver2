@@ -73,10 +73,19 @@ async function registerSeller(request: any, suffix: string, actuatorId?: number)
     const retry = await request.post(`${BASE}/sellers/`, { data: payload });
     expect([200, 201, 409]).toContain(retry.status());
     if (retry.status() === 409) return { error: true };
-    return await retry.json();
+    const retryResult = await retry.json();
+    if (retryResult && retryResult.id) {
+      await request.post(`${BASE}/sellers/${retryResult.id}/approve`);
+    }
+    return retryResult;
   }
   if (res.status() >= 400) return { error: true };
-  return await res.json();
+  const result = await res.json();
+  // Approve seller so they can create offers
+  if (result && result.id) {
+    await request.post(`${BASE}/sellers/${result.id}/approve`);
+  }
+  return result;
 }
 
 async function createActuator(request: any, suffix: string, isBusiness = false) {

@@ -124,6 +124,11 @@ test.describe.serial('A. Registration + AI Approval', () => {
     const body = await res.json();
     expect(body.email).toBe(SELLER_EMAIL);
     sellerId = body.id;
+    // Approve seller so they can create offers
+    if (sellerId) {
+      const appr = await request.post(`${BASE}/sellers/${sellerId}/approve`);
+      console.log(`[A04] seller ${sellerId} approve → ${appr.status()}`);
+    }
   });
 
   test('A05: 중복 이메일 셀러 가입 → 409', async ({ request }) => {
