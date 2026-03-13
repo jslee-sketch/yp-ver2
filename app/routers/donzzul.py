@@ -543,16 +543,9 @@ def create_vote_week(body: dict, db: Session = Depends(get_db)):
         total_votes=0,
     )
     db.add(week)
-    try:
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(500, f"DB commit error: {e}")
+    db.commit()
     db.refresh(week)
-    try:
-        return _vote_week_response(week, db)
-    except Exception as e:
-        raise HTTPException(500, f"Response error: {e}")
+    return _vote_week_response(week, db)
 
 
 @router.post("/votes/cast")
