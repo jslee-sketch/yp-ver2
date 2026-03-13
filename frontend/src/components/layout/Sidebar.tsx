@@ -62,7 +62,7 @@ const SidebarTab: React.FC<{ isVisible: boolean; onClick: () => void }> = ({ isV
 // ── 섹션 타이틀 ──────────────────────────────────────
 const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div style={{
-    fontSize: 11, fontWeight: 700, color: '#78909c',
+    fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
     letterSpacing: '1px', textTransform: 'uppercase',
     padding: '14px 20px 5px',
   }}>
@@ -82,7 +82,7 @@ const MenuItem: React.FC<{
 }> = ({ icon, label, badge, badgeColor = 'green', desc, danger, onClick }) => (
   <button
     onClick={onClick}
-    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
     onMouseLeave={e => (e.currentTarget.style.background = 'none')}
     style={{
       width: '100%',
@@ -94,12 +94,12 @@ const MenuItem: React.FC<{
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0 }}>{icon}</span>
-      <span style={{ fontSize: 14, fontWeight: 500, color: danger ? '#ff5252' : '#e8eaed' }}>
+      <span style={{ fontSize: 14, fontWeight: 500, color: danger ? 'var(--accent-red)' : 'var(--text-primary)' }}>
         {label}
       </span>
     </div>
     {desc !== undefined && (
-      <span style={{ fontSize: 11, color: '#607d8b', marginLeft: 'auto', flexShrink: 0 }}>
+      <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>
         {desc}
       </span>
     )}
@@ -222,7 +222,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                   {displayName.charAt(0)}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                  <span style={{ fontSize: 15, fontWeight: 800, color: '#e8eaed' }}>{displayName}</span>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>{displayName}</span>
                   <span style={{
                     padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
                     background: isAdmin ? 'rgba(224,64,251,0.12)' : isActuator ? 'rgba(0,229,255,0.12)' : isSeller ? 'rgba(255,145,0,0.12)' : 'rgba(0,230,118,0.12)',
@@ -231,7 +231,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     {isAdmin ? '관리자' : isActuator ? '액추에이터' : isSeller ? '판매자' : '구매자'}
                   </span>
                 </div>
-                <div style={{ fontSize: 12, color: '#78909c', marginBottom: 10 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>
                   {displayNickname ? `@${displayNickname} · ` : ''}{displayEmail}
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

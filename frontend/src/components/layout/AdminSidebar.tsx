@@ -78,6 +78,16 @@ export default function AdminSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    return document.documentElement.getAttribute('data-theme') !== 'light';
+  });
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.setAttribute('data-theme', next ? '' : 'light');
+    localStorage.setItem('yp-theme', next ? 'dark' : 'light');
+  };
 
   // Escape 키로 닫기
   useEffect(() => {
@@ -249,7 +259,7 @@ export default function AdminSidebar() {
                             fontWeight: active ? 600 : 400,
                           }}
                           onMouseEnter={(e) => {
-                            if (!active) (e.currentTarget.style.background = 'rgba(255,255,255,0.04)');
+                            if (!active) (e.currentTarget.style.background = 'var(--bg-elevated)');
                           }}
                           onMouseLeave={(e) => {
                             if (!active) (e.currentTarget.style.background = 'transparent');
@@ -263,8 +273,27 @@ export default function AdminSidebar() {
                 ))}
               </nav>
 
-              {/* 하단: 로그아웃 */}
-              <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-subtle)' }}>
+              {/* 하단: 테마 + 로그아웃 */}
+              <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <button
+                  onClick={toggleTheme}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    background: 'transparent',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 6,
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                >
+                  {isDark ? '☀️' : '🌙'} {isDark ? '라이트 테마' : '다크 테마'}
+                </button>
                 <button
                   onClick={() => {
                     localStorage.removeItem('access_token');
