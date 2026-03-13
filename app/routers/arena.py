@@ -10,8 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
 from app.database import get_db, engine
-from app.security import get_current_user
-from app.models import ArenaPlayer, ArenaGame, ArenaRegionStats
+from app.models import ArenaPlayer, ArenaGame, ArenaRegionStats, Buyer
 from app.database import Base
 
 # 아레나 테이블 자동 생성
@@ -21,6 +20,28 @@ except Exception as _e:
     print(f"[arena] create_all: {_e}")
 
 router = APIRouter(prefix="/arena", tags=["arena"])
+
+
+def _get_arena_user(request: Request, db: Session):
+    """JWT에서 유저 추출 (get_current_user 대신 직접 구현)"""
+    from app.security import SECRET_KEY, ALGORITHM
+    from jose import jwt as jose_jwt
+
+    auth = request.headers.get("authorization", "")
+    if not auth.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = auth[7:]
+    try:
+        payload = jose_jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    buyer = db.query(Buyer).filter(Buyer.id == int(user_id)).first()
+    if not buyer:
+        raise HTTPException(status_code=401, detail="User not found")
+    return buyer
 
 # ─────────────────────────────────────────────
 # 상수
@@ -275,7 +296,7 @@ async def arena_debug_register(request: Request, db: Session = Depends(get_db)):
         return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
 
 @router.post("/debug-auth")
-async def arena_debug_auth(request: Request, db: Session = Depends(get_db), user=Depends(get_current_user)):
+async def arena_debug_auth(request: Request, db: Session = Depends(get_db)):
     """디버그: 인증 테스트"""
     import traceback
     try:
@@ -283,6 +304,7 @@ async def arena_debug_auth(request: Request, db: Session = Depends(get_db), user
     except Exception:
         body = {}
     try:
+        user = _get_arena_user(request, db)
         player = _get_or_create_player(db, user)
         db.commit()
         db.refresh(player)
@@ -295,9 +317,9 @@ async def arena_debug_auth(request: Request, db: Session = Depends(get_db), user
 async def arena_register(
     request: Request,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
 ):
     """아레나 플레이어 등록/조회"""
+    user = _get_arena_user(request, db)
     try:
         body = await request.json()
     except Exception:
@@ -328,9 +350,9 @@ async def arena_register(
 async def arena_play(
     request: Request,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
 ):
     """통합 게임 플레이 API"""
+    user = _get_arena_user(request, db)
     try:
         body = await request.json()
     except Exception:
@@ -556,10 +578,11 @@ def arena_quiz_questions(
 
 @router.get("/me")
 def arena_me(
+    request: Request,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
 ):
     """내 아레나 프로필"""
+    user = _get_arena_user(request, db)
     player = db.query(ArenaPlayer).filter(ArenaPlayer.user_id == user.id).first()
     if not player:
         raise HTTPException(status_code=404, detail="Arena player not found. Register first.")
@@ -587,12 +610,13 @@ def arena_me(
 
 @router.get("/history")
 def arena_history(
+    request: Request,
     limit: int = Query(20, le=100),
     game_type: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
 ):
     """내 게임 히스토리"""
+    user = _get_arena_user(request, db)
     player = db.query(ArenaPlayer).filter(ArenaPlayer.user_id == user.id).first()
     if not player:
         return {"games": []}
