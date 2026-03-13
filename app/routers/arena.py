@@ -274,6 +274,23 @@ async def arena_debug_register(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
 
+@router.post("/debug-auth")
+async def arena_debug_auth(request: Request, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    """디버그: 인증 테스트"""
+    import traceback
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    try:
+        player = _get_or_create_player(db, user)
+        db.commit()
+        db.refresh(player)
+        return {"status": "ok", "user_id": user.id, "player_id": player.id}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "error": str(e), "tb": traceback.format_exc()[-500:]}
+
 @router.post("/register")
 async def arena_register(
     request: Request,
