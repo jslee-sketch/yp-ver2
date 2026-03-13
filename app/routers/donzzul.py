@@ -6,7 +6,9 @@ from app.models import (
     DonzzulVoteWeek, DonzzulVote, DonzzulSettlement, DonzzulChatMessage
 )
 from datetime import datetime, timedelta
+from hashlib import sha256
 import json
+import secrets
 
 router = APIRouter(prefix="/donzzul", tags=["donzzul"])
 
@@ -207,20 +209,51 @@ def list_deals(status: str = Query(None), db: Session = Depends(get_db)):
 
 @router.get("/deals/{deal_id}")
 def get_deal(deal_id: int, db: Session = Depends(get_db)):
-    """돈쭐 딜 상세"""
+    """돈쭐 딜 상세 (사연/사진/달성률/응원 메시지)"""
     deal = db.query(DonzzulDeal).filter(DonzzulDeal.id == deal_id).first()
     if not deal:
         raise HTTPException(404, "딜을 찾을 수 없습니다")
 
     store = db.query(DonzzulStore).filter(DonzzulStore.id == deal.store_id).first()
-    messages = db.query(DonzzulChatMessage).filter(
-        DonzzulChatMessage.deal_id == deal_id
-    ).order_by(DonzzulChatMessage.created_at.desc()).limit(50).all()
+
+    # 최근 응원 메시지 (상품권 cheer_message)
+    cheer_vouchers = db.query(DonzzulVoucher).filter(
+        DonzzulVoucher.deal_id == deal_id,
+        DonzzulVoucher.cheer_message != None,
+        DonzzulVoucher.cheer_message != "",
+    ).order_by(DonzzulVoucher.created_at.desc()).limit(20).all()
+
+    # 달성률
+    target = deal.target_amount or 0
+    current = deal.current_amount or 0
+    progress = round((current / target * 100), 1) if target > 0 else 0
 
     return {
-        "deal": deal,
-        "store": store,
-        "recent_messages": messages,
+        "deal": {
+            "id": deal.id,
+            "title": deal.title,
+            "status": deal.status,
+            "target_amount": target,
+            "current_amount": current,
+            "progress": min(progress, 100),
+            "voucher_count": deal.voucher_count or 0,
+            "starts_at": str(deal.starts_at),
+            "expires_at": str(deal.expires_at),
+        },
+        "store": {
+            "id": store.id,
+            "store_name": store.store_name,
+            "store_address": store.store_address,
+            "store_phone": store.store_phone,
+            "store_category": store.store_category,
+            "story_text": store.story_text,
+            "youtube_url": store.youtube_url,
+            "store_photos": json.loads(store.store_photos) if store.store_photos else [],
+        } if store else None,
+        "cheer_messages": [
+            {"message": m.cheer_message, "amount": m.amount, "created_at": str(m.created_at)}
+            for m in cheer_vouchers
+        ],
     }
 
 
@@ -228,12 +261,177 @@ def get_deal(deal_id: int, db: Session = Depends(get_db)):
 # 상품권
 # ============================================================
 
+def _load_donzzul_policy() -> dict:
+    try:
+        from app.policy.runtime import load_defaults
+        policy = load_defaults()
+        return policy.get("donzzul", {})
+    except Exception:
+        return {}
+
+
+@router.post("/vouchers/purchase")
+def purchase_voucher(body: dict, db: Session = Depends(get_db)):
+    """상품권 구매"""
+    deal_id = body.get("deal_id")
+    buyer_id = body.get("buyer_id")
+    amount = body.get("amount")
+    cheer_message = body.get("cheer_message", "")
+
+    # 딜 존재 + OPEN 확인
+    deal = db.query(DonzzulDeal).filter(DonzzulDeal.id == deal_id).first()
+    if not deal or deal.status != "OPEN":
+        raise HTTPException(400, "구매 가능한 딜이 아닙니다")
+
+    # 딜 만료 확인
+    if deal.expires_at and deal.expires_at < datetime.utcnow():
+        raise HTTPException(400, "마감된 딜입니다")
+
+    # 금액 검증
+    policy = _load_donzzul_policy()
+    allowed = policy.get("voucher_amounts", [10000, 20000, 50000])
+    if amount not in allowed:
+        raise HTTPException(400, f"허용 금액: {allowed}")
+
+    # 상품권 코드 생성 (DONZZUL-XXXX-XXXX)
+    prefix = policy.get("voucher_code_prefix", "DONZZUL")
+    while True:
+        code = f"{prefix}-{secrets.token_hex(2).upper()}-{secrets.token_hex(2).upper()}"
+        if not db.query(DonzzulVoucher).filter(DonzzulVoucher.code == code).first():
+            break
+
+    # PIN 생성 (4자리 랜덤)
+    pin_length = policy.get("voucher_pin_length", 4)
+    pin_plain = ''.join([str(secrets.randbelow(10)) for _ in range(pin_length)])
+    pin_hash = sha256(pin_plain.encode()).hexdigest()
+
+    # 유효기간
+    expiry_days = policy.get("voucher_expiry_days", 90)
+    expires_at = datetime.utcnow() + timedelta(days=expiry_days)
+
+    voucher = DonzzulVoucher(
+        code=code,
+        deal_id=deal.id,
+        store_id=deal.store_id,
+        buyer_id=buyer_id,
+        amount=amount,
+        remaining_amount=amount,
+        pin_hash=pin_hash,
+        cheer_message=cheer_message[:200] if cheer_message else None,
+        status="ACTIVE",
+        expires_at=expires_at,
+    )
+    db.add(voucher)
+
+    # 딜 금액/건수 업데이트
+    deal.current_amount = (deal.current_amount or 0) + amount
+    deal.voucher_count = (deal.voucher_count or 0) + 1
+
+    db.commit()
+    db.refresh(voucher)
+
+    store = db.query(DonzzulStore).filter(DonzzulStore.id == deal.store_id).first()
+    return {
+        "voucher_id": voucher.id,
+        "code": voucher.code,
+        "pin": pin_plain,  # 구매 시에만 1회 반환
+        "amount": voucher.amount,
+        "expires_at": str(voucher.expires_at),
+        "store_name": store.store_name if store else "",
+    }
+
+
+@router.post("/vouchers/{code}/redeem")
+def redeem_voucher(code: str, body: dict, db: Session = Depends(get_db)):
+    """상품권 사용 확정 (사장님 비밀번호 입력)"""
+    voucher = db.query(DonzzulVoucher).filter(DonzzulVoucher.code == code).first()
+    if not voucher:
+        raise HTTPException(404, "상품권을 찾을 수 없습니다")
+
+    if voucher.status != "ACTIVE":
+        raise HTTPException(400, f"사용할 수 없는 상품권입니다 (상태: {voucher.status})")
+
+    # 유효기간 확인
+    if voucher.expires_at < datetime.utcnow():
+        raise HTTPException(400, "유효기간이 만료된 상품권입니다")
+
+    # 잠금 확인
+    if voucher.pin_locked_until and voucher.pin_locked_until > datetime.utcnow():
+        remaining = (voucher.pin_locked_until - datetime.utcnow()).seconds // 60
+        raise HTTPException(423, f"비밀번호 오류로 {remaining}분간 잠금 상태입니다")
+
+    # 가게 비밀번호 검증
+    store = db.query(DonzzulStore).filter(DonzzulStore.id == voucher.store_id).first()
+    if not store or not store.store_pin_hash:
+        raise HTTPException(500, "가게 비밀번호가 설정되지 않았습니다")
+
+    input_pin = body.get("store_pin", "")
+    input_pin_hash = sha256(input_pin.encode()).hexdigest()
+
+    if input_pin_hash != store.store_pin_hash:
+        # 오류 횟수 증가
+        voucher.pin_attempts = (voucher.pin_attempts or 0) + 1
+
+        policy = _load_donzzul_policy()
+        max_attempts = policy.get("voucher_pin_max_attempts", 5)
+        lock_minutes = policy.get("voucher_pin_lock_minutes", 30)
+
+        if voucher.pin_attempts >= max_attempts:
+            voucher.pin_locked_until = datetime.utcnow() + timedelta(minutes=lock_minutes)
+            db.commit()
+            raise HTTPException(423, f"비밀번호 {max_attempts}회 오류! {lock_minutes}분간 잠금됩니다")
+
+        remaining = max_attempts - voucher.pin_attempts
+        db.commit()
+        raise HTTPException(401, f"비밀번호가 틀렸습니다 (남은 시도: {remaining}회)")
+
+    # 성공! 사용 처리
+    voucher.status = "USED"
+    voucher.used_at = datetime.utcnow()
+    voucher.remaining_amount = 0
+    voucher.pin_attempts = 0
+    voucher.pin_locked_until = None
+
+    # 위치 정보 (있으면)
+    voucher.used_location_lat = body.get("lat")
+    voucher.used_location_lng = body.get("lng")
+
+    db.commit()
+
+    return {
+        "status": "USED",
+        "message": "사용 완료! 감사합니다 💚",
+        "store_name": store.store_name,
+        "amount": voucher.amount,
+    }
+
+
 @router.get("/vouchers/my")
 def my_vouchers(buyer_id: int = Query(...), db: Session = Depends(get_db)):
     """내 상품권함"""
-    return db.query(DonzzulVoucher).filter(
+    vouchers = db.query(DonzzulVoucher).filter(
         DonzzulVoucher.buyer_id == buyer_id
     ).order_by(DonzzulVoucher.created_at.desc()).all()
+
+    result = []
+    for v in vouchers:
+        store = db.query(DonzzulStore).filter(DonzzulStore.id == v.store_id).first()
+        result.append({
+            "id": v.id,
+            "code": v.code,
+            "amount": v.amount,
+            "remaining_amount": v.remaining_amount,
+            "status": v.status,
+            "store_name": store.store_name if store else "알 수 없음",
+            "store_address": store.store_address if store else "",
+            "expires_at": str(v.expires_at),
+            "used_at": str(v.used_at) if v.used_at else None,
+            "cheer_message": v.cheer_message,
+            "created_at": str(v.created_at),
+            "days_left": max(0, (v.expires_at - datetime.utcnow()).days) if v.expires_at else 0,
+        })
+
+    return result
 
 
 # ============================================================

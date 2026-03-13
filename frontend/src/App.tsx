@@ -88,6 +88,9 @@ import AdminUserConditionsPage from './pages/AdminUserConditionsPage';
 import DonzzulMainPage from './pages/donzzul/DonzzulMainPage';
 import DonzzulRecommendPage from './pages/donzzul/DonzzulRecommendPage';
 import DonzzulMyStoresPage from './pages/donzzul/DonzzulMyStoresPage';
+import DonzzulDealPage from './pages/donzzul/DonzzulDealPage';
+import DonzzulVouchersPage from './pages/donzzul/DonzzulVouchersPage';
+import DonzzulVoucherUsePage from './pages/donzzul/DonzzulVoucherUsePage';
 import AdminDonzzulStoresPage from './pages/admin/AdminDonzzulStoresPage';
 
 const MAINTENANCE_KEY = 'yeokping2026';
@@ -209,6 +212,9 @@ function App() {
 
           {/* 돈쭐 */}
           <Route path="/donzzul" element={<DonzzulMainPage />} />
+          <Route path="/donzzul/deals/:id" element={<DonzzulDealPage />} />
+          <Route path="/donzzul/vouchers" element={<DonzzulVouchersPage />} />
+          <Route path="/donzzul/vouchers/:code/use" element={<DonzzulVoucherUsePage />} />
           <Route path="/donzzul/hero/recommend" element={<DonzzulRecommendPage />} />
           <Route path="/donzzul/hero/my-stores" element={<DonzzulMyStoresPage />} />
           <Route path="/donzzul/*" element={<DonzzulMainPage />} />
