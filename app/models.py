@@ -1829,6 +1829,59 @@ class Dispute(Base):
     r2_respondent_decision_at = Column(DateTime, nullable=True)
     r2_respondent_deadline = Column(DateTime, nullable=True)
 
+    # ── Structured Proposals: Round 1 신청자 ──
+    initiator_amount_type = Column(String(10), default="fixed")
+    initiator_amount_value = Column(Float, nullable=True)
+    initiator_amount_calculated = Column(Integer, nullable=True)
+    initiator_shipping_burden = Column(String(20), default="seller")
+    initiator_return_required = Column(Boolean, nullable=True)
+
+    # ── Structured Proposals: Round 1 상대방 ──
+    r1_respondent_amount_type = Column(String(10), nullable=True)
+    r1_respondent_amount_value = Column(Float, nullable=True)
+    r1_respondent_amount_calculated = Column(Integer, nullable=True)
+    r1_respondent_shipping_burden = Column(String(20), nullable=True)
+    r1_respondent_return_required = Column(Boolean, nullable=True)
+
+    # ── Structured Proposals: Round 1 AI ──
+    r1_ai_amount_type = Column(String(10), nullable=True)
+    r1_ai_amount_value = Column(Float, nullable=True)
+    r1_ai_shipping_burden = Column(String(20), nullable=True)
+    r1_ai_return_required = Column(Boolean, nullable=True)
+    r1_ai_legal_basis = Column(Text, nullable=True)
+    r1_ai_nudge_buyer = Column(Text, nullable=True)
+    r1_ai_nudge_seller = Column(Text, nullable=True)
+
+    # ── Structured Proposals: Round 2 신청자 ──
+    r2_initiator_amount_type = Column(String(10), nullable=True)
+    r2_initiator_amount_value = Column(Float, nullable=True)
+    r2_initiator_amount_calculated = Column(Integer, nullable=True)
+    r2_initiator_shipping_burden = Column(String(20), nullable=True)
+    r2_initiator_return_required = Column(Boolean, nullable=True)
+
+    # ── Structured Proposals: Round 2 상대방 ──
+    r2_respondent_amount_type = Column(String(10), nullable=True)
+    r2_respondent_amount_value = Column(Float, nullable=True)
+    r2_respondent_amount_calculated = Column(Integer, nullable=True)
+    r2_respondent_shipping_burden = Column(String(20), nullable=True)
+    r2_respondent_return_required = Column(Boolean, nullable=True)
+
+    # ── Structured Proposals: Round 2 AI ──
+    r2_ai_amount_type = Column(String(10), nullable=True)
+    r2_ai_amount_value = Column(Float, nullable=True)
+    r2_ai_shipping_burden = Column(String(20), nullable=True)
+    r2_ai_return_required = Column(Boolean, nullable=True)
+    r2_ai_legal_basis = Column(Text, nullable=True)
+    r2_ai_nudge_buyer = Column(Text, nullable=True)
+    r2_ai_nudge_seller = Column(Text, nullable=True)
+
+    # ── 최종 채택된 제안 ──
+    accepted_proposal_source = Column(String(20), nullable=True)
+    accepted_proposal_type = Column(String(30), nullable=True)
+    accepted_amount = Column(Integer, nullable=True)
+    accepted_shipping_burden = Column(String(20), nullable=True)
+    accepted_return_required = Column(Boolean, nullable=True)
+
     resolution = Column(Text, nullable=True)
     resolution_amount = Column(Integer, nullable=True)
     closed_at = Column(DateTime, nullable=True)

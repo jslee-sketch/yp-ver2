@@ -15,9 +15,14 @@ interface DisputeData {
   evidence: { type: string; url: string; description: string }[];
   requested_resolution: string;
   requested_amount: number;
+  // 구조화 제안
+  initiator_amount_type?: string;
+  initiator_amount_value?: number;
+  initiator_shipping_burden?: string;
+  initiator_return_required?: boolean;
   round1: {
     response: string;
-    response_evidence: any[];
+    response_evidence: unknown[];
     proposal_type: string;
     proposal_amount: number;
     deadline: string;
@@ -25,6 +30,16 @@ interface DisputeData {
     ai_recommendation: string;
     ai_amount: number;
     ai_explanation: { to_initiator?: string; to_respondent?: string; reasoning?: string };
+    // 구조화
+    respondent_amount_type?: string;
+    respondent_shipping_burden?: string;
+    respondent_return_required?: boolean;
+    ai_amount_type?: string;
+    ai_shipping_burden?: string;
+    ai_return_required?: boolean;
+    ai_legal_basis?: string;
+    ai_nudge_buyer?: string;
+    ai_nudge_seller?: string;
     initiator_decision: string;
     respondent_decision: string;
   };
@@ -37,9 +52,18 @@ interface DisputeData {
     ai_recommendation: string;
     ai_amount: number;
     ai_explanation: { to_initiator?: string; to_respondent?: string; reasoning?: string };
+    ai_legal_basis?: string;
+    ai_nudge_buyer?: string;
+    ai_nudge_seller?: string;
     initiator_decision: string;
     respondent_decision: string;
   } | null;
+  // 채택된 제안
+  accepted_proposal_source?: string;
+  accepted_proposal_type?: string;
+  accepted_amount?: number;
+  accepted_shipping_burden?: string;
+  accepted_return_required?: boolean;
   resolution: string;
   resolution_amount: number;
   closed_at: string;
@@ -60,6 +84,8 @@ const statusLabels: Record<string, string> = {
   REJECTED: '미합의 (법적 안내)',
   AUTO_CLOSED: '자동 종결',
 };
+
+const fmt = (n?: number) => (n ?? 0).toLocaleString('ko-KR');
 
 export default function DisputeDetailPage() {
   const { id } = useParams();
@@ -106,8 +132,15 @@ export default function DisputeDetailPage() {
         {/* Filing */}
         <TimelineStep icon="📝" title="분쟁 신청" done>
           <div style={{ fontSize: 12, color: '#aaa' }}>
-            카테고리: {dispute.category} | 희망: {dispute.requested_resolution} ({dispute.requested_amount?.toLocaleString()}원)
+            카테고리: {dispute.category} | 희망: {dispute.requested_resolution} ({fmt(dispute.requested_amount)}원)
           </div>
+          {dispute.initiator_amount_type && (
+            <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+              {dispute.initiator_amount_type === 'rate' ? `정률 ${dispute.initiator_amount_value}%` : `정액 ${fmt(dispute.requested_amount)}원`}
+              {dispute.initiator_shipping_burden && ` | 배송비: ${dispute.initiator_shipping_burden}`}
+              {dispute.initiator_return_required != null && ` | 반품: ${dispute.initiator_return_required ? '필요' : '불필요'}`}
+            </div>
+          )}
           <div style={{ fontSize: 12, color: '#ccc', marginTop: 4 }}>{dispute.description}</div>
           {dispute.evidence.length > 0 && (
             <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
@@ -122,8 +155,14 @@ export default function DisputeDetailPage() {
             <>
               <div style={{ fontSize: 12, color: '#ccc' }}>{dispute.round1.response}</div>
               <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
-                제안: {dispute.round1.proposal_type} / {dispute.round1.proposal_amount?.toLocaleString()}원
+                제안: {dispute.round1.proposal_type} / {fmt(dispute.round1.proposal_amount)}원
+                {dispute.round1.respondent_amount_type && ` (${dispute.round1.respondent_amount_type === 'rate' ? '정률' : '정액'})`}
               </div>
+              {dispute.round1.respondent_shipping_burden && (
+                <div style={{ fontSize: 11, color: '#888' }}>
+                  배송비: {dispute.round1.respondent_shipping_burden} | 반품: {dispute.round1.respondent_return_required ? '필요' : '불필요'}
+                </div>
+              )}
             </>
           ) : (
             <div style={{ fontSize: 12, color: '#666' }}>
@@ -138,8 +177,20 @@ export default function DisputeDetailPage() {
             <>
               <div style={{ fontSize: 12, color: '#ccc' }}>{dispute.round1.ai_opinion}</div>
               <div style={{ fontSize: 12, color: '#4ade80', marginTop: 4 }}>
-                추천 금액: {dispute.round1.ai_amount?.toLocaleString()}원
+                추천: {dispute.round1.ai_recommendation} / {fmt(dispute.round1.ai_amount)}원
+                {dispute.round1.ai_shipping_burden && ` | 배송비: ${dispute.round1.ai_shipping_burden}`}
+                {dispute.round1.ai_return_required != null && ` | 반품: ${dispute.round1.ai_return_required ? '필요' : '불필요'}`}
               </div>
+              {dispute.round1.ai_legal_basis && (
+                <div style={{ fontSize: 11, color: '#60a5fa', marginTop: 4 }}>
+                  📌 {dispute.round1.ai_legal_basis}
+                </div>
+              )}
+              {dispute.round1.ai_nudge_buyer && (
+                <div style={{ padding: '6px 10px', marginTop: 6, borderRadius: 8, background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.15)', fontSize: 11, color: '#93c5fd' }}>
+                  {dispute.round1.ai_nudge_buyer}
+                </div>
+              )}
             </>
           )}
         </TimelineStep>
@@ -172,8 +223,18 @@ export default function DisputeDetailPage() {
               <>
                 <div style={{ fontSize: 12, color: '#ccc' }}>{dispute.round2.ai_opinion}</div>
                 <div style={{ fontSize: 12, color: '#4ade80', marginTop: 4 }}>
-                  최종 추천 금액: {dispute.round2.ai_amount?.toLocaleString()}원
+                  최종 추천 금액: {fmt(dispute.round2.ai_amount)}원
                 </div>
+                {dispute.round2.ai_legal_basis && (
+                  <div style={{ fontSize: 11, color: '#60a5fa', marginTop: 4 }}>
+                    📌 {dispute.round2.ai_legal_basis}
+                  </div>
+                )}
+                {dispute.round2.ai_nudge_buyer && (
+                  <div style={{ padding: '6px 10px', marginTop: 6, borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)', fontSize: 11, color: '#fca5a5' }}>
+                    {dispute.round2.ai_nudge_buyer}
+                  </div>
+                )}
               </>
             )}
           </TimelineStep>
@@ -195,8 +256,22 @@ export default function DisputeDetailPage() {
           {dispute.status === 'ACCEPTED' && (
             <>
               <div style={{ fontSize: 15, fontWeight: 700, color: '#4ade80' }}>합의 완료</div>
+              {dispute.accepted_proposal_source && (
+                <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>
+                  채택: {dispute.accepted_proposal_source === 'ai' ? 'AI 추천안' : dispute.accepted_proposal_source === 'respondent' ? '상대방 제안' : '신청자 제안'}
+                  {dispute.accepted_proposal_type && ` (${dispute.accepted_proposal_type})`}
+                </div>
+              )}
               <div style={{ fontSize: 13, color: '#ccc', marginTop: 4 }}>
-                합의 금액: {dispute.resolution_amount?.toLocaleString()}원
+                합의 금액: {fmt(dispute.accepted_amount ?? dispute.resolution_amount)}원
+              </div>
+              {dispute.accepted_shipping_burden && (
+                <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+                  배송비: {dispute.accepted_shipping_burden} | 반품: {dispute.accepted_return_required ? '필요' : '불필요'}
+                </div>
+              )}
+              <div style={{ fontSize: 11, color: '#4ade80', marginTop: 8 }}>
+                후속 처리가 자동으로 진행됩니다.
               </div>
             </>
           )}

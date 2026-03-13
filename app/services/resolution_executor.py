@@ -128,6 +128,114 @@ def execute_dispute_resolution(dispute_id: int, db: Session) -> dict:
 
 
 SELLER_FAULT_REASONS_KR = {"품질불량", "미배송", "허위설명", "파손", "오배송"}
+SELLER_FAULT_REASONS_EN = {"defective", "wrong_item", "damaged", "not_delivered", "description_mismatch"}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# E-1b. 구조화된 승인 데이터 → ResolutionAction 직접 생성
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def execute_dispute_resolution_structured(dispute_id: int, accepted: dict, db: Session) -> dict:
+    """구조화된 승인 데이터 → ResolutionAction 직접 생성"""
+    dispute = db.query(Dispute).filter(Dispute.id == dispute_id).first()
+    if not dispute:
+        return {"error": "분쟁을 찾을 수 없습니다"}
+    reservation = db.query(Reservation).filter(Reservation.id == dispute.reservation_id).first()
+    if not reservation:
+        return {"error": "예약을 찾을 수 없습니다"}
+
+    res_type = accepted["type"]
+    amount = accepted["amount"]
+    shipping_burden = accepted.get("shipping_burden", "buyer")
+    return_required = accepted.get("return_required", True)
+
+    total = reservation.amount_total
+    ship_fee = reservation.amount_shipping
+
+    # 미배송이면 반품 불필요
+    cat = dispute.category or ""
+    if cat in ("미배송", "not_delivered"):
+        return_required = False
+
+    # 소액 보상 (10% 이하)이면 반품 불필요
+    if res_type in ("PARTIAL_REFUND", "COMPENSATION") and amount <= total * 0.1:
+        return_required = False
+
+    # 귀책 결정
+    if cat in SELLER_FAULT_REASONS_KR or cat in SELLER_FAULT_REASONS_EN:
+        fault = "seller"
+    elif cat in ("buyer_change_mind", "단순변심"):
+        fault = "buyer"
+    else:
+        fault = determine_fault(cat)
+
+    raw = _load_raw_policy()
+    default_ship = raw.get("refund", {}).get("default_return_shipping_cost", 3000)
+    fee_rate = raw.get("money", {}).get("platform_fee_rate", 0.035)
+    shipping_mode = getattr(reservation, 'shipping_mode', 'free') or 'free'
+    delivery_status_val = getattr(reservation, 'delivery_status', 'delivered') or 'delivered'
+
+    # 배송비 계산
+    buyer_shipping = 0
+    seller_shipping = 0
+    if return_required:
+        if shipping_burden == "buyer":
+            buyer_shipping = default_ship * 2 if shipping_mode == 'free' else default_ship
+        elif shipping_burden == "seller":
+            seller_shipping = default_ship
+        elif shipping_burden == "split":
+            buyer_shipping = default_ship
+            seller_shipping = default_ship
+
+    # 구매자 최종 환불 금액
+    orig_amount = total - ship_fee
+    if res_type == "FULL_REFUND":
+        buyer_refund = total - buyer_shipping
+    elif res_type in ("PARTIAL_REFUND", "COMPENSATION"):
+        buyer_refund = amount - buyer_shipping
+    elif res_type == "EXCHANGE":
+        buyer_refund = 0
+    else:
+        buyer_refund = 0
+    buyer_refund = max(0, buyer_refund)
+
+    # 판매자 정산 영향
+    seller_original = int(orig_amount * (1 - fee_rate))
+    if buyer_refund >= total * 0.9:
+        seller_new = 0
+    elif buyer_refund > 0:
+        remaining = total - buyer_refund
+        seller_new = int(max(0, remaining - ship_fee) * (1 - fee_rate))
+    else:
+        seller_new = seller_original
+
+    action = ResolutionAction(
+        dispute_id=dispute.id,
+        reservation_id=reservation.id,
+        resolution_type=res_type,
+        original_amount=orig_amount,
+        original_shipping_fee=ship_fee,
+        original_total=total,
+        shipping_mode=shipping_mode,
+        delivery_status=delivery_status_val,
+        fault=fault,
+        refund_reason=cat or "dispute",
+        return_required=return_required,
+        buyer_refund_amount=buyer_refund,
+        total_deduction=buyer_shipping,
+        return_shipping_cost=buyer_shipping,
+        shipping_payer=shipping_burden,
+        seller_deduction_amount=seller_original - seller_new,
+        seller_return_shipping_burden=seller_shipping,
+        platform_fee_refund=int(buyer_refund * fee_rate),
+        compensation_amount=amount if res_type == "COMPENSATION" else 0,
+        status="PENDING",
+    )
+    db.add(action)
+    db.commit()
+    db.refresh(action)
+
+    return route_resolution(action.id, db)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
