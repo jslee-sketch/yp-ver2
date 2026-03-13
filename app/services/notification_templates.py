@@ -1,5 +1,5 @@
 # app/services/notification_templates.py
-"""알림 이벤트 정의 + 메시지 템플릿 (57개 이벤트 + 7개 관리자)"""
+"""알림 이벤트 정의 + 메시지 템플릿 (67개 이벤트 + 8개 관리자)"""
 from __future__ import annotations
 import re
 
@@ -30,6 +30,10 @@ BUYER_EVENTS = {
     "DISPUTE_FILED":            {"title": "분쟁이 접수되었어요 ⚖️",        "message": "'{product_name}' 분쟁이 접수되었습니다. 관리자가 검토합니다.", "link": "/my-orders", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
     "DISPUTE_SELLER_RESPONSE":  {"title": "판매자 이의제기 도착 📨",       "message": "'{product_name}' 분쟁에 대해 판매자가 이의를 제기했습니다.", "link": "/my-orders", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
     "DISPUTE_RESULT":           {"title": "분쟁 결과 통보 📋",             "message": "'{product_name}' 분쟁 결과: {result}.", "link": "/my-orders", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "DISPUTE_AI_MEDIATION":     {"title": "AI 중재 결과 도착 🤖",          "message": "'{product_name}' 분쟁에 대한 AI 중재 결과가 도착했습니다. 확인 후 수락/거절을 결정해주세요.", "link": "/disputes/{dispute_id}", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "DISPUTE_ROUND2_STARTED":   {"title": "분쟁 2라운드 진행 ⚖️",          "message": "'{product_name}' 분쟁이 2라운드로 진행됩니다. 재반론을 제출해주세요.", "link": "/disputes/{dispute_id}", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "DISPUTE_TIMEOUT_WARNING":  {"title": "분쟁 응답 기한 임박 ⏰",         "message": "'{product_name}' 분쟁 응답 기한이 내일까지입니다. 미응답 시 자동 종결됩니다.", "link": "/disputes/{dispute_id}", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "DISPUTE_REJECTED_LEGAL":   {"title": "분쟁 종료 — 법적 안내 📋",       "message": "'{product_name}' 분쟁이 합의에 이르지 못했습니다. 법적 구제 절차를 안내드립니다.", "link": "/disputes/{dispute_id}", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
 
     "POINTS_EARNED":            {"title": "포인트 적립! 🎯",              "message": "{earned_points}포인트가 적립되었어요! 현재 잔액: {total_points}pt", "link": "/points", "default": {"app": True, "push": False, "email": False}, "group": "포인트/등급"},
     "GRADE_CHANGED":            {"title": "등급이 변경되었어요! 🏅",       "message": "{old_grade} → {new_grade}(으)로 등급이 변경되었어요!", "link": "/my", "default": {"app": True, "push": True, "email": False}, "group": "포인트/등급"},
@@ -60,6 +64,8 @@ SELLER_EVENTS = {
     "S_REFUND_RETURN_UPDATE":   {"title": "환불/반품 상태 변경 📋",        "message": "'{product_name}' 환불/반품 상태가 변경되었습니다.", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": False}, "group": "환불/분쟁"},
     "S_DISPUTE_RECEIVED":       {"title": "분쟁 접수 ⚠️",                 "message": "'{product_name}' 주문에 구매자가 분쟁을 접수했습니다.", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
     "S_DISPUTE_RESULT":         {"title": "분쟁 결과 ⚖️",                 "message": "'{product_name}' 분쟁 결과: {result}.", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "S_DISPUTE_AI_MEDIATION":   {"title": "AI 중재 결과 🤖",              "message": "'{product_name}' 분쟁 AI 중재 결과가 도착했습니다.", "link": "/disputes/{dispute_id}", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "S_DISPUTE_ROUND2_STARTED": {"title": "분쟁 2라운드 진행 ⚖️",          "message": "'{product_name}' 분쟁이 2라운드로 진행됩니다.", "link": "/disputes/{dispute_id}", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
 
     "NEW_REVIEW":               {"title": "새 리뷰가 작성되었어요 ⭐",     "message": "{buyer_name}님이 '{product_name}'에 리뷰를 남겼어요.", "link": "/seller/reviews", "default": {"app": True, "push": True, "email": False}, "group": "리뷰"},
     "LEVEL_CHANGED":            {"title": "판매자 레벨 변경! 📊",          "message": "Lv.{old_level} → Lv.{new_level} 변경! 수수료율: {old_fee}% → {new_fee}%", "link": "/seller", "default": {"app": True, "push": True, "email": False}, "group": "레벨"},
@@ -85,6 +91,10 @@ ACTUATOR_EVENTS = {
     "RECRUITED_SELLER_FIRST":   {"title": "모집 판매자 첫 거래! 🎉🎉",   "message": "{seller_name}님의 첫 거래가 성사되었어요!", "link": "/actuator/sellers", "default": {"app": True, "push": True, "email": True}, "group": "모집 판매자"},
 
     "INTEREST_DEAL_CREATED":    {"title": "관심 상품 딜 등록! 📌",        "message": "'{matched_interest}' 관련 '{product_name}' 딜이 생성되었어요!", "link": "/deal/{deal_id}", "default": {"app": True, "push": True, "email": False}, "group": "매칭"},
+
+    "A_SELLER_DISCONNECT_REQ":  {"title": "판매자 해지 신청 ⚠️",          "message": "{seller_name}님과의 연결 해지가 신청되었습니다. 유예기간 7일.", "link": "/actuator/sellers", "default": {"app": True, "push": True, "email": True}, "group": "해지"},
+    "A_SELLER_DISCONNECT_DONE": {"title": "판매자 해지 확정 🔒",          "message": "{seller_name}님과의 연결이 해지되었습니다. 쿨다운 30일.", "link": "/actuator/sellers", "default": {"app": True, "push": True, "email": True}, "group": "해지"},
+    "A_SELLER_DISCONNECT_CANCEL": {"title": "판매자 해지 철회 ✅",        "message": "{seller_name}님과의 해지가 철회되었습니다.", "link": "/actuator/sellers", "default": {"app": True, "push": True, "email": False}, "group": "해지"},
 
     "A_ANNOUNCEMENT":           {"title": "📢 공지사항",                  "message": "{announcement_preview}", "link": "/support", "default": {"app": True, "push": False, "email": False}, "group": "시스템"},
     "CONTRACT_RENEWAL":         {"title": "위탁계약 갱신 안내 📋",        "message": "위탁계약이 {renewal_date}에 자동 갱신됩니다.", "link": "/actuator/contract", "default": {"app": True, "push": True, "email": True}, "group": "시스템"},

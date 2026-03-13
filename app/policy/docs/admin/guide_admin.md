@@ -125,13 +125,32 @@ ECOUNT 엑셀 내보내기: 선택한 건 또는 전체를 XLSX로 다운로드.
 
 ---
 
-## 분쟁 관리
+## 분쟁 관리 (v3 — 2라운드 AI 중재)
 경로: /admin/disputes
-탭/모달/처리폼. 분쟁 사유, 종료, 알림 관리.
 분쟁 제기 기간: 배달 완료 후 7일 이내 (defaults.yaml 기준).
-관리자 처리 기한: 14일 (defaults.yaml 기준).
 분쟁 중 정산 자동 보류(auto_hold_settlement: true).
 분쟁 종료 후 정산 재개 지연: 3일 (defaults.yaml 기준).
+
+### 2라운드 AI 중재 흐름
+```
+ROUND1_RESPONSE → ROUND1_REVIEW → (양측 결정)
+  → ACCEPTED (합의) / ROUND2_RESPONSE (거절)
+ROUND2_RESPONSE → ROUND2_REBUTTAL → ROUND2_REVIEW → (양측 결정)
+  → ACCEPTED (합의) / REJECTED (불합의 + 법적 안내)
+```
+
+### 관리자 수동 개입
+- PUT `/v3_6/admin/seller/{seller_id}/decision`: 스코어 수동 승인/거절
+- 타임아웃 배치: POST `/v3_6/disputes/batch/timeout` → 미응답 분쟁 자동 종결 + 경고 발송
+
+### AI 중재 파라미터 (defaults.yaml)
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| round1_response_days | 3 | Round 1 반론 기한 (영업일) |
+| round1_review_days | 1 | Round 1 검토 기한 (영업일) |
+| round2_rebuttal_days | 2 | Round 2 재반론 기한 (영업일) |
+| round2_review_days | 1 | Round 2 검토 기한 (영업일) |
+| max_rounds | 2 | 최대 라운드 수 |
 
 ---
 
@@ -226,6 +245,47 @@ admin/ 폴더: 관리자용 가이드, SSOT 문서
 ## 통계/KPI
 경로: /admin/stats
 플랫폼 전체 통계. 기간별 거래량, GMV, 사용자 증가 추이.
+
+### KPI 고도화
+API: GET `/v3_6/admin/kpi/advanced?period=30d`
+기간 선택: 7d / 30d / 90d / all
+| KPI | 설명 |
+|-----|------|
+| GMV | 총 거래액 (PAID 예약 합계) |
+| AOV | 평균 주문금액 |
+| order_count | 주문 건수 |
+| conversion_rate | 오퍼 확정률 (확정/총오퍼 %) |
+| MAU | 월간 활성 구매자 수 |
+| retention_rate | 전월 구매자 재구매율 |
+
+---
+
+## 금맥 인사이트
+경로: /admin/insights
+API: GET `/v3_6/admin/insights/trends`
+| 항목 | 설명 |
+|------|------|
+| 카테고리 TOP 10 | 딜 수 내림차순 |
+| 브랜드 TOP 10 | 딜 수 + 평균 목표가 |
+| 가격대 분포 (5구간) | 10만미만 / 10-30만 / 30-50만 / 50-100만 / 100만+ |
+| 핫 키워드 TOP 15 | 최근 7일 딜 제목 키워드 빈도 |
+
+---
+
+## 판매자 신뢰 엔진
+### 외부 평점 관리
+API: POST `/v3_6/seller/external-ratings`, POST `/v3_6/seller/external-ratings/batch`
+판매자가 등록한 외부 플랫폼 평점의 검증/배치 관리.
+
+### AI 종합 스코어링
+API: POST `/v3_6/seller/{seller_id}/score`
+7개 항목(업력 20% + 외부평점 25% + 리뷰수 15% + 감성 15% + 통판신고서 10% + 계좌 10% + 사업자 5%) 가중 합산.
+- 70점 이상: AUTO_APPROVED (자동 승인)
+- 70점 미만: MANUAL_REVIEW (수동 검토 필요)
+
+### 관리자 수동 결정
+API: PUT `/v3_6/admin/seller/{seller_id}/decision`
+수동 승인(ADMIN_APPROVED) 또는 거절(ADMIN_REJECTED) + 사유 메모.
 
 ---
 
