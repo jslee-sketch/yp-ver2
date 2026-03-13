@@ -543,14 +543,9 @@ def create_vote_week(body: dict, db: Session = Depends(get_db)):
         total_votes=0,
     )
     db.add(week)
-    try:
-        db.commit()
-        db.refresh(week)
-        return _vote_week_response(week, db)
-    except Exception as e:
-        db.rollback()
-        import traceback
-        return {"error": str(e), "trace": traceback.format_exc()}
+    db.commit()
+    db.refresh(week)
+    return _vote_week_response(week, db)
 
 
 @router.post("/votes/cast")

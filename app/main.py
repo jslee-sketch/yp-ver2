@@ -530,6 +530,15 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass
 
+    # Widen week_label column
+    try:
+        with engine.connect() as _conn:
+            _conn.execute(_text("ALTER TABLE donzzul_vote_weeks ALTER COLUMN week_label TYPE VARCHAR(100)"))
+            _conn.commit()
+            print("[migration] donzzul_vote_weeks week_label widened to 100")
+    except Exception:
+        pass
+
     # FK constraint drops for donzzul_votes
     for _fk_name in ["donzzul_votes_voter_id_fkey", "donzzul_votes_store_id_fkey"]:
         try:

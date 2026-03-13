@@ -66,7 +66,7 @@ test.describe.serial('투표 주차', () => {
         await ensureSetup(request);
         const res = await request.post(`${BASE}/donzzul/votes/weeks`, {
             data: {
-                week_label: `Sprint6-${TS}`,
+                week_label: `S6-${String(TS).slice(-8)}`,
                 candidate_store_ids: [STORE_A_ID, STORE_B_ID, STORE_C_ID],
             },
         });

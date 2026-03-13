@@ -1665,7 +1665,7 @@ class DonzzulVoteWeek(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    week_label = Column(String(20), nullable=False)
+    week_label = Column(String(100), nullable=False)
     vote_start = Column(DateTime, nullable=False)
     vote_end = Column(DateTime, nullable=False)
 
