@@ -1021,6 +1021,11 @@ _include_router_safe("preregister", ("router",), label="preregister")
 # --------------------------------------------------
 _include_router_safe("arena", ("router",), label="arena")
 
+# --------------------------------------------------
+# 📊 Public Demand Dashboard (공개 수요 대시보드)
+# --------------------------------------------------
+_include_router_safe("public_demand", ("router",), label="public_demand")
+
 # 돈쭐 (착한 가게 응원 시스템)
 _include_router_safe("donzzul", ("router",), label="donzzul")
 

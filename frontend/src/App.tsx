@@ -53,6 +53,9 @@ import SellerShippingPolicyPage from './pages/SellerShippingPolicyPage';
 import SellerFeesPage from './pages/SellerFeesPage';
 import SellerAnnouncementsPage from './pages/SellerAnnouncementsPage';
 
+// Public pages
+import PublicDemandPage from './pages/PublicDemandPage';
+
 // Arena pages
 import { ArenaPage, ArenaRpsPage, ArenaMukjjippaPage, ArenaYutPage, ArenaMathPage, ArenaQuizPage, ArenaReactionPage, ArenaRankingsPage, ArenaMapPage } from './pages/arena';
 
@@ -185,6 +188,7 @@ function App() {
           <Route path="/completed-deals"     element={<CompletedDealsPage />} />
           <Route path="/completed-deals/:id" element={<CompletedDealDetailPage />} />
           <Route path="/spectating"   element={<SpectatingPage />} />
+          <Route path="/demand"      element={<PublicDemandPage />} />
           <Route path="/terms"        element={<TermsPage />} />
           <Route path="/privacy"      element={<PrivacyPage />} />
           <Route path="/support"      element={<SupportPage />} />
