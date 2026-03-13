@@ -539,6 +539,16 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
 
+    # FK constraint drops for donzzul_actuators
+    for _fk_name in ["donzzul_actuators_user_id_fkey", "donzzul_actuators_actuator_id_fkey"]:
+        try:
+            with engine.connect() as _conn:
+                _conn.execute(_text(f"ALTER TABLE donzzul_actuators DROP CONSTRAINT IF EXISTS {_fk_name}"))
+                _conn.commit()
+                print(f"[migration] donzzul_actuators {_fk_name} dropped")
+        except Exception:
+            pass
+
     # FK constraint drops for donzzul_votes
     for _fk_name in ["donzzul_votes_voter_id_fkey", "donzzul_votes_store_id_fkey"]:
         try:
