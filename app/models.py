@@ -1624,7 +1624,7 @@ class DonzzulVoucher(Base):
 
     deal_id = Column(Integer, ForeignKey("donzzul_deals.id"), nullable=False)
     store_id = Column(Integer, ForeignKey("donzzul_stores.id"), nullable=False)
-    buyer_id = Column(Integer, ForeignKey("buyers.id"), nullable=False)
+    buyer_id = Column(Integer, nullable=False)
 
     amount = Column(Integer, nullable=False)
     remaining_amount = Column(Integer, nullable=False)
@@ -1635,7 +1635,7 @@ class DonzzulVoucher(Base):
 
     cheer_message = Column(String(200), nullable=True)
 
-    gifted_to = Column(Integer, ForeignKey("buyers.id"), nullable=True)
+    gifted_to = Column(Integer, nullable=True)
     gifted_at = Column(DateTime, nullable=True)
 
     status = Column(String(20), default="ACTIVE")
