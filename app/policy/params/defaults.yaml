@@ -128,6 +128,27 @@ settlement:
   payout_delay_days_default: 30
   payout_delay_days_dispute_path: 30
 
+# ✅ 환불 정책 SSOT
+refund:
+  cooling_period_days: 7
+  seller_fault_cooling_days: 90
+  seller_response_deadline_days: 2
+  return_shipping_deadline_days: 7
+  default_return_shipping_cost: 3000
+  max_inspection_deduction_rate: 0.5
+  auto_approve_on_seller_timeout: true
+  platform_fee_refund_on_full_refund: true
+
+# ✅ 교환 정책
+exchange:
+  seller_reshipment_deadline_days: 3
+
+# ✅ Clawback 정책
+clawback:
+  enabled: true
+  max_attempts: 3
+  deduct_from_next_settlement: true
+
 # 배송 추적 설정
 delivery:
   tracking_provider: sweettracker

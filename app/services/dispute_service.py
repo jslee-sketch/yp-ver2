@@ -242,6 +242,12 @@ def evaluate_round_result(dispute_id: int, round_num: int, db: Session) -> dict:
         dispute.resolution_amount = getattr(dispute, f"{prefix}ai_recommendation_amount")
         dispute.resolution = getattr(dispute, f"{prefix}ai_opinion")
         db.commit()
+        # ★ 환불/교환/보상 자동 실행
+        try:
+            from app.services.resolution_executor import execute_dispute_resolution
+            execute_dispute_resolution(dispute_id, db)
+        except Exception:
+            pass
         return {
             "status": "ACCEPTED",
             "resolution_amount": dispute.resolution_amount,
@@ -255,6 +261,12 @@ def evaluate_round_result(dispute_id: int, round_num: int, db: Session) -> dict:
         dispute.legal_guidance_sent = True
         dispute.legal_guidance_sent_at = now
         db.commit()
+        # ★ LEGAL_HOLD + 관리자 에스컬레이션
+        try:
+            from app.services.resolution_executor import handle_rejected_dispute
+            handle_rejected_dispute(dispute_id, db)
+        except Exception:
+            pass
         return {"status": "REJECTED", "message": "2차 중재 미합의. 정산 보류 + 법적 안내."}
 
     rejecters = []

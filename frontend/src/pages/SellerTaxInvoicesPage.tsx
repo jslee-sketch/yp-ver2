@@ -93,11 +93,11 @@ export default function SellerTaxInvoicesPage() {
                     </span>
                   </div>
                 )}
-                {((inv as Record<string, unknown>).payment_due_date || (inv as Record<string, unknown>).expected_payment_date) && (
+                {((inv as unknown as Record<string, unknown>).payment_due_date || (inv as unknown as Record<string, unknown>).expected_payment_date) && (
                   <div>
                     지급 예정일:{' '}
                     <span style={{ fontWeight: 700, color: C.green }}>
-                      {String((inv as Record<string, unknown>).payment_due_date ?? (inv as Record<string, unknown>).expected_payment_date).slice(0, 10)}
+                      {String((inv as unknown as Record<string, unknown>).payment_due_date ?? (inv as unknown as Record<string, unknown>).expected_payment_date).slice(0, 10)}
                     </span>
                   </div>
                 )}

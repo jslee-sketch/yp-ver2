@@ -967,6 +967,7 @@ _include_router_safe("tax_invoices", ("router",), label="tax_invoices")
 _include_router_safe("notifications", ("router",), label="notifications")
 
 _include_router_safe("admin_refund_preview", ("router",), label="admin_refund_preview")
+_include_router_safe("refund", ("router",), label="refund")
 _include_router_safe("customer_inquiries", ("router",), label="customer_inquiries")
 
 # --------------------------------------------------

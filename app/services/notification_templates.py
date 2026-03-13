@@ -35,6 +35,16 @@ BUYER_EVENTS = {
     "DISPUTE_TIMEOUT_WARNING":  {"title": "분쟁 응답 기한 임박 ⏰",         "message": "'{product_name}' 분쟁 응답 기한이 내일까지입니다. 미응답 시 자동 종결됩니다.", "link": "/disputes/{dispute_id}", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
     "DISPUTE_REJECTED_LEGAL":   {"title": "분쟁 종료 — 법적 안내 📋",       "message": "'{product_name}' 분쟁이 합의에 이르지 못했습니다. 법적 구제 절차를 안내드립니다.", "link": "/disputes/{dispute_id}", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
 
+    # ── 환불/교환/반품 자동화 알림 ──
+    "REFUND_REQUESTED_BUYER":   {"title": "환불 접수",        "message": "환불 요청이 접수되었습니다. 판매자 응답을 대기합니다.", "link": "/my-orders", "default": {"app": True, "push": True, "email": False}, "group": "환불/분쟁"},
+    "REFUND_APPROVED":          {"title": "환불 승인",        "message": "환불이 승인되었습니다. 반품 안내를 확인하세요.", "link": "/my-orders", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "REFUND_REJECTED":          {"title": "환불 거절",        "message": "환불이 거절되었습니다. 사유: {reason}. 분쟁 신청이 가능합니다.", "link": "/my-orders", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "REFUND_AUTO_APPROVED":     {"title": "자동 승인",        "message": "판매자 미응답으로 환불이 자동 승인되었습니다.", "link": "/my-orders", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "RETURN_ADDRESS":           {"title": "반품 안내",        "message": "반품 주소: {address}. 7일 내 발송 후 운송장을 입력해주세요.", "link": "/my-orders", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "RETURN_DEADLINE_WARNING":  {"title": "반품 기한 임박",   "message": "내일까지 반품 미발송 시 환불이 취소됩니다.", "link": "/my-orders", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "PG_REFUNDED":              {"title": "환불 완료",        "message": "{amount}원 환불 처리 완료 (카드 3~5영업일 소요).", "link": "/my-orders", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "EXCHANGE_SHIPPED":         {"title": "교환 발송됨",      "message": "교환 상품이 발송되었습니다. 운송장: {tracking}", "link": "/my-orders", "default": {"app": True, "push": True, "email": False}, "group": "환불/분쟁"},
+
     "POINTS_EARNED":            {"title": "포인트 적립! 🎯",              "message": "{earned_points}포인트가 적립되었어요! 현재 잔액: {total_points}pt", "link": "/points", "default": {"app": True, "push": False, "email": False}, "group": "포인트/등급"},
     "GRADE_CHANGED":            {"title": "등급이 변경되었어요! 🏅",       "message": "{old_grade} → {new_grade}(으)로 등급이 변경되었어요!", "link": "/my", "default": {"app": True, "push": True, "email": False}, "group": "포인트/등급"},
     "SPECTATOR_PREDICT_RESULT": {"title": "예측 결과 발표! 🎯",            "message": "'{product_name}' 딜 예측 결과: {result}! {points_change}", "link": "/spectating", "default": {"app": True, "push": False, "email": False}, "group": "포인트/등급"},
@@ -62,6 +72,13 @@ SELLER_EVENTS = {
     "REFUND_REQUESTED":         {"title": "환불 요청 접수 💸",             "message": "'{product_name}' 주문에 환불 요청이 접수되었습니다. 사유: {refund_reason}", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
     "RETURN_EXCHANGE_REQUESTED":{"title": "반품/교환 요청 📦↩️",           "message": "'{product_name}' 반품/교환 요청이 접수되었습니다.", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
     "S_REFUND_RETURN_UPDATE":   {"title": "환불/반품 상태 변경 📋",        "message": "'{product_name}' 환불/반품 상태가 변경되었습니다.", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": False}, "group": "환불/분쟁"},
+
+    # ── 환불/교환/반품 자동화 알림 (판매자) ──
+    "REFUND_REQUESTED_SELLER":  {"title": "환불 요청",        "message": "주문 {order_number} 환불 요청이 접수되었습니다. 2영업일 내 승인/거절해주세요.", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
+    "RETURN_INITIATED":         {"title": "반품 접수",        "message": "주문 {order_number} 반품이 접수되었습니다.", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": False}, "group": "환불/분쟁"},
+    "RETURN_SHIPPED":           {"title": "반품 발송",        "message": "반품 상품이 발송되었습니다. 운송장: {tracking}", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": False}, "group": "환불/분쟁"},
+    "SETTLEMENT_ADJUSTED":      {"title": "정산 조정",        "message": "환불로 인해 정산에서 {amount}원이 차감되었습니다.", "link": "/seller/settlements", "default": {"app": True, "push": True, "email": True}, "group": "정산"},
+    "EXCHANGE_SHIP_REQUEST":    {"title": "교환 발송 요청",   "message": "검수 완료. 3영업일 내 새 상품을 발송해주세요.", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
     "S_DISPUTE_RECEIVED":       {"title": "분쟁 접수 ⚠️",                 "message": "'{product_name}' 주문에 구매자가 분쟁을 접수했습니다.", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
     "S_DISPUTE_RESULT":         {"title": "분쟁 결과 ⚖️",                 "message": "'{product_name}' 분쟁 결과: {result}.", "link": "/seller/refunds", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
     "S_DISPUTE_AI_MEDIATION":   {"title": "AI 중재 결과 🤖",              "message": "'{product_name}' 분쟁 AI 중재 결과가 도착했습니다.", "link": "/disputes/{dispute_id}", "default": {"app": True, "push": True, "email": True}, "group": "환불/분쟁"},
@@ -109,6 +126,7 @@ ADMIN_EVENTS = {
     "TAX_INVOICE_BATCH_READY":  {"title": "세금계산서 일괄 발행 🧾",     "message": "{count}건의 세금계산서 발행 대기 중입니다.", "link": "/admin/tax-invoices"},
     "ANOMALY_DETECTED":         {"title": "이상 감지! 🔴",               "message": "{anomaly_desc}", "link": "/admin/anomalies"},
     "SYSTEM_ERROR":             {"title": "시스템 오류 🔧",              "message": "{error_summary}", "link": "/admin"},
+    "ADMIN_MANUAL_NEEDED":      {"title": "수동 처리 필요",              "message": "건 #{id} 수동 처리가 필요합니다. 사유: {reason}", "link": "/admin/resolution"},
     "DONZZUL_STORE_PENDING_REVIEW": {"title": "새 돈쭐 가게 검증 대기 🔍", "message": "'{store_name}' 가게가 검증 대기 중입니다. 확인해주세요.", "link": "/admin/donzzul/stores"},
 }
 
@@ -122,6 +140,7 @@ DONZZUL_EVENTS = {
     "DONZZUL_STORE_APPROVED":       {"title": "가게가 승인되었어요! 💚", "message": "추천하신 '{store_name}'이(가) 승인되었습니다. 500포인트 적립!", "link": "/donzzul/hero/my-stores", "default": {"app": True, "push": True, "email": False}, "group": "돈쭐"},
     "DONZZUL_STORE_REJECTED":       {"title": "가게 승인 거절 😢", "message": "'{store_name}' 가게가 거절되었습니다. 사유: {reason}", "link": "/donzzul/hero/my-stores", "default": {"app": True, "push": False, "email": False}, "group": "돈쭐"},
     "DONZZUL_HERO_LEVEL_UP":        {"title": "🌿 히어로 레벨 UP!", "message": "{old_level} → {new_level}(으)로 레벨업! {total_stores}개 가게 추천 감사합니다.", "link": "/donzzul/hero", "default": {"app": True, "push": True, "email": False}, "group": "돈쭐"},
+}
 
 # ── 역할별 이벤트 맵 ──
 ALL_EVENTS_BY_ROLE = {

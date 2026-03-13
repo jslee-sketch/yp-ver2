@@ -30,7 +30,7 @@ function pgFee(s: Settlement) { return s.pg_fee_amount ?? 0; }
 function platFee(s: Settlement) { return s.platform_commission_amount ?? s.platform_fee ?? 0; }
 function payout(s: Settlement) { return s.seller_payout_amount ?? s.net_amount ?? 0; }
 function shippingFee(s: Settlement) {
-  const any = s as Record<string, unknown>;
+  const any = s as unknown as Record<string, unknown>;
   return (any.amount_shipping ?? any.shipping_fee ?? 0) as number;
 }
 

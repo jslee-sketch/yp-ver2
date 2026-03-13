@@ -775,6 +775,10 @@ class Reservation(Base):
     delivery_auto_confirmed = Column(Boolean, default=False, nullable=False, server_default="false")
     delivery_confirmed_source = Column(String(50), nullable=True)  # "batch_auto" | "buyer_manual"
 
+    # ── 환불/교환 자동화 추가 필드 ──
+    shipping_mode = Column(String(20), nullable=True, default="free")  # free / buyer_paid / conditional_free
+    pg_transaction_id = Column(String(200), nullable=True)
+
     __table_args__ = (
         Index("ix_resv_offer_status", "offer_id", "status"),
         Index("ix_resv_buyer_status", "buyer_id", "status"),
@@ -2038,3 +2042,164 @@ class ArenaRegionStats(Base):
     __table_args__ = (
         UniqueConstraint("level", "country", "region", name="uq_arena_region"),
     )
+
+
+# -------------------------------------------------------
+# 🔄 RefundRequest (단순 환불 요청)
+# -------------------------------------------------------
+class RefundRequest(Base):
+    __tablename__ = "refund_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reservation_id = Column(Integer, ForeignKey("reservations.id"), nullable=False, index=True)
+    buyer_id = Column(Integer, ForeignKey("buyers.id"), nullable=False, index=True)
+
+    reason = Column(String(50), nullable=False)
+    # buyer_change_mind, defective, wrong_item, damaged, not_delivered, description_mismatch, other
+    reason_detail = Column(Text, nullable=True)
+    evidence_urls = Column(Text, default="[]")
+
+    status = Column(String(30), default="REQUESTED")
+    # REQUESTED → SELLER_APPROVED / SELLER_REJECTED / AUTO_APPROVED
+    # → CANCELLED (구매자 취소) / EXPIRED (반품 미발송)
+
+    seller_response = Column(String(20), nullable=True)
+    seller_reject_reason = Column(Text, nullable=True)
+    seller_response_at = Column(DateTime, nullable=True)
+    seller_response_deadline = Column(DateTime, nullable=True)
+
+    resolution_action_id = Column(Integer, ForeignKey("resolution_actions.id", use_alter=True), nullable=True)
+    dispute_id = Column(Integer, ForeignKey("disputes.id"), nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# -------------------------------------------------------
+# ⚖️ ResolutionAction (환불/교환/보상 실행 — 12 시나리오)
+# -------------------------------------------------------
+class ResolutionAction(Base):
+    __tablename__ = "resolution_actions"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # 출처
+    dispute_id = Column(Integer, ForeignKey("disputes.id"), nullable=True)
+    refund_request_id = Column(Integer, ForeignKey("refund_requests.id"), nullable=True)
+    reservation_id = Column(Integer, ForeignKey("reservations.id"), nullable=False, index=True)
+
+    # 결과 유형
+    resolution_type = Column(String(30), nullable=False)
+    # FULL_REFUND, PARTIAL_REFUND, EXCHANGE, COMPENSATION, DISCOUNT, NO_ACTION, PENDING_LEGAL
+
+    # ── 원본 정보 ──
+    original_amount = Column(Integer, nullable=True)
+    original_shipping_fee = Column(Integer, default=0)
+    original_total = Column(Integer, nullable=True)
+    shipping_mode = Column(String(20), nullable=True)
+    delivery_status = Column(String(20), nullable=True)
+
+    # ── 귀책 ──
+    fault = Column(String(20), nullable=True)
+    refund_reason = Column(String(50), nullable=True)
+
+    # ── 배송비 ──
+    return_shipping_cost = Column(Integer, default=0)
+    original_shipping_deduction = Column(Integer, default=0)
+    total_shipping_deduction = Column(Integer, default=0)
+    shipping_payer = Column(String(20), nullable=True)
+
+    # ── 감가 ──
+    usage_deduction = Column(Integer, default=0)
+    usage_deduction_rate = Column(Float, default=0)
+
+    # ── 최종 금액 ──
+    total_deduction = Column(Integer, default=0)
+    buyer_refund_amount = Column(Integer, default=0)
+    seller_deduction_amount = Column(Integer, default=0)
+    seller_return_shipping_burden = Column(Integer, default=0)
+    platform_fee_refund = Column(Integer, default=0)
+    compensation_amount = Column(Integer, default=0)
+
+    # ── 상태 머신 ──
+    status = Column(String(30), default="PENDING")
+
+    # ── 반품 물류 ──
+    return_required = Column(Boolean, default=False)
+    return_address = Column(Text, nullable=True)
+    return_tracking_number = Column(String(100), nullable=True)
+    return_carrier = Column(String(50), nullable=True)
+    return_shipped_at = Column(DateTime, nullable=True)
+    return_received_at = Column(DateTime, nullable=True)
+    return_deadline = Column(DateTime, nullable=True)
+    return_expired_notified = Column(Boolean, default=False)
+
+    # ── 검수 ──
+    inspection_result = Column(String(20), nullable=True)
+    inspection_notes = Column(Text, nullable=True)
+    inspected_at = Column(DateTime, nullable=True)
+
+    # ── 교환 ──
+    exchange_tracking_number = Column(String(100), nullable=True)
+    exchange_carrier = Column(String(50), nullable=True)
+    exchange_shipped_at = Column(DateTime, nullable=True)
+    exchange_delivered_at = Column(DateTime, nullable=True)
+    exchange_ship_deadline = Column(DateTime, nullable=True)
+
+    # ── PG 환불 ──
+    pg_refund_requested = Column(Boolean, default=False)
+    pg_refund_tx_id = Column(String(200), nullable=True)
+    pg_refund_status = Column(String(30), nullable=True)
+    pg_refunded_at = Column(DateTime, nullable=True)
+    pg_refund_method = Column(String(30), nullable=True)
+    pg_refund_retry_count = Column(Integer, default=0)
+    pg_refund_error = Column(Text, nullable=True)
+
+    # ── 정산 조정 ──
+    settlement_id = Column(Integer, ForeignKey("reservation_settlements.id"), nullable=True)
+    settlement_adjusted = Column(Boolean, default=False)
+    settlement_adjustment_type = Column(String(20), nullable=True)
+    settlement_adjustment_amount = Column(Integer, default=0)
+    settlement_before_payout = Column(Integer, nullable=True)
+    settlement_after_payout = Column(Integer, nullable=True)
+
+    # ── 세금계산서 ──
+    tax_invoice_adjusted = Column(Boolean, default=False)
+    tax_invoice_adjustment_note = Column(Text, nullable=True)
+
+    # ── 관리자 ──
+    admin_override = Column(Boolean, default=False)
+    admin_notes = Column(Text, nullable=True)
+    admin_processed_by = Column(Integer, nullable=True)
+    escalation_reason = Column(String(200), nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+
+# -------------------------------------------------------
+# 💸 ClawbackRecord (이미 지급 정산 회수)
+# -------------------------------------------------------
+class ClawbackRecord(Base):
+    __tablename__ = "clawback_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    settlement_id = Column(Integer, ForeignKey("reservation_settlements.id"), nullable=False)
+    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False, index=True)
+    resolution_action_id = Column(Integer, ForeignKey("resolution_actions.id"), nullable=True)
+
+    amount = Column(Integer, nullable=False)
+    reason = Column(Text, nullable=True)
+
+    status = Column(String(20), default="PENDING")
+    # PENDING → DEDUCTED → COMPLETED
+    # PENDING → INSUFFICIENT_BALANCE
+
+    deducted_from_settlement_id = Column(Integer, nullable=True)
+    remaining_amount = Column(Integer, default=0)
+    attempt_count = Column(Integer, default=0)
+    max_attempts = Column(Integer, default=3)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    processed_at = Column(DateTime, nullable=True)
