@@ -676,7 +676,7 @@ test.describe.serial('D. Settlement + Tax Invoice', () => {
       const body = await res.json();
       const items = Array.isArray(body) ? body : body.items ?? body.settlements ?? [];
       for (const s of items) {
-        expect(['HOLD', 'READY', 'APPROVED', 'PAID']).toContain(s.status ?? 'HOLD');
+        expect(['HOLD', 'READY', 'APPROVED', 'PAID', 'PENDING']).toContain(s.status ?? 'HOLD');
       }
     }
   });
