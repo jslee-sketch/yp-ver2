@@ -82,12 +82,12 @@ export const API = {
 
   // ── 오퍼 (v3.5) ─────────────────────────────────────────────
   OFFERS: {
-    LIST:              '/offers',
-    CREATE:            '/offers',
+    LIST:              '/offers/',
+    CREATE:            '/offers/',
     DETAIL:            (id: number)       => `/offers/${id}`,
     UPDATE:            (id: number)       => `/offers/${id}`,
     DEACTIVATE:        (id: number)       => `/offers/${id}/deactivate`,
-    BY_DEAL:           (dealId: number)   => `/offers?deal_id=${dealId}`,
+    BY_DEAL:           (dealId: number)   => `/offers/?deal_id=${dealId}`,
     PREVIEW_PRICING:   (id: number)       => `/offers/${id}/preview_pricing`,
     PREVIEW_PACK:      '/offers/preview_pack',
   },
