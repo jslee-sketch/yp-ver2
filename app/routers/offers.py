@@ -1602,6 +1602,14 @@ def create_offer(db: Session, offer_in: schemas.OfferCreate):
         total_available_qty=offer_in.total_available_qty,
         delivery_days=offer_in.delivery_days,
         comment=offer_in.comment,
+        # 4-step wizard fields
+        confirmed_options=getattr(offer_in, "confirmed_options", None),
+        extra_options=getattr(offer_in, "extra_options", None),
+        conditions=getattr(offer_in, "conditions", None),
+        components=getattr(offer_in, "components", None),
+        product_description=getattr(offer_in, "product_description", None),
+        product_images=getattr(offer_in, "product_images", None),
+        option_agreement=getattr(offer_in, "option_agreement", False),
     )
     db.add(db_offer)
     db.commit()
