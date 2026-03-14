@@ -665,6 +665,12 @@ def api_confirm_reservation_arrival(
         except Exception:
             pass
 
+        # ✅ 정산 스냅샷 갱신 (ready_at 계산 포함)
+        try:
+            create_or_update_settlement_for_reservation(db, resv)
+        except Exception:
+            logging.warning("[ARRIVAL-CONFIRM] settlement upsert failed for resv=%s", reservation_id)
+
         try:
             resv = _attach_phase(resv)
         except Exception:

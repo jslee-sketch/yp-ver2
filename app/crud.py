@@ -4228,6 +4228,30 @@ def create_or_update_settlement_for_reservation(db: Session, resv: Reservation) 
     platform_commission_amount = int(snap["platform_fee"] + snap["platform_fee_vat"])
     seller_payout_amount = int(snap["seller_payout"])
 
+    # ✅ ready_at / scheduled_payout_at 계산 (arrival_confirmed_at 기준)
+    base_time = (
+        getattr(resv, "arrival_confirmed_at", None)
+        or getattr(resv, "delivered_at", None)
+        or getattr(resv, "paid_at", None)
+    )
+    ready_at = None
+    scheduled_payout_at = None
+    if base_time is not None:
+        from datetime import timedelta
+        cooling_days = 7  # 기본 쿨링 기간
+        try:
+            raw_snap = getattr(resv, "policy_snapshot_json", None)
+            if raw_snap:
+                import json as _json
+                ps = _json.loads(raw_snap)
+                cd = int(ps.get("cancel_within_days") or 0)
+                if cd >= 0:
+                    cooling_days = cd
+        except Exception:
+            pass
+        ready_at = base_time + timedelta(days=cooling_days)
+        scheduled_payout_at = ready_at + timedelta(days=30)
+
     if settlement is None:
         settlement = ReservationSettlement(
             reservation_id=resv.id,
@@ -4242,9 +4266,12 @@ def create_or_update_settlement_for_reservation(db: Session, resv: Reservation) 
             platform_commission_amount=platform_commission_amount,
             seller_payout_amount=seller_payout_amount,
 
-            status="PENDING",
+            status="HOLD" if ready_at else "PENDING",
+            block_reason="WITHIN_COOLING" if ready_at else None,
             currency="KRW",
             created_at=now,
+            ready_at=ready_at,
+            scheduled_payout_at=scheduled_payout_at,
         )
         db.add(settlement)
     else:
@@ -4259,9 +4286,20 @@ def create_or_update_settlement_for_reservation(db: Session, resv: Reservation) 
         settlement.platform_commission_amount = platform_commission_amount
         settlement.seller_payout_amount = seller_payout_amount
 
+        # ✅ ready_at 갱신: 아직 없으면 계산해서 채움
+        if getattr(settlement, "ready_at", None) is None and ready_at is not None:
+            settlement.ready_at = ready_at
+            settlement.scheduled_payout_at = scheduled_payout_at
+
         # status가 CANCELLED인데 gross>0이면 비정상 → 최소한 PENDING으로 복구(안전)
         if str(getattr(settlement, "status", "")).upper() == "CANCELLED":
             settlement.status = "PENDING"
+
+        # PENDING + ready_at 있으면 HOLD로 진행
+        if str(getattr(settlement, "status", "")).upper() == "PENDING" and ready_at is not None:
+            settlement.status = "HOLD"
+            if not (getattr(settlement, "block_reason", None) or "").strip():
+                settlement.block_reason = "WITHIN_COOLING"
 
     db.flush()
     db.refresh(settlement)

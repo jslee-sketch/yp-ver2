@@ -253,7 +253,7 @@ def refresh_settlement_dispute(
         db.query(models.ReservationSettlement, models.Reservation)
         .join(models.Reservation, models.Reservation.id == models.ReservationSettlement.reservation_id)
         .filter(
-            models.Reservation.is_disputed == 1,
+            models.Reservation.is_disputed == True,
         )
         .order_by(models.ReservationSettlement.id.desc())
         .limit(limit)
@@ -648,7 +648,7 @@ def bulk_mark_paid(
     db.execute(
         text(
             """
-            INSERT OR IGNORE INTO event_logs (
+            INSERT INTO event_logs (
               event_type, actor_type, actor_id,
               reason, idempotency_key, meta, created_at
             ) VALUES (
@@ -708,7 +708,7 @@ def bulk_mark_paid(
         db.execute(
             text(
                 """
-                INSERT OR IGNORE INTO event_logs (
+                INSERT INTO event_logs (
                   event_type, actor_type, actor_id,
                   deal_id, offer_id, reservation_id, seller_id, buyer_id,
                   reason, idempotency_key, meta, created_at
@@ -747,7 +747,7 @@ def bulk_mark_paid(
     db.execute(
         text(
             """
-            INSERT OR IGNORE INTO event_logs (
+            INSERT INTO event_logs (
               event_type, actor_type, actor_id,
               reason, idempotency_key, meta, created_at
             ) VALUES (
@@ -1000,7 +1000,7 @@ def get_paid_batch(
         db.execute(
             text(
                 """
-                INSERT OR IGNORE INTO event_logs (
+                INSERT INTO event_logs (
                   event_type, actor_type, actor_id,
                   reason, idempotency_key, meta, created_at
                 ) VALUES (
