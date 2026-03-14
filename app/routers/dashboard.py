@@ -12,34 +12,29 @@ from app.database import get_db
 from app.logic import trust as T
 
 # (있으면 활용)
+from app.models import (
+    Reservation,
+    ReservationStatus,
+    Offer,
+    PointTransaction,
+    UserNotification,
+    DealChatMessage,
+    ReservationSettlement,
+    Seller,
+    Buyer,
+)
+
+# optional models (may not exist yet)
 try:
-    from app.models import (
-        Reservation,
-        ReservationStatus,
-        BuyerDeposit,
-        Offer,
-        PointTransaction,
-        UserNotification,
-        DealChatMessage,
-        ReservationSettlement,
-        Seller,
-        ActuatorCommission,
-        Actuator,
-        Buyer,
-    )
+    from app.models import BuyerDeposit
 except Exception:
-    Reservation = None  # type: ignore
-    ReservationStatus = None  # type: ignore
     BuyerDeposit = None  # type: ignore
-    Offer = None  # type: ignore
-    PointTransaction = None  # type: ignore
-    UserNotification = None  # type: ignore
-    DealChatMessage = None  # type: ignore
-    ReservationSettlement = None  # type: ignore
-    Seller = None  # type: ignore
+
+try:
+    from app.models import ActuatorCommission, Actuator
+except Exception:
     ActuatorCommission = None  # type: ignore
     Actuator = None  # type: ignore
-    Buyer = None  # type: ignore
 
 router = APIRouter(prefix="/dashboard", tags=["📈 Dashboards (NO-AUTH)"])
 

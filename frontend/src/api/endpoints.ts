@@ -105,8 +105,8 @@ export const API = {
   // ── 예약/결제 (v3.5) ─────────────────────────────────────────
   RESERVATIONS: {
     CREATE:            '/reservations/',
-    LIST_BUYER:        (buyerId: number) => `/v3_6/reservations/search?buyer_id=${buyerId}&limit=100`,
-    LIST_SELLER:       (sellerId: number) => `/v3_6/reservations/search?seller_id=${sellerId}&limit=100`,
+    LIST_BUYER:        (buyerId: number) => `/v3_6/search?buyer_id=${buyerId}&limit=100`,
+    LIST_SELLER:       (sellerId: number) => `/v3_6/search?seller_id=${sellerId}&limit=100`,
     DETAIL:            (id: number) => `/reservations/${id}`,
     PAY:               '/reservations/pay',
     SHIP:              (id: number) => `/reservations/${id}/mark_shipped`,

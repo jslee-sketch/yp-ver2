@@ -174,7 +174,7 @@ if check("CP-1a: Reservation detail returns 200", code == 200, f"code={code}"):
 
 # ---- CP-2: Buyer's reservation list ----
 print("\n--- CP-2: Buyer reservations search ---")
-code, br = api('GET', f'/v3_6/reservations/search?buyer_id={buyer_id}&limit=50', buyer_token)
+code, br = api('GET', f'/v3_6/search?buyer_id={buyer_id}&limit=50', buyer_token)
 if check("CP-2a: Buyer reservations returns 200", code == 200, f"code={code}"):
     items = br if isinstance(br, list) else br.get('items', [])
     found = any(rv.get('id') == resv_id for rv in items)
@@ -182,7 +182,7 @@ if check("CP-2a: Buyer reservations returns 200", code == 200, f"code={code}"):
 
 # ---- CP-3: Seller's reservation list ----
 print("\n--- CP-3: Seller reservations search ---")
-code, sr = api('GET', f'/v3_6/reservations/search?seller_id={seller_id}&limit=50', seller_token)
+code, sr = api('GET', f'/v3_6/search?seller_id={seller_id}&limit=50', seller_token)
 if check("CP-3a: Seller reservations returns 200", code == 200, f"code={code}"):
     items = sr if isinstance(sr, list) else sr.get('items', [])
     found = any(rv.get('id') == resv_id for rv in items)
