@@ -30,11 +30,18 @@ def api_simulate(
 # ── 단순 환불 ──
 @router.post("/v3_6/refund-requests")
 def api_create(body: dict, db: Session = Depends(get_db)):
-    from app.services.refund_request_service import create_refund_request
-    r = create_refund_request(body, db)
-    if "error" in r:
-        raise HTTPException(400, r["error"])
-    return r
+    try:
+        from app.services.refund_request_service import create_refund_request
+        r = create_refund_request(body, db)
+        if "error" in r:
+            raise HTTPException(400, r["error"])
+        return r
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(500, f"환불 요청 처리 오류: {type(e).__name__}: {e}")
 
 
 @router.put("/v3_6/refund-requests/{id}/seller-response")
