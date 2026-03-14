@@ -12,29 +12,36 @@ from app.database import get_db
 from app.logic import trust as T
 
 # (있으면 활용)
-from app.models import (
-    Reservation,
-    ReservationStatus,
-    Offer,
-    PointTransaction,
-    UserNotification,
-    DealChatMessage,
-    ReservationSettlement,
-    Seller,
-    Buyer,
-)
+import traceback as _tb
 
-# optional models (may not exist yet)
+Reservation = ReservationStatus = BuyerDeposit = Offer = None
+PointTransaction = UserNotification = DealChatMessage = None
+ReservationSettlement = Seller = ActuatorCommission = Actuator = Buyer = None
+
+try:
+    from app.models import Reservation, ReservationStatus
+except Exception as _e:
+    print(f"[dashboard] Reservation import FAIL: {_e}")
+
+try:
+    from app.models import Offer, Seller, Buyer
+except Exception as _e:
+    print(f"[dashboard] Offer/Seller/Buyer import FAIL: {_e}")
+
+try:
+    from app.models import PointTransaction, UserNotification, DealChatMessage, ReservationSettlement
+except Exception as _e:
+    print(f"[dashboard] misc model import FAIL: {_e}")
+
 try:
     from app.models import BuyerDeposit
 except Exception:
-    BuyerDeposit = None  # type: ignore
+    pass
 
 try:
     from app.models import ActuatorCommission, Actuator
 except Exception:
-    ActuatorCommission = None  # type: ignore
-    Actuator = None  # type: ignore
+    pass
 
 router = APIRouter(prefix="/dashboard", tags=["📈 Dashboards (NO-AUTH)"])
 
