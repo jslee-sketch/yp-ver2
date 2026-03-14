@@ -327,8 +327,7 @@ def admin_list_reservations(
     total = db.query(sa_func.count(models.Reservation.id)).scalar() or 0
     return {"items": result, "total": total}
   except Exception as e:
-    import traceback
-    return {"items": [], "total": 0, "error": str(e), "trace": traceback.format_exc()}
+    return {"items": [], "total": 0, "error": str(e)}
 
 
 # ── GET /admin/stats ─────────────────────────────────────

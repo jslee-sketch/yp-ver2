@@ -239,6 +239,25 @@ _alter_cols = [
     ("reservations", "delivery_confirmed_source", "VARCHAR(50)"),
     ("reservations", "shipping_mode", "VARCHAR(20) DEFAULT 'free'"),
     ("reservations", "pg_transaction_id", "VARCHAR(200)"),
+    # offer 배송비/옵션 확장 컬럼
+    ("offers", "shipping_mode", "VARCHAR(32) DEFAULT 'INCLUDED'"),
+    ("offers", "shipping_fee_per_reservation", "INTEGER DEFAULT 0"),
+    ("offers", "shipping_fee_per_qty", "INTEGER DEFAULT 0"),
+    ("offers", "option1_title", "VARCHAR"),
+    ("offers", "option1_value", "VARCHAR"),
+    ("offers", "option2_title", "VARCHAR"),
+    ("offers", "option2_value", "VARCHAR"),
+    ("offers", "option3_title", "VARCHAR"),
+    ("offers", "option3_value", "VARCHAR"),
+    ("offers", "option4_title", "VARCHAR"),
+    ("offers", "option4_value", "VARCHAR"),
+    ("offers", "option5_title", "VARCHAR"),
+    ("offers", "option5_value", "VARCHAR"),
+    ("offers", "free_text", "TEXT"),
+    ("offers", "decision_state", "VARCHAR(20)"),
+    ("offers", "decision_deadline_at", "TIMESTAMP"),
+    ("offers", "decision_made_at", "TIMESTAMP"),
+    ("offers", "decision_reason", "VARCHAR"),
 ]
 try:
     _insp = _sa.inspect(engine)
