@@ -371,6 +371,11 @@ export default function PriceJourneyPage() {
 
       {/* ── 딜 정보 스트립 ── */}
       <div style={{ padding: '12px 20px 14px', fontSize: 14, fontWeight: 500, color: T.text }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#00b0ff', background: 'rgba(0,176,255,0.1)', padding: '2px 8px', borderRadius: 6 }}>
+            Deal #{dealId}
+          </span>
+        </div>
         🎧 {apiDeal ? String(apiDeal.product_name ?? '에어팟 프로 2 (USB-C)') : '에어팟 프로 2 (USB-C)'}
         <div style={{ fontSize: 12, color: T.textSec, marginTop: 4 }}>
           👥 현재 {currentQ}명 참여 · 목표 {qTarget}명 · 🏷️ 오퍼 {offers.length}건 · ⏰ {countdown || '로딩 중'}
