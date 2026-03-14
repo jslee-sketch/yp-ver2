@@ -231,6 +231,14 @@ _alter_cols = [
     ("disputes", "accepted_amount", "INTEGER"),
     ("disputes", "accepted_shipping_burden", "VARCHAR(20)"),
     ("disputes", "accepted_return_required", "BOOLEAN"),
+    # reservation 정책/배송/PG 확장 컬럼
+    ("reservations", "policy_id", "INTEGER"),
+    ("reservations", "policy_snapshot_json", "TEXT"),
+    ("reservations", "policy_agreed_at", "TIMESTAMP"),
+    ("reservations", "delivery_auto_confirmed", "BOOLEAN DEFAULT FALSE"),
+    ("reservations", "delivery_confirmed_source", "VARCHAR(50)"),
+    ("reservations", "shipping_mode", "VARCHAR(20) DEFAULT 'free'"),
+    ("reservations", "pg_transaction_id", "VARCHAR(200)"),
 ]
 try:
     _insp = _sa.inspect(engine)
