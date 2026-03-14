@@ -1,202 +1,533 @@
 {
-  "report_name": "Frontend E2E Journey Verification Report",
-  "report_date": "2026-03-15",
+  "report_name": "Frontend E2E Journey Verification Report v2",
+  "report_date": "2026-03-14",
   "platform": "Yeokping (역핑) v2",
-  "test_environment": "https://web-production-defb.up.railway.app",
-  "total_tests": 69,
-  "passed": 69,
+  "test_environment": "https://www.yeokping.com",
+  "total_tests": 75,
+  "passed": 75,
   "failed": 0,
-  "pass_rate": "100%",
-  "test_runner": "Playwright",
-  "duration_minutes": 3.0,
-
-  "journey_summary": {
-    "J0_auth_setup": {
-      "tests": 4,
-      "passed": 4,
-      "description": "Admin/Buyer/Seller 로그인, JWT 토큰 발급, RBAC 접근제어 검증",
-      "verified_data": ["admin_id=1", "buyer_id=11", "seller_id=9", "RBAC buyer→admin=403"]
+  "pass_rate": "100.0%",
+  "test_runner": "Playwright (UI + API hybrid)",
+  "journey_results": {
+    "1_회원": {
+      "total": 11,
+      "pass": 11,
+      "fail": 0,
+      "fixed": 0,
+      "details": [
+        {
+          "name": "J1-01 로그인 페이지 렌더링",
+          "status": "PASS"
+        },
+        {
+          "name": "J1-02 잘못된 비밀번호 에러",
+          "status": "PASS"
+        },
+        {
+          "name": "J1-03 구매자 로그인 성공",
+          "status": "PASS"
+        },
+        {
+          "name": "J1-04 판매자 로그인 성공",
+          "status": "PASS"
+        },
+        {
+          "name": "J1-05 관리자 로그인 성공",
+          "status": "PASS"
+        },
+        {
+          "name": "J1-06 회원가입 역할 선택",
+          "status": "PASS"
+        },
+        {
+          "name": "J1-07 회원가입 프로필 Step",
+          "status": "PASS"
+        },
+        {
+          "name": "J1-08 MyPage 프로필",
+          "status": "PASS"
+        },
+        {
+          "name": "J1-09 Settings 페이지",
+          "status": "PASS"
+        },
+        {
+          "name": "J1-10 공개 딜 목록 접근",
+          "status": "PASS"
+        },
+        {
+          "name": "J1-11 홈 페이지 렌더링",
+          "status": "PASS"
+        }
+      ]
     },
-    "J1_member_lifecycle": {
-      "tests": 7,
-      "passed": 7,
-      "description": "이메일 중복체크, 닉네임 금지어, 바이어/셀러 프로필 필드, 프론트엔드 로그인/회원가입/마이페이지 렌더링",
-      "verified_data": ["check-email API", "check-nickname API (banned)", "buyers/me fields", "sellers/me fields", "LoginPage", "RegisterPage", "MyPage"]
+    "2_딜오퍼예약배송": {
+      "total": 26,
+      "pass": 26,
+      "fail": 0,
+      "fixed": 0,
+      "details": [
+        {
+          "name": "J2-01 딜 생성",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-02 딜 목록 페이지",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-03 딜 상세 페이지",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-04 오퍼 생성",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-05 딜 상세 오퍼 확인",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-06 판매자 오퍼 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-07 DealJoinPage 렌더링",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-08 예약+결제",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-09 내 주문 페이지",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-10 판매자 배송 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-11 배송 처리",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-12 배송중 상태 확인",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-13 구매확정",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-14 배송완료 상태",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-15 관리자 딜 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-16 관리자 예약 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-17 판매자 대시보드",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-18 판매자 통계",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-19 딜 채팅",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-20 OfferCreatePage 렌더링",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-21 DealCreatePage 렌더링",
+          "status": "PASS"
+        },
+        {
+          "name": "J2-22 검색 페이지",
+          "status": "PASS"
+        },
+        {
+          "name": "JF-01 deal_id 정합성",
+          "status": "PASS"
+        },
+        {
+          "name": "JF-02 offer_id 정합성",
+          "status": "PASS"
+        },
+        {
+          "name": "JF-03 reservation/order_number 정합성",
+          "status": "PASS"
+        },
+        {
+          "name": "JF-04 seller_id 정합성",
+          "status": "PASS"
+        }
+      ]
     },
-    "J2_deal_lifecycle": {
-      "tests": 20,
-      "passed": 20,
-      "description": "딜 생성→오퍼 생성→예약 생성→결제(order_number 생성)→배송→도착확인. 모든 값이 모든 엔드포인트에서 정합성 유지",
-      "verified_data": {
-        "deal_id": "1680 → /deals/, /deals/{id}, PriceJourneyPage, /v3_6/offers",
-        "offer_id": "1168 → /v3_6/offers, /v3_6/offers?seller_id=, /v3_6/offers?deal_id=",
-        "reservation_id": "1465 → /v3_6/search?buyer_id=, /v3_6/search?seller_id=",
-        "order_number": "YP-20260314-0038 → buyer search, seller search",
-        "shipped_at": "confirmed in buyer search after /v3_6/reservations/{id}/ship",
-        "arrival_confirmed_at": "confirmed after /v3_6/reservations/{id}/arrival-confirm"
-      },
-      "frontend_pages_verified": ["DealsListPage", "PriceJourneyPage (Deal #{id})", "SellerOffersPage", "MyOrdersPage", "SellerShipPage"]
+    "3_환불": {
+      "total": 6,
+      "pass": 6,
+      "fail": 0,
+      "fixed": 0,
+      "details": [
+        {
+          "name": "J3-01 환불용 예약+결제",
+          "status": "PASS"
+        },
+        {
+          "name": "J3-02 환불 실행",
+          "status": "PASS"
+        },
+        {
+          "name": "J3-03 환불 상태 UI 확인",
+          "status": "PASS"
+        },
+        {
+          "name": "J3-04 판매자 환불 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J3-05 관리자 환불 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J3-06 환불 시뮬레이터",
+          "status": "PASS"
+        }
+      ]
     },
-    "J3_refund_lifecycle": {
-      "tests": 5,
-      "passed": 5,
-      "description": "두번째 예약 생성→결제→환불 실행→CANCELLED 상태 확인",
-      "verified_data": {
-        "reservation_id": "1466",
-        "order_number": "YP-20260314-0039",
-        "refund_status": "CANCELLED (buyer_cancel)",
-        "refund_visible": "buyer search에서 CANCELLED 상태 확인"
-      }
+    "4_분쟁": {
+      "total": 4,
+      "pass": 4,
+      "fail": 0,
+      "fixed": 0,
+      "details": [
+        {
+          "name": "J4-01 분쟁용 예약+결제+배송",
+          "status": "PASS"
+        },
+        {
+          "name": "J4-02 분쟁 접수",
+          "status": "PASS"
+        },
+        {
+          "name": "J4-03 관리자 분쟁 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J4-04 판매자 분쟁 확인",
+          "status": "PASS"
+        }
+      ]
     },
-    "J4_dispute_lifecycle": {
-      "tests": 4,
-      "passed": 4,
-      "description": "세번째 예약 생성→결제→배송→분쟁 접수(ROUND1_RESPONSE)",
-      "verified_data": {
-        "reservation_id": "1467",
-        "order_number": "YP-20260314-0040",
-        "dispute_status": "ROUND1_RESPONSE (filed by buyer, category=defective)"
-      }
+    "5_정산": {
+      "total": 5,
+      "pass": 5,
+      "fail": 0,
+      "fixed": 0,
+      "details": [
+        {
+          "name": "J5-01 refresh-ready",
+          "status": "PASS"
+        },
+        {
+          "name": "J5-02 관리자 정산 페이지",
+          "status": "PASS"
+        },
+        {
+          "name": "J5-03 판매자 정산 페이지",
+          "status": "PASS"
+        },
+        {
+          "name": "J5-04 판매자 수수료",
+          "status": "PASS"
+        },
+        {
+          "name": "J5-05 세금계산서",
+          "status": "PASS"
+        }
+      ]
     },
-    "J5_settlement_lifecycle": {
-      "tests": 5,
-      "passed": 5,
-      "description": "정산 생성 확인(HOLD), refresh-ready 배치, 판매자/관리자 정산 페이지",
-      "verified_data": {
-        "settlement_status": "HOLD (for reservation 1465)",
-        "refresh_ready": "200 settlements checked, 0 updated",
-        "seller_settlements": "32 settlements for seller 9",
-        "frontend_pages": ["SellerSettlementsPage", "AdminSettlementsPage"]
-      }
-    },
-    "J6_additional_features": {
-      "tests": 19,
-      "passed": 19,
-      "description": "알림, 포인트, 리뷰, 핑퐁이 AI, 관리자, 딜 채팅, 대시보드, 검색, 홈",
-      "verified_data": {
-        "notifications": "buyer 알림 조회",
-        "points": "balance=0, transactions history",
-        "reviews": "seller review summary",
-        "pingpong_ai": "자연어 질문 → 응답 정상 (LLM 연동)",
-        "admin_stats": "관리자 API 접근",
-        "deal_chat": "메시지 전송+조회 (deal_id={dealId})",
-        "frontend_pages": ["NotificationsPage", "PointsPage", "SellerReviewsPage", "AdminDashboardPage", "SellerDashboardPage", "SellerStatsPage", "SearchPage", "HomePage", "AdminDealsPage", "AdminSellersPage"]
-      }
-    },
-    "JF_cross_journey_integrity": {
-      "tests": 5,
-      "passed": 5,
-      "description": "크로스-여정 데이터 정합성: deal_id, offer_id, reservation_id, order_number, seller_id, buyer_id가 모든 엔드포인트에서 일관성 유지",
-      "verified_endpoints": {
-        "deal_id": ["/deals/{id}", "/v3_6/offers?deal_id=", "/v3_6/search"],
-        "offer_id": ["/v3_6/offers/{id}", "/v3_6/search"],
-        "reservation_id": ["/v3_6/search?buyer_id=", "/v3_6/search?seller_id="],
-        "order_number": ["buyer search", "seller search"],
-        "seller_id": ["/v3_6/search?seller_id=", "/reviews/seller/{id}/summary", "/settlements/seller/{id}"],
-        "buyer_id": ["/v3_6/search?buyer_id=", "/buyers/me", "/notifications/buyer/{id}"]
-      }
+    "6_부가기능": {
+      "total": 23,
+      "pass": 23,
+      "fail": 0,
+      "fixed": 0,
+      "details": [
+        {
+          "name": "J6-01 알림 페이지",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-02 포인트 페이지",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-03 핑퐁이 AI",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-04 관리자 대시보드",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-05 관리자 구매자 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-06 관리자 판매자 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-07 관리자 오퍼 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-08 관리자 배송 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-09 관리자 통합 검색",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-10 판매자 리뷰 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-11 아레나 메인",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-12 아레나 랭킹",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-13 돈쭐 메인",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-14 배송정책",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-15 반품 관리",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-16 사업자 정보",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-17 이상탐지",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-18 정책 파라미터",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-19 환불 시뮬레이터",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-20 세금계산서",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-21 로그",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-22 FAQ",
+          "status": "PASS"
+        },
+        {
+          "name": "J6-23 약관/개인정보",
+          "status": "PASS"
+        }
+      ]
     }
   },
-
+  "created_data": {
+    "buyer_email": "realtest1@e2e.com",
+    "seller_email": "seller@yeokping.com",
+    "admin_email": "admin@yeokping.com",
+    "deal_id": 1688,
+    "offer_id": 1175,
+    "reservation_id": 1481,
+    "order_number": "YP-20260314-0054",
+    "second_reservation_id": 1482,
+    "second_order_number": "YP-20260314-0055",
+    "third_reservation_id": 1483,
+    "third_order_number": "YP-20260314-0056"
+  },
   "value_flow_trace": {
     "deal_id": {
-      "created_at": "POST /deals/ → id=1680",
-      "flows_to": [
-        "GET /deals/ (list) → found",
-        "GET /deals/{id} (detail) → id, creator_id, status verified",
-        "PriceJourneyPage → Deal #{id} badge displayed",
-        "POST /v3_6/offers (offer.deal_id=1680)",
-        "POST /v3_6/reservations (reservation.deal_id=1680)",
-        "/v3_6/search (reservation results contain deal_id=1680)"
+      "created": "POST /deals/ → id=1688",
+      "verified_at": [
+        "GET /deals/{id}",
+        "GET /v3_6/offers?deal_id=1688",
+        "GET /v3_6/search (buyer/seller)",
+        "PriceJourneyPage /deal/{id}",
+        "DealsListPage /deals",
+        "AdminDealsPage /admin/deals",
+        "DealJoinPage /deal/{id}/join",
+        "OfferCreatePage /deal/{id}/offer/create",
+        "DealCreatePage /deal/create",
+        "SearchPage /search"
       ]
     },
     "offer_id": {
-      "created_at": "POST /v3_6/offers → id=1168",
-      "flows_to": [
-        "GET /v3_6/offers?deal_id=1680 → found",
-        "GET /v3_6/offers?seller_id=9 → found",
-        "GET /v3_6/offers/{id} → detail verified",
-        "POST /v3_6/reservations (reservation.offer_id=1168)",
-        "/v3_6/search (reservation results contain offer_id=1168)"
+      "created": "POST /v3_6/offers → id=1175",
+      "verified_at": [
+        "GET /v3_6/offers/1175",
+        "GET /v3_6/offers?deal_id=1688",
+        "GET /v3_6/offers?seller_id=9",
+        "SellerOffersPage /seller/offers",
+        "AdminOffersPage /admin/offers"
       ]
     },
     "reservation_id": {
-      "created_at": "POST /v3_6/reservations → id=1465",
-      "flows_to": [
-        "POST /v3_6/reservations/pay → status=PAID, order_number generated",
-        "/v3_6/search?buyer_id= → found with all fields",
-        "/v3_6/search?seller_id= → found",
-        "POST /v3_6/reservations/{id}/ship → shipped_at set",
-        "POST /v3_6/reservations/{id}/arrival-confirm → arrival_confirmed_at set",
-        "/admin/settlements/ → settlement found with HOLD status"
+      "created": "POST /v3_6/reservations → id=1481",
+      "verified_at": [
+        "GET /v3_6/search?buyer_id=11",
+        "GET /v3_6/search?seller_id=9",
+        "MyOrdersPage /my-orders",
+        "SellerDeliveryPage /seller/delivery",
+        "AdminReservationsPage /admin/reservations"
       ]
     },
     "order_number": {
-      "created_at": "POST /v3_6/reservations/pay → YP-20260314-0038",
-      "flows_to": [
-        "/v3_6/search?buyer_id= → order_number field present",
-        "/v3_6/search?seller_id= → visible to seller",
-        "MyOrdersPage (frontend)"
+      "created": "POST /v3_6/reservations/pay → YP-20260314-0054",
+      "verified_at": [
+        "buyer search",
+        "seller search",
+        "MyOrdersPage",
+        "AdminReservationsPage"
       ]
     }
   },
-
   "frontend_pages_tested": [
     "LoginPage (/login)",
     "RegisterPage (/register)",
-    "MyPage (/mypage)",
+    "HomePage (/)",
     "DealsListPage (/deals)",
     "PriceJourneyPage (/deal/{id})",
-    "SellerOffersPage (/seller/offers)",
+    "DealJoinPage (/deal/{id}/join)",
+    "OfferCreatePage (/deal/{id}/offer/create)",
+    "DealCreatePage (/deal/create)",
     "MyOrdersPage (/my-orders)",
-    "SellerShipPage (/seller/delivery)",
-    "SellerSettlementsPage (/seller/settlements)",
-    "SellerDashboardPage (/seller)",
-    "SellerStatsPage (/seller/stats)",
-    "SellerReviewsPage (/seller/reviews)",
+    "MyPage (/mypage)",
+    "SettingsPage (/settings)",
+    "SearchPage (/search)",
     "NotificationsPage (/notifications)",
     "PointsPage (/points)",
-    "SearchPage (/search)",
-    "HomePage (/)",
+    "RefundSimulatorPage (/buyer/refund-simulator)",
+    "SellerDashboardPage (/seller)",
+    "SellerOffersPage (/seller/offers)",
+    "SellerShipPage (/seller/delivery)",
+    "SellerSettlementsPage (/seller/settlements)",
+    "SellerStatsPage (/seller/stats)",
+    "SellerReviewsPage (/seller/reviews)",
+    "SellerRefundsPage (/seller/refunds)",
+    "SellerReturnsPage (/seller/returns)",
+    "SellerFeesPage (/seller/fees)",
+    "SellerTaxInvoicesPage (/seller/tax-invoices)",
+    "SellerBusinessInfoPage (/seller/business-info)",
+    "SellerShippingPolicyPage (/seller/shipping-policy)",
     "AdminDashboardPage (/admin)",
     "AdminDealsPage (/admin/deals)",
+    "AdminOffersPage (/admin/offers)",
+    "AdminReservationsPage (/admin/reservations)",
+    "AdminDeliveryPage (/admin/delivery)",
+    "AdminRefundsPage (/admin/refunds)",
+    "AdminSettlementsPage (/admin/settlements)",
     "AdminSellersPage (/admin/sellers)",
-    "AdminSettlementsPage (/admin/settlements)"
+    "AdminBuyersPage (/admin/buyers)",
+    "AdminDisputePage (/admin/disputes)",
+    "AdminUnifiedSearchPage (/admin/search)",
+    "AdminAnomaliesPage (/admin/anomalies)",
+    "AdminPolicyParamsPage (/admin/policy-params)",
+    "AdminRefundSimulatorPage (/admin/refund-simulator)",
+    "AdminTaxInvoicesPage (/admin/tax-invoices)",
+    "AdminLogsPage (/admin/logs)",
+    "ArenaPage (/arena)",
+    "ArenaRankingsPage (/arena/rankings)",
+    "DonzzulMainPage (/donzzul)",
+    "FAQPage (/faq)",
+    "TermsPage (/terms)",
+    "PrivacyPage (/privacy)"
   ],
-
-  "api_endpoints_tested": [
-    "POST /auth/login (admin, buyer, seller)",
-    "GET /auth/check-email",
-    "GET /users/check-nickname",
-    "GET /buyers/me",
-    "GET /sellers/me",
-    "GET /health",
-    "POST /deals/",
-    "GET /deals/?page=&size=",
-    "GET /deals/{id}",
-    "POST /v3_6/offers",
-    "GET /v3_6/offers?deal_id=",
-    "GET /v3_6/offers?seller_id=",
-    "GET /v3_6/offers/{id}",
-    "POST /v3_6/reservations",
-    "POST /v3_6/reservations/pay",
-    "GET /v3_6/search?buyer_id=",
-    "GET /v3_6/search?seller_id=",
-    "POST /v3_6/reservations/{id}/ship",
-    "POST /v3_6/reservations/{id}/arrival-confirm",
-    "POST /v3_6/reservations/refund",
-    "POST /v3_6/disputes",
-    "GET /admin/settlements/",
-    "POST /settlements/refresh-ready",
-    "GET /settlements/seller/{id}",
-    "GET /notifications/buyer/{id}",
-    "GET /points/buyer/{id}/balance",
-    "GET /points/buyer/{id}/transactions",
-    "GET /reviews/seller/{id}/summary",
-    "POST /v3_6/pingpong/ask",
-    "GET /admin/stats/counts",
-    "GET /settlements/batches",
-    "POST /deals/{id}/chat/messages",
-    "GET /deals/{id}/chat/messages"
+  "screenshots": [
+    "j1-01-login-page.png",
+    "j1-02-login-error.png",
+    "j1-03-buyer-login-success.png",
+    "j1-04-seller-login-success.png",
+    "j1-05-admin-login-success.png",
+    "j1-06-register-role-select.png",
+    "j1-07-register-profile-step.png",
+    "j1-08-mypage.png",
+    "j1-09-settings.png",
+    "j1-10-deals-public.png",
+    "j1-11-home.png",
+    "j2-02-deals-list.png",
+    "j2-03-deal-detail.png",
+    "j2-05-deal-with-offers.png",
+    "j2-06-seller-offers.png",
+    "j2-07-deal-join.png",
+    "j2-09-my-orders.png",
+    "j2-10-seller-delivery.png",
+    "j2-12-order-shipped.png",
+    "j2-14-order-delivered.png",
+    "j2-15-admin-deals.png",
+    "j2-16-admin-reservations.png",
+    "j2-17-seller-dashboard.png",
+    "j2-18-seller-stats.png",
+    "j2-20-offer-create.png",
+    "j2-21-deal-create.png",
+    "j2-22-search.png",
+    "j3-03-orders-refunded.png",
+    "j3-04-seller-refunds.png",
+    "j3-05-admin-refunds.png",
+    "j3-06-refund-simulator.png",
+    "j4-03-admin-disputes.png",
+    "j4-04-seller-disputes.png",
+    "j5-02-admin-settlements.png",
+    "j5-03-seller-settlements.png",
+    "j5-04-seller-fees.png",
+    "j5-05-seller-tax.png",
+    "j6-01-notifications.png",
+    "j6-02-points.png",
+    "j6-04-admin-dashboard.png",
+    "j6-05-admin-buyers.png",
+    "j6-06-admin-sellers.png",
+    "j6-07-admin-offers.png",
+    "j6-08-admin-delivery.png",
+    "j6-09-admin-search.png",
+    "j6-10-seller-reviews.png",
+    "j6-11-arena.png",
+    "j6-12-arena-rankings.png",
+    "j6-13-donzzul.png",
+    "j6-14-shipping-policy.png",
+    "j6-15-seller-returns.png",
+    "j6-16-business-info.png",
+    "j6-17-admin-anomalies.png",
+    "j6-18-admin-policy.png",
+    "j6-19-admin-refund-sim.png",
+    "j6-20-admin-tax.png",
+    "j6-21-admin-logs.png",
+    "j6-22-faq.png",
+    "j6-23-terms.png",
+    "j6-23-privacy.png"
   ]
 }
