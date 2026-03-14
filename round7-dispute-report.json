@@ -1,0 +1,101 @@
+{
+  "round": 7,
+  "entity": "Dispute",
+  "reservation_id": 1448,
+  "order_number": "YP-20260314-0021",
+  "checkpoints": 18,
+  "PASS": 18,
+  "FAIL": 0,
+  "details": [
+    {
+      "name": "DISPUTE OPEN: Accepted",
+      "status": "PASS",
+      "detail": "code=200, result={'reservation_id': 1448, 'order_number': 'YP-20260314-0021', 'is_disputed': True, 'dispute_opened_at': '2026-03-14T12:53:38.940418+00:00', 'dispute_reason': 'Product defective - QA Ro"
+    },
+    {
+      "name": "CP-1a: Returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-1b: is_disputed is True",
+      "status": "PASS",
+      "detail": "got=True"
+    },
+    {
+      "name": "CP-1c: dispute_opened_at set",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:53:38.940418Z"
+    },
+    {
+      "name": "CP-1d: dispute_reason saved",
+      "status": "PASS",
+      "detail": "got=Product defective - QA Round 7 test dispute"
+    },
+    {
+      "name": "CP-2a: Buyer search returns 200",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "CP-2b: Buyer sees disputed",
+      "status": "PASS",
+      "detail": "found=True, is_disputed=True"
+    },
+    {
+      "name": "CP-3a: Seller search returns 200",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "CP-3b: Seller sees disputed",
+      "status": "PASS",
+      "detail": "found=True"
+    },
+    {
+      "name": "CP-4a: Admin returns 200",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "CP-4b: Admin sees disputed",
+      "status": "PASS",
+      "detail": "checked 20"
+    },
+    {
+      "name": "CP-5a: Disputed filter returns 200",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "CP-5b: Found via disputed filter",
+      "status": "PASS",
+      "detail": "checked 10"
+    },
+    {
+      "name": "DISPUTE CLOSE: Accepted",
+      "status": "PASS",
+      "detail": "code=200, result={'reservation_id': 1448, 'order_number': 'YP-20260314-0021', 'is_disputed': False, 'dispute_closed_at': '2026-03-14T12:53:44.979481+00:00', 'dispute_resolution': 'Refund approved afte"
+    },
+    {
+      "name": "CP-6a: Returns 200",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "CP-6b: is_disputed now False",
+      "status": "PASS",
+      "detail": "got=False"
+    },
+    {
+      "name": "CP-6c: dispute_closed_at set",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:53:44.979481Z"
+    },
+    {
+      "name": "CP-6d: dispute_resolution saved",
+      "status": "PASS",
+      "detail": "got=Refund approved after inspection - QA test"
+    }
+  ]
+}

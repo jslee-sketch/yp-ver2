@@ -1,0 +1,101 @@
+{
+  "round": 5,
+  "entity": "Arrival Confirmation",
+  "reservation_id": 1446,
+  "order_number": "YP-20260314-0019",
+  "checkpoints": 18,
+  "PASS": 18,
+  "FAIL": 0,
+  "details": [
+    {
+      "name": "CONFIRM: Arrival confirmed",
+      "status": "PASS",
+      "detail": "code=200, result={'id': 1446, 'deal_id': 1658, 'offer_id': 1141, 'buyer_id': 11, 'qty': 1, 'order_number': 'YP-20260314-0019', 'status': 'PAID', 'created_at': '2026-03-14T12:52:55.402040Z', 'expires_a"
+    },
+    {
+      "name": "CP-1a: Returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-1b: arrival_confirmed_at set",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:52:58.017944Z"
+    },
+    {
+      "name": "CP-1c: phase updated after arrival",
+      "status": "PASS",
+      "detail": "got=DELIVERED_COOLING"
+    },
+    {
+      "name": "CP-1d: status still PAID",
+      "status": "PASS",
+      "detail": "got=PAID"
+    },
+    {
+      "name": "CP-2a: Returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-2b: Found in list",
+      "status": "PASS",
+      "detail": "checked 10"
+    },
+    {
+      "name": "CP-2c: arrival_confirmed_at visible",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:52:58.017944Z"
+    },
+    {
+      "name": "CP-3a: Returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-3b: Found by seller",
+      "status": "PASS",
+      "detail": "checked 10"
+    },
+    {
+      "name": "CP-3c: Seller sees confirmed",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:52:58.017944Z"
+    },
+    {
+      "name": "CP-4a: Returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-4b: Admin sees confirmed",
+      "status": "PASS",
+      "detail": "checked 20"
+    },
+    {
+      "name": "CP-5a: Returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-5b: Settlement exists",
+      "status": "PASS",
+      "detail": "checked 20 settlements"
+    },
+    {
+      "name": "CP-5c: Settlement has amount data",
+      "status": "PASS",
+      "detail": "total_amount=340000, settlement_amount=315690"
+    },
+    {
+      "name": "CP-6a: Returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-6b: Dashboard pipeline data exists",
+      "status": "PASS",
+      "detail": "pipeline={'paid_not_shipped': 80, 'shipped_not_arrived': 42, 'arrived_confirmed': 42}"
+    }
+  ]
+}

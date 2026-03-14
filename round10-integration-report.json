@@ -1,0 +1,169 @@
+{
+  "round": 10,
+  "entity": "Cross-cutting Integration",
+  "checkpoints": 32,
+  "PASS": 32,
+  "FAIL": 0,
+  "details": [
+    {
+      "name": "CP-1a: Buyer notifications returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-2a: Seller notifications returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-3a: Mark all read returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'updated': 24}"
+    },
+    {
+      "name": "CP-3b: Updated count returned",
+      "status": "PASS",
+      "detail": "keys=['updated']"
+    },
+    {
+      "name": "CP-4a: Unread query returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-4b: Unread count is 0 after mark-read",
+      "status": "PASS",
+      "detail": "unread=0"
+    },
+    {
+      "name": "CP-5a: Activity log returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-6: Deal activity log returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-7a: Returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-7b: Has stats",
+      "status": "PASS",
+      "detail": "keys=['buyer_id', 'profile', 'trust', 'stats', 'recent']"
+    },
+    {
+      "name": "CP-7c: Has reservation stats",
+      "status": "PASS",
+      "detail": "type=<class 'dict'>"
+    },
+    {
+      "name": "CP-7d: Has by_status breakdown",
+      "status": "PASS",
+      "detail": "keys=['PENDING', 'PAID', 'CANCELLED', 'EXPIRED']"
+    },
+    {
+      "name": "CP-7e: Has shipping pipeline",
+      "status": "PASS",
+      "detail": "pipeline={'paid_not_shipped': 80, 'shipped_not_arrived': 43, 'arrived_confirmed': 44}"
+    },
+    {
+      "name": "CP-8a: Returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-8b: Has stats",
+      "status": "PASS",
+      "detail": "keys=['seller_id', 'profile', 'pricing', 'stats', 'relations', 'recent']"
+    },
+    {
+      "name": "CP-9a: Admin reservations returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-9b: Has reservation entries",
+      "status": "PASS",
+      "detail": "count=10"
+    },
+    {
+      "name": "CP-10a: Admin settlements returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-10b: Has settlement entries",
+      "status": "PASS",
+      "detail": "count=10"
+    },
+    {
+      "name": "CP-11a: Buyer search returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-11b: Buyer has reservations",
+      "status": "PASS",
+      "detail": "count=10"
+    },
+    {
+      "name": "CP-11c: Has deal_id",
+      "status": "PASS",
+      "detail": "keys=['id', 'deal_id', 'offer_id', 'buyer_id', 'qty', 'order_number', 'status', 'created_at', 'expires_at', 'paid_at']"
+    },
+    {
+      "name": "CP-11d: Has offer_id",
+      "status": "PASS",
+      "detail": "got=1145"
+    },
+    {
+      "name": "CP-11e: Has order_number",
+      "status": "PASS",
+      "detail": "got=YP-20260314-0023"
+    },
+    {
+      "name": "CP-12a: Seller search returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-12b: Seller has reservations",
+      "status": "PASS",
+      "detail": "count=10"
+    },
+    {
+      "name": "CP-13: Home page loads",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "CP-13: My Orders page loads",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "CP-13: Login page loads",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "CP-14a: Health check returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-15: Pingpong responds",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-16: Preview pack returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    }
+  ]
+}

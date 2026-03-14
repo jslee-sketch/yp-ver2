@@ -1,0 +1,206 @@
+{
+  "round": 2,
+  "entity": "Offer",
+  "deal_id": 1655,
+  "created_id": 1138,
+  "checkpoints": 39,
+  "PASS": 39,
+  "FAIL": 0,
+  "details": [
+    {
+      "name": "CP-1a: Offer detail returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-1b: deal_id matches",
+      "status": "PASS",
+      "detail": "got=1655"
+    },
+    {
+      "name": "CP-1c: seller_id matches",
+      "status": "PASS",
+      "detail": "got=9"
+    },
+    {
+      "name": "CP-1d: price matches",
+      "status": "PASS",
+      "detail": "got=1450000.0"
+    },
+    {
+      "name": "CP-1e: total_available_qty matches",
+      "status": "PASS",
+      "detail": "got=10"
+    },
+    {
+      "name": "CP-1f: confirmed_options saved",
+      "status": "PASS",
+      "detail": "got=[{\"name\": \"color\", \"value\": \"Titanium Blue\", \"confirmed\": true}, {\"name\": \"stora"
+    },
+    {
+      "name": "CP-1g: conditions saved",
+      "status": "PASS",
+      "detail": "got={\"warranty\": \"1 year Samsung\", \"refund\": \"7 days\", \"shipping\": \"free\", \"delivery"
+    },
+    {
+      "name": "CP-1h: components saved",
+      "status": "PASS",
+      "detail": "got=Galaxy S25 Ultra, charger, USB-C cable, SIM ejector, manual"
+    },
+    {
+      "name": "CP-1i: product_description saved",
+      "status": "PASS",
+      "detail": "got=Brand new sealed Samsung Galaxy S25 Ultra 512GB Titanium Blue. Official Korean v"
+    },
+    {
+      "name": "CP-1j: product_images saved",
+      "status": "PASS",
+      "detail": "got=[\"https://example.com/s25ultra1.jpg\", \"https://example.com/s25ultra2.jpg\"]"
+    },
+    {
+      "name": "CP-1k: option_agreement is True",
+      "status": "PASS",
+      "detail": "got=True"
+    },
+    {
+      "name": "CP-1l: shipping_mode matches",
+      "status": "PASS",
+      "detail": "got=INCLUDED"
+    },
+    {
+      "name": "CP-1m: comment saved",
+      "status": "PASS",
+      "detail": "got=QA Round2 offer - full 4-step"
+    },
+    {
+      "name": "CP-2a: Seller offers returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-2b: New offer in seller's list",
+      "status": "PASS",
+      "detail": "checked 28 offers"
+    },
+    {
+      "name": "CP-3a: Deal offers returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-3b: New offer in deal's offer list",
+      "status": "PASS",
+      "detail": "checked 1 offers"
+    },
+    {
+      "name": "CP-4a: Buyer can fetch deal's offers",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-4b: Buyer sees the offer",
+      "status": "PASS",
+      "detail": "checked 1 offers"
+    },
+    {
+      "name": "CP-5a: Ranked offers returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-5b: New offer in ranked list",
+      "status": "PASS",
+      "detail": "type=list, count=1"
+    },
+    {
+      "name": "CP-6a: Extended detail returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-6b: Has deal context",
+      "status": "PASS",
+      "detail": "keys=['offer', 'deal', 'remaining_qty', 'total_available_qty', 'sold_qty', 'reserved_qty', 'seller_level', 'seller_rating_adjusted', 'seller_rating_count', 'external_rating']"
+    },
+    {
+      "name": "CP-7a: Admin offers returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-7b: New offer in admin list",
+      "status": "PASS",
+      "detail": "checked 50 offers"
+    },
+    {
+      "name": "CP-8a: Admin stats returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-8b: Offer count incremented",
+      "status": "PASS",
+      "detail": "before=1129, after=1130"
+    },
+    {
+      "name": "CP-9a: Seller dashboard returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-9b: Dashboard has data",
+      "status": "PASS",
+      "detail": "keys=['seller_id', 'profile', 'pricing', 'stats', 'relations', 'recent']"
+    },
+    {
+      "name": "CP-10a: v3.6 offers returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-10b: Offer in v3.6 list",
+      "status": "PASS",
+      "detail": "checked 1 items"
+    },
+    {
+      "name": "CP-11a: Activity log returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-11b: Offer creation logged",
+      "status": "PASS",
+      "detail": "total_events=1, offer_events=0"
+    },
+    {
+      "name": "CP-12: Preview pricing accessible",
+      "status": "PASS",
+      "detail": "code=200, data={'_html': True, '_len': 2276}"
+    },
+    {
+      "name": "CP-13: Deal detail (with offer) (/deal/1655) loads",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "CP-13: Offer create page (/deal/1655/offer/create) loads",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "CP-13: Seller offers page (/seller/offers) loads",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "CP-14a: Notifications returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-14b: Notifications accessible",
+      "status": "PASS",
+      "detail": "count=0"
+    }
+  ]
+}

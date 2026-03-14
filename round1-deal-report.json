@@ -1,0 +1,220 @@
+{
+  "round": 1,
+  "entity": "Deal",
+  "created_id": 1654,
+  "checkpoints": 42,
+  "PASS": 42,
+  "FAIL": 0,
+  "details": [
+    {
+      "name": "CP-1a: Deal detail returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-1b: product_name matches",
+      "status": "PASS",
+      "detail": "got=QA Round1 iPhone 16 Pro"
+    },
+    {
+      "name": "CP-1c: target_price matches",
+      "status": "PASS",
+      "detail": "got=1200000.0"
+    },
+    {
+      "name": "CP-1d: anchor_price present",
+      "status": "PASS",
+      "detail": "got=1550000.0"
+    },
+    {
+      "name": "CP-1e: category matches",
+      "status": "PASS",
+      "detail": "got=electronics"
+    },
+    {
+      "name": "CP-1f: brand matches",
+      "status": "PASS",
+      "detail": "got=Apple"
+    },
+    {
+      "name": "CP-1g: options present",
+      "status": "PASS",
+      "detail": "options=[{\"title\": \"color\", \"values\": [\"Black Titanium\", \"White Titanium\"], \"selected_value\": \"Black Titaniu"
+    },
+    {
+      "name": "CP-1h: status is open",
+      "status": "PASS",
+      "detail": "got=open"
+    },
+    {
+      "name": "CP-1i: creator_id matches buyer",
+      "status": "PASS",
+      "detail": "got=11"
+    },
+    {
+      "name": "CP-1j: created_at present",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:50:59.915009"
+    },
+    {
+      "name": "CP-1k: desired_qty matches",
+      "status": "PASS",
+      "detail": "got=3"
+    },
+    {
+      "name": "CP-1l: condition is new",
+      "status": "PASS",
+      "detail": "got=new"
+    },
+    {
+      "name": "CP-1m: product_code present",
+      "status": "PASS",
+      "detail": "got=MYW23KH/A"
+    },
+    {
+      "name": "CP-1n: free_text present",
+      "status": "PASS",
+      "detail": "got=QA verification deal - Round 1"
+    },
+    {
+      "name": "CP-2a: Deals list returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-2b: New deal in list",
+      "status": "PASS",
+      "detail": "checked 20 items, deal_id=1654"
+    },
+    {
+      "name": "CP-3a: My deals returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-3b: New deal in my deals",
+      "status": "PASS",
+      "detail": "checked 20 items"
+    },
+    {
+      "name": "CP-4a: Participants returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-4b: Creator auto-added as participant",
+      "status": "PASS",
+      "detail": "participants=[{\"id\": 1526, \"deal_id\": 1654, \"buyer_id\": 11, \"qty\": 3, \"created_at\": \"2026-03-14T12:50:59.933819\"}]"
+    },
+    {
+      "name": "CP-5a: Find-similar returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-5b: New deal in matching results",
+      "status": "PASS",
+      "detail": "exact=4, opt_diff=0, similar=5, counts={'exact': 4, 'option_different': 0, 'similar': 5}"
+    },
+    {
+      "name": "CP-6a: Seller can fetch deal detail",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-6b: Seller sees same product_name",
+      "status": "PASS",
+      "detail": "got=QA Round1 iPhone 16 Pro"
+    },
+    {
+      "name": "CP-7a: Seller deals list returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-7b: New deal visible to seller",
+      "status": "PASS",
+      "detail": "checked 20 items"
+    },
+    {
+      "name": "CP-8a: Admin deals returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-8b: New deal in admin list",
+      "status": "PASS",
+      "detail": "checked 50 items"
+    },
+    {
+      "name": "CP-9a: Admin stats returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-9b: Deal count incremented",
+      "status": "PASS",
+      "detail": "before=1518, after=1519"
+    },
+    {
+      "name": "CP-10a: Buyer dashboard returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-10b: Buyer dashboard has deals stats",
+      "status": "PASS",
+      "detail": "stats.deals={'participated': 189}"
+    },
+    {
+      "name": "CP-11a: Search returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-11b: New deal found via search",
+      "status": "PASS",
+      "detail": "checked 20 results"
+    },
+    {
+      "name": "CP-12a: Activity log returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-12b: Activity log has entries",
+      "status": "PASS",
+      "detail": "entries=1"
+    },
+    {
+      "name": "CP-13: Deal has rounds data",
+      "status": "PASS",
+      "detail": "rounds=0"
+    },
+    {
+      "name": "CP-14: Preview pack returns 200",
+      "status": "PASS",
+      "detail": "code=200, keys=['ok', 'reason_code', 'entity', 'id', 'actor']"
+    },
+    {
+      "name": "CP-15: Deal detail page (/deal/1654) loads",
+      "status": "PASS",
+      "detail": "status=200, is_spa=True"
+    },
+    {
+      "name": "CP-15: Deal list page (/deals) loads",
+      "status": "PASS",
+      "detail": "status=200, is_spa=True"
+    },
+    {
+      "name": "CP-15: My deals page (/my-deals) loads",
+      "status": "PASS",
+      "detail": "status=200, is_spa=True"
+    },
+    {
+      "name": "CP-15: Search page (/search) loads",
+      "status": "PASS",
+      "detail": "status=200, is_spa=True"
+    }
+  ]
+}

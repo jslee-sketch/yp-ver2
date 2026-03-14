@@ -1,0 +1,224 @@
+{
+  "round": 3,
+  "entity": "Reservation + Payment",
+  "deal_id": 1656,
+  "offer_id": 1139,
+  "reservation_id": 1444,
+  "order_number": "YP-20260314-0017",
+  "amount_total": 1280000,
+  "checkpoints": 42,
+  "PASS": 42,
+  "FAIL": 0,
+  "details": [
+    {
+      "name": "CP-1a: Reservation detail returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-1b: status is PENDING",
+      "status": "PASS",
+      "detail": "got=PENDING"
+    },
+    {
+      "name": "CP-1c: deal_id matches",
+      "status": "PASS",
+      "detail": "got=1656"
+    },
+    {
+      "name": "CP-1d: offer_id matches",
+      "status": "PASS",
+      "detail": "got=1139"
+    },
+    {
+      "name": "CP-1e: buyer_id matches",
+      "status": "PASS",
+      "detail": "got=11"
+    },
+    {
+      "name": "CP-1f: qty matches",
+      "status": "PASS",
+      "detail": "got=2"
+    },
+    {
+      "name": "CP-1g: order_number exists",
+      "status": "PASS",
+      "detail": "got=YP-20260314-0017"
+    },
+    {
+      "name": "CP-1h: amount_total > 0",
+      "status": "PASS",
+      "detail": "got=1280000"
+    },
+    {
+      "name": "CP-1i: created_at present",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:52:02.328278Z"
+    },
+    {
+      "name": "CP-2a: Buyer reservations returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-2b: New reservation in buyer's list",
+      "status": "PASS",
+      "detail": "checked 50 items"
+    },
+    {
+      "name": "CP-3a: Seller reservations returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-3b: New reservation in seller's list",
+      "status": "PASS",
+      "detail": "checked 17 items"
+    },
+    {
+      "name": "CP-4a: Admin reservations returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-4b: New reservation in admin list",
+      "status": "PASS",
+      "detail": "checked 50 items"
+    },
+    {
+      "name": "CP-5a: Offer detail returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-5b: reserved_qty increased by 2",
+      "status": "PASS",
+      "detail": "before=0, after=2"
+    },
+    {
+      "name": "CP-6a: Admin stats returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-6b: Reservation count incremented",
+      "status": "PASS",
+      "detail": "before=1441, after=1442"
+    },
+    {
+      "name": "PAY: Payment accepted",
+      "status": "PASS",
+      "detail": "code=200, result={'id': 1444, 'deal_id': 1656, 'offer_id': 1139, 'buyer_id': 11, 'qty': 2, 'order_number': 'YP-20260314-0017', 'status': 'PAID', 'created_at': '2026-03-14T12:52:02.328278Z', 'expires_a"
+    },
+    {
+      "name": "CP-7a: Reservation detail still accessible",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-7b: Status is PAID",
+      "status": "PASS",
+      "detail": "got=PAID"
+    },
+    {
+      "name": "CP-7c: paid_at is set",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:52:08.741709Z"
+    },
+    {
+      "name": "CP-8a: Offer detail returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-8b: sold_qty increased",
+      "status": "PASS",
+      "detail": "before=0, after=2"
+    },
+    {
+      "name": "CP-8c: reserved_qty decreased back",
+      "status": "PASS",
+      "detail": "before=0, after=0"
+    },
+    {
+      "name": "CP-9a: Settlements endpoint returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-9b: Settlement exists for this reservation",
+      "status": "PASS",
+      "detail": "checked 20 settlements"
+    },
+    {
+      "name": "CP-10a: Buyer dashboard returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-10b: Dashboard has reservation stats",
+      "status": "PASS",
+      "detail": "reservations={'total': 190, 'by_status': {'PENDING': 0, 'PAID': 162, 'CANCELLED': 22, 'EXPIRED': 6}, 'amounts': {'paid_total': 62593000, 'cancelled_total': 12460000}, 'shipping_pipeline': {'paid_not_s"
+    },
+    {
+      "name": "CP-11a: Seller dashboard returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-11b: Dashboard has data",
+      "status": "PASS",
+      "detail": "keys=['seller_id', 'profile', 'pricing', 'stats', 'relations', 'recent']"
+    },
+    {
+      "name": "CP-12: Refund preview accessible",
+      "status": "PASS",
+      "detail": "code=200, data={'_html': True, '_len': 2276}"
+    },
+    {
+      "name": "CP-13a: v3.6 by-id returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-13b: Has phase field",
+      "status": "PASS",
+      "detail": "keys=['id', 'deal_id', 'offer_id', 'buyer_id', 'qty', 'order_number', 'status', 'created_at', 'expires_at', 'paid_at']"
+    },
+    {
+      "name": "CP-14a: Activity log returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-14b: Activity log has entries",
+      "status": "PASS",
+      "detail": "entries=2"
+    },
+    {
+      "name": "CP-15: My Orders page (/my-orders) loads",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "CP-15: Deal detail page (/deal/1656) loads",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "CP-16a: Buyer notifications accessible",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-16b: Notifications exist",
+      "status": "PASS",
+      "detail": "count=0"
+    },
+    {
+      "name": "CP-16c: Seller notifications accessible",
+      "status": "PASS",
+      "detail": "code=200"
+    }
+  ]
+}

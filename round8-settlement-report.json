@@ -1,0 +1,207 @@
+{
+  "round": 8,
+  "entity": "Settlement Pipeline",
+  "reservation_id": 1449,
+  "order_number": "YP-20260314-0022",
+  "settlement_id": 1275,
+  "checkpoints": 39,
+  "PASS": 39,
+  "FAIL": 0,
+  "details": [
+    {
+      "name": "CP-1a: Settlement found by reservation_id",
+      "status": "PASS",
+      "detail": "code=200, data={'id': 1275, 'reservation_id': 1449, 'order_number': None, 'deal_id': 1661, 'offer_id': 1144, 'seller_id': 9, 'buyer_id': 11, 'buyer_paid_amount': 290000, 'pg_fee_amount': 9570, 'platfo"
+    },
+    {
+      "name": "CP-1b: reservation_id matches",
+      "status": "PASS",
+      "detail": "got=1449"
+    },
+    {
+      "name": "CP-1c: deal_id matches",
+      "status": "PASS",
+      "detail": "got=1661"
+    },
+    {
+      "name": "CP-1d: offer_id matches",
+      "status": "PASS",
+      "detail": "got=1144"
+    },
+    {
+      "name": "CP-1e: seller_id matches",
+      "status": "PASS",
+      "detail": "got=9"
+    },
+    {
+      "name": "CP-1f: buyer_id matches",
+      "status": "PASS",
+      "detail": "got=11"
+    },
+    {
+      "name": "CP-1g: buyer_paid_amount > 0",
+      "status": "PASS",
+      "detail": "got=290000"
+    },
+    {
+      "name": "CP-1h: seller_payout_amount > 0",
+      "status": "PASS",
+      "detail": "got=269265"
+    },
+    {
+      "name": "CP-1i: currency is KRW",
+      "status": "PASS",
+      "detail": "got=KRW"
+    },
+    {
+      "name": "CP-1j: initial status PENDING or HOLD",
+      "status": "PASS",
+      "detail": "got=HOLD"
+    },
+    {
+      "name": "CP-2a: Admin list returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-2b: Settlement found in admin list",
+      "status": "PASS",
+      "detail": "checked 20 items"
+    },
+    {
+      "name": "CP-2c: total_amount > 0",
+      "status": "PASS",
+      "detail": "got=290000"
+    },
+    {
+      "name": "CP-2d: settlement_amount > 0",
+      "status": "PASS",
+      "detail": "got=269265"
+    },
+    {
+      "name": "CP-2e: order_number present",
+      "status": "PASS",
+      "detail": "got=YP-20260314-0022"
+    },
+    {
+      "name": "CP-3a: refresh-ready returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'checked': 200, 'backfilled': 0, 'updated': 0, 'updated_ids': []}"
+    },
+    {
+      "name": "CP-3b: Settlement re-fetch OK",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-3c: Status progressed from PENDING",
+      "status": "PASS",
+      "detail": "status=HOLD"
+    },
+    {
+      "name": "CP-3d: ready_at is set",
+      "status": "PASS",
+      "detail": "got=2026-03-21T12:53:57.799607Z"
+    },
+    {
+      "name": "CP-4a: HOLD → approve correctly rejected (409)",
+      "status": "PASS",
+      "detail": "code=409, data={\"detail\":\"not READY (status=HOLD)\"}"
+    },
+    {
+      "name": "CP-4b: Guard rail working (HOLD blocks approve)",
+      "status": "PASS",
+      "detail": "HOLD state verified"
+    },
+    {
+      "name": "CP-4c: Settlement pipeline integrity maintained",
+      "status": "PASS",
+      "detail": "Cannot skip states"
+    },
+    {
+      "name": "CP-5a: Status filter returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-5b: Found with status filter",
+      "status": "PASS",
+      "detail": "checked 20"
+    },
+    {
+      "name": "CP-6a: Seller filter returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-6b: Found with seller filter",
+      "status": "PASS",
+      "detail": "checked 18"
+    },
+    {
+      "name": "CP-7a: Final fetch OK",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-7b: buyer_paid = payout + fees",
+      "status": "PASS",
+      "detail": "paid=290000, payout=269265, pg=9570, platform=11165"
+    },
+    {
+      "name": "CP-7c: buyer_paid_amount matches reservation",
+      "status": "PASS",
+      "detail": "got=290000"
+    },
+    {
+      "name": "CP-8: Batch list accessible",
+      "status": "PASS",
+      "detail": "code=200, data={'ok': True, 'count': 2, 'items': [{'batch_id': 'a1b66e05091f4a1e8a42637542df6f27', 'end': {'id': 14, 'actor_type': 'system', 'actor_id': None, 'reason': 'paid_batch_end batch=a1b66e050"
+    },
+    {
+      "name": "CP-9a: Bulk mark paid returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-9b: Returns batch_id",
+      "status": "PASS",
+      "detail": "got=5572d666c699466cb780c48dca73c71f"
+    },
+    {
+      "name": "CP-9c: Returns ok=true",
+      "status": "PASS",
+      "detail": "got=True"
+    },
+    {
+      "name": "CP-10a: refresh-dispute returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'checked': 10, 'updated': 10, 'updated_ids': [221, 220, 219, 218, 217, 117, 116, 115, 114, 113]}"
+    },
+    {
+      "name": "CP-10b: refresh-dispute-closed returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'checked': 0, 'updated': 0, 'updated_ids': []}"
+    },
+    {
+      "name": "CP-10c: refresh-dispute-path-schedule returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'checked': 0, 'updated': 0, 'updated_ids': [], 'delay_days': 30, 'now': '2026-03-14T12:54:13.288165+00:00'}"
+    },
+    {
+      "name": "CP-10d: refresh-dispute-path-ready returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'checked': 0, 'updated': 0, 'updated_ids': [], 'now': '2026-03-14T12:54:14.284918+00:00'}"
+    },
+    {
+      "name": "CP-11a: Buyer dashboard returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-11b: Dashboard has reservation stats",
+      "status": "PASS",
+      "detail": "type=<class 'dict'>"
+    }
+  ]
+}

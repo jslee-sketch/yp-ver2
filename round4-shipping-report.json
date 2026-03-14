@@ -1,0 +1,111 @@
+{
+  "round": 4,
+  "entity": "Shipping",
+  "reservation_id": 1445,
+  "order_number": "YP-20260314-0018",
+  "checkpoints": 20,
+  "PASS": 20,
+  "FAIL": 0,
+  "details": [
+    {
+      "name": "SHIP: Mark shipped accepted",
+      "status": "PASS",
+      "detail": "code=200, result={'id': 1445, 'deal_id': 1657, 'offer_id': 1140, 'buyer_id': 11, 'qty': 1, 'order_number': 'YP-20260314-0018', 'status': 'PAID', 'created_at': '2026-03-14T12:52:37.258012Z', 'expires_a"
+    },
+    {
+      "name": "CP-1a: Reservation detail returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-1b: shipped_at is set",
+      "status": "PASS",
+      "detail": "shipped_at=2026-03-14T12:52:39.063870Z"
+    },
+    {
+      "name": "CP-1c: tracking_number saved",
+      "status": "PASS",
+      "detail": "got=1234567890123"
+    },
+    {
+      "name": "CP-1d: shipping_carrier saved",
+      "status": "PASS",
+      "detail": "got=CJ Logistics"
+    },
+    {
+      "name": "CP-1e: status still PAID",
+      "status": "PASS",
+      "detail": "got=PAID"
+    },
+    {
+      "name": "CP-1f: phase updated",
+      "status": "PASS",
+      "detail": "got=SHIPPED"
+    },
+    {
+      "name": "CP-2a: Buyer search returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-2b: Reservation found",
+      "status": "PASS",
+      "detail": "checked 10 items"
+    },
+    {
+      "name": "CP-2c: Buyer sees shipped_at",
+      "status": "PASS",
+      "detail": "shipped_at=2026-03-14T12:52:39.063870Z"
+    },
+    {
+      "name": "CP-2d: Buyer sees tracking_number",
+      "status": "PASS",
+      "detail": "tracking=1234567890123"
+    },
+    {
+      "name": "CP-3a: Seller search returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-3b: Reservation found by seller",
+      "status": "PASS",
+      "detail": "checked 10 items"
+    },
+    {
+      "name": "CP-3c: Seller sees shipped_at",
+      "status": "PASS",
+      "detail": "shipped_at=2026-03-14T12:52:39.063870Z"
+    },
+    {
+      "name": "CP-4a: Admin reservations returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-4b: Admin sees shipped reservation",
+      "status": "PASS",
+      "detail": "checked 20 items"
+    },
+    {
+      "name": "CP-4c: Admin sees tracking_number",
+      "status": "PASS",
+      "detail": "tracking=1234567890123"
+    },
+    {
+      "name": "CP-5a: Dashboard returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-5b: Shipping pipeline data exists",
+      "status": "PASS",
+      "detail": "pipeline={'paid_not_shipped': 80, 'shipped_not_arrived': 42, 'arrived_confirmed': 41}"
+    },
+    {
+      "name": "CP-6: My Orders page loads",
+      "status": "PASS",
+      "detail": "status=200"
+    }
+  ]
+}

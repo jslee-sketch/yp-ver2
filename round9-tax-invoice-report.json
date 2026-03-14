@@ -1,0 +1,173 @@
+{
+  "round": 9,
+  "entity": "Tax Invoice",
+  "reservation_id": 1450,
+  "order_number": "YP-20260314-0023",
+  "settlement_id": 1276,
+  "invoice_id": 13,
+  "checkpoints": 32,
+  "PASS": 32,
+  "FAIL": 0,
+  "details": [
+    {
+      "name": "CP-1a: Generate returns 200/201",
+      "status": "PASS",
+      "detail": "code=200, data={'ok': True, 'invoice': {'id': 13, 'invoice_number': 'YP-20260314-000003', 'status': 'PENDING', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'suppli"
+    },
+    {
+      "name": "CP-1b: invoice_number starts with YP-",
+      "status": "PASS",
+      "detail": "got=YP-20260314-000003"
+    },
+    {
+      "name": "CP-1c: status is PENDING",
+      "status": "PASS",
+      "detail": "got=PENDING"
+    },
+    {
+      "name": "CP-1d: settlement_id matches",
+      "status": "PASS",
+      "detail": "got=1276"
+    },
+    {
+      "name": "CP-1e: total_amount > 0",
+      "status": "PASS",
+      "detail": "got=18480"
+    },
+    {
+      "name": "CP-1f: supply_amount > 0",
+      "status": "PASS",
+      "detail": "got=16800"
+    },
+    {
+      "name": "CP-1g: tax_amount > 0",
+      "status": "PASS",
+      "detail": "got=1680"
+    },
+    {
+      "name": "CP-1h: supply + tax = total",
+      "status": "PASS",
+      "detail": "supply=16800 + tax=1680 = 18480, total=18480"
+    },
+    {
+      "name": "CP-1i: supplier_business_name set",
+      "status": "PASS",
+      "detail": "got=(주)텔러스테크"
+    },
+    {
+      "name": "CP-1j: recipient_type is seller",
+      "status": "PASS",
+      "detail": "got=seller"
+    },
+    {
+      "name": "CP-2a: Admin list returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-2b: items is a list",
+      "status": "PASS",
+      "detail": "type=<class 'list'>"
+    },
+    {
+      "name": "CP-2c: Our invoice found in list",
+      "status": "PASS",
+      "detail": "checked 13"
+    },
+    {
+      "name": "CP-3a: Seller list returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'total': 3, 'items': [{'id': 13, 'invoice_number': 'YP-20260314-000003', 'status': 'PENDING', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'supplie"
+    },
+    {
+      "name": "CP-3b: Seller response has items",
+      "status": "PASS",
+      "detail": "type=<class 'list'>"
+    },
+    {
+      "name": "CP-3c: Seller sees our invoice",
+      "status": "PASS",
+      "detail": "checked 3"
+    },
+    {
+      "name": "CP-4a: Status filter returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-4b: Filtered list is valid",
+      "status": "PASS",
+      "detail": "type=<class 'list'>"
+    },
+    {
+      "name": "CP-5a: Confirm returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'ok': True, 'invoice': {'id': 13, 'invoice_number': 'YP-20260314-000003', 'status': 'CONFIRMED', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'supp"
+    },
+    {
+      "name": "CP-5b: status is CONFIRMED",
+      "status": "PASS",
+      "detail": "got=CONFIRMED"
+    },
+    {
+      "name": "CP-5c: confirmed_at is set",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:54:35.873910"
+    },
+    {
+      "name": "CP-6a: Issue returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'ok': True, 'invoice': {'id': 13, 'invoice_number': 'YP-20260314-000003', 'status': 'ISSUED', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'supplie"
+    },
+    {
+      "name": "CP-6b: status is ISSUED",
+      "status": "PASS",
+      "detail": "got=ISSUED"
+    },
+    {
+      "name": "CP-6c: issued_at is set",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:54:36.832400"
+    },
+    {
+      "name": "CP-7a: ISSUED filter returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-7b: Our invoice found as ISSUED",
+      "status": "PASS",
+      "detail": "checked 1"
+    },
+    {
+      "name": "CP-8a: Export ECOUNT returns 200",
+      "status": "PASS",
+      "detail": "code=200, binary=True"
+    },
+    {
+      "name": "CP-8b: Export sales returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-8c: Export purchase returns 200",
+      "status": "PASS",
+      "detail": "code=200"
+    },
+    {
+      "name": "CP-9a: Cancel returns 200",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "CP-9b: status is CANCELLED",
+      "status": "PASS",
+      "detail": "got=CANCELLED"
+    },
+    {
+      "name": "CP-10: Batch issue endpoint accessible",
+      "status": "PASS",
+      "detail": "code=200, data={'ok': True, 'count': 0, 'invoices': []}"
+    }
+  ]
+}
