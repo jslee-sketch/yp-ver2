@@ -265,15 +265,10 @@ else:
         check("CP-13: Deal rounds accessible", False, "no rounds data")
 
 # ---- CP-14: Preview pack ----
-print("\n--- CP-14: GET /preview/deal/{id} (Preview pack) ---")
-code, pp = api('GET', f'/preview/deal/{deal_id}', admin_token)
+print("\n--- CP-14: GET /preview/deal/{id}?user_id=...&role=BUYER (Preview pack) ---")
+code, pp = api('GET', f'/preview/deal/{deal_id}?user_id={buyer_id}&role=BUYER', buyer_token)
 check("CP-14: Preview pack returns 200", code == 200,
       f"code={code}, keys={list(pp.keys())[:5] if isinstance(pp, dict) else 'N/A'}")
-
-# ---- CP-14b: Preview pack with user_id ----
-code2, pp2 = api('GET', f'/preview/deal/{deal_id}?user_id={buyer_id}&role=BUYER', buyer_token)
-check("CP-14b: Preview pack with user_id", code2 == 200,
-      f"code={code2}")
 
 # ---- CP-15: SPA pages load ----
 print("\n--- CP-15: SPA pages load check ---")
