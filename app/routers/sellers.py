@@ -395,6 +395,21 @@ def update_seller_fields(
 # -----------------------------------------------------
 # 7-B. 관리자: 판매자 비밀번호 리셋
 # -----------------------------------------------------
+@router.patch("/{seller_id}/force-approve", summary="관리자용 판매자 강제 승인")
+def admin_force_approve_seller(
+    seller_id: int = Path(..., ge=1),
+    db: Session = Depends(get_db),
+):
+    """관리자가 판매자를 강제 승인합니다 (24시간 제한 무시)."""
+    seller = db.query(models.Seller).filter(models.Seller.id == seller_id).first()
+    if not seller:
+        raise HTTPException(404, "seller not found")
+    seller.verified_at = datetime.now(timezone.utc)
+    seller.status = "APPROVED"
+    db.commit()
+    return {"id": seller.id, "status": "APPROVED", "verified_at": str(seller.verified_at)}
+
+
 @router.patch("/{seller_id}/reset-password", summary="관리자용 판매자 비밀번호 리셋")
 def admin_reset_seller_password(
     seller_id: int = Path(..., ge=1),
