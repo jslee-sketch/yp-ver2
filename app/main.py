@@ -66,6 +66,7 @@ from app.models import (  # noqa: F401
     DonzzulVoteWeek, DonzzulVote, DonzzulSettlement, DonzzulChatMessage,
     Dispute, SellerExternalRating, SellerVerificationScore, ActuatorSellerDisconnection,
     ArenaPlayer, ArenaGame, ArenaRegionStats,
+    RefundRequest, ResolutionAction, ClawbackRecord,
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -269,6 +270,44 @@ _alter_cols = [
     ("user_notifications", "sent_app", "BOOLEAN DEFAULT FALSE"),
     ("user_notifications", "sent_push", "BOOLEAN DEFAULT FALSE"),
     ("user_notifications", "sent_email", "BOOLEAN DEFAULT FALSE"),
+    # refund_requests 확장 컬럼
+    ("refund_requests", "reason", "VARCHAR(50) DEFAULT 'buyer_change_mind'"),
+    ("refund_requests", "reason_detail", "TEXT"),
+    ("refund_requests", "evidence_urls", "TEXT DEFAULT '[]'"),
+    ("refund_requests", "status", "VARCHAR(30) DEFAULT 'REQUESTED'"),
+    ("refund_requests", "seller_response", "VARCHAR(20)"),
+    ("refund_requests", "seller_reject_reason", "TEXT"),
+    ("refund_requests", "seller_response_at", "TIMESTAMP"),
+    ("refund_requests", "seller_response_deadline", "TIMESTAMP"),
+    ("refund_requests", "resolution_action_id", "INTEGER"),
+    ("refund_requests", "dispute_id", "INTEGER"),
+    # resolution_actions 확장 컬럼
+    ("resolution_actions", "resolution_type", "VARCHAR(30)"),
+    ("resolution_actions", "status", "VARCHAR(30) DEFAULT 'PENDING'"),
+    ("resolution_actions", "original_amount", "INTEGER"),
+    ("resolution_actions", "deduction_usage", "INTEGER DEFAULT 0"),
+    ("resolution_actions", "deduction_shipping", "INTEGER DEFAULT 0"),
+    ("resolution_actions", "final_refund_amount", "INTEGER"),
+    ("resolution_actions", "return_required", "BOOLEAN DEFAULT FALSE"),
+    ("resolution_actions", "return_tracking_number", "VARCHAR(100)"),
+    ("resolution_actions", "return_carrier", "VARCHAR(50)"),
+    ("resolution_actions", "inspection_result", "VARCHAR(20)"),
+    ("resolution_actions", "inspection_deduction_rate", "DOUBLE PRECISION"),
+    ("resolution_actions", "pg_refund_status", "VARCHAR(30)"),
+    # clawback_records 확장 컬럼
+    ("clawback_records", "settlement_id", "INTEGER"),
+    ("clawback_records", "seller_id", "INTEGER"),
+    ("clawback_records", "resolution_action_id", "INTEGER"),
+    ("clawback_records", "amount", "INTEGER"),
+    ("clawback_records", "reason", "TEXT"),
+    ("clawback_records", "status", "VARCHAR(30) DEFAULT 'PENDING'"),
+    # spectator_predictions 확장 컬럼
+    ("spectator_predictions", "predicted_price", "INTEGER"),
+    ("spectator_predictions", "comment", "TEXT"),
+    ("spectator_predictions", "settled_price", "INTEGER"),
+    ("spectator_predictions", "error_pct", "DOUBLE PRECISION"),
+    ("spectator_predictions", "tier_name", "VARCHAR(20)"),
+    ("spectator_predictions", "points_earned", "INTEGER DEFAULT 0"),
 ]
 try:
     _insp = _sa.inspect(engine)
