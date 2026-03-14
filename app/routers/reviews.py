@@ -523,13 +523,7 @@ def seller_level_info(
     Seller 레벨/수수료/평점/거래수 조회용 앤드포인트.
     내부 로직은 compute_seller_level_info 헬퍼에 위임.
     """
-    import traceback as _tb
-    try:
-        return compute_seller_level_info(db, seller_id)
-    except Exception as exc:
-        print(f"[SELLER-LEVEL] seller_id={seller_id} ERROR: {exc}", flush=True)
-        _tb.print_exc()
-        raise HTTPException(status_code=500, detail=f"seller_level error: {exc.__class__.__name__}: {exc}")
+    return compute_seller_level_info(db, seller_id)
 
 
 def compute_seller_level_info(db: Session, seller_id: int) -> SellerLevelOut:

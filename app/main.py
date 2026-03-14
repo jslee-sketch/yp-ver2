@@ -132,7 +132,7 @@ _alter_cols = [
     ("actuators", "ecommerce_permit_image", "VARCHAR(500)"),
     # actuator 위탁계약 + 원천징수
     ("actuators", "contract_agreed", "BOOLEAN DEFAULT FALSE"),
-    ("actuators", "contract_agreed_at", "DATETIME"),
+    ("actuators", "contract_agreed_at", "TIMESTAMP"),
     ("actuators", "contract_version", "VARCHAR(20)"),
     ("actuators", "withholding_tax_rate", "DOUBLE PRECISION DEFAULT 0.033"),
     ("actuators", "resident_id_last", "VARCHAR(10)"),
@@ -140,7 +140,7 @@ _alter_cols = [
     ("sellers", "shipping_policy", "TEXT"),
     ("reservations", "refund_type", "VARCHAR(20)"),
     ("reviews", "seller_reply", "TEXT"),
-    ("reviews", "replied_at", "DATETIME"),
+    ("reviews", "replied_at", "TIMESTAMP"),
     # 비밀번호 재설정 토큰
     ("buyers", "reset_token", "VARCHAR(64)"),
     ("buyers", "reset_token_expires_at", "TIMESTAMP"),
@@ -156,7 +156,7 @@ _alter_cols = [
     ("announcements", "is_published", "BOOLEAN DEFAULT FALSE"),
     ("announcements", "target_role", "VARCHAR(20) DEFAULT 'all'"),
     ("announcements", "author", "VARCHAR(100)"),
-    ("announcements", "updated_at", "DATETIME"),
+    ("announcements", "updated_at", "TIMESTAMP"),
     # dispute 확장 컬럼
     ("reservations", "dispute_reason", "VARCHAR(500)"),
     ("reservations", "dispute_resolution", "VARCHAR(500)"),
