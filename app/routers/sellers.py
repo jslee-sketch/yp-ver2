@@ -393,6 +393,28 @@ def update_seller_fields(
 
 
 # -----------------------------------------------------
+# 7-B. 관리자: 판매자 비밀번호 리셋
+# -----------------------------------------------------
+@router.patch("/{seller_id}/reset-password", summary="관리자용 판매자 비밀번호 리셋")
+def admin_reset_seller_password(
+    seller_id: int = Path(..., ge=1),
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+):
+    """관리자가 판매자 비밀번호를 강제 리셋합니다. body: {new_password: str}"""
+    from app.security import get_password_hash
+    seller = db.query(models.Seller).filter(models.Seller.id == seller_id).first()
+    if not seller:
+        raise HTTPException(404, "seller not found")
+    new_pw = body.get("new_password", "")
+    if len(new_pw) < 8:
+        raise HTTPException(422, "password must be at least 8 characters")
+    seller.password_hash = get_password_hash(new_pw)
+    db.commit()
+    return {"id": seller.id, "password_reset": True}
+
+
+# -----------------------------------------------------
 # 8️⃣ 사업자등록증 OCR
 # -----------------------------------------------------
 @router.post("/ocr-business", summary="사업자등록증 OCR (GPT-4o Vision)")
