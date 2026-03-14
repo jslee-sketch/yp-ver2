@@ -1,0 +1,5 @@
+Deal matching OK:
+  exact_match: 1 items
+  option_different: 0 items
+  similar_product: 5 items
+  counts: {'exact': 1, 'option_different': 0, 'similar': 5}

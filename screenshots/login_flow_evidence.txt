@@ -1,0 +1,8 @@
+PASS [200] admin@yeokping.com -> role=admin, sub=1
+PASS [200] realtest1@e2e.com -> role=buyer, sub=11
+PASS [200] seller@yeokping.com -> role=seller, sub=9
+
+=== Summary ===
+PASS admin@yeokping.com -> role=admin
+PASS realtest1@e2e.com -> role=buyer
+PASS seller@yeokping.com -> role=seller

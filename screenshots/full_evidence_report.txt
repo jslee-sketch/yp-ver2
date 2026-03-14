@@ -1,0 +1,51 @@
+============================================================
+PART 1: 통합 로그인 — 역할 자동 판별
+============================================================
+Endpoint: POST /auth/login (email+password only, no role selector)
+Backend: User(admin) → Buyer → Seller → Actuator cascade
+
+PASS admin@yeokping.com -> role=admin, sub=1
+PASS realtest1@e2e.com -> role=buyer, sub=11
+PASS seller@yeokping.com -> role=seller, sub=9, seller_id=9, verified=True
+
+Frontend: LoginPage.tsx role-based navigation
+  seller → /seller
+  actuator → /actuator
+  buyer/admin → /
+
+============================================================
+PART 2: 오퍼 생성 — 4-Step 완전체
+============================================================
+Endpoint: POST /offers (with new 4-step fields)
+Offer id=1110 created with all fields:
+
+  confirmed_options = [{"name": "색상", "value": "블랙"}]
+  conditions = {"warranty": "1년", "refund": "7일", "shipping": "무료", "delivery": "1~3일"}
+  components = 세탁기 본체, 급수/배수호스, 설명서, 보증서
+  product_description = LG 드럼 세탁기 블랙 정품. 에너지 1등급, 무료설치+A/S 1년.
+  product_images = ["https://example.com/washer_black.jpg"]
+  option_agreement = True
+
+Frontend: OfferCreatePage.tsx restructured to 4-step wizard
+  Step 1: 옵션 확인 + 조건 + 구성품 + 동의
+  Step 2: 가격 입력 + 가드레일 표시
+  Step 3: 제품 상세 설명 + 사진 업로드
+  Step 4: 최종 확인 요약 → 제출
+
+============================================================
+PART 3: 딜 매칭 3단계 프론트엔드
+============================================================
+Endpoint: GET /deals/find-similar?product_name=LG&brand=LG&category=electronics
+
+  exact_match: 1 items (🟢 완전일치)
+  option_different: 0 items (🟡 옵션 다름)
+  similar: 5 items (🔵 유사 제품)
+
+Frontend: DealCreatePage.tsx 3-tier accordion UI
+  Page 1: "유사 딜 N건" count display
+  Page 2: 3-tier accordion with [이 딜 합류] / [새 딜 만들기]
+
+============================================================
+SUMMARY: 5/5 PASS
+============================================================
+Timestamp: 2026-03-14T06:22:00Z

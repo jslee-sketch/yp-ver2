@@ -1,0 +1,7 @@
+Offer created OK: id=1110
+  confirmed_options = [{"name": "\uc0c9\uc0c1", "value": "\ube14\ub799"}]
+  conditions = {"warranty": "1\ub144", "refund": "7\uc77c", "shipping": "\ubb34\ub8cc", "delivery": "1~3\uc77c"}
+  components = 세탁기 본체, 급수/배수호스, 설명서, 보증서
+  product_description = LG 드럼 세탁기 블랙 정품. 에너지 1등급, 무료설치+A/S 1년.
+  product_images = ["https://example.com/washer_black.jpg"]
+  option_agreement = True
