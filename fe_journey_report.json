@@ -1,0 +1,202 @@
+{
+  "report_name": "Frontend E2E Journey Verification Report",
+  "report_date": "2026-03-15",
+  "platform": "Yeokping (역핑) v2",
+  "test_environment": "https://web-production-defb.up.railway.app",
+  "total_tests": 69,
+  "passed": 69,
+  "failed": 0,
+  "pass_rate": "100%",
+  "test_runner": "Playwright",
+  "duration_minutes": 3.0,
+
+  "journey_summary": {
+    "J0_auth_setup": {
+      "tests": 4,
+      "passed": 4,
+      "description": "Admin/Buyer/Seller 로그인, JWT 토큰 발급, RBAC 접근제어 검증",
+      "verified_data": ["admin_id=1", "buyer_id=11", "seller_id=9", "RBAC buyer→admin=403"]
+    },
+    "J1_member_lifecycle": {
+      "tests": 7,
+      "passed": 7,
+      "description": "이메일 중복체크, 닉네임 금지어, 바이어/셀러 프로필 필드, 프론트엔드 로그인/회원가입/마이페이지 렌더링",
+      "verified_data": ["check-email API", "check-nickname API (banned)", "buyers/me fields", "sellers/me fields", "LoginPage", "RegisterPage", "MyPage"]
+    },
+    "J2_deal_lifecycle": {
+      "tests": 20,
+      "passed": 20,
+      "description": "딜 생성→오퍼 생성→예약 생성→결제(order_number 생성)→배송→도착확인. 모든 값이 모든 엔드포인트에서 정합성 유지",
+      "verified_data": {
+        "deal_id": "1680 → /deals/, /deals/{id}, PriceJourneyPage, /v3_6/offers",
+        "offer_id": "1168 → /v3_6/offers, /v3_6/offers?seller_id=, /v3_6/offers?deal_id=",
+        "reservation_id": "1465 → /v3_6/search?buyer_id=, /v3_6/search?seller_id=",
+        "order_number": "YP-20260314-0038 → buyer search, seller search",
+        "shipped_at": "confirmed in buyer search after /v3_6/reservations/{id}/ship",
+        "arrival_confirmed_at": "confirmed after /v3_6/reservations/{id}/arrival-confirm"
+      },
+      "frontend_pages_verified": ["DealsListPage", "PriceJourneyPage (Deal #{id})", "SellerOffersPage", "MyOrdersPage", "SellerShipPage"]
+    },
+    "J3_refund_lifecycle": {
+      "tests": 5,
+      "passed": 5,
+      "description": "두번째 예약 생성→결제→환불 실행→CANCELLED 상태 확인",
+      "verified_data": {
+        "reservation_id": "1466",
+        "order_number": "YP-20260314-0039",
+        "refund_status": "CANCELLED (buyer_cancel)",
+        "refund_visible": "buyer search에서 CANCELLED 상태 확인"
+      }
+    },
+    "J4_dispute_lifecycle": {
+      "tests": 4,
+      "passed": 4,
+      "description": "세번째 예약 생성→결제→배송→분쟁 접수(ROUND1_RESPONSE)",
+      "verified_data": {
+        "reservation_id": "1467",
+        "order_number": "YP-20260314-0040",
+        "dispute_status": "ROUND1_RESPONSE (filed by buyer, category=defective)"
+      }
+    },
+    "J5_settlement_lifecycle": {
+      "tests": 5,
+      "passed": 5,
+      "description": "정산 생성 확인(HOLD), refresh-ready 배치, 판매자/관리자 정산 페이지",
+      "verified_data": {
+        "settlement_status": "HOLD (for reservation 1465)",
+        "refresh_ready": "200 settlements checked, 0 updated",
+        "seller_settlements": "32 settlements for seller 9",
+        "frontend_pages": ["SellerSettlementsPage", "AdminSettlementsPage"]
+      }
+    },
+    "J6_additional_features": {
+      "tests": 19,
+      "passed": 19,
+      "description": "알림, 포인트, 리뷰, 핑퐁이 AI, 관리자, 딜 채팅, 대시보드, 검색, 홈",
+      "verified_data": {
+        "notifications": "buyer 알림 조회",
+        "points": "balance=0, transactions history",
+        "reviews": "seller review summary",
+        "pingpong_ai": "자연어 질문 → 응답 정상 (LLM 연동)",
+        "admin_stats": "관리자 API 접근",
+        "deal_chat": "메시지 전송+조회 (deal_id={dealId})",
+        "frontend_pages": ["NotificationsPage", "PointsPage", "SellerReviewsPage", "AdminDashboardPage", "SellerDashboardPage", "SellerStatsPage", "SearchPage", "HomePage", "AdminDealsPage", "AdminSellersPage"]
+      }
+    },
+    "JF_cross_journey_integrity": {
+      "tests": 5,
+      "passed": 5,
+      "description": "크로스-여정 데이터 정합성: deal_id, offer_id, reservation_id, order_number, seller_id, buyer_id가 모든 엔드포인트에서 일관성 유지",
+      "verified_endpoints": {
+        "deal_id": ["/deals/{id}", "/v3_6/offers?deal_id=", "/v3_6/search"],
+        "offer_id": ["/v3_6/offers/{id}", "/v3_6/search"],
+        "reservation_id": ["/v3_6/search?buyer_id=", "/v3_6/search?seller_id="],
+        "order_number": ["buyer search", "seller search"],
+        "seller_id": ["/v3_6/search?seller_id=", "/reviews/seller/{id}/summary", "/settlements/seller/{id}"],
+        "buyer_id": ["/v3_6/search?buyer_id=", "/buyers/me", "/notifications/buyer/{id}"]
+      }
+    }
+  },
+
+  "value_flow_trace": {
+    "deal_id": {
+      "created_at": "POST /deals/ → id=1680",
+      "flows_to": [
+        "GET /deals/ (list) → found",
+        "GET /deals/{id} (detail) → id, creator_id, status verified",
+        "PriceJourneyPage → Deal #{id} badge displayed",
+        "POST /v3_6/offers (offer.deal_id=1680)",
+        "POST /v3_6/reservations (reservation.deal_id=1680)",
+        "/v3_6/search (reservation results contain deal_id=1680)"
+      ]
+    },
+    "offer_id": {
+      "created_at": "POST /v3_6/offers → id=1168",
+      "flows_to": [
+        "GET /v3_6/offers?deal_id=1680 → found",
+        "GET /v3_6/offers?seller_id=9 → found",
+        "GET /v3_6/offers/{id} → detail verified",
+        "POST /v3_6/reservations (reservation.offer_id=1168)",
+        "/v3_6/search (reservation results contain offer_id=1168)"
+      ]
+    },
+    "reservation_id": {
+      "created_at": "POST /v3_6/reservations → id=1465",
+      "flows_to": [
+        "POST /v3_6/reservations/pay → status=PAID, order_number generated",
+        "/v3_6/search?buyer_id= → found with all fields",
+        "/v3_6/search?seller_id= → found",
+        "POST /v3_6/reservations/{id}/ship → shipped_at set",
+        "POST /v3_6/reservations/{id}/arrival-confirm → arrival_confirmed_at set",
+        "/admin/settlements/ → settlement found with HOLD status"
+      ]
+    },
+    "order_number": {
+      "created_at": "POST /v3_6/reservations/pay → YP-20260314-0038",
+      "flows_to": [
+        "/v3_6/search?buyer_id= → order_number field present",
+        "/v3_6/search?seller_id= → visible to seller",
+        "MyOrdersPage (frontend)"
+      ]
+    }
+  },
+
+  "frontend_pages_tested": [
+    "LoginPage (/login)",
+    "RegisterPage (/register)",
+    "MyPage (/mypage)",
+    "DealsListPage (/deals)",
+    "PriceJourneyPage (/deal/{id})",
+    "SellerOffersPage (/seller/offers)",
+    "MyOrdersPage (/my-orders)",
+    "SellerShipPage (/seller/delivery)",
+    "SellerSettlementsPage (/seller/settlements)",
+    "SellerDashboardPage (/seller)",
+    "SellerStatsPage (/seller/stats)",
+    "SellerReviewsPage (/seller/reviews)",
+    "NotificationsPage (/notifications)",
+    "PointsPage (/points)",
+    "SearchPage (/search)",
+    "HomePage (/)",
+    "AdminDashboardPage (/admin)",
+    "AdminDealsPage (/admin/deals)",
+    "AdminSellersPage (/admin/sellers)",
+    "AdminSettlementsPage (/admin/settlements)"
+  ],
+
+  "api_endpoints_tested": [
+    "POST /auth/login (admin, buyer, seller)",
+    "GET /auth/check-email",
+    "GET /users/check-nickname",
+    "GET /buyers/me",
+    "GET /sellers/me",
+    "GET /health",
+    "POST /deals/",
+    "GET /deals/?page=&size=",
+    "GET /deals/{id}",
+    "POST /v3_6/offers",
+    "GET /v3_6/offers?deal_id=",
+    "GET /v3_6/offers?seller_id=",
+    "GET /v3_6/offers/{id}",
+    "POST /v3_6/reservations",
+    "POST /v3_6/reservations/pay",
+    "GET /v3_6/search?buyer_id=",
+    "GET /v3_6/search?seller_id=",
+    "POST /v3_6/reservations/{id}/ship",
+    "POST /v3_6/reservations/{id}/arrival-confirm",
+    "POST /v3_6/reservations/refund",
+    "POST /v3_6/disputes",
+    "GET /admin/settlements/",
+    "POST /settlements/refresh-ready",
+    "GET /settlements/seller/{id}",
+    "GET /notifications/buyer/{id}",
+    "GET /points/buyer/{id}/balance",
+    "GET /points/buyer/{id}/transactions",
+    "GET /reviews/seller/{id}/summary",
+    "POST /v3_6/pingpong/ask",
+    "GET /admin/stats/counts",
+    "GET /settlements/batches",
+    "POST /deals/{id}/chat/messages",
+    "GET /deals/{id}/chat/messages"
+  ]
+}
