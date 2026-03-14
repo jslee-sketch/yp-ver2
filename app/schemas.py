@@ -1019,6 +1019,15 @@ class ReservationSettlementOut(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
+    ready_at: Optional[datetime] = None
+    approved_at: Optional[datetime] = None
+    scheduled_payout_at: Optional[datetime] = None
+    paid_at: Optional[datetime] = None
+    block_reason: Optional[str] = None
+
+    dispute_opened_at: Optional[datetime] = None
+    dispute_closed_at: Optional[datetime] = None
+
     class Config:
         orm_mode = True  # SQLAlchemy ORM → Pydantic 변환 허용
 
