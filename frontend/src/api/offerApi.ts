@@ -5,7 +5,7 @@ import { FEATURES } from '../config';
 export async function fetchOffersByDeal(dealId: number) {
   if (!FEATURES.USE_API_OFFERS) return null;
   try {
-    const res = await apiClient.get(API.OFFERS.BY_DEAL(dealId));
+    const res = await apiClient.get(API.OFFERS_V36.BY_DEAL(dealId));
     return res.data;
   } catch (err) {
     console.error('오퍼 목록 API 실패, Mock 폴백:', err);
@@ -16,7 +16,7 @@ export async function fetchOffersByDeal(dealId: number) {
 export async function fetchOfferDetail(offerId: number) {
   if (!FEATURES.USE_API_OFFERS) return null;
   try {
-    const res = await apiClient.get(API.OFFERS.DETAIL(offerId));
+    const res = await apiClient.get(API.OFFERS_V36.DETAIL(offerId));
     return res.data;
   } catch (err) {
     console.error('오퍼 상세 API 실패:', err);
@@ -25,6 +25,6 @@ export async function fetchOfferDetail(offerId: number) {
 }
 
 export async function createOffer(offerData: Record<string, unknown>) {
-  const res = await apiClient.post(API.OFFERS.CREATE, offerData);
+  const res = await apiClient.post(API.OFFERS_V36.CREATE, offerData);
   return res.data;
 }

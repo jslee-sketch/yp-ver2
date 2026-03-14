@@ -12,6 +12,7 @@ interface MyOrder {
   id: number;
   deal_id?: number;
   offer_id?: number;
+  order_number?: string;
   product_name: string;
   seller_name?: string;
   price?: number;
@@ -125,6 +126,7 @@ export default function MyOrdersPage() {
               id: r.id as number,
               deal_id: (r.deal_id as number) || (deal?.id as number) || undefined,
               offer_id: (r.offer_id as number) || undefined,
+              order_number: (r.order_number as string) || undefined,
               product_name: String(deal?.product_name ?? offer?.comment ?? `주문 #${r.id}`),
               seller_name: String(seller?.business_name ?? seller?.nickname ?? ''),
               price: (r.amount_goods as number) || undefined,
@@ -299,7 +301,7 @@ export default function MyOrdersPage() {
                       onClick={e => { e.stopPropagation(); if (item.deal_id) navigate(`/deal/${item.deal_id}`); }}
                       style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-blue)', background: 'rgba(0,176,255,0.08)', padding: '1px 6px', borderRadius: 4, cursor: 'pointer', textDecoration: 'underline' }}
                     >
-                      주문번호 {(item as any).order_number || `#${item.id}`}
+                      주문번호 {item.order_number || `#${item.id}`}
                     </span>
                     {item.deal_id && (
                       <span
@@ -453,7 +455,7 @@ export default function MyOrdersPage() {
           <div onClick={() => setRefundTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 3000 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '92%', maxWidth: 400, background: '#1a1a2e', border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px 20px', zIndex: 3001, maxHeight: '80vh', overflowY: 'auto' }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 4 }}>환불 요청</div>
-            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>주문번호 {(refundTarget as any).order_number || `#${refundTarget.id}`} · {refundTarget.product_name}</div>
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>주문번호 {refundTarget.order_number || `#${refundTarget.id}`} · {refundTarget.product_name}</div>
 
             <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 8 }}>처리 유형</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
@@ -533,7 +535,7 @@ export default function MyOrdersPage() {
           <div onClick={() => setDisputeTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 3000 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '92%', maxWidth: 400, background: '#1a1a2e', border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px 20px', zIndex: 3001 }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: '#ff5252', marginBottom: 4 }}>⚠️ 분쟁 신청</div>
-            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>주문번호 {(disputeTarget as any).order_number || `#${disputeTarget.id}`} · {disputeTarget.product_name}</div>
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>주문번호 {disputeTarget.order_number || `#${disputeTarget.id}`} · {disputeTarget.product_name}</div>
 
             <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 8 }}>분쟁 사유</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>

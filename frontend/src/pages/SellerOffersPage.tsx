@@ -52,7 +52,7 @@ export default function SellerOffersPage() {
   const { data: offers, loading, error, refetch } = useApiData<OfferResponse[]>(async () => {
     if (!sellerId) return [];
     try {
-      const res = await apiClient.get(API.OFFERS.LIST, { params: { seller_id: sellerId, limit: 100 } });
+      const res = await apiClient.get(API.OFFERS_V36.LIST, { params: { seller_id: sellerId, limit: 100 } });
       const raw = res.data;
       // API 응답이 배열이 아닐 수 있음 (paginated object 등)
       if (Array.isArray(raw)) return raw as OfferResponse[];
@@ -84,7 +84,7 @@ export default function SellerOffersPage() {
     if (!editTarget) return;
     setEditSaving(true);
     try {
-      await apiClient.patch(API.OFFERS.UPDATE(editTarget.id), {
+      await apiClient.patch(API.OFFERS_V36.UPDATE(editTarget.id), {
         price: Number(editPrice),
         shipping_fee_per_reservation: Number(editShipping),
         delivery_days: editDeliveryDays ? Number(editDeliveryDays) : null,

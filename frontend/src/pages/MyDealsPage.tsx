@@ -60,7 +60,7 @@ export default function MyDealsPage() {
         target_price:      d.target_price ?? d.max_budget ?? 0,
         current_qty:       d.current_qty ?? 0,
         desired_qty:       d.desired_qty ?? 1,
-        offer_count:       0,
+        offer_count:       (d as unknown as Record<string, unknown>).offer_count as number ?? 0,
         status:            d.status as MyCreatedDeal['status'],
         created_at:        d.created_at?.split('T')[0] ?? '',
         deadline_at:       d.deadline_at ?? '',

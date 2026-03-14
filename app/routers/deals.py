@@ -205,9 +205,13 @@ def read_deals(
     items = q.offset(offset).limit(size).all()
     pages = (total + size - 1) // size if total > 0 else 1
 
-    # ORM 객체를 Pydantic으로 직렬화
-    serialized = [schemas.DealOut.model_validate(item) for item in items]
-    return {"items": [i.model_dump() for i in serialized], "total": total, "page": page, "size": size, "pages": pages}
+    # ORM 객체를 Pydantic으로 직렬화 + offer_count 추가
+    result_items = []
+    for item in items:
+        d = schemas.DealOut.model_validate(item).model_dump()
+        d["offer_count"] = len(item.offers) if item.offers else 0
+        result_items.append(d)
+    return {"items": result_items, "total": total, "page": page, "size": size, "pages": pages}
 
 
 # ---------------------------

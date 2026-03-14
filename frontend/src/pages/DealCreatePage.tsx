@@ -1111,7 +1111,7 @@ export default function DealCreatePage() {
     try {
       const dealData = {
         product_name: productNameConfirmed || productName,
-        creator_id: user?.id ?? 1,
+        creator_id: user?.id,
         category: category || null,
         brand: brand || null,
         product_detail: productDetail || null,
