@@ -904,28 +904,10 @@ def get_deal(db: Session, deal_id: int):
     )
     total_qty = (deal.desired_qty or 0) + (total_qty_from_participants or 0)
 
-    # 🔹 옵션/텍스트까지 같이 내려주기
-    return schemas.DealDetail(
-        id=deal.id,
-        product_name=deal.product_name,
-        creator_id=deal.creator_id,
-        desired_qty=deal.desired_qty,
-        target_price=getattr(deal, "target_price", None),
-        max_budget=getattr(deal, "max_budget", None),
-        created_at=deal.created_at,
-        option1_title=getattr(deal, "option1_title", None),
-        option1_value=getattr(deal, "option1_value", None),
-        option2_title=getattr(deal, "option2_title", None),
-        option2_value=getattr(deal, "option2_value", None),
-        option3_title=getattr(deal, "option3_title", None),
-        option3_value=getattr(deal, "option3_value", None),
-        option4_title=getattr(deal, "option4_title", None),
-        option4_value=getattr(deal, "option4_value", None),
-        option5_title=getattr(deal, "option5_title", None),
-        option5_value=getattr(deal, "option5_value", None),
-        free_text=getattr(deal, "free_text", None),
-        current_total_qty=total_qty or 0,
-    )
+    # 🔹 ORM → DealDetail: from_attributes=True 로 모든 필드 자동 매핑
+    detail = schemas.DealDetail.model_validate(deal)
+    detail.current_total_qty = total_qty or 0
+    return detail
 
 
 def get_deals(db: Session, skip: int = 0, limit: int = 10):
@@ -937,29 +919,9 @@ def get_deals(db: Session, skip: int = 0, limit: int = 10):
               .filter(models.DealParticipant.deal_id == d.id)
               .scalar()
         )
-        result.append(
-            schemas.DealDetail(
-                id=d.id,
-                product_name=d.product_name,
-                creator_id=d.creator_id,
-                desired_qty=d.desired_qty,
-                target_price=getattr(d, "target_price", None),
-                max_budget=getattr(d, "max_budget", None),
-                created_at=d.created_at,
-                option1_title=getattr(d, "option1_title", None),
-                option1_value=getattr(d, "option1_value", None),
-                option2_title=getattr(d, "option2_title", None),
-                option2_value=getattr(d, "option2_value", None),
-                option3_title=getattr(d, "option3_title", None),
-                option3_value=getattr(d, "option3_value", None),
-                option4_title=getattr(d, "option4_title", None),
-                option4_value=getattr(d, "option4_value", None),
-                option5_title=getattr(d, "option5_title", None),
-                option5_value=getattr(d, "option5_value", None),
-                free_text=getattr(d, "free_text", None),
-                current_total_qty=total_qty or 0,
-            )
-        )
+        detail = schemas.DealDetail.model_validate(d)
+        detail.current_total_qty = total_qty or 0
+        result.append(detail)
     return result
 
 # =========================================================
