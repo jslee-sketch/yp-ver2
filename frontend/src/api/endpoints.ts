@@ -83,7 +83,7 @@ export const API = {
   // ── 오퍼 (v3.5) ─────────────────────────────────────────────
   OFFERS: {
     LIST:              '/offers/',
-    CREATE:            '/offers/',
+    CREATE:            '/offers',
     DETAIL:            (id: number)       => `/offers/${id}`,
     UPDATE:            (id: number)       => `/offers/${id}`,
     DEACTIVATE:        (id: number)       => `/offers/${id}/deactivate`,

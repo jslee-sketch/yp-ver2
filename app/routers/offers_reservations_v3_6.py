@@ -137,13 +137,17 @@ def api_create_offer(payload: OfferCreate, db: Session = Depends(get_db)):
 @router.get("/offers", response_model=List[OfferOut], summary="오퍼 목록")
 def api_list_offers(
     deal_id: Optional[int] = Query(None, ge=1),
+    seller_id: Optional[int] = Query(None, ge=1),
+    limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
     try:
-        rows = get_offers(db)
+        q = db.query(models.Offer)
         if deal_id is not None:
-            rows = [o for o in rows if o.deal_id == deal_id]
-        return rows
+            q = q.filter(models.Offer.deal_id == deal_id)
+        if seller_id is not None:
+            q = q.filter(models.Offer.seller_id == seller_id)
+        return q.order_by(models.Offer.id.desc()).limit(limit).all()
     except Exception as e:
         _xlate(e)
 
