@@ -82,13 +82,7 @@ def buyer_dashboard(
     buyer_id: int = Path(..., ge=1),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
-    try:
-        return _buyer_dashboard_impl(buyer_id, db)
-    except Exception as e:
-        import traceback
-        tb = traceback.format_exc()
-        print(f"[dashboard/buyer/{buyer_id}] ERROR: {tb}")
-        return {"error": str(e), "traceback": tb, "buyer_id": buyer_id}
+    return _buyer_dashboard_impl(buyer_id, db)
 
 
 def _buyer_dashboard_impl(buyer_id: int, db: Session) -> Dict[str, Any]:
@@ -407,7 +401,7 @@ def _buyer_dashboard_impl(buyer_id: int, db: Session) -> Dict[str, Any]:
             db.query(func.count(UserNotification.id))
             .filter(
                 UserNotification.user_id == buyer_id,
-                func.coalesce(UserNotification.is_read, 0) == 0,
+                func.coalesce(UserNotification.is_read, False) == False,
             )
             .scalar()
             or 0
@@ -883,7 +877,7 @@ def seller_dashboard(
             db.query(func.count(UserNotification.id))
             .filter(
                 UserNotification.user_id == seller_id,
-                func.coalesce(UserNotification.is_read, 0) == 0,
+                func.coalesce(UserNotification.is_read, False) == False,
             )
             .scalar()
             or 0
