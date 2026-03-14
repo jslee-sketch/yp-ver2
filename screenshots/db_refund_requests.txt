@@ -1,0 +1,92 @@
+=== Refund Requests ===
+
+{
+  "reservation_id": 1423,
+  "buyer_id": 1212,
+  "reason_detail": "[시드] 기타 사유 환불",
+  "status": "REQUESTED",
+  "seller_reject_reason": null,
+  "seller_response_deadline": "2026-03-17T02:00:39.221232",
+  "dispute_id": null,
+  "updated_at": "2026-03-14T02:00:39.224458",
+  "id": 13,
+  "reason": "other",
+  "evidence_urls": "[]",
+  "seller_response": null,
+  "seller_response_at": null,
+  "resolution_action_id": null,
+  "created_at": "2026-03-14T02:00:39.224454"
+}
+---
+{
+  "reservation_id": 1424,
+  "buyer_id": 1213,
+  "reason_detail": "[시드] 미배송 환불",
+  "status": "REQUESTED",
+  "seller_reject_reason": null,
+  "seller_response_deadline": "2026-03-17T02:00:37.888333",
+  "dispute_id": null,
+  "updated_at": "2026-03-14T02:00:37.891802",
+  "id": 12,
+  "reason": "not_delivered",
+  "evidence_urls": "[]",
+  "seller_response": null,
+  "seller_response_at": null,
+  "resolution_action_id": null,
+  "created_at": "2026-03-14T02:00:37.891799"
+}
+---
+{
+  "reservation_id": 1425,
+  "buyer_id": 1214,
+  "reason_detail": "[시드] 오배송 환불",
+  "status": "SELLER_APPROVED",
+  "seller_reject_reason": null,
+  "seller_response_deadline": "2026-03-17T02:00:36.551576",
+  "dispute_id": null,
+  "updated_at": "2026-03-14T02:00:57.538610",
+  "id": 11,
+  "reason": "wrong_item",
+  "evidence_urls": "[]",
+  "seller_response": "approve",
+  "seller_response_at": "2026-03-14T02:00:57.538374",
+  "resolution_action_id": null,
+  "created_at": "2026-03-14T02:00:36.554582"
+}
+---
+{
+  "reservation_id": 1426,
+  "buyer_id": 1215,
+  "reason_detail": "[시드] 상품불량 환불",
+  "status": "SELLER_APPROVED",
+  "seller_reject_reason": null,
+  "seller_response_deadline": "2026-03-17T02:00:35.192209",
+  "dispute_id": null,
+  "updated_at": "2026-03-14T02:00:56.079057",
+  "id": 10,
+  "reason": "defective",
+  "evidence_urls": "[]",
+  "seller_response": "approve",
+  "seller_response_at": "2026-03-14T02:00:56.078088",
+  "resolution_action_id": null,
+  "created_at": "2026-03-14T02:00:35.195463"
+}
+---
+{
+  "reservation_id": 1427,
+  "buyer_id": 1216,
+  "reason_detail": "[시드] 단순변심 환불",
+  "status": "SELLER_APPROVED",
+  "seller_reject_reason": null,
+  "seller_response_deadline": "2026-03-17T02:00:33.849905",
+  "dispute_id": null,
+  "updated_at": "2026-03-14T02:00:54.890487",
+  "id": 9,
+  "reason": "buyer_change_mind",
+  "evidence_urls": "[]",
+  "seller_response": "approve",
+  "seller_response_at": "2026-03-14T02:00:54.889625",
+  "resolution_action_id": null,
+  "created_at": "2026-03-14T02:00:33.855316"
+}
+---

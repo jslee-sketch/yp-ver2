@@ -1,0 +1,54 @@
+{
+  "seed_date": "2026-03-14T01:53:54.402079+00:00",
+  "base": "https://web-production-defb.up.railway.app",
+  "results": {
+    "admin/stats/counts": {
+      "status": 200,
+      "count": 13
+    },
+    "disputes": {
+      "status": 200,
+      "count": 259
+    },
+    "refund-requests": {
+      "status": 200,
+      "count": 0
+    },
+    "resolution-actions": {
+      "status": 200,
+      "count": 0
+    },
+    "clawback-records": {
+      "status": 200,
+      "count": 0
+    },
+    "tax-invoices": {
+      "status": 200,
+      "count": 10
+    },
+    "arena-rankings": {
+      "status": 200,
+      "count": 2
+    },
+    "arena-map": {
+      "status": 200,
+      "count": 2
+    },
+    "spectator-monthly": {
+      "status": 200,
+      "count": "?"
+    },
+    "settlements": {
+      "status": 200,
+      "count": 200
+    },
+    "reservations": {
+      "status": 200,
+      "count": 1425
+    },
+    "notifications": {
+      "status": 200,
+      "count": 473
+    }
+  }
+}

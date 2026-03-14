@@ -1,0 +1,59 @@
+=== Disputes (Top 5) ===
+
+{
+  "id": 259,
+  "status": "ROUND1_RESPONSE",
+  "category": "상품파손",
+  "title": "[시드] 포장 훼손으로 상품 파손",
+  "current_round": 1,
+  "initiator_id": 1,
+  "respondent_id": 17,
+  "created_at": "2026-03-14 01:53:12.761467"
+}
+---
+{
+  "id": 258,
+  "status": "ROUND1_RESPONSE",
+  "category": "수량부족",
+  "title": "[시드] 2개 주문했는데 1개만 왔습니다",
+  "current_round": 1,
+  "initiator_id": 1,
+  "respondent_id": 16,
+  "created_at": "2026-03-14 01:53:11.453738"
+}
+---
+{
+  "id": 257,
+  "status": "ROUND1_RESPONSE",
+  "category": "미배송",
+  "title": "[시드] 결제 후 3주째 미배송",
+  "current_round": 1,
+  "initiator_id": 1,
+  "respondent_id": 13,
+  "created_at": "2026-03-14 01:53:10.128544"
+}
+---
+{
+  "id": 256,
+  "status": "ROUND1_RESPONSE",
+  "category": "오배송",
+  "title": "[시드] 주문한 사이즈와 다른 제품 도착",
+  "current_round": 1,
+  "initiator_id": 1,
+  "respondent_id": 12,
+  "created_at": "2026-03-14 01:53:08.816475"
+}
+---
+{
+  "id": 255,
+  "status": "ROUND1_RESPONSE",
+  "category": "품질불량",
+  "title": "[시드] 색상이 상품페이지와 다릅니다",
+  "current_round": 1,
+  "initiator_id": 1,
+  "respondent_id": 11,
+  "created_at": "2026-03-14 01:53:07.537811"
+}
+---
+
+Total: 259

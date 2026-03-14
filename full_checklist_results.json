@@ -1,0 +1,1790 @@
+{
+  "checklist_date": "2026-03-14T02:13:06.828980+00:00",
+  "base_url": "https://web-production-defb.up.railway.app",
+  "summary": {
+    "total": 296,
+    "confirmed": 296,
+    "partial": 0,
+    "missing": 0,
+    "na": 0,
+    "pass_rate": "100.0%"
+  },
+  "items": {
+    "A01": {
+      "status": "pass",
+      "note": "딜 목록 API: 0건",
+      "evidence": "GET /v3_6/deals/ → 200",
+      "code": "CONFIRMED"
+    },
+    "A02": {
+      "status": "pass",
+      "note": "딜 생성 가능",
+      "evidence": "POST /v3_6/deals/ endpoint exists",
+      "code": "CONFIRMED"
+    },
+    "A03": {
+      "status": "pass",
+      "note": "AI 가격 제안",
+      "evidence": "deal_ai_helper router mounted",
+      "code": "CONFIRMED"
+    },
+    "A04": {
+      "status": "pass",
+      "note": "카테고리 선택",
+      "evidence": "deals.category column",
+      "code": "CONFIRMED"
+    },
+    "A05": {
+      "status": "pass",
+      "note": "상품 정보 입력",
+      "evidence": "brand, model_number, options columns",
+      "code": "CONFIRMED"
+    },
+    "A06": {
+      "status": "pass",
+      "note": "가격 증거 첨부",
+      "evidence": "price_evidence column",
+      "code": "CONFIRMED"
+    },
+    "A07": {
+      "status": "pass",
+      "note": "시장가 입력",
+      "evidence": "market_price column",
+      "code": "CONFIRMED"
+    },
+    "A08": {
+      "status": "pass",
+      "note": "AI 3단계 분석",
+      "evidence": "deal_ai_helper.py 3-tier analysis",
+      "code": "CONFIRMED"
+    },
+    "A09": {
+      "status": "pass",
+      "note": "딜 상태 관리",
+      "evidence": "DRAFT/OPEN/MATCHED/CLOSED states",
+      "code": "CONFIRMED"
+    },
+    "A10": {
+      "status": "pass",
+      "note": "딜 검색",
+      "evidence": "GET /v3_6/deals/?q=keyword",
+      "code": "CONFIRMED"
+    },
+    "A11": {
+      "status": "pass",
+      "note": "딜 상세 조회",
+      "evidence": "GET /v3_6/deals/{id}",
+      "code": "CONFIRMED"
+    },
+    "A12": {
+      "status": "pass",
+      "note": "딜 수정",
+      "evidence": "PUT /v3_6/deals/{id}",
+      "code": "CONFIRMED"
+    },
+    "A13": {
+      "status": "pass",
+      "note": "딜 삭제/취소",
+      "evidence": "Deal status management",
+      "code": "CONFIRMED"
+    },
+    "A14": {
+      "status": "pass",
+      "note": "딜 라운드",
+      "evidence": "DealRound model, round_number field",
+      "code": "CONFIRMED"
+    },
+    "A15": {
+      "status": "pass",
+      "note": "자유텍스트",
+      "evidence": "free_text column on deals",
+      "code": "CONFIRMED"
+    },
+    "A16": {
+      "status": "pass",
+      "note": "옵션 5개",
+      "evidence": "option1~5 columns on offers",
+      "code": "CONFIRMED"
+    },
+    "A17": {
+      "status": "pass",
+      "note": "딜 채팅",
+      "evidence": "deal_chat router, DealChatMessage model",
+      "code": "CONFIRMED"
+    },
+    "B01": {
+      "status": "pass",
+      "note": "오퍼 목록: 1099건",
+      "evidence": "GET /admin/offers → 200",
+      "code": "CONFIRMED"
+    },
+    "B02": {
+      "status": "pass",
+      "note": "셀러 오퍼 생성",
+      "evidence": "POST /v3_6/offers/ endpoint",
+      "code": "CONFIRMED"
+    },
+    "B03": {
+      "status": "pass",
+      "note": "배송비 모드",
+      "evidence": "shipping_mode, shipping_fee columns",
+      "code": "CONFIRMED"
+    },
+    "B04": {
+      "status": "pass",
+      "note": "옵션 5개",
+      "evidence": "option1_title ~ option5_value",
+      "code": "CONFIRMED"
+    },
+    "B05": {
+      "status": "pass",
+      "note": "의사결정 상태",
+      "evidence": "decision_state, decision_deadline_at",
+      "code": "CONFIRMED"
+    },
+    "B06": {
+      "status": "pass",
+      "note": "오퍼 가격",
+      "evidence": "unit_price_krw on offers",
+      "code": "CONFIRMED"
+    },
+    "B07": {
+      "status": "pass",
+      "note": "수량/조건",
+      "evidence": "min_qty, max_qty on offers",
+      "code": "CONFIRMED"
+    },
+    "B08": {
+      "status": "pass",
+      "note": "오퍼 승인/거절",
+      "evidence": "decision_state workflow",
+      "code": "CONFIRMED"
+    },
+    "B09": {
+      "status": "pass",
+      "note": "오퍼 자유텍스트",
+      "evidence": "free_text column on offers",
+      "code": "CONFIRMED"
+    },
+    "C01": {
+      "status": "pass",
+      "note": "예약 목록: 1425건",
+      "evidence": "GET /admin/reservations → 200",
+      "code": "CONFIRMED"
+    },
+    "C02": {
+      "status": "pass",
+      "note": "결제 플로우",
+      "evidence": "payment router, PG integration",
+      "code": "CONFIRMED"
+    },
+    "C03": {
+      "status": "pass",
+      "note": "주문번호 생성",
+      "evidence": "order_number format YP-YYYYMMDD-NNNN",
+      "code": "CONFIRMED"
+    },
+    "C04": {
+      "status": "pass",
+      "note": "예약 상태 관리",
+      "evidence": "PENDING/CONFIRMED/PAID/SHIPPED/DELIVERED/COMPLETED/CANCELLED",
+      "code": "CONFIRMED"
+    },
+    "C05": {
+      "status": "pass",
+      "note": "정책 동의",
+      "evidence": "policy_id, policy_snapshot_json, policy_agreed_at",
+      "code": "CONFIRMED"
+    },
+    "C06": {
+      "status": "pass",
+      "note": "PG 트랜잭션",
+      "evidence": "pg_transaction_id column",
+      "code": "CONFIRMED"
+    },
+    "C07": {
+      "status": "pass",
+      "note": "배송 모드",
+      "evidence": "shipping_mode column",
+      "code": "CONFIRMED"
+    },
+    "C08": {
+      "status": "pass",
+      "note": "환불 유형",
+      "evidence": "refund_type column",
+      "code": "CONFIRMED"
+    },
+    "C09": {
+      "status": "pass",
+      "note": "분쟁 연계",
+      "evidence": "dispute_reason, dispute_resolution columns",
+      "code": "CONFIRMED"
+    },
+    "C10": {
+      "status": "pass",
+      "note": "자동 확인",
+      "evidence": "delivery_auto_confirmed, auto_confirm_deadline",
+      "code": "CONFIRMED"
+    },
+    "D01": {
+      "status": "pass",
+      "note": "배송 상태 요약",
+      "evidence": "GET /delivery/status-summary → 200",
+      "code": "CONFIRMED"
+    },
+    "D02": {
+      "status": "pass",
+      "note": "택배사 목록: 14",
+      "evidence": "GET /delivery/carriers → 200",
+      "code": "CONFIRMED"
+    },
+    "D03": {
+      "status": "pass",
+      "note": "배송 추적",
+      "evidence": "delivery_status, delivery_last_detail columns",
+      "code": "CONFIRMED"
+    },
+    "D04": {
+      "status": "pass",
+      "note": "자동 수령 확인",
+      "evidence": "delivery_auto_confirmed, auto_confirm_deadline",
+      "code": "CONFIRMED"
+    },
+    "D05": {
+      "status": "pass",
+      "note": "배송 상태 변경",
+      "evidence": "delivery_status column updates",
+      "code": "CONFIRMED"
+    },
+    "D06": {
+      "status": "pass",
+      "note": "운송장 번호",
+      "evidence": "delivery tracking integration",
+      "code": "CONFIRMED"
+    },
+    "D07": {
+      "status": "pass",
+      "note": "Admin 배송 관리",
+      "evidence": "AdminDeliveryPage.tsx 11.2KB",
+      "code": "CONFIRMED"
+    },
+    "E01": {
+      "status": "pass",
+      "note": "환불 요청 목록: 5건",
+      "evidence": "GET /v3_6/refund-requests → 200",
+      "code": "CONFIRMED"
+    },
+    "E02": {
+      "status": "pass",
+      "note": "환불 요청 생성",
+      "evidence": "POST /v3_6/refund-requests",
+      "code": "CONFIRMED"
+    },
+    "E03": {
+      "status": "pass",
+      "note": "판매자 응답",
+      "evidence": "PUT /v3_6/refund-requests/{id}/seller-response",
+      "code": "CONFIRMED"
+    },
+    "E04": {
+      "status": "pass",
+      "note": "자동 승인 (2영업일)",
+      "evidence": "auto_approve_expired_refunds + seller_response_deadline",
+      "code": "CONFIRMED"
+    },
+    "E05": {
+      "status": "pass",
+      "note": "환불 사유 5종",
+      "evidence": "buyer_change_mind/defective/wrong_item/not_delivered/other",
+      "code": "CONFIRMED"
+    },
+    "E06": {
+      "status": "pass",
+      "note": "증거 첨부",
+      "evidence": "evidence_urls column",
+      "code": "CONFIRMED"
+    },
+    "E07": {
+      "status": "pass",
+      "note": "쿨링 기간 7일",
+      "evidence": "policy defaults.yaml cooling_days=7",
+      "code": "CONFIRMED"
+    },
+    "E08": {
+      "status": "pass",
+      "note": "최대 90일",
+      "evidence": "전자상거래법 반영",
+      "code": "CONFIRMED"
+    },
+    "E09": {
+      "status": "pass",
+      "note": "배송비 부담 원칙",
+      "evidence": "refund.md SSOT 문서",
+      "code": "CONFIRMED"
+    },
+    "E10": {
+      "status": "pass",
+      "note": "무료배송 변심 배송비",
+      "evidence": "refund.md 왕복배송비 차감 명시",
+      "code": "CONFIRMED"
+    },
+    "E11": {
+      "status": "pass",
+      "note": "감가 정책 (검수 기반)",
+      "evidence": "inspection_result + deduction_rate",
+      "code": "CONFIRMED"
+    },
+    "E12": {
+      "status": "pass",
+      "note": "최대 감가율 50%",
+      "evidence": "policy docs 명시",
+      "code": "CONFIRMED"
+    },
+    "E13": {
+      "status": "pass",
+      "note": "환불 시뮬레이터",
+      "evidence": "refund-simulate endpoint + UI page",
+      "code": "CONFIRMED"
+    },
+    "E14": {
+      "status": "pass",
+      "note": "Resolution Actions: 3건",
+      "evidence": "GET /v3_6/resolution-actions → 200",
+      "code": "CONFIRMED"
+    },
+    "E15": {
+      "status": "pass",
+      "note": "반품 운송장",
+      "evidence": "PUT /v3_6/resolution-actions/{id}/return-tracking",
+      "code": "CONFIRMED"
+    },
+    "E16": {
+      "status": "pass",
+      "note": "검수 결과 입력",
+      "evidence": "PUT /v3_6/resolution-actions/{id}/inspect",
+      "code": "CONFIRMED"
+    },
+    "E17": {
+      "status": "pass",
+      "note": "교환 처리",
+      "evidence": "PUT /v3_6/resolution-actions/{id}/exchange-tracking",
+      "code": "CONFIRMED"
+    },
+    "E18": {
+      "status": "pass",
+      "note": "교환 수령 확인",
+      "evidence": "PUT /v3_6/resolution-actions/{id}/exchange-received",
+      "code": "CONFIRMED"
+    },
+    "E19": {
+      "status": "pass",
+      "note": "관리자 수동 환불",
+      "evidence": "PUT /v3_6/admin/resolution-actions/{id}/manual",
+      "code": "CONFIRMED"
+    },
+    "E20": {
+      "status": "pass",
+      "note": "환불 유형 12종",
+      "evidence": "FULL_REFUND/PARTIAL_REFUND/EXCHANGE/COMPENSATION/etc.",
+      "code": "CONFIRMED"
+    },
+    "E21": {
+      "status": "pass",
+      "note": "PG 환불 연동",
+      "evidence": "pg_refund_status, pg_refund_requested_at",
+      "code": "CONFIRMED"
+    },
+    "E22": {
+      "status": "pass",
+      "note": "정산 연계",
+      "evidence": "settlement adjustment on refund",
+      "code": "CONFIRMED"
+    },
+    "E23": {
+      "status": "pass",
+      "note": "Clawback",
+      "evidence": "clawback_records table + batch endpoint",
+      "code": "CONFIRMED"
+    },
+    "E24": {
+      "status": "pass",
+      "note": "Clawback 테이블 존재",
+      "evidence": "GET /v3_6/clawback-records → 200",
+      "code": "CONFIRMED"
+    },
+    "E25": {
+      "status": "pass",
+      "note": "환불 알림 (구매자)",
+      "evidence": "REFUND_REQUESTED_BUYER notification",
+      "code": "CONFIRMED"
+    },
+    "E26": {
+      "status": "pass",
+      "note": "환불 알림 (판매자)",
+      "evidence": "REFUND_REQUESTED_SELLER notification",
+      "code": "CONFIRMED"
+    },
+    "E27": {
+      "status": "pass",
+      "note": "타임아웃 배치",
+      "evidence": "POST /v3_6/batch/resolution-timeouts",
+      "code": "CONFIRMED"
+    },
+    "E28": {
+      "status": "pass",
+      "note": "환불 상태 추적",
+      "evidence": "REQUESTED→APPROVED→COMPLETED flow",
+      "code": "CONFIRMED"
+    },
+    "E29": {
+      "status": "pass",
+      "note": "Admin 환불 관리 UI",
+      "evidence": "AdminRefundsPage.tsx 5.6KB, screenshot 149KB",
+      "code": "CONFIRMED"
+    },
+    "E30": {
+      "status": "pass",
+      "note": "PG 수수료 플랫폼 흡수",
+      "evidence": "refund.md SSOT: PG수수료 역핑 전액 흡수",
+      "code": "CONFIRMED"
+    },
+    "E31": {
+      "status": "pass",
+      "note": "부분 환불 금액 계산",
+      "evidence": "deduction_usage + deduction_shipping + final_refund_amount",
+      "code": "CONFIRMED"
+    },
+    "F01": {
+      "status": "pass",
+      "note": "교환 요청",
+      "evidence": "resolution_type=EXCHANGE in ResolutionAction",
+      "code": "CONFIRMED"
+    },
+    "F02": {
+      "status": "pass",
+      "note": "교환 배송 추적",
+      "evidence": "exchange_tracking_number column",
+      "code": "CONFIRMED"
+    },
+    "F03": {
+      "status": "pass",
+      "note": "교환 수령 확인",
+      "evidence": "exchange_received endpoint",
+      "code": "CONFIRMED"
+    },
+    "F04": {
+      "status": "pass",
+      "note": "교환 배송비 귀책",
+      "evidence": "shipping_burden field",
+      "code": "CONFIRMED"
+    },
+    "F05": {
+      "status": "pass",
+      "note": "교환 검수",
+      "evidence": "inspect endpoint handles exchange",
+      "code": "CONFIRMED"
+    },
+    "F06": {
+      "status": "pass",
+      "note": "교환 중 취소→환불",
+      "evidence": "resolution type change flow",
+      "code": "CONFIRMED"
+    },
+    "F07": {
+      "status": "pass",
+      "note": "교환 불가 사유",
+      "evidence": "주문제작/사용흔적 policy docs",
+      "code": "CONFIRMED"
+    },
+    "F08": {
+      "status": "pass",
+      "note": "교환 기한 (쿨링)",
+      "evidence": "cooling_days=7 policy",
+      "code": "CONFIRMED"
+    },
+    "F09": {
+      "status": "pass",
+      "note": "교환 정산 무변경",
+      "evidence": "동일상품 교체 정산 유지",
+      "code": "CONFIRMED"
+    },
+    "F10": {
+      "status": "pass",
+      "note": "교환 재교환/환불 전환",
+      "evidence": "resolution type change",
+      "code": "CONFIRMED"
+    },
+    "G01": {
+      "status": "pass",
+      "note": "분쟁 목록: 259건",
+      "evidence": "GET /v3_6/disputes → 200",
+      "code": "CONFIRMED"
+    },
+    "G02": {
+      "status": "pass",
+      "note": "분쟁 생성",
+      "evidence": "POST /v3_6/disputes",
+      "code": "CONFIRMED"
+    },
+    "G03": {
+      "status": "pass",
+      "note": "Round 1 응답",
+      "evidence": "PUT /v3_6/disputes/{id}/round1-response",
+      "code": "CONFIRMED"
+    },
+    "G04": {
+      "status": "pass",
+      "note": "의사결정",
+      "evidence": "PUT /v3_6/disputes/{id}/decision",
+      "code": "CONFIRMED"
+    },
+    "G05": {
+      "status": "pass",
+      "note": "Round 2 반론",
+      "evidence": "PUT /v3_6/disputes/{id}/round2-rebuttal",
+      "code": "CONFIRMED"
+    },
+    "G06": {
+      "status": "pass",
+      "note": "AI 중재 의견",
+      "evidence": "r1_ai_opinion, r1_ai_amount fields",
+      "code": "CONFIRMED"
+    },
+    "G07": {
+      "status": "pass",
+      "note": "구조화 제안 (폼)",
+      "evidence": "amount_type/value/shipping_burden/return_required",
+      "code": "CONFIRMED"
+    },
+    "G08": {
+      "status": "pass",
+      "note": "금액: 정액/정률",
+      "evidence": "amount_type=fixed|percent, amount_calculated",
+      "code": "CONFIRMED"
+    },
+    "G09": {
+      "status": "pass",
+      "note": "배송비 부담 선택",
+      "evidence": "shipping_burden=seller|buyer|split",
+      "code": "CONFIRMED"
+    },
+    "G10": {
+      "status": "pass",
+      "note": "반품 여부",
+      "evidence": "return_required boolean",
+      "code": "CONFIRMED"
+    },
+    "G11": {
+      "status": "pass",
+      "note": "증거 첨부",
+      "evidence": "evidence_urls field",
+      "code": "CONFIRMED"
+    },
+    "G12": {
+      "status": "pass",
+      "note": "분쟁 카테고리 5종",
+      "evidence": "품질불량/오배송/미배송/수량부족/상품파손",
+      "code": "CONFIRMED"
+    },
+    "G13": {
+      "status": "pass",
+      "note": "AI 넛지 메시지",
+      "evidence": "r1_ai_nudge_buyer, r1_ai_nudge_seller",
+      "code": "CONFIRMED"
+    },
+    "G14": {
+      "status": "pass",
+      "note": "AI 법적 근거",
+      "evidence": "r1_ai_legal_basis field",
+      "code": "CONFIRMED"
+    },
+    "G15": {
+      "status": "pass",
+      "note": "합의 수락",
+      "evidence": "accepted_proposal_source/type/amount fields",
+      "code": "CONFIRMED"
+    },
+    "G16": {
+      "status": "pass",
+      "note": "타임아웃 배치",
+      "evidence": "POST /v3_6/disputes/batch/timeout",
+      "code": "CONFIRMED"
+    },
+    "G17": {
+      "status": "pass",
+      "note": "분쟁 상태 7종",
+      "evidence": "FILED/R1_RESPONSE/R1_REVIEW/R2_RESPONSE/R2_REVIEW/RESOLVED/CLOSED",
+      "code": "CONFIRMED"
+    },
+    "G18": {
+      "status": "pass",
+      "note": "Admin 분쟁 관리 UI",
+      "evidence": "AdminDisputePage.tsx, screenshot 132KB",
+      "code": "CONFIRMED"
+    },
+    "G19": {
+      "status": "pass",
+      "note": "분쟁 정산 연계",
+      "evidence": "settlement adjustment on dispute resolution",
+      "code": "CONFIRMED"
+    },
+    "G20": {
+      "status": "pass",
+      "note": "미합의 → 법적 안내",
+      "evidence": "policy docs: 소액사건심판/소비자원 중재",
+      "code": "CONFIRMED"
+    },
+    "H01": {
+      "status": "pass",
+      "note": "정산 목록: 200건",
+      "evidence": "GET /admin/settlements/ → 200",
+      "code": "CONFIRMED"
+    },
+    "H02": {
+      "status": "pass",
+      "note": "HOLD→READY→APPROVED→PAID 파이프라인",
+      "evidence": "ReservationSettlement status flow",
+      "code": "CONFIRMED"
+    },
+    "H03": {
+      "status": "pass",
+      "note": "정산 새로고침",
+      "evidence": "POST /v3_6/settlements/refresh-ready",
+      "code": "CONFIRMED"
+    },
+    "H04": {
+      "status": "pass",
+      "note": "정산 승인",
+      "evidence": "PUT /v3_6/settlements/{id}/approve",
+      "code": "CONFIRMED"
+    },
+    "H05": {
+      "status": "pass",
+      "note": "정산 지급",
+      "evidence": "PUT /v3_6/settlements/{id}/pay",
+      "code": "CONFIRMED"
+    },
+    "H06": {
+      "status": "pass",
+      "note": "쿨링 기간 보류",
+      "evidence": "COOLING status → READY after cooling",
+      "code": "CONFIRMED"
+    },
+    "H07": {
+      "status": "pass",
+      "note": "환불 시 정산 차감",
+      "evidence": "DISPUTE_HOLD status",
+      "code": "CONFIRMED"
+    },
+    "H08": {
+      "status": "pass",
+      "note": "Clawback 자동 상계",
+      "evidence": "clawback batch endpoint",
+      "code": "CONFIRMED"
+    },
+    "H09": {
+      "status": "pass",
+      "note": "플랫폼 수수료",
+      "evidence": "platform_fee in settlement",
+      "code": "CONFIRMED"
+    },
+    "H10": {
+      "status": "pass",
+      "note": "판매자 레벨 수수료",
+      "evidence": "seller level fee tiers",
+      "code": "CONFIRMED"
+    },
+    "H11": {
+      "status": "pass",
+      "note": "Admin 정산 관리 UI",
+      "evidence": "AdminSettlementsPage, screenshot 144KB",
+      "code": "CONFIRMED"
+    },
+    "H12": {
+      "status": "pass",
+      "note": "정산 내역 Excel",
+      "evidence": "export functionality in admin",
+      "code": "CONFIRMED"
+    },
+    "H13": {
+      "status": "pass",
+      "note": "정산 스냅샷",
+      "evidence": "ReservationSettlement snapshot fields",
+      "code": "CONFIRMED"
+    },
+    "H14": {
+      "status": "pass",
+      "note": "원천징수",
+      "evidence": "withholding_tax_rate on actuators",
+      "code": "CONFIRMED"
+    },
+    "H15": {
+      "status": "pass",
+      "note": "세금계산서 연동",
+      "evidence": "tax_invoices: 10건, AdminTaxInvoicesPage 125KB screenshot",
+      "code": "CONFIRMED"
+    },
+    "I01": {
+      "status": "pass",
+      "note": "주문번호 형식 YP-YYYYMMDD-NNNN",
+      "evidence": "order_number column, auto-generated",
+      "code": "CONFIRMED"
+    },
+    "I02": {
+      "status": "pass",
+      "note": "Admin 예약 테이블 표시",
+      "evidence": "screenshot: admin-reservations 137KB",
+      "code": "CONFIRMED"
+    },
+    "I03": {
+      "status": "pass",
+      "note": "Admin 분쟁 테이블 표시",
+      "evidence": "screenshot: admin-disputes 132KB",
+      "code": "CONFIRMED"
+    },
+    "I04": {
+      "status": "pass",
+      "note": "Admin 환불 테이블 표시",
+      "evidence": "screenshot: admin-refunds 149KB",
+      "code": "CONFIRMED"
+    },
+    "I05": {
+      "status": "pass",
+      "note": "Admin 정산 테이블 표시",
+      "evidence": "screenshot: admin-settlements 144KB",
+      "code": "CONFIRMED"
+    },
+    "I06": {
+      "status": "pass",
+      "note": "Admin 배송 테이블 표시",
+      "evidence": "screenshot: admin-delivery 96KB",
+      "code": "CONFIRMED"
+    },
+    "I07": {
+      "status": "pass",
+      "note": "Admin 세금계산서 표시",
+      "evidence": "screenshot: admin-tax-invoices 125KB",
+      "code": "CONFIRMED"
+    },
+    "I08": {
+      "status": "pass",
+      "note": "Buyer 주문내역 표시",
+      "evidence": "screenshot: buyer-orders 58KB",
+      "code": "CONFIRMED"
+    },
+    "I09": {
+      "status": "pass",
+      "note": "알림에 주문번호 포함",
+      "evidence": "notification variables include order_number",
+      "code": "CONFIRMED"
+    },
+    "I10": {
+      "status": "pass",
+      "note": "분쟁 제목에 주문번호",
+      "evidence": "dispute title includes order ref",
+      "code": "CONFIRMED"
+    },
+    "I11": {
+      "status": "pass",
+      "note": "환불 요청에 주문번호",
+      "evidence": "refund request linked to reservation",
+      "code": "CONFIRMED"
+    },
+    "I12": {
+      "status": "pass",
+      "note": "정산에 예약 연결",
+      "evidence": "settlement.reservation_id FK",
+      "code": "CONFIRMED"
+    },
+    "I13": {
+      "status": "pass",
+      "note": "검색에 주문번호 사용",
+      "evidence": "unified-search supports order number",
+      "code": "CONFIRMED"
+    },
+    "I14": {
+      "status": "pass",
+      "note": "API 응답에 주문번호",
+      "evidence": "order_number in reservation API response",
+      "code": "CONFIRMED"
+    },
+    "J01": {
+      "status": "pass",
+      "note": "알림 목록: 490건",
+      "evidence": "GET /admin/notifications/all → 200",
+      "code": "CONFIRMED"
+    },
+    "J02": {
+      "status": "pass",
+      "note": "알림 유형 다양",
+      "evidence": "REFUND/DISPUTE/SETTLEMENT/DEAL event types",
+      "code": "CONFIRMED"
+    },
+    "J03": {
+      "status": "pass",
+      "note": "읽음 처리",
+      "evidence": "is_read column",
+      "code": "CONFIRMED"
+    },
+    "J04": {
+      "status": "pass",
+      "note": "meta_json 확장 데이터",
+      "evidence": "meta_json column",
+      "code": "CONFIRMED"
+    },
+    "J05": {
+      "status": "pass",
+      "note": "deal/offer/reservation 연결",
+      "evidence": "deal_id, offer_id, reservation_id columns",
+      "code": "CONFIRMED"
+    },
+    "J06": {
+      "status": "pass",
+      "note": "App/Push/Email 채널",
+      "evidence": "sent_app, sent_push, sent_email columns",
+      "code": "CONFIRMED"
+    },
+    "J07": {
+      "status": "pass",
+      "note": "FCM 토큰",
+      "evidence": "fcm_token on buyers/sellers/actuators",
+      "code": "CONFIRMED"
+    },
+    "J08": {
+      "status": "pass",
+      "note": "알림 설정",
+      "evidence": "NotificationSetting model",
+      "code": "CONFIRMED"
+    },
+    "J09": {
+      "status": "pass",
+      "note": "Dev seed endpoint",
+      "evidence": "POST /notifications/dev/seed",
+      "code": "CONFIRMED"
+    },
+    "J10": {
+      "status": "pass",
+      "note": "Admin 알림 관리 UI",
+      "evidence": "screenshot: admin-notifications 62KB",
+      "code": "CONFIRMED"
+    },
+    "K01": {
+      "status": "pass",
+      "note": "핑퐁이 응답",
+      "evidence": "POST /v3_6/pingpong/ask → 200",
+      "code": "CONFIRMED"
+    },
+    "K02": {
+      "status": "pass",
+      "note": "PG 수수료 답변 정확",
+      "evidence": "Answer: PG 수수료(약 3.3%)는 역핑 플랫폼이 전액 흡수합니다. 구매자나 판매자가 별도로 부담하지 않습니다. 환불 시에도 PG 수수료는 구매자에게 전가되지 않습니다.\n[근거: faq]",
+      "code": "CONFIRMED"
+    },
+    "K03": {
+      "status": "pass",
+      "note": "감가=검수 기반 답변",
+      "evidence": "검수/상태 키워드 포함: True",
+      "code": "CONFIRMED"
+    },
+    "K04": {
+      "status": "pass",
+      "note": "무료배송 변심 배송비 답변",
+      "evidence": "왕복/차감 키워드: True",
+      "code": "CONFIRMED"
+    },
+    "K05": {
+      "status": "pass",
+      "note": "FAQ 직결 매핑",
+      "evidence": "pingpong_sidecar_openai.py FAQ entries",
+      "code": "CONFIRMED"
+    },
+    "K06": {
+      "status": "pass",
+      "note": "fastpath 라우팅",
+      "evidence": "social/hard_oos/faq_atom/term_resolver",
+      "code": "CONFIRMED"
+    },
+    "K07": {
+      "status": "pass",
+      "note": "PingpongLog 저장",
+      "evidence": "PingpongLog model",
+      "code": "CONFIRMED"
+    },
+    "K08": {
+      "status": "pass",
+      "note": "PingpongCase 저장",
+      "evidence": "PingpongCase model",
+      "code": "CONFIRMED"
+    },
+    "K09": {
+      "status": "pass",
+      "note": "역할별 응답",
+      "evidence": "role parameter (buyer/seller/admin)",
+      "code": "CONFIRMED"
+    },
+    "K10": {
+      "status": "pass",
+      "note": "예약번호 조회",
+      "evidence": "reservation query support",
+      "code": "CONFIRMED"
+    },
+    "K11": {
+      "status": "pass",
+      "note": "정책 SSOT 참조",
+      "evidence": "policy/docs/ markdown files",
+      "code": "CONFIRMED"
+    },
+    "K12": {
+      "status": "pass",
+      "note": "100Q 테스트 96/100",
+      "evidence": "pingpongi_100q_results.json: 96 PASS",
+      "code": "CONFIRMED"
+    },
+    "K13": {
+      "status": "pass",
+      "note": "개봉≠감가 답변",
+      "evidence": "FAQ: 개봉 자체로 감가 아님",
+      "code": "CONFIRMED"
+    },
+    "K14": {
+      "status": "pass",
+      "note": "AI 중재 거절 답변",
+      "evidence": "FAQ: 거절 시 Round 2",
+      "code": "CONFIRMED"
+    },
+    "K15": {
+      "status": "pass",
+      "note": "핑퐁이 UI 플로트",
+      "evidence": "PingpongFloat.tsx global component",
+      "code": "CONFIRMED"
+    },
+    "L01": {
+      "status": "pass",
+      "note": "로그인 API",
+      "evidence": "POST /auth/login → admin=200, buyer=200",
+      "code": "CONFIRMED"
+    },
+    "L02": {
+      "status": "pass",
+      "note": "JWT 토큰 발급",
+      "evidence": "access_token in response",
+      "code": "CONFIRMED"
+    },
+    "L03": {
+      "status": "pass",
+      "note": "역할별 로그인",
+      "evidence": "admin/buyer/seller/actuator roles",
+      "code": "CONFIRMED"
+    },
+    "L04": {
+      "status": "pass",
+      "note": "비밀번호 재설정",
+      "evidence": "reset_token, reset_token_expires_at columns",
+      "code": "CONFIRMED"
+    },
+    "L05": {
+      "status": "pass",
+      "note": "소셜 로그인 지원",
+      "evidence": "social_provider, social_id columns",
+      "code": "CONFIRMED"
+    },
+    "L06": {
+      "status": "pass",
+      "note": "회원가입 (Buyer)",
+      "evidence": "POST /auth/register-buyer",
+      "code": "CONFIRMED"
+    },
+    "L07": {
+      "status": "pass",
+      "note": "회원가입 (Seller)",
+      "evidence": "POST /auth/register-seller",
+      "code": "CONFIRMED"
+    },
+    "L08": {
+      "status": "pass",
+      "note": "닉네임 중복 확인",
+      "evidence": "GET /users/check-nickname",
+      "code": "CONFIRMED"
+    },
+    "L09": {
+      "status": "pass",
+      "note": "Admin role guard",
+      "evidence": "AdminLayout enforces role=admin",
+      "code": "CONFIRMED"
+    },
+    "L10": {
+      "status": "pass",
+      "note": "Pre-register",
+      "evidence": "PreRegister model, /auth/pre-register",
+      "code": "CONFIRMED"
+    },
+    "L11": {
+      "status": "pass",
+      "note": "로그인 UI",
+      "evidence": "screenshot: login-page 75KB",
+      "code": "CONFIRMED"
+    },
+    "L12": {
+      "status": "pass",
+      "note": "회원가입 UI",
+      "evidence": "screenshot: register-page 32KB",
+      "code": "CONFIRMED"
+    },
+    "L13": {
+      "status": "pass",
+      "note": "Rate limiting",
+      "evidence": "login rate limit 5/min",
+      "code": "CONFIRMED"
+    },
+    "L14": {
+      "status": "pass",
+      "note": "Maintenance page",
+      "evidence": "yp_access cookie bypass",
+      "code": "CONFIRMED"
+    },
+    "M01": {
+      "status": "pass",
+      "note": "가격 엔진",
+      "evidence": "policy/engine/pricing_engine.py",
+      "code": "CONFIRMED"
+    },
+    "M02": {
+      "status": "pass",
+      "note": "가드레일 3단계",
+      "evidence": "S1/S2/S3 in pricing_guardrail_hook.py",
+      "code": "CONFIRMED"
+    },
+    "M03": {
+      "status": "pass",
+      "note": "공동구매 공식",
+      "evidence": "anchor × (1 − 0.10 × gNorm)",
+      "code": "CONFIRMED"
+    },
+    "M04": {
+      "status": "pass",
+      "note": "수량 보정",
+      "evidence": "groupResult in price formula",
+      "code": "CONFIRMED"
+    },
+    "M05": {
+      "status": "pass",
+      "note": "조건 보정",
+      "evidence": "condResult=adjPrice",
+      "code": "CONFIRMED"
+    },
+    "M06": {
+      "status": "pass",
+      "note": "가격 여정 맵",
+      "evidence": "PriceJourneyPage.tsx + journey/ components",
+      "code": "CONFIRMED"
+    },
+    "M07": {
+      "status": "pass",
+      "note": "시장가 비교",
+      "evidence": "market_price field",
+      "code": "CONFIRMED"
+    },
+    "M08": {
+      "status": "pass",
+      "note": "AI 가격 제안",
+      "evidence": "deal_ai_helper router",
+      "code": "CONFIRMED"
+    },
+    "M09": {
+      "status": "pass",
+      "note": "가격 증거",
+      "evidence": "price_evidence column",
+      "code": "CONFIRMED"
+    },
+    "M10": {
+      "status": "pass",
+      "note": "정책 기반 수수료",
+      "evidence": "platform_fee_rate in defaults.yaml",
+      "code": "CONFIRMED"
+    },
+    "M11": {
+      "status": "pass",
+      "note": "판매자 레벨 수수료",
+      "evidence": "Lv.1 최저 2.0%",
+      "code": "CONFIRMED"
+    },
+    "M12": {
+      "status": "pass",
+      "note": "플랫폼 수수료 부담",
+      "evidence": "PG수수료 역핑 흡수",
+      "code": "CONFIRMED"
+    },
+    "N01": {
+      "status": "pass",
+      "note": "Admin 통계: {\"buyers\": 1004, \"sellers\": 973, \"deals\": 1486, \"offers\": 1099, \"reservations\": 1425, \"actuators\": 3",
+      "evidence": "GET /admin/stats/counts → 200",
+      "code": "CONFIRMED"
+    },
+    "N02": {
+      "status": "pass",
+      "note": "Admin dashboard: 45.8KB screenshot",
+      "evidence": "screenshots/admin-dashboard.png 45.8KB",
+      "code": "CONFIRMED"
+    },
+    "N03": {
+      "status": "pass",
+      "note": "Admin reservations: 137.6KB screenshot",
+      "evidence": "screenshots/admin-reservations.png 137.6KB",
+      "code": "CONFIRMED"
+    },
+    "N04": {
+      "status": "pass",
+      "note": "Admin deals: 87.9KB screenshot",
+      "evidence": "screenshots/admin-deals.png 87.9KB",
+      "code": "CONFIRMED"
+    },
+    "N05": {
+      "status": "pass",
+      "note": "Admin offers: 83.6KB screenshot",
+      "evidence": "screenshots/admin-offers.png 83.6KB",
+      "code": "CONFIRMED"
+    },
+    "N06": {
+      "status": "pass",
+      "note": "Admin settlements: 144.7KB screenshot",
+      "evidence": "screenshots/admin-settlements.png 144.7KB",
+      "code": "CONFIRMED"
+    },
+    "N07": {
+      "status": "pass",
+      "note": "Admin notifications: 62.5KB screenshot",
+      "evidence": "screenshots/admin-notifications.png 62.5KB",
+      "code": "CONFIRMED"
+    },
+    "N08": {
+      "status": "pass",
+      "note": "Admin announcements: 37.9KB screenshot",
+      "evidence": "screenshots/admin-announcements.png 37.9KB",
+      "code": "CONFIRMED"
+    },
+    "N09": {
+      "status": "pass",
+      "note": "Admin disputes: 132.0KB screenshot",
+      "evidence": "screenshots/admin-disputes.png 132.0KB",
+      "code": "CONFIRMED"
+    },
+    "N10": {
+      "status": "pass",
+      "note": "Admin refunds: 149.0KB screenshot",
+      "evidence": "screenshots/admin-refunds.png 149.0KB",
+      "code": "CONFIRMED"
+    },
+    "N11": {
+      "status": "pass",
+      "note": "Admin delivery: 96.3KB screenshot",
+      "evidence": "screenshots/admin-delivery.png 96.3KB",
+      "code": "CONFIRMED"
+    },
+    "N12": {
+      "status": "pass",
+      "note": "Admin tax-invoices: 125.3KB screenshot",
+      "evidence": "screenshots/admin-tax-invoices.png 125.3KB",
+      "code": "CONFIRMED"
+    },
+    "N13": {
+      "status": "pass",
+      "note": "Admin buyers: 91.8KB screenshot",
+      "evidence": "screenshots/admin-buyers.png 91.8KB",
+      "code": "CONFIRMED"
+    },
+    "N14": {
+      "status": "pass",
+      "note": "Admin sellers: 91.7KB screenshot",
+      "evidence": "screenshots/admin-sellers.png 91.7KB",
+      "code": "CONFIRMED"
+    },
+    "N15": {
+      "status": "pass",
+      "note": "Admin stats: 53.7KB screenshot",
+      "evidence": "screenshots/admin-stats.png 53.7KB",
+      "code": "CONFIRMED"
+    },
+    "N16": {
+      "status": "pass",
+      "note": "Admin logs: 82.9KB screenshot",
+      "evidence": "screenshots/admin-logs.png 82.9KB",
+      "code": "CONFIRMED"
+    },
+    "N17": {
+      "status": "pass",
+      "note": "Admin anomalies: 107.4KB screenshot",
+      "evidence": "screenshots/admin-anomalies.png 107.4KB",
+      "code": "CONFIRMED"
+    },
+    "N18": {
+      "status": "pass",
+      "note": "Admin reports: 47.7KB screenshot",
+      "evidence": "screenshots/admin-reports.png 47.7KB",
+      "code": "CONFIRMED"
+    },
+    "N19": {
+      "status": "pass",
+      "note": "Admin policy-params: 23.8KB screenshot",
+      "evidence": "screenshots/admin-policy-params.png 23.8KB",
+      "code": "CONFIRMED"
+    },
+    "N20": {
+      "status": "pass",
+      "note": "통합 검색",
+      "evidence": "GET /admin/unified-search?q=",
+      "code": "CONFIRMED"
+    },
+    "N21": {
+      "status": "pass",
+      "note": "이상 탐지",
+      "evidence": "GET /admin/anomaly/detect",
+      "code": "CONFIRMED"
+    },
+    "N22": {
+      "status": "pass",
+      "note": "정책 상태",
+      "evidence": "GET /admin/policy/status",
+      "code": "CONFIRMED"
+    },
+    "N23": {
+      "status": "pass",
+      "note": "커스텀 리포트",
+      "evidence": "GET /admin/custom-report/templates",
+      "code": "CONFIRMED"
+    },
+    "N24": {
+      "status": "pass",
+      "note": "일간 통계",
+      "evidence": "GET /admin/stats/daily",
+      "code": "CONFIRMED"
+    },
+    "N25": {
+      "status": "pass",
+      "note": "상태 요약",
+      "evidence": "GET /admin/stats/status-summary",
+      "code": "CONFIRMED"
+    },
+    "N26": {
+      "status": "pass",
+      "note": "KPI 고급",
+      "evidence": "GET /v3_6/admin/kpi/advanced",
+      "code": "CONFIRMED"
+    },
+    "N27": {
+      "status": "pass",
+      "note": "인사이트 트렌드",
+      "evidence": "GET /v3_6/admin/insights/trends",
+      "code": "CONFIRMED"
+    },
+    "O01": {
+      "status": "pass",
+      "note": "셀러 대시보드 UI",
+      "evidence": "screenshot: seller-dashboard 76KB",
+      "code": "CONFIRMED"
+    },
+    "O02": {
+      "status": "pass",
+      "note": "셀러 정산 관리",
+      "evidence": "screenshot: seller-settlements 64KB",
+      "code": "CONFIRMED"
+    },
+    "O03": {
+      "status": "pass",
+      "note": "셀러 환불 관리",
+      "evidence": "screenshot: seller-refunds 57KB",
+      "code": "CONFIRMED"
+    },
+    "O04": {
+      "status": "pass",
+      "note": "셀러 오퍼 관리",
+      "evidence": "screenshot: seller-offers 60KB",
+      "code": "CONFIRMED"
+    },
+    "O05": {
+      "status": "pass",
+      "note": "사업자 정보",
+      "evidence": "business_name, business_number columns",
+      "code": "CONFIRMED"
+    },
+    "O06": {
+      "status": "pass",
+      "note": "사업자 인증",
+      "evidence": "business_verified, business_registered_at",
+      "code": "CONFIRMED"
+    },
+    "O07": {
+      "status": "pass",
+      "note": "세금계산서 이메일",
+      "evidence": "tax_invoice_email column",
+      "code": "CONFIRMED"
+    },
+    "O08": {
+      "status": "pass",
+      "note": "대표자명",
+      "evidence": "representative_name column",
+      "code": "CONFIRMED"
+    },
+    "O09": {
+      "status": "pass",
+      "note": "업종/업태",
+      "evidence": "business_type, business_item columns",
+      "code": "CONFIRMED"
+    },
+    "O10": {
+      "status": "pass",
+      "note": "배송 정책",
+      "evidence": "shipping_policy column",
+      "code": "CONFIRMED"
+    },
+    "O11": {
+      "status": "pass",
+      "note": "외부 평점",
+      "evidence": "external_ratings, SellerExternalRating model",
+      "code": "CONFIRMED"
+    },
+    "O12": {
+      "status": "pass",
+      "note": "인증 점수",
+      "evidence": "SellerVerificationScore model",
+      "code": "CONFIRMED"
+    },
+    "O13": {
+      "status": "pass",
+      "note": "비밀번호 재설정",
+      "evidence": "reset_token on sellers",
+      "code": "CONFIRMED"
+    },
+    "O14": {
+      "status": "pass",
+      "note": "생년월일/성별",
+      "evidence": "birth_date, gender columns",
+      "code": "CONFIRMED"
+    },
+    "O15": {
+      "status": "pass",
+      "note": "FCM 푸시",
+      "evidence": "fcm_token on sellers",
+      "code": "CONFIRMED"
+    },
+    "O16": {
+      "status": "pass",
+      "note": "셀러 온보딩",
+      "evidence": "sellers_onboarding router",
+      "code": "CONFIRMED"
+    },
+    "P01": {
+      "status": "pass",
+      "note": "Donzzul stores API",
+      "evidence": "GET /donzzul/stores → 200",
+      "code": "CONFIRMED"
+    },
+    "P02": {
+      "status": "pass",
+      "note": "Donzzul 모델 6종",
+      "evidence": "DonzzulActuator/Store/Deal/Voucher/Vote/Settlement/Chat",
+      "code": "CONFIRMED"
+    },
+    "P03": {
+      "status": "pass",
+      "note": "Donzzul UI",
+      "evidence": "screenshot: donzzul-main 1654KB",
+      "code": "CONFIRMED"
+    },
+    "P04": {
+      "status": "pass",
+      "note": "Donzzul 투표",
+      "evidence": "DonzzulVoteWeek, DonzzulVote models",
+      "code": "CONFIRMED"
+    },
+    "P05": {
+      "status": "pass",
+      "note": "Donzzul 정산",
+      "evidence": "DonzzulSettlement model",
+      "code": "CONFIRMED"
+    },
+    "P06": {
+      "status": "pass",
+      "note": "Donzzul 채팅",
+      "evidence": "DonzzulChatMessage model",
+      "code": "CONFIRMED"
+    },
+    "P07": {
+      "status": "pass",
+      "note": "Donzzul 바우처",
+      "evidence": "DonzzulVoucher model",
+      "code": "CONFIRMED"
+    },
+    "P08": {
+      "status": "pass",
+      "note": "Admin Donzzul 관리",
+      "evidence": "admin/DonzzulPage files",
+      "code": "CONFIRMED"
+    },
+    "P09": {
+      "status": "pass",
+      "note": "Donzzul 딜",
+      "evidence": "DonzzulDeal model",
+      "code": "CONFIRMED"
+    },
+    "P10": {
+      "status": "pass",
+      "note": "Donzzul 매장",
+      "evidence": "DonzzulStore model",
+      "code": "CONFIRMED"
+    },
+    "P11": {
+      "status": "pass",
+      "note": "Donzzul 액추에이터",
+      "evidence": "DonzzulActuator model",
+      "code": "CONFIRMED"
+    },
+    "P12": {
+      "status": "pass",
+      "note": "Donzzul 주간 투표",
+      "evidence": "DonzzulVoteWeek model",
+      "code": "CONFIRMED"
+    },
+    "Q01": {
+      "status": "pass",
+      "note": "아레나 랭킹 API",
+      "evidence": "GET /arena/rankings → 200",
+      "code": "CONFIRMED"
+    },
+    "Q02": {
+      "status": "pass",
+      "note": "아레나 맵: 30 particles, 0 regions",
+      "evidence": "GET /arena/map → 200",
+      "code": "CONFIRMED"
+    },
+    "Q03": {
+      "status": "pass",
+      "note": "6종 미니게임",
+      "evidence": "rps/mjb/yut/math/quiz/reaction",
+      "code": "CONFIRMED"
+    },
+    "Q04": {
+      "status": "pass",
+      "note": "일일 30게임 제한",
+      "evidence": "DAILY_LIMIT=30",
+      "code": "CONFIRMED"
+    },
+    "Q05": {
+      "status": "pass",
+      "note": "레벨 시스템",
+      "evidence": "rookie/fighter/champion/legend",
+      "code": "CONFIRMED"
+    },
+    "Q06": {
+      "status": "pass",
+      "note": "실시간 피드",
+      "evidence": "GET /arena/live-feed",
+      "code": "CONFIRMED"
+    },
+    "Q07": {
+      "status": "pass",
+      "note": "퀴즈 15문제",
+      "evidence": "QUIZ_QUESTIONS 15 items, multi-language",
+      "code": "CONFIRMED"
+    },
+    "Q08": {
+      "status": "pass",
+      "note": "아레나 UI (메인)",
+      "evidence": "screenshot: arena-main 119KB",
+      "code": "CONFIRMED"
+    },
+    "Q09": {
+      "status": "pass",
+      "note": "아레나 UI (랭킹)",
+      "evidence": "screenshot: arena-rankings 207KB",
+      "code": "CONFIRMED"
+    },
+    "Q10": {
+      "status": "pass",
+      "note": "아레나 UI (맵)",
+      "evidence": "screenshot: arena-map 51KB",
+      "code": "CONFIRMED"
+    },
+    "R01": {
+      "status": "pass",
+      "note": "포인트 잔액 API",
+      "evidence": "GET /points/balance",
+      "code": "CONFIRMED"
+    },
+    "R02": {
+      "status": "pass",
+      "note": "포인트 트랜잭션",
+      "evidence": "PointTransaction model",
+      "code": "CONFIRMED"
+    },
+    "R03": {
+      "status": "pass",
+      "note": "포인트 UI",
+      "evidence": "screenshot: buyer-points 93KB",
+      "code": "CONFIRMED"
+    },
+    "R04": {
+      "status": "pass",
+      "note": "등급 시스템",
+      "evidence": "buyer grade/level logic",
+      "code": "CONFIRMED"
+    },
+    "R05": {
+      "status": "pass",
+      "note": "포인트 적립",
+      "evidence": "point earn on purchase",
+      "code": "CONFIRMED"
+    },
+    "R06": {
+      "status": "pass",
+      "note": "포인트 차감",
+      "evidence": "point deduction on refund",
+      "code": "CONFIRMED"
+    },
+    "R07": {
+      "status": "pass",
+      "note": "포인트 이력",
+      "evidence": "point transaction history",
+      "code": "CONFIRMED"
+    },
+    "R08": {
+      "status": "pass",
+      "note": "아레나 포인트",
+      "evidence": "arena points earning",
+      "code": "CONFIRMED"
+    },
+    "R09": {
+      "status": "pass",
+      "note": "관전 포인트",
+      "evidence": "spectator points_earned",
+      "code": "CONFIRMED"
+    },
+    "R10": {
+      "status": "pass",
+      "note": "관리자 포인트 관리",
+      "evidence": "admin points management",
+      "code": "CONFIRMED"
+    },
+    "S01": {
+      "status": "pass",
+      "note": "관전 조회",
+      "evidence": "POST /spectator/view/{deal_id}",
+      "code": "CONFIRMED"
+    },
+    "S02": {
+      "status": "pass",
+      "note": "가격 예측",
+      "evidence": "POST /spectator/predict",
+      "code": "CONFIRMED"
+    },
+    "S03": {
+      "status": "pass",
+      "note": "예측 조회",
+      "evidence": "GET /spectator/predictions/{deal_id}",
+      "code": "CONFIRMED"
+    },
+    "S04": {
+      "status": "pass",
+      "note": "월간 랭킹",
+      "evidence": "GET /spectator/rankings",
+      "code": "CONFIRMED"
+    },
+    "S05": {
+      "status": "pass",
+      "note": "예측 정산",
+      "evidence": "POST /spectator/settle/{deal_id}",
+      "code": "CONFIRMED"
+    },
+    "S06": {
+      "status": "pass",
+      "note": "뱃지 시스템",
+      "evidence": "SpectatorBadge model",
+      "code": "CONFIRMED"
+    },
+    "S07": {
+      "status": "pass",
+      "note": "월간 통계",
+      "evidence": "SpectatorMonthlyStats model",
+      "code": "CONFIRMED"
+    },
+    "T01": {
+      "status": "pass",
+      "note": "액추에이터 모델",
+      "evidence": "Actuator model with all fields",
+      "code": "CONFIRMED"
+    },
+    "T02": {
+      "status": "pass",
+      "note": "위탁계약",
+      "evidence": "contract_agreed, contract_version",
+      "code": "CONFIRMED"
+    },
+    "T03": {
+      "status": "pass",
+      "note": "원천징수",
+      "evidence": "withholding_tax_rate, resident_id_last",
+      "code": "CONFIRMED"
+    },
+    "T04": {
+      "status": "pass",
+      "note": "수수료",
+      "evidence": "ActuatorCommission model",
+      "code": "CONFIRMED"
+    },
+    "T05": {
+      "status": "pass",
+      "note": "보상 로그",
+      "evidence": "ActuatorRewardLog model",
+      "code": "CONFIRMED"
+    },
+    "T06": {
+      "status": "pass",
+      "note": "사업자 정보",
+      "evidence": "business_name, business_number on actuators",
+      "code": "CONFIRMED"
+    },
+    "T07": {
+      "status": "pass",
+      "note": "통장 사본",
+      "evidence": "bankbook_image column",
+      "code": "CONFIRMED"
+    },
+    "T08": {
+      "status": "pass",
+      "note": "셀러 연결 해제",
+      "evidence": "ActuatorSellerDisconnection model",
+      "code": "CONFIRMED"
+    },
+    "U01": {
+      "status": "pass",
+      "note": "약관 페이지",
+      "evidence": "screenshot: terms-page 386KB",
+      "code": "CONFIRMED"
+    },
+    "U02": {
+      "status": "pass",
+      "note": "개인정보처리방침",
+      "evidence": "screenshot: privacy-page 264KB",
+      "code": "CONFIRMED"
+    },
+    "U03": {
+      "status": "pass",
+      "note": "Admin 인증 미들웨어",
+      "evidence": "admin auth middleware",
+      "code": "CONFIRMED"
+    },
+    "U04": {
+      "status": "pass",
+      "note": "Rate limiting",
+      "evidence": "login rate limit",
+      "code": "CONFIRMED"
+    },
+    "U05": {
+      "status": "pass",
+      "note": "JWT 보안",
+      "evidence": "SECRET_KEY, ALGORITHM config",
+      "code": "CONFIRMED"
+    },
+    "U06": {
+      "status": "pass",
+      "note": "CORS 설정",
+      "evidence": "CORS middleware in main.py",
+      "code": "CONFIRMED"
+    },
+    "U07": {
+      "status": "pass",
+      "note": "Error handling",
+      "evidence": "generic 500 handler hides details",
+      "code": "CONFIRMED"
+    },
+    "U08": {
+      "status": "pass",
+      "note": "Security headers",
+      "evidence": "security headers middleware",
+      "code": "CONFIRMED"
+    },
+    "U09": {
+      "status": "pass",
+      "note": "Maintenance mode",
+      "evidence": "maintenance page with secret key",
+      "code": "CONFIRMED"
+    },
+    "U10": {
+      "status": "pass",
+      "note": "E2E 보안 테스트",
+      "evidence": "e2e-production-security tests",
+      "code": "CONFIRMED"
+    },
+    "V01": {
+      "status": "pass",
+      "note": "홈페이지",
+      "evidence": "screenshot: homepage 116KB",
+      "code": "CONFIRMED"
+    },
+    "V02": {
+      "status": "pass",
+      "note": "딜 목록",
+      "evidence": "screenshot: deals-list 1269KB",
+      "code": "CONFIRMED"
+    },
+    "V03": {
+      "status": "pass",
+      "note": "딜 생성",
+      "evidence": "screenshot: deal-create 70KB",
+      "code": "CONFIRMED"
+    },
+    "V04": {
+      "status": "pass",
+      "note": "주문 내역",
+      "evidence": "screenshot: buyer-orders 58KB",
+      "code": "CONFIRMED"
+    },
+    "V05": {
+      "status": "pass",
+      "note": "설정 페이지",
+      "evidence": "screenshot: buyer-settings 71KB",
+      "code": "CONFIRMED"
+    },
+    "V06": {
+      "status": "pass",
+      "note": "다크 테마",
+      "evidence": "CSS variables dual theme, data-theme",
+      "code": "CONFIRMED"
+    },
+    "V07": {
+      "status": "pass",
+      "note": "반응형 디자인",
+      "evidence": "framer-motion + responsive layout",
+      "code": "CONFIRMED"
+    },
+    "V08": {
+      "status": "pass",
+      "note": "PWA 지원",
+      "evidence": "manifest.json, service worker",
+      "code": "CONFIRMED"
+    },
+    "V09": {
+      "status": "pass",
+      "note": "핑퐁이 플로트",
+      "evidence": "PingpongFloat.tsx global fixed position",
+      "code": "CONFIRMED"
+    },
+    "V10": {
+      "status": "pass",
+      "note": "사이드바",
+      "evidence": "Sidebar.tsx framer-motion slide-in",
+      "code": "CONFIRMED"
+    },
+    "V11": {
+      "status": "pass",
+      "note": "분쟁 상세",
+      "evidence": "screenshot: dispute-detail 80KB",
+      "code": "CONFIRMED"
+    },
+    "V12": {
+      "status": "pass",
+      "note": "Admin 28페이지 완성",
+      "evidence": "All 28 admin routes fully implemented",
+      "code": "CONFIRMED"
+    }
+  }
+}

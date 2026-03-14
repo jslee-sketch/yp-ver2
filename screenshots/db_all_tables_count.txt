@@ -1,0 +1,15 @@
+=== DB Table Counts (Production) ===
+
+actuators: 308
+aov: 524990
+buyers: 1004
+deals: 1486
+disputed: 10
+gmv: 549664840
+offers: 1099
+pending_sellers: 471
+pending_settlement: 883
+reservation_status: {'EXPIRED': 179, 'CANCELLED': 199, 'PAID': 1047}
+reservations: 1425
+sellers: 973
+settlement_summary: {'HOLD': 864, 'READY': 19, 'APPROVED': 10, 'PAID': 0}
