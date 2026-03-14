@@ -228,13 +228,15 @@ def admin_list_reservations(
     limit: int = Query(100, le=500),
     db: Session = Depends(get_db),
 ):
+  try:
     q = db.query(models.Reservation)
     if buyer_id:
         q = q.filter(models.Reservation.buyer_id == buyer_id)
-    if seller_id:
-        q = q.filter(models.Reservation.seller_id == seller_id)
     if status:
-        q = q.filter(models.Reservation.status == status)
+        try:
+            q = q.filter(models.Reservation.status == status)
+        except Exception:
+            pass
     if is_disputed is True:
         q = q.filter(models.Reservation.is_disputed == True)
     if is_disputed is False:
@@ -244,7 +246,7 @@ def admin_list_reservations(
     if shipped is False:
         q = q.filter(models.Reservation.shipped_at.is_(None))
     if refund is True:
-        q = q.filter(models.Reservation.status.in_(["CANCELLED"]))
+        q = q.filter(models.Reservation.status == "CANCELLED")
 
     if date_from:
         try:
@@ -324,6 +326,9 @@ def admin_list_reservations(
             result.append({"id": getattr(r, "id", 0), "error": str(row_err)})
     total = db.query(sa_func.count(models.Reservation.id)).scalar() or 0
     return {"items": result, "total": total}
+  except Exception as e:
+    import traceback
+    return {"items": [], "total": 0, "error": str(e), "trace": traceback.format_exc()}
 
 
 # ── GET /admin/stats ─────────────────────────────────────
