@@ -5212,6 +5212,7 @@ def search_reservations(
     deal_id: Optional[int] = None,
     offer_id: Optional[int] = None,
     buyer_id: Optional[int] = None,
+    seller_id: Optional[int] = None,
     status: Optional[ReservationStatus] = None,
     is_disputed: Optional[bool] = None,
     after_id: Optional[int] = None,
@@ -5226,6 +5227,8 @@ def search_reservations(
         q = q.filter(Reservation.offer_id == offer_id)
     if buyer_id is not None:
         q = q.filter(Reservation.buyer_id == buyer_id)
+    if seller_id is not None:
+        q = q.join(Offer, Reservation.offer_id == Offer.id).filter(Offer.seller_id == seller_id)
     if status is not None:
         q = q.filter(Reservation.status == status)
     if is_disputed is not None:
