@@ -19,7 +19,6 @@ const CATEGORIES = [
   { key: 'users', label: '사용자' },
 ];
 
-const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10 };
 
 export default function AdminUnifiedSearchPage() {
   const [keyword, setKeyword] = useState('');

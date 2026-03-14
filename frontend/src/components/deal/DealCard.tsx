@@ -74,9 +74,9 @@ export const DealCard: React.FC<DealCardProps> = ({ deal, lowestOffer }) => {
             목표 <span style={{ fontWeight: 700 }}>{deal.desired_price.toLocaleString('ko-KR')}원</span>
           </span>
         )}
-        {deal.anchor_price > 0 && (
+        {(deal.anchor_price ?? 0) > 0 && (
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            시장 <PriceText amount={deal.anchor_price} size="body-md" color="var(--text-muted)" strikethrough />
+            시장 <PriceText amount={deal.anchor_price!} size="body-md" color="var(--text-muted)" strikethrough />
           </span>
         )}
       </div>

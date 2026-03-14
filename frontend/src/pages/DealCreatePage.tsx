@@ -511,6 +511,14 @@ export default function DealCreatePage() {
   const [optionGroups,          setOptionGroups]          = useState<OptionGroup[]>([]);
   const [aiFilledFields,        setAiFilledFields]        = useState<Set<string>>(new Set());
   const [similarDeals,          setSimilarDeals]          = useState<any[]>([]);
+  // 3-tier matching sub-step within step 2
+  const [showMatchingStep,      setShowMatchingStep]      = useState(false);
+  const [matchingLoading,       setMatchingLoading]       = useState(false);
+  const [matchTiers, setMatchTiers] = useState<{
+    exact_match: any[]; option_different: any[]; similar_product: any[];
+    counts: { exact: number; option_different: number; similar: number };
+  }>({ exact_match: [], option_different: [], similar_product: [], counts: { exact: 0, option_different: 0, similar: 0 } });
+  const [expandedTier, setExpandedTier] = useState<Record<string, boolean>>({ exact: true, option_diff: false, similar: false });
 
   // Step 3: 가격 챌린지 + 목표가격 + 수량
   const [marketPrice,     setMarketPrice]     = useState<number | null>(null);
@@ -640,6 +648,8 @@ export default function DealCreatePage() {
     if (showModelSelect) {
       setShowModelSelect(false);
       setModelOptions([]);
+    } else if (showMatchingStep) {
+      setShowMatchingStep(false);
     } else if (step === 1) {
       navigate(-1);
     } else {
@@ -656,17 +666,23 @@ export default function DealCreatePage() {
   }, [showModelSelect, step]);
 
   useEffect(() => {
+    if (showMatchingStep) window.history.pushState({ step, showMatchingStep: true }, '');
+  }, [showMatchingStep, step]);
+
+  useEffect(() => {
     const handlePopState = () => {
       if (showModelSelect) {
         setShowModelSelect(false);
         setModelOptions([]);
+      } else if (showMatchingStep) {
+        setShowMatchingStep(false);
       } else if (step > 1) {
         setStep(prev => prev - 1);
       }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [step, showModelSelect]);
+  }, [step, showModelSelect, showMatchingStep]);
 
   // ── AI 분석 로직 ───────────────────────────────────────
   const runAIAnalysis = async (name: string, text: string) => {
@@ -770,8 +786,12 @@ export default function DealCreatePage() {
     setPriceCommentary(result.price?.commentary || '');
     setQuantity(1);
 
-    // 유사 딜 체크 (비동기 — 블로킹하지 않음)
+    // 매칭 상태 리셋
+    setShowMatchingStep(false);
+    setMatchTiers({ exact_match: [], option_different: [], similar_product: [], counts: { exact: 0, option_different: 0, similar: 0 } });
     setSimilarDeals([]);
+
+    // 유사 딜 체크 (비동기 — 블로킹하지 않음)
     try {
       const pn = result.product_detail || result.canonical_name || result.model_name || name;
       const br = result.brand || '';
@@ -1054,6 +1074,37 @@ export default function DealCreatePage() {
     setOptionGroups(prev => [...prev, { title: '', values: [], selectedIndex: -1 }]);
   };
 
+  // ── 3-tier 매칭 검색 (Step 2 → matching sub-step) ──
+  const handleFindMatching = async () => {
+    setMatchingLoading(true);
+    try {
+      const pn = productDetail || productNameConfirmed || productName;
+      const br = brand || '';
+      const cat = category || '';
+      const selectedOpts = optionGroups
+        .filter(g => g.title && g.selectedIndex >= 0 && g.selectedIndex < g.values.length)
+        .map(g => ({ title: g.title, selected_value: g.values[g.selectedIndex] }));
+      const optsParam = selectedOpts.length > 0 ? JSON.stringify(selectedOpts) : '';
+      const resp = await apiClient.get(API.DEALS.FIND_SIMILAR, {
+        params: { product_name: pn, brand: br, category: cat, options: optsParam },
+      });
+      const data = resp.data || {};
+      setMatchTiers({
+        exact_match: data.exact_match || [],
+        option_different: data.option_different || [],
+        similar_product: data.similar_product || [],
+        counts: data.counts || { exact: 0, option_different: 0, similar: 0 },
+      });
+      // Also set similarDeals for backward compat
+      if (data.similar_deals?.length > 0) setSimilarDeals(data.similar_deals);
+    } catch {
+      setMatchTiers({ exact_match: [], option_different: [], similar_product: [], counts: { exact: 0, option_different: 0, similar: 0 } });
+    }
+    setMatchingLoading(false);
+    setShowMatchingStep(true);
+    setExpandedTier({ exact: true, option_diff: false, similar: false });
+  };
+
   // ── 딜 생성 API ─────────────────────────────────────
   const handleCreate = async () => {
     setCreating(true);
@@ -1093,6 +1144,7 @@ export default function DealCreatePage() {
   // ── TopBar ─────────────────────────────────────────
   const getStepTitle = () => {
     if (step === 1 && showModelSelect) return '모델 선택';
+    if (step === 2 && showMatchingStep) return '딜 매칭';
     return '딜 만들기';
   };
 
@@ -1627,7 +1679,7 @@ export default function DealCreatePage() {
             )}
 
             {/* ══ Step 2: 상품 정보 확인 ══ */}
-            {step === 2 && (
+            {step === 2 && (!showMatchingStep ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div>
                   <div style={{ fontSize: 22, fontWeight: 900, color: C.textPri, lineHeight: 1.3, marginBottom: 6 }}>
@@ -1825,11 +1877,156 @@ export default function DealCreatePage() {
 
                 {/* 버튼 */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-                  {primaryBtn('다음', () => goTo(3))}
+                  {primaryBtn('다음', () => { void handleFindMatching(); }, matchingLoading, matchingLoading)}
                   {skipBtn(() => goTo(3))}
                 </div>
               </div>
-            )}
+            ) : (
+              /* ── 3-tier 매칭 결과 서브스텝 ── */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: C.textPri, lineHeight: 1.3, marginBottom: 6 }}>
+                    기존 딜 매칭 결과
+                  </div>
+                  <div style={{ fontSize: 13, color: C.textSec }}>
+                    같은 제품의 진행 중인 딜이 있으면 합류할 수 있어요
+                  </div>
+                </div>
+
+                {(() => {
+                  const totalCount = matchTiers.counts.exact + matchTiers.counts.option_different + matchTiers.counts.similar;
+
+                  if (totalCount === 0) {
+                    return (
+                      <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                        <div style={{ fontSize: 48, marginBottom: 16 }}>{'\ud83d\ude45'}</div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: C.textPri, marginBottom: 8 }}>
+                          같은 제품의 딜이 없습니다!
+                        </div>
+                        <div style={{ fontSize: 13, color: C.textSec, marginBottom: 24 }}>
+                          새 딜을 만들어서 공동구매를 시작하세요
+                        </div>
+                        {primaryBtn('새 딜 만들기', () => { setShowMatchingStep(false); goTo(3); })}
+                      </div>
+                    );
+                  }
+
+                  const tierConfigs = [
+                    { key: 'exact', label: '\ud83d\udfe2 완전일치', desc: '제품 + 옵션 모두 일치', items: matchTiers.exact_match, count: matchTiers.counts.exact, expandKey: 'exact' },
+                    { key: 'option_diff', label: '\ud83d\udfe1 옵션 다름', desc: '같은 제품, 다른 옵션', items: matchTiers.option_different, count: matchTiers.counts.option_different, expandKey: 'option_diff' },
+                    { key: 'similar', label: '\ud83d\udfe0 유사 제품', desc: '같은 브랜드/카테고리의 비슷한 제품', items: matchTiers.similar_product, count: matchTiers.counts.similar, expandKey: 'similar' },
+                  ];
+
+                  const tierColors: Record<string, string> = {
+                    exact: '#39ff14',
+                    option_diff: '#ffe156',
+                    similar: '#60a5fa',
+                  };
+
+                  return (
+                    <>
+                      {tierConfigs.map(tier => {
+                        if (tier.count === 0) return null;
+                        const isOpen = expandedTier[tier.expandKey] ?? false;
+                        const color = tierColors[tier.key] || C.textPri;
+                        return (
+                          <div key={tier.key} style={{
+                            background: C.bgCard,
+                            border: `1px solid ${color}30`,
+                            borderRadius: 14,
+                            overflow: 'hidden',
+                          }}>
+                            {/* Accordion header */}
+                            <button
+                              onClick={() => setExpandedTier(prev => ({ ...prev, [tier.expandKey]: !isOpen }))}
+                              style={{
+                                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer',
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 15, fontWeight: 800, color }}>{tier.label}</span>
+                                <span style={{
+                                  padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                                  background: `${color}20`, color,
+                                }}>{tier.count}건</span>
+                              </div>
+                              <span style={{ fontSize: 12, color: C.textDim }}>{isOpen ? '\u25b2 접기' : '\u25bc 펼치기'}</span>
+                            </button>
+                            {isOpen && (
+                              <div style={{ fontSize: 12, color: C.textDim, padding: '0 16px 6px' }}>{tier.desc}</div>
+                            )}
+                            {/* Accordion body */}
+                            {isOpen && (
+                              <div style={{ padding: '0 12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                {tier.items.map((deal: any) => (
+                                  <div key={deal.id} style={{
+                                    background: C.bgSurface, borderRadius: 12, padding: '12px 14px',
+                                    border: `1px solid ${C.border}`,
+                                  }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                          {deal.product_detail || deal.product_name}
+                                        </div>
+                                        {deal.options_display && (
+                                          <div style={{ fontSize: 12, color: C.textSec, marginBottom: 4 }}>
+                                            {deal.options_display}
+                                          </div>
+                                        )}
+                                        <div style={{ display: 'flex', gap: 12, fontSize: 11, color: C.textDim, flexWrap: 'wrap' }}>
+                                          {deal.participant_count > 0 && <span>{deal.participant_count}\uba85 \ucc38\uc5ec</span>}
+                                          {deal.offer_count > 0 && <span>\uc624\ud37c {deal.offer_count}\uac74</span>}
+                                          {deal.best_price && <span>\ucd5c\uc800 {deal.best_price.toLocaleString()}\uc6d0</span>}
+                                          {deal.target_price && <span>\ubaa9\ud45c {deal.target_price.toLocaleString()}\uc6d0</span>}
+                                        </div>
+                                      </div>
+                                      <button
+                                        onClick={() => navigate(`/deal/${deal.id}`)}
+                                        style={{
+                                          padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                                          background: `${color}`, color: '#0a0e1a', fontWeight: 800, fontSize: 12,
+                                          whiteSpace: 'nowrap', flexShrink: 0,
+                                        }}
+                                      >{'\uc774 \ub51c \ud569\ub958'}</button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* 새 딜 만들기 버튼 */}
+                      <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <button
+                          onClick={() => { setShowMatchingStep(false); goTo(3); }}
+                          style={{
+                            width: '100%', padding: '16px', borderRadius: 14, fontSize: 15, fontWeight: 800,
+                            background: C.bgCard, border: `2px solid ${C.cyan}`,
+                            color: C.cyan, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          {'\ud83c\udd95'} \uc0c8 \ub51c \ub9cc\ub4e4\uae30
+                        </button>
+                        <button
+                          onClick={() => setShowMatchingStep(false)}
+                          style={{
+                            background: 'none', border: 'none', color: C.textDim, fontSize: 13,
+                            cursor: 'pointer', padding: '8px 0', textDecoration: 'underline', textAlign: 'center',
+                          }}
+                        >
+                          {'\u2190'} \ub3cc\uc544\uac00\uae30
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            ))}
 
             {/* ══ Step 3: 가격 챌린지 + 목표가 + 수량 ══ */}
             {step === 3 && (() => {

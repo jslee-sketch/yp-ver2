@@ -176,8 +176,8 @@ export default function SellerOffersPage() {
                     }}>{status}</span>
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: C.textSec, marginBottom: 6 }}>
-                    {(offer as Record<string, unknown>).product_name
-                      ?? ((offer as Record<string, unknown>).deal as Record<string, unknown> | undefined)?.product_name
+                    {(offer as any).product_name
+                      ?? (offer as any).deal?.product_name
                       ?? `딜 #${offer.deal_id}`}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 6 }}>

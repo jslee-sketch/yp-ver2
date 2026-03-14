@@ -27,7 +27,6 @@ export default function MatrixCodeRain({ active, finalPrice, onComplete, duratio
         const width = canvas.offsetWidth
         const height = canvas.offsetHeight
 
-        const chars = '₩$¥€0123456789,.'
         const fontSize = 14
         const columns = Math.floor(width / fontSize)
         const drops: number[] = Array(columns).fill(0)

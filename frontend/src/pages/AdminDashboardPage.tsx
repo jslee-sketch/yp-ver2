@@ -212,7 +212,7 @@ export default function AdminDashboardPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="date" tick={{ fill: '#78909c', fontSize: 10 }} tickFormatter={v => v?.slice(5)} />
               <YAxis tick={{ fill: '#78909c', fontSize: 10 }} tickFormatter={v => `${(v / 10000).toFixed(0)}만`} />
-              <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`${v.toLocaleString()}원`, '매출']} />
+              <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} formatter={(v: any) => [`${Number(v).toLocaleString()}원`, '매출']} />
               <Bar dataKey="revenue" fill={C.green} radius={[4, 4, 0, 0]} name="매출" />
             </BarChart>
           </ResponsiveContainer>
@@ -227,7 +227,7 @@ export default function AdminDashboardPage() {
               <h3 style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8, textAlign: 'center' }}>딜 상태</h3>
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
-                  <Pie data={statusData.deal_status} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                  <Pie data={statusData.deal_status} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label={({ name, percent }: any) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
                     {statusData.deal_status.map((_: any, i: number) => <Cell key={i} fill={['#00e676', '#00b0ff', '#e040fb', '#ff9100', '#ff5252', '#ffea00'][i % 6]} />)}
                   </Pie>
                   <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />
@@ -240,7 +240,7 @@ export default function AdminDashboardPage() {
               <h3 style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8, textAlign: 'center' }}>정산 상태</h3>
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
-                  <Pie data={statusData.settlement_status} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                  <Pie data={statusData.settlement_status} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label={({ name, percent }: any) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
                     {statusData.settlement_status.map((_: any, i: number) => <Cell key={i} fill={['#ff9100', '#00e5ff', '#4fc3f7', '#00e676'][i % 4]} />)}
                   </Pie>
                   <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, fontSize: 12 }} />

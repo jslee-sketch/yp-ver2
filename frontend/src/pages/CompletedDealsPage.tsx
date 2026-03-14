@@ -36,7 +36,7 @@ type SortKey = 'qty' | 'recent' | 'price';
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
   text: 'var(--text-primary)', textSec: 'var(--text-secondary)', textDim: 'var(--text-muted)',
-  border: 'var(--border-subtle)', green: 'var(--accent-green)', cyan: '#00e5ff', orange: 'var(--accent-orange)',
+  border: 'var(--border-subtle)', green: 'var(--accent-green)', cyan: '#00e5ff', orange: 'var(--accent-orange)', blue: '#00b0ff',
 };
 
 function fmtP(n: number) { return n.toLocaleString('ko-KR') + '원'; }

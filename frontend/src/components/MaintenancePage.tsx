@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function MaintenancePage({ onAccessGranted }: { onAccessGranted: () => void }) {
+export default function MaintenancePage({ onAccessGranted: _onAccessGranted }: { onAccessGranted: () => void }) {
     const [email, setEmail] = useState('')
     const [submitted, setSubmitted] = useState(false)
 
