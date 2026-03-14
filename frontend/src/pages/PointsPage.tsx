@@ -42,13 +42,14 @@ export default function PointsPage() {
 
   useEffect(() => {
     if (!user) return;
+    const userId = user.id;
     const load = async () => {
       try {
-        const balRes = await apiClient.get(API.POINTS.BALANCE);
+        const balRes = await apiClient.get(API.POINTS.BALANCE(userId));
         if (balRes.data != null) setBalance(Number(balRes.data) || 0);
       } catch { /* Mock 유지 */ }
       try {
-        const histRes = await apiClient.get(API.POINTS.HISTORY);
+        const histRes = await apiClient.get(API.POINTS.HISTORY(userId));
         if (histRes.data && Array.isArray(histRes.data) && histRes.data.length > 0) {
           setTxs(histRes.data.map((t: Record<string, unknown>, i: number) => ({
             id:    typeof t.id === 'number' ? t.id : i + 1,

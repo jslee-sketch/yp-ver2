@@ -142,8 +142,8 @@ export const API = {
 
   // ── 포인트 ──────────────────────────────────────────────────
   POINTS: {
-    HISTORY:           '/points/history',
-    BALANCE:           '/points/balance',
+    HISTORY:           (userId: number) => `/points/buyer/${userId}/transactions`,
+    BALANCE:           (userId: number) => `/points/buyer/${userId}/balance`,
     EARN:              '/points/earn',
     SPEND:             '/points/spend',
   },

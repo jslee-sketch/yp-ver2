@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { fetchMyTaxInvoices, confirmTaxInvoice } from '../api/taxInvoiceApi';
 import type { TaxInvoice, TaxInvoiceStatus } from '../types/taxInvoice';
 
@@ -20,11 +21,11 @@ const fmt = (n: number) => n.toLocaleString('ko-KR');
 
 export default function SellerTaxInvoicesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [items, setItems] = useState<TaxInvoice[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 로그인된 판매자 ID (로컬스토리지에서 가져오기)
-  const sellerId = Number(localStorage.getItem('seller_id') || '0');
+  const sellerId = user?.seller?.id ?? user?.id ?? 0;
 
   const load = async () => {
     if (!sellerId) { setLoading(false); return; }
@@ -46,7 +47,7 @@ export default function SellerTaxInvoicesPage() {
   };
 
   if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
-  if (!sellerId) return <div style={{ padding: 40, color: C.textSec }}>판매자 로그인이 필요합니다.</div>;
+  if (!sellerId) return <div style={{ padding: 40, color: C.textSec }}>로그인이 필요합니다.</div>;
 
   return (
     <div style={{ padding: '20px 0' }}>

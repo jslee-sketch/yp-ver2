@@ -29,7 +29,7 @@ export default function RefundSimulatorPage({ role = 'buyer' }: { role?: string 
   useEffect(() => {
     const params = new URLSearchParams({
       amount: String(amount), reason, delivery_status: deliveryStatus,
-      shipping_mode: shippingMode, shipping_cost: String(shippingCost),
+      shipping_mode: shippingMode, shipping_fee: String(shippingCost),
       days_since_delivery: String(daysSince), role,
     });
     fetch(`${BASE}/v3_6/refund-simulator/calculate?${params}`)
@@ -59,66 +59,66 @@ export default function RefundSimulatorPage({ role = 'buyer' }: { role?: string 
 
   const inputStyle = {
     width: '100%', padding: '8px 12px', borderRadius: 8,
-    border: '1px solid #333', background: '#1a1a2e', color: '#e0e0e0',
+    border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)',
     fontSize: 14,
   };
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto', padding: 20 }}>
-      <h2 style={{ color: '#e0e0e0', fontSize: 18, marginBottom: 16 }}>
+      <h2 style={{ color: 'var(--text-primary)', fontSize: 18, marginBottom: 16 }}>
         환불 시뮬레이터 {role === 'seller' ? '(판매자)' : '(구매자)'}
       </h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
-        <label style={{ color: '#aaa', fontSize: 13 }}>
+        <label style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
           주문 금액
           <input type="number" value={amount} onChange={e => setAmount(+e.target.value)}
             style={{ ...inputStyle, marginTop: 4 }} />
         </label>
 
-        <label style={{ color: '#aaa', fontSize: 13 }}>
+        <label style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
           환불 사유
           <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
             {reasons.map(r => (
               <button key={r.value} onClick={() => setReason(r.value)} style={{
                 padding: '6px 12px', borderRadius: 8, fontSize: 12,
-                border: reason === r.value ? '1px solid #60a5fa' : '1px solid #333',
-                background: reason === r.value ? 'rgba(96,165,250,0.15)' : '#1a1a2e',
-                color: reason === r.value ? '#60a5fa' : '#888', cursor: 'pointer',
+                border: reason === r.value ? '1px solid #60a5fa' : '1px solid var(--border-subtle)',
+                background: reason === r.value ? 'rgba(96,165,250,0.15)' : 'var(--bg-secondary)',
+                color: reason === r.value ? '#60a5fa' : 'var(--text-muted)', cursor: 'pointer',
               }}>{r.label}</button>
             ))}
           </div>
         </label>
 
-        <label style={{ color: '#aaa', fontSize: 13 }}>
+        <label style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
           배송 상태
           <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
             {deliveryStatuses.map(d => (
               <button key={d.value} onClick={() => setDeliveryStatus(d.value)} style={{
                 padding: '6px 12px', borderRadius: 8, fontSize: 12,
-                border: deliveryStatus === d.value ? '1px solid #4ade80' : '1px solid #333',
-                background: deliveryStatus === d.value ? 'rgba(74,222,128,0.15)' : '#1a1a2e',
-                color: deliveryStatus === d.value ? '#4ade80' : '#888', cursor: 'pointer',
+                border: deliveryStatus === d.value ? '1px solid #4ade80' : '1px solid var(--border-subtle)',
+                background: deliveryStatus === d.value ? 'rgba(74,222,128,0.15)' : 'var(--bg-secondary)',
+                color: deliveryStatus === d.value ? '#4ade80' : 'var(--text-muted)', cursor: 'pointer',
               }}>{d.label}</button>
             ))}
           </div>
         </label>
 
-        <label style={{ color: '#aaa', fontSize: 13 }}>
+        <label style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
           배송비 모드
           <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
             {shippingModes.map(s => (
               <button key={s.value} onClick={() => setShippingMode(s.value)} style={{
                 padding: '6px 12px', borderRadius: 8, fontSize: 12,
-                border: shippingMode === s.value ? '1px solid #f59e0b' : '1px solid #333',
-                background: shippingMode === s.value ? 'rgba(245,158,11,0.15)' : '#1a1a2e',
-                color: shippingMode === s.value ? '#f59e0b' : '#888', cursor: 'pointer',
+                border: shippingMode === s.value ? '1px solid #f59e0b' : '1px solid var(--border-subtle)',
+                background: shippingMode === s.value ? 'rgba(245,158,11,0.15)' : 'var(--bg-secondary)',
+                color: shippingMode === s.value ? '#f59e0b' : 'var(--text-muted)', cursor: 'pointer',
               }}>{s.label}</button>
             ))}
           </div>
         </label>
 
-        <label style={{ color: '#aaa', fontSize: 13 }}>
+        <label style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
           수령 후 경과일
           <input type="number" value={daysSince} onChange={e => setDaysSince(+e.target.value)}
             style={{ ...inputStyle, marginTop: 4 }} min={0} />
@@ -132,7 +132,7 @@ export default function RefundSimulatorPage({ role = 'buyer' }: { role?: string 
           background: result.can_refund ? 'rgba(74,222,128,0.06)' : 'rgba(239,68,68,0.06)',
           border: `1px solid ${result.can_refund ? 'rgba(74,222,128,0.2)' : 'rgba(239,68,68,0.2)'}`,
         }}>
-          <div style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
             {result.can_refund ? '환불 가능' : `환불 불가 (쿨링 ${result.cooling_period}일 초과)`}
           </div>
 
@@ -157,15 +157,15 @@ export default function RefundSimulatorPage({ role = 'buyer' }: { role?: string 
           {/* Seller: Settlement Impact */}
           {result.settlement_impact && (
             <div style={{
-              marginTop: 12, paddingTop: 12, borderTop: '1px solid #333',
+              marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-subtle)',
             }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#e0e0e0', marginBottom: 6 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                 정산 영향
               </div>
-              <div style={{ fontSize: 12, color: '#aaa' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                 환불 전 정산금: {result.settlement_impact.before_refund.toLocaleString()}원
               </div>
-              <div style={{ fontSize: 12, color: '#aaa' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                 환불 후 정산금: {result.settlement_impact.after_refund.toLocaleString()}원
               </div>
               <div style={{ fontSize: 12, color: '#ef4444' }}>

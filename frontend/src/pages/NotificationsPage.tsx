@@ -68,7 +68,7 @@ export default function NotificationsPage() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const apiData = await fetchNotifications();
+      const apiData = await fetchNotifications(user?.id);
       if (apiData && Array.isArray(apiData) && apiData.length > 0) {
         setItems(apiData.map((n: Record<string, unknown>) => ({
           id:         typeof n.id === 'number' ? n.id : 0,

@@ -101,8 +101,12 @@ export default function PriceJourneyPage() {
   const [dealPhase, setDealPhase] = useState<'RECRUITING' | 'OFFER_PHASE'>('RECRUITING');
   const [deadlineMs, setDeadlineMs] = useState(Date.now() + 72 * 3600000);
   const timelineStage = apiDeal ? mapDealToTimelineStage(apiDeal) : (dealPhase === 'RECRUITING' ? 'recruiting' as const : 'offer_competition' as const);
-  const [shownStages, setShownStages] = useState<string[]>([]);
-  const shouldShowBanner = !shownStages.includes(timelineStage);
+  const [shownStages, setShownStages] = useState<string[]>(() => {
+    const saved = localStorage.getItem(`deal_${dealId}_shown_stages`);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const shouldShowBanner = !bannerDismissed && !shownStages.includes(timelineStage);
   const [predBuckets, _setPredBuckets] = useState<{range: string; count: number}[]>([]);
   const [avgPrediction, _setAvgPrediction] = useState(0);
   void _setPredBuckets; void _setAvgPrediction; // TODO: wire to spectator API
@@ -285,20 +289,17 @@ export default function PriceJourneyPage() {
     if (chatExpanded) chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages, chatExpanded]);
 
-  // Banner shown tracking (sessionStorage per deal)
+  // Banner shown tracking (localStorage per deal)
   useEffect(() => {
     if (shouldShowBanner) {
+      setBannerDismissed(false);
       const updated = [...shownStages, timelineStage];
       setShownStages(updated);
       localStorage.setItem(`deal_${dealId}_shown_stages`, JSON.stringify(updated));
     }
   }, [timelineStage]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load shown stages from sessionStorage
-  useEffect(() => {
-    const saved = localStorage.getItem(`deal_${dealId}_shown_stages`);
-    if (saved) setShownStages(JSON.parse(saved));
-  }, [dealId]);
+  const handleBannerDismiss = () => setBannerDismissed(true);
 
   const previewMsgs = chatMessages.slice(-3);
 
@@ -343,6 +344,9 @@ export default function PriceJourneyPage() {
 
         <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 17, fontWeight: 600, color: T.text, flex: 1 }}>
           가격 여정
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#00b0ff', marginLeft: 8, opacity: 0.85 }}>
+            딜 #{dealId}
+          </span>
         </span>
 
         {/* LIVE 배지 */}
@@ -372,7 +376,7 @@ export default function PriceJourneyPage() {
       {/* ── 딜 정보 스트립 ── */}
       <div style={{ padding: '12px 20px 14px', fontSize: 14, fontWeight: 500, color: T.text }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#00b0ff', background: 'rgba(0,176,255,0.1)', padding: '2px 8px', borderRadius: 6 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#00b0ff', background: 'rgba(0,176,255,0.15)', padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(0,176,255,0.25)' }}>
             Deal #{dealId}
           </span>
         </div>
@@ -388,7 +392,7 @@ export default function PriceJourneyPage() {
           background: T.bgSurface, border: `1px solid ${T.border}`,
           borderRadius: 14, padding: '6px 8px 2px',
         }}>
-          <DealTimeline currentStage={timelineStage} showBanner={shouldShowBanner} />
+          <DealTimeline currentStage={timelineStage} showBanner={shouldShowBanner} onBannerDismiss={handleBannerDismiss} />
           <div style={{
             padding: '6px 8px 10px', borderTop: `1px solid ${T.border}`,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',

@@ -38,7 +38,7 @@ export default function AdminPolicyParamsPage() {
   return (
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16 }}>정책 파라미터</h1>
-      <div style={{ display: 'flex', gap: 16, minHeight: 500 }}>
+      <div style={{ display: 'flex', gap: 16, height: 'calc(100vh - 120px)', minHeight: 500 }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
             <button onClick={save} disabled={saving || !changed} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: changed ? C.cyan : 'rgba(0,229,255,0.2)', color: changed ? '#000' : C.textSec, fontWeight: 600, cursor: changed ? 'pointer' : 'default', fontSize: 13 }}>
@@ -47,7 +47,7 @@ export default function AdminPolicyParamsPage() {
             <button onClick={revert} disabled={!changed} style={{ padding: '8px 20px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.textSec, cursor: changed ? 'pointer' : 'default', fontSize: 13 }}>되돌리기</button>
             {msg && <span style={{ fontSize: 13, color: msg.includes('실패') || msg.includes('error') ? C.red : C.green, alignSelf: 'center' }}>{msg}</span>}
           </div>
-          <textarea value={yaml} onChange={e => setYaml(e.target.value)} style={{ flex: 1, fontFamily: 'monospace', fontSize: 13, padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, background: 'var(--bg-primary)', color: C.text, resize: 'none', lineHeight: 1.6 }} />
+          <textarea value={yaml} onChange={e => setYaml(e.target.value)} style={{ flex: 1, fontFamily: 'monospace', fontSize: 13, padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, background: 'var(--bg-primary)', color: C.text, resize: 'vertical', lineHeight: 1.6, overflowY: 'auto', minHeight: 400 }} />
         </div>
         <div style={{ width: 280 }}>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: C.textSec, marginBottom: 8 }}>변경 이력</h3>

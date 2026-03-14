@@ -42,23 +42,6 @@ interface DealInfo {
 // ── 타입 ────────────────────────────────────────────────
 type CancelRule = 'A1' | 'A2' | 'A3' | 'A4';
 
-const CANCEL_RULES: { id: CancelRule; label: string; desc: string }[] = [
-  { id: 'A1', label: '언제든 취소 가능',    desc: '구매자 친화적, 신뢰도 ↑' },
-  { id: 'A2', label: '발송 후 취소 불가',   desc: '판매자 보호, 식품/맞춤제작' },
-  { id: 'A3', label: '수령 후 N일 이내 취소', desc: '수령 후 기간 내 취소 허용' },
-  { id: 'A4', label: '협의 후 취소',        desc: '케이스별 개별 협의' },
-];
-
-const WARRANTY_OPTIONS = [
-  { months: 0,  label: '없음' },
-  { months: 3,  label: '3개월' },
-  { months: 6,  label: '6개월' },
-  { months: 12, label: '12개월' },
-  { months: -1, label: '12개월+' },  // custom: triggers input
-];
-
-const DELIVERY_CHIPS = [1, 2, 3] as const;
-
 // ── 헬퍼 ─────────────────────────────────────────────────
 const fmtPrice  = (n: number) => n > 0 ? n.toLocaleString('ko-KR') : '';
 const parseNum  = (s: string) => parseInt(s.replace(/[^\d]/g, ''), 10) || 0;
@@ -113,25 +96,6 @@ function Label({ children, required }: { children: React.ReactNode; required?: b
   );
 }
 
-function Chip({
-  active, onClick, children,
-}: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: '7px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-        background: active ? `${C.green}18` : C.bgSurface,
-        border: `1.5px solid ${active ? C.green : C.border}`,
-        color: active ? C.green : C.textSec,
-        transition: 'all 0.15s',
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
 // ── 메인 컴포넌트 ────────────────────────────────────────
 export default function OfferCreatePage() {
   const { id: dealId } = useParams<{ id: string }>();
@@ -153,6 +117,8 @@ export default function OfferCreatePage() {
   const [condDelivery, setCondDelivery] = useState('1~3일');
   const [componentsText, setComponentsText] = useState('');
   const [optionAgreement, setOptionAgreement] = useState(false);
+  const [optionsCompleted, setOptionsCompleted] = useState(false);
+  const [condStep, setCondStep] = useState(0); // 0=waiting, 1=warranty, 2=refund, 3=shipping, 4=delivery, 5=all done
 
   // Step 2: 가격 & 수량
   const [priceStr,  setPriceStr]  = useState('');
@@ -163,17 +129,14 @@ export default function OfferCreatePage() {
   const [detail,    setDetail]    = useState('');
   const [images,    setImages]    = useState<string[]>([]);
 
-  // Step 2 (old): 배송 & 정책
-  const [shippingMode,      setShippingMode]      = useState<'INCLUDED' | 'PER_RESERVATION' | 'PER_QTY'>('INCLUDED');
-  const [feePerReservation, setFeePerReservation] = useState(3000);
-  const [feePerQty,         setFeePerQty]         = useState(1000);
-  const [deliveryDays,      setDeliveryDays]      = useState(2);
-  const [showCustomDel,     setShowCustomDel]     = useState(false);
-  const [warrantyMonths,    setWarrantyMonths]    = useState(0);
-  const [showCustomWarranty, setShowCustomWarranty] = useState(false);
-  const [cancelRule,        setCancelRule]        = useState<CancelRule>('A1');
-  const [cancelWithinDays,  setCancelWithinDays]  = useState(7);
-  const [extraText,         setExtraText]         = useState('');
+  // 배송 & 정책 (defaults, used in summary)
+  const [shippingMode]      = useState<'INCLUDED' | 'PER_RESERVATION' | 'PER_QTY'>('INCLUDED');
+  const [feePerReservation] = useState(3000);
+  const [feePerQty]         = useState(1000);
+  const [deliveryDays]      = useState(2);
+  const [warrantyMonths]    = useState(0);
+  const [cancelRule]        = useState<CancelRule>('A1');
+  const cancelWithinDays    = 7;
 
   // 제출
   const [submitting, setSubmitting] = useState(false);
@@ -338,6 +301,23 @@ export default function OfferCreatePage() {
         shipping_mode:               shippingMode,
         shipping_fee_per_reservation: feePerReservation,
         shipping_fee_per_qty:        feePerQty,
+        // 4-step wizard new fields
+        confirmed_options:           JSON.stringify(
+          (deal?.options ?? []).filter((_, i) => confirmedOptions[`opt_${i}`])
+        ),
+        extra_options:               JSON.stringify(
+          extraOptions.filter(o => o.key && o.value)
+        ),
+        conditions:                  JSON.stringify({
+          warranty: condWarranty,
+          refund: condRefund,
+          shipping: condShipping,
+          delivery: condDelivery,
+        }),
+        components:                  componentsText || undefined,
+        product_description:         detail || undefined,
+        product_images:              JSON.stringify(images),
+        option_agreement:            true,
       });
       if (result) {
         showToast('오퍼가 제출되었어요! 🎉', 'success');
@@ -497,6 +477,10 @@ export default function OfferCreatePage() {
         @keyframes ppBlink { 0%,100%{opacity:1} 50%{opacity:0.45} }
         .oc-input:focus { border-color: rgba(0,240,255,0.5) !important; outline: none; }
         .oc-input { box-sizing: border-box; width: 100%; }
+        @keyframes guidePulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,240,255,0.3)} 50%{box-shadow:0 0 12px 3px rgba(0,240,255,0.15)} }
+        .oc-dim { opacity: 0.2; pointer-events: none; filter: grayscale(0.8); transition: all 0.4s ease; }
+        .oc-active { opacity: 1; pointer-events: auto; filter: none; transition: all 0.4s ease; }
+        .oc-done { opacity: 0.85; pointer-events: auto; filter: none; transition: all 0.4s ease; }
       `}</style>
 
       {/* ── TopBar ── */}
@@ -546,7 +530,27 @@ export default function OfferCreatePage() {
             {step === 1 && (() => {
               const dealOptions = deal?.options ?? [];
               const allConfirmed = dealOptions.length === 0 || dealOptions.every((_, i) => confirmedOptions[`opt_${i}`]);
-              const canProceed = allConfirmed && optionAgreement;
+              const maxExtra = Math.max(0, 10 - dealOptions.length);
+              const canProceed = allConfirmed && optionsCompleted && condStep >= 5 && optionAgreement;
+
+              // Progressive section states
+              const secOptions = 'oc-active'; // always active first
+              const secOptComplete = allConfirmed ? 'oc-active' : 'oc-dim';
+              const secWarranty = optionsCompleted ? (condStep >= 1 ? 'oc-done' : 'oc-active') : 'oc-dim';
+              const secRefund = optionsCompleted && condStep >= 1 ? (condStep >= 2 ? 'oc-done' : 'oc-active') : 'oc-dim';
+              const secShipping = optionsCompleted && condStep >= 2 ? (condStep >= 3 ? 'oc-done' : 'oc-active') : 'oc-dim';
+              const secDelivery = optionsCompleted && condStep >= 3 ? (condStep >= 4 ? 'oc-done' : 'oc-active') : 'oc-dim';
+              const secComponents = optionsCompleted && condStep >= 4 ? (condStep >= 5 ? 'oc-done' : 'oc-active') : 'oc-dim';
+              const secAgreement = optionsCompleted && condStep >= 5 ? 'oc-active' : 'oc-dim';
+              const secNext = canProceed ? 'oc-active' : 'oc-dim';
+
+              const condSectionStyle = (active: boolean): React.CSSProperties => ({
+                padding: '14px', borderRadius: 12,
+                background: active ? 'rgba(0,240,255,0.04)' : C.bgSurface,
+                border: `1px solid ${active ? 'rgba(0,240,255,0.3)' : C.border}`,
+                animation: active ? 'guidePulse 2s ease-in-out infinite' : 'none',
+              });
+
               return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
                 {/* 딜 정보 헤더 */}
@@ -560,145 +564,257 @@ export default function OfferCreatePage() {
                   </div>
                 </div>
 
-                {/* 딜 요청 옵션 확인 */}
-                {dealOptions.length > 0 && (
-                  <div>
-                    <Label required>딜 요청 옵션 확인</Label>
-                    <div style={{ fontSize: 12, color: C.textSec, marginBottom: 10 }}>
-                      구매자가 요청한 옵션을 하나씩 확인해주세요. 모든 옵션을 확인해야 다음 단계로 진행할 수 있습니다.
+                {/* ── STEP A: 딜 요청 옵션 확인 ── */}
+                <div className={secOptions}>
+                  {!optionsCompleted && (
+                    <div style={{
+                      fontSize: 12, fontWeight: 700, color: C.cyan, marginBottom: 10,
+                      display: 'flex', alignItems: 'center', gap: 6,
+                    }}>
+                      <span style={{ display: 'inline-block', width: 22, height: 22, borderRadius: 11, background: C.cyan, color: '#0a0e1a', textAlign: 'center', lineHeight: '22px', fontSize: 11, fontWeight: 900 }}>1</span>
+                      구매자 옵션을 확인하고 추가옵션을 설정하세요
+                    </div>
+                  )}
+
+                  {dealOptions.length > 0 && (
+                    <div style={{ marginBottom: 16 }}>
+                      <Label required>딜 요청 옵션 확인</Label>
+                      <div style={{ fontSize: 12, color: C.textSec, marginBottom: 10 }}>
+                        구매자가 요청한 옵션을 하나씩 확인해주세요.
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {dealOptions.map((opt, i) => {
+                          const key = `opt_${i}`;
+                          const isConfirmed = !!confirmedOptions[key];
+                          return (
+                            <div key={key} style={{
+                              display: 'flex', alignItems: 'center', gap: 12,
+                              padding: '12px 14px', borderRadius: 12,
+                              background: isConfirmed ? `${C.green}10` : C.bgSurface,
+                              border: `1px solid ${isConfirmed ? C.green + '50' : C.border}`,
+                              transition: 'all 0.15s',
+                            }}>
+                              {/* 체크박스 */}
+                              <div
+                                onClick={() => setConfirmedOptions(prev => ({ ...prev, [key]: !prev[key] }))}
+                                style={{
+                                  width: 22, height: 22, borderRadius: 6, flexShrink: 0, cursor: 'pointer',
+                                  border: `2px solid ${isConfirmed ? C.green : C.textDim}`,
+                                  background: isConfirmed ? C.green : 'transparent',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  color: '#0a0e1a', fontSize: 13, fontWeight: 900,
+                                  transition: 'all 0.15s',
+                                }}
+                              >
+                                {isConfirmed && '✓'}
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{opt.title}</div>
+                                <div style={{ fontSize: 12, color: C.textSec }}>{opt.value}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {!allConfirmed && (
+                        <div style={{ fontSize: 11, color: C.magenta, marginTop: 6 }}>
+                          모든 옵션을 확인해주세요 ({Object.values(confirmedOptions).filter(Boolean).length}/{dealOptions.length})
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 추가 옵션 */}
+                  <div style={{ marginBottom: 16 }}>
+                    <Label>추가 옵션 (선택, 최대 {maxExtra}개)</Label>
+                    <div style={{ fontSize: 11, color: C.textDim, marginBottom: 8 }}>
+                      총 옵션 한도 10개 중 구매자 {dealOptions.length}개 사용 → 남은 {maxExtra}개 추가 가능
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {dealOptions.map((opt, i) => {
-                        const key = `opt_${i}`;
-                        const isConfirmed = !!confirmedOptions[key];
-                        return (
-                          <div key={key} style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: '12px 14px', borderRadius: 12,
-                            background: isConfirmed ? `${C.green}10` : C.bgSurface,
-                            border: `1px solid ${isConfirmed ? C.green + '50' : C.border}`,
-                            transition: 'all 0.15s',
-                          }}>
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{opt.title}</div>
-                              <div style={{ fontSize: 12, color: C.textSec }}>{opt.value}</div>
-                            </div>
-                            <button
-                              onClick={() => setConfirmedOptions(prev => ({ ...prev, [key]: !prev[key] }))}
-                              style={{
-                                padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                                cursor: 'pointer', transition: 'all 0.15s',
-                                background: isConfirmed ? C.green : 'transparent',
-                                color: isConfirmed ? '#0a0e1a' : C.textSec,
-                                border: `1px solid ${isConfirmed ? C.green : C.border}`,
-                              }}
-                            >
-                              {isConfirmed ? '확인됨' : '확인'}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {!allConfirmed && (
-                      <div style={{ fontSize: 11, color: C.magenta, marginTop: 6 }}>
-                        모든 옵션을 확인해주세요 ({Object.values(confirmedOptions).filter(Boolean).length}/{dealOptions.length})
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* 추가 옵션 (최대 5개) */}
-                <div>
-                  <Label>추가 옵션 (선택, 최대 5개)</Label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {extraOptions.map((opt, i) => (
-                      <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <input
-                          type="text"
-                          placeholder="옵션명"
-                          value={opt.key}
-                          onChange={e => {
-                            const next = [...extraOptions];
-                            next[i] = { ...next[i], key: e.target.value };
-                            setExtraOptions(next);
-                          }}
-                          className="oc-input"
-                          style={{ ...inputStyle, flex: 1 }}
-                        />
-                        <input
-                          type="text"
-                          placeholder="옵션값"
-                          value={opt.value}
-                          onChange={e => {
-                            const next = [...extraOptions];
-                            next[i] = { ...next[i], value: e.target.value };
-                            setExtraOptions(next);
-                          }}
-                          className="oc-input"
-                          style={{ ...inputStyle, flex: 1 }}
-                        />
+                      {extraOptions.map((opt, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            placeholder="옵션명"
+                            value={opt.key}
+                            onChange={e => {
+                              const next = [...extraOptions];
+                              next[i] = { ...next[i], key: e.target.value };
+                              setExtraOptions(next);
+                            }}
+                            className="oc-input"
+                            style={{ ...inputStyle, flex: 1 }}
+                          />
+                          <input
+                            type="text"
+                            placeholder="옵션값"
+                            value={opt.value}
+                            onChange={e => {
+                              const next = [...extraOptions];
+                              next[i] = { ...next[i], value: e.target.value };
+                              setExtraOptions(next);
+                            }}
+                            className="oc-input"
+                            style={{ ...inputStyle, flex: 1 }}
+                          />
+                          <button
+                            onClick={() => setExtraOptions(prev => prev.filter((_, idx) => idx !== i))}
+                            style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,45,120,0.12)', border: `1px solid rgba(255,45,120,0.3)`, color: C.magenta, fontSize: 14, cursor: 'pointer', flexShrink: 0 }}
+                          >✕</button>
+                        </div>
+                      ))}
+                      {extraOptions.length < maxExtra && (
                         <button
-                          onClick={() => setExtraOptions(prev => prev.filter((_, idx) => idx !== i))}
-                          style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,45,120,0.12)', border: `1px solid rgba(255,45,120,0.3)`, color: C.magenta, fontSize: 14, cursor: 'pointer', flexShrink: 0 }}
-                        >✕</button>
-                      </div>
-                    ))}
-                    {extraOptions.length < 5 && (
-                      <button
-                        onClick={() => setExtraOptions(prev => [...prev, { key: '', value: '' }])}
-                        style={{
-                          padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-                          background: C.bgSurface, border: `1.5px dashed ${C.border}`,
-                          color: C.textSec, cursor: 'pointer',
-                        }}
-                      >+ 추가 옵션</button>
-                    )}
+                          onClick={() => setExtraOptions(prev => [...prev, { key: '', value: '' }])}
+                          style={{
+                            padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                            background: C.bgSurface, border: `1.5px dashed ${C.border}`,
+                            color: C.textSec, cursor: 'pointer',
+                          }}
+                        >+ 추가 옵션</button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 옵션 선택 완료 버튼 */}
+                  <div className={secOptComplete}>
+                    <button
+                      onClick={() => {
+                        if (!allConfirmed) {
+                          showToast('모든 딜 옵션을 확인해주세요.', 'error');
+                          return;
+                        }
+                        setOptionsCompleted(true);
+                        if (condStep === 0) setCondStep(0.5);
+                        setTimeout(() => setCondStep(prev => prev < 0.5 ? prev : 0.5), 50);
+                      }}
+                      disabled={!allConfirmed || optionsCompleted}
+                      style={{
+                        width: '100%', padding: '14px', borderRadius: 12, fontSize: 14, fontWeight: 800,
+                        background: optionsCompleted
+                          ? `${C.green}20`
+                          : allConfirmed
+                            ? `linear-gradient(135deg, ${C.orange}, #ff6a33)`
+                            : `${C.orange}30`,
+                        color: optionsCompleted ? C.green : allConfirmed ? '#fff' : C.textDim,
+                        border: optionsCompleted ? `1px solid ${C.green}40` : 'none',
+                        cursor: !allConfirmed || optionsCompleted ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {optionsCompleted ? '✓ 옵션 선택 완료' : '옵션 선택 완료'}
+                    </button>
                   </div>
                 </div>
 
-                {/* 조건 설정 */}
-                <div>
-                  <Label>판매 조건</Label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <div>
-                      <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>보증</div>
-                      <select value={condWarranty} onChange={e => setCondWarranty(e.target.value)} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
+                {/* ── STEP B: 판매 조건 (순차적 하이라이트) ── */}
+                {optionsCompleted && (
+                  <div style={{
+                    fontSize: 12, fontWeight: 700, color: C.cyan, marginBottom: -12,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    <span style={{ display: 'inline-block', width: 22, height: 22, borderRadius: 11, background: C.cyan, color: '#0a0e1a', textAlign: 'center', lineHeight: '22px', fontSize: 11, fontWeight: 900 }}>2</span>
+                    판매 조건을 하나씩 설정하세요
+                  </div>
+                )}
+
+                {/* 보증 */}
+                <div className={secWarranty} style={condSectionStyle(secWarranty === 'oc-active')}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: secWarranty === 'oc-active' ? C.cyan : C.textSec, marginBottom: 6 }}>🛡️ 보증 기간</div>
+                      <select value={condWarranty} onChange={e => { setCondWarranty(e.target.value); }} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
                         <option value="없음">없음</option>
                         <option value="3개월">3개월</option>
                         <option value="6개월">6개월</option>
                         <option value="1년">1년</option>
                       </select>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>환불</div>
-                      <select value={condRefund} onChange={e => setCondRefund(e.target.value)} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
+                    {condStep < 1 && optionsCompleted && (
+                      <button onClick={() => setCondStep(1)} style={{
+                        padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                        background: C.cyan, color: '#0a0e1a', cursor: 'pointer', flexShrink: 0, marginTop: 18,
+                      }}>확인</button>
+                    )}
+                    {condStep >= 1 && <span style={{ color: C.green, fontSize: 16, marginTop: 18 }}>✓</span>}
+                  </div>
+                </div>
+
+                {/* 환불 */}
+                <div className={secRefund} style={condSectionStyle(secRefund === 'oc-active')}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: secRefund === 'oc-active' ? C.cyan : C.textSec, marginBottom: 6 }}>↩️ 환불 정책</div>
+                      <select value={condRefund} onChange={e => { setCondRefund(e.target.value); }} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
                         <option value="7일">7일</option>
                         <option value="14일">14일</option>
                         <option value="불가">불가</option>
                       </select>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>배송비</div>
-                      <select value={condShipping} onChange={e => setCondShipping(e.target.value)} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
+                    {condStep >= 1 && condStep < 2 && (
+                      <button onClick={() => setCondStep(2)} style={{
+                        padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                        background: C.cyan, color: '#0a0e1a', cursor: 'pointer', flexShrink: 0, marginTop: 18,
+                      }}>확인</button>
+                    )}
+                    {condStep >= 2 && <span style={{ color: C.green, fontSize: 16, marginTop: 18 }}>✓</span>}
+                  </div>
+                </div>
+
+                {/* 배송비 */}
+                <div className={secShipping} style={condSectionStyle(secShipping === 'oc-active')}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: secShipping === 'oc-active' ? C.cyan : C.textSec, marginBottom: 6 }}>🚚 배송비</div>
+                      <select value={condShipping} onChange={e => { setCondShipping(e.target.value); }} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
                         <option value="무료">무료</option>
                         <option value="유료">유료</option>
                         <option value="조건부">조건부</option>
                       </select>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>배송일</div>
-                      <select value={condDelivery} onChange={e => setCondDelivery(e.target.value)} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
+                    {condStep >= 2 && condStep < 3 && (
+                      <button onClick={() => setCondStep(3)} style={{
+                        padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                        background: C.cyan, color: '#0a0e1a', cursor: 'pointer', flexShrink: 0, marginTop: 18,
+                      }}>확인</button>
+                    )}
+                    {condStep >= 3 && <span style={{ color: C.green, fontSize: 16, marginTop: 18 }}>✓</span>}
+                  </div>
+                </div>
+
+                {/* 배송일 */}
+                <div className={secDelivery} style={condSectionStyle(secDelivery === 'oc-active')}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: secDelivery === 'oc-active' ? C.cyan : C.textSec, marginBottom: 6 }}>📅 배송 소요일</div>
+                      <select value={condDelivery} onChange={e => { setCondDelivery(e.target.value); }} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
                         <option value="1~3일">1~3일</option>
                         <option value="3~5일">3~5일</option>
                         <option value="5~7일">5~7일</option>
                         <option value="7일+">7일+</option>
                       </select>
                     </div>
+                    {condStep >= 3 && condStep < 4 && (
+                      <button onClick={() => setCondStep(4)} style={{
+                        padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                        background: C.cyan, color: '#0a0e1a', cursor: 'pointer', flexShrink: 0, marginTop: 18,
+                      }}>확인</button>
+                    )}
+                    {condStep >= 4 && <span style={{ color: C.green, fontSize: 16, marginTop: 18 }}>✓</span>}
                   </div>
                 </div>
 
                 {/* 구성품 */}
-                <div>
+                <div className={secComponents}>
+                  {secComponents === 'oc-active' && (
+                    <div style={{
+                      fontSize: 12, fontWeight: 700, color: C.cyan, marginBottom: 8,
+                      display: 'flex', alignItems: 'center', gap: 6,
+                    }}>
+                      <span style={{ display: 'inline-block', width: 22, height: 22, borderRadius: 11, background: C.cyan, color: '#0a0e1a', textAlign: 'center', lineHeight: '22px', fontSize: 11, fontWeight: 900 }}>3</span>
+                      구성품을 입력하세요 (선택)
+                    </div>
+                  )}
                   <Label>구성품 (선택)</Label>
                   <textarea
                     value={componentsText}
@@ -708,40 +824,63 @@ export default function OfferCreatePage() {
                     className="oc-input"
                     style={{ ...inputStyle, resize: 'none', lineHeight: 1.55 }}
                   />
-                  <div style={{ fontSize: 11, color: C.textDim, textAlign: 'right', marginTop: 4 }}>{componentsText.length}/500</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                    <div style={{ fontSize: 11, color: C.textDim }}>{componentsText.length}/500</div>
+                    {condStep >= 4 && condStep < 5 && (
+                      <button onClick={() => setCondStep(5)} style={{
+                        padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                        background: C.cyan, color: '#0a0e1a', cursor: 'pointer',
+                      }}>{componentsText.length > 0 ? '확인' : '건너뛰기'}</button>
+                    )}
+                  </div>
                 </div>
 
                 {/* 동의 체크박스 */}
-                <div
-                  onClick={() => setOptionAgreement(prev => !prev)}
-                  style={{
-                    display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer',
-                    padding: '14px', borderRadius: 12,
-                    background: optionAgreement ? `${C.green}08` : C.bgSurface,
-                    border: `1px solid ${optionAgreement ? C.green + '40' : C.border}`,
-                  }}
-                >
-                  <div style={{
-                    width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
-                    border: `2px solid ${optionAgreement ? C.green : C.textDim}`,
-                    background: optionAgreement ? C.green : 'transparent',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#0a0e1a', fontSize: 12, fontWeight: 900,
-                  }}>
-                    {optionAgreement && '✓'}
-                  </div>
-                  <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.5 }}>
-                    위 딜 옵션과 판매 조건을 확인했으며, 해당 조건으로 오퍼를 제출하는 것에 동의합니다.
+                <div className={secAgreement}>
+                  {secAgreement === 'oc-active' && (
+                    <div style={{
+                      fontSize: 12, fontWeight: 700, color: C.cyan, marginBottom: 8,
+                      display: 'flex', alignItems: 'center', gap: 6,
+                    }}>
+                      <span style={{ display: 'inline-block', width: 22, height: 22, borderRadius: 11, background: C.cyan, color: '#0a0e1a', textAlign: 'center', lineHeight: '22px', fontSize: 11, fontWeight: 900 }}>4</span>
+                      동의 후 다음 단계로 진행하세요
+                    </div>
+                  )}
+                  <div
+                    onClick={() => setOptionAgreement(prev => !prev)}
+                    style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer',
+                      padding: '14px', borderRadius: 12,
+                      background: optionAgreement ? `${C.green}08` : C.bgSurface,
+                      border: `1px solid ${optionAgreement ? C.green + '40' : C.border}`,
+                      animation: secAgreement === 'oc-active' && !optionAgreement ? 'guidePulse 2s ease-in-out infinite' : 'none',
+                    }}
+                  >
+                    <div style={{
+                      width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                      border: `2px solid ${optionAgreement ? C.green : C.textDim}`,
+                      background: optionAgreement ? C.green : 'transparent',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#0a0e1a', fontSize: 12, fontWeight: 900,
+                    }}>
+                      {optionAgreement && '✓'}
+                    </div>
+                    <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.5 }}>
+                      위 딜 옵션과 판매 조건을 확인했으며, 해당 조건으로 오퍼를 제출하는 것에 동의합니다.
+                    </div>
                   </div>
                 </div>
 
-                {ctaBtn('다음 →', () => {
-                  if (!canProceed) {
-                    showToast('모든 옵션을 확인하고 동의 체크를 해주세요.', 'error');
-                    return;
-                  }
-                  goTo(2);
-                }, !canProceed)}
+                {/* 다음 버튼 */}
+                <div className={secNext}>
+                  {ctaBtn('다음 →', () => {
+                    if (!canProceed) {
+                      showToast('모든 옵션을 확인하고 동의 체크를 해주세요.', 'error');
+                      return;
+                    }
+                    goTo(2);
+                  }, !canProceed)}
+                </div>
               </div>
               );
             })()}

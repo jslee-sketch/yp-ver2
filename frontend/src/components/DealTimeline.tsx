@@ -5,6 +5,7 @@ export type TimelineStage = 'recruiting' | 'offer_competition' | 'reservation_pa
 interface TimelineProps {
   currentStage: TimelineStage;
   showBanner?: boolean;
+  onBannerDismiss?: () => void;
 }
 
 const STAGES: { key: TimelineStage; label: string; icon: string; color: string }[] = [
@@ -34,21 +35,29 @@ export function mapDealToTimelineStage(deal: Record<string, unknown>): TimelineS
   return 'recruiting';
 }
 
-export default function DealTimeline({ currentStage, showBanner = false }: TimelineProps) {
+export default function DealTimeline({ currentStage, showBanner = false, onBannerDismiss }: TimelineProps) {
   const currentIndex = STAGES.findIndex(s => s.key === currentStage);
   const [bannerVisible, setBannerVisible] = useState(false);
   const [bannerText, setBannerText] = useState('');
   const confettiFired = useRef(false);
 
-  // Banner
+  // Banner — auto-dismiss after 3s
   useEffect(() => {
     if (showBanner && BANNER_MESSAGES[currentStage]) {
       setBannerText(BANNER_MESSAGES[currentStage]);
       setBannerVisible(true);
-      const t = setTimeout(() => setBannerVisible(false), 3000);
+      const t = setTimeout(() => {
+        setBannerVisible(false);
+        onBannerDismiss?.();
+      }, 3000);
       return () => clearTimeout(t);
     }
-  }, [currentStage, showBanner]);
+  }, [currentStage, showBanner, onBannerDismiss]);
+
+  const dismissBanner = () => {
+    setBannerVisible(false);
+    onBannerDismiss?.();
+  };
 
   // Confetti
   useEffect(() => {
@@ -71,7 +80,7 @@ export default function DealTimeline({ currentStage, showBanner = false }: Timel
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
           display: 'flex', justifyContent: 'center', padding: 16,
           animation: 'tlBannerIn 0.3s ease-out',
-          pointerEvents: 'none',
+          pointerEvents: 'auto',
         }}>
           <div style={{
             background: 'linear-gradient(135deg, #1a1a2e 0%, #2a2a4a 100%)',
@@ -80,8 +89,22 @@ export default function DealTimeline({ currentStage, showBanner = false }: Timel
             color: '#fff', fontSize: 18, fontWeight: 700,
             boxShadow: '0 8px 32px rgba(74,222,128,0.3)',
             textAlign: 'center',
+            position: 'relative',
           }}>
             {bannerText}
+            <button
+              onClick={dismissBanner}
+              style={{
+                position: 'absolute', top: 6, right: 10,
+                background: 'transparent', border: 'none',
+                color: 'rgba(255,255,255,0.6)', fontSize: 16,
+                cursor: 'pointer', padding: '2px 6px',
+                lineHeight: 1,
+              }}
+              aria-label="닫기"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}

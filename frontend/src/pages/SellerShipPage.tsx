@@ -31,6 +31,7 @@ interface SellerOrder {
   shipped_at?: string;
   tracking_number?: string;
   shipping_carrier?: string;
+  order_number?: string;
   created_at: string;
 }
 
@@ -108,7 +109,7 @@ export default function SellerShipPage() {
               id: r.id as number,
               deal_id: (r.deal_id as number) || (deal?.id as number) || undefined,
               offer_id: (r.offer_id as number) || 0,
-              product_name: String(deal?.product_name ?? `예약 #${r.id}`),
+              product_name: String(deal?.product_name ?? `주문 ${r.order_number || '#' + r.id}`),
               buyer_name: String(buyer?.nickname ?? buyer?.name ?? `구매자#${r.buyer_id}`),
               qty: (r.qty as number) || 1,
               amount_total: (r.amount_total as number) || 0,
@@ -116,6 +117,7 @@ export default function SellerShipPage() {
               shipped_at: (r.shipped_at as string) || undefined,
               tracking_number: (r.tracking_number as string) || undefined,
               shipping_carrier: (r.shipping_carrier as string) || undefined,
+              order_number: (r.order_number as string) || undefined,
               created_at: String(r.created_at ?? '').split('T')[0],
             };
           }));
@@ -210,7 +212,7 @@ export default function SellerShipPage() {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>📦 {order.product_name}</div>
                   <div style={{ fontSize: 11, color: C.textSec }}>
-                    예약 <span style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>#{order.id}</span>
+                    주문 <span style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>{order.order_number || `#${order.id}`}</span>
                     {order.deal_id ? <> · <span onClick={e => { e.stopPropagation(); navigate(`/deal/${order.deal_id}`); }} style={{ cursor: 'pointer', color: 'var(--accent-blue)', textDecoration: 'underline' }}>딜 #{order.deal_id}</span></> : null}
                     {' · '}오퍼 #{order.offer_id} · {order.buyer_name}
                   </div>
@@ -271,7 +273,7 @@ export default function SellerShipPage() {
           <div onClick={() => setShipTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 3000 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '92%', maxWidth: 400, background: '#1a1a2e', border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px 20px', zIndex: 3001 }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 4 }}>발송 처리</div>
-            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>예약 #{shipTarget.id} · {shipTarget.product_name}</div>
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>주문 {shipTarget.order_number || `#${shipTarget.id}`} · {shipTarget.product_name}</div>
 
             <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 6 }}>택배사</div>
             <select value={carrier} onChange={e => setCarrier(e.target.value)}

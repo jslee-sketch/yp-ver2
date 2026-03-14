@@ -31,6 +31,7 @@ interface RefundReservation {
   cancelled_at?: string;
   reason?: string;
   refund_reason?: string;
+  order_number?: string;
   deal?: { product_name?: string };
   buyer?: { nickname?: string; name?: string };
 }
@@ -187,7 +188,7 @@ export default function SellerRefundsPage() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: C.textSec }}>
-                  예약 #{r.id} · 딜 #{r.deal_id}
+                  주문 {r.order_number || `#${r.id}`} · 딜 #{r.deal_id}
                 </span>
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
@@ -195,7 +196,7 @@ export default function SellerRefundsPage() {
                 }}>{st}</span>
               </div>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>
-                {r.deal?.product_name ?? `예약 #${r.id}`}
+                {r.deal?.product_name ?? `주문 ${r.order_number || '#' + r.id}`}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 6 }}>
                 <div><div style={{ fontSize: 10, color: C.textDim }}>결제액</div><div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{fmtP(r.amount_total)}</div></div>
@@ -249,7 +250,7 @@ export default function SellerRefundsPage() {
           <div onClick={() => setAgreeTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 3000 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '92%', maxWidth: 400, background: '#1a1a2e', border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px 20px', zIndex: 3001 }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 4 }}>환불 동의</div>
-            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>예약 #{agreeTarget.id}</div>
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>주문 {agreeTarget.order_number || `#${agreeTarget.id}`}</div>
             {previewLoading ? (
               <div style={{ textAlign: 'center', padding: '20px 0', color: C.textDim }}>미리보기 로딩...</div>
             ) : preview ? (
@@ -280,7 +281,7 @@ export default function SellerRefundsPage() {
           <div onClick={() => setDisagreeTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 3000 }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '92%', maxWidth: 400, background: '#1a1a2e', border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px 20px', zIndex: 3001 }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 4 }}>환불 미동의</div>
-            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>예약 #{disagreeTarget.id}</div>
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 16 }}>주문 {disagreeTarget.order_number || `#${disagreeTarget.id}`}</div>
             <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 6 }}>미동의 사유</div>
             <textarea
               value={disagreeReason} onChange={e => setDisagreeReason(e.target.value)}

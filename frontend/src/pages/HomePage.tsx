@@ -337,15 +337,16 @@ export default function HomePage() {
           {/* 오늘 절약 (wide) */}
           <div style={{
             padding: '16px 20px',
-            background: 'rgba(255,255,255,0.025)',
-            border: '1px solid rgba(255,255,255,0.05)',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 14,
             textAlign: 'center',
             marginBottom: 8,
+            boxShadow: '0 0 20px rgba(0,230,118,0.08)',
           }}>
-            <div style={{ fontSize: 11, color: '#546e7a', marginBottom: 6 }}>💰 오늘 절약된 금액</div>
+            <div style={{ fontSize: 11, color: '#78909c', marginBottom: 6 }}>💰 오늘 절약된 금액</div>
             <div style={{
-              fontSize: 28, fontWeight: 900,
+              fontSize: 32, fontWeight: 900,
               color: 'var(--accent-green)',
               fontVariantNumeric: 'tabular-nums',
               letterSpacing: '-0.5px',

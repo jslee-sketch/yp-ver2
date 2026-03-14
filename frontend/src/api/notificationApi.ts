@@ -1,9 +1,10 @@
 import apiClient from './client';
 import { API } from './endpoints';
 
-export async function fetchNotifications() {
+export async function fetchNotifications(userId?: number) {
   try {
-    const res = await apiClient.get(API.NOTIFICATIONS.LIST);
+    const params = userId != null ? { user_id: userId } : {};
+    const res = await apiClient.get(API.NOTIFICATIONS.LIST, { params });
     return res.data;
   } catch (err) {
     console.error('알림 API 실패:', err);

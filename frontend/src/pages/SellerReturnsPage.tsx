@@ -12,7 +12,7 @@ const C = {
 
 function fmtP(n: number) { return (n ?? 0).toLocaleString('ko-KR') + '원'; }
 function fmtDate(s?: string) { return (s ?? '').split('T')[0].replace(/-/g, '.'); }
-function fmtId(prefix: string, id: number) { return `${prefix}-${String(id).padStart(6, '0')}`; }
+
 
 interface ReturnItem {
   id: number;
@@ -25,6 +25,7 @@ interface ReturnItem {
   refunded_amount_total: number;
   refund_type?: string;
   is_disputed?: boolean;
+  order_number?: string;
   created_at: string;
   deal?: { product_name?: string };
   buyer?: { nickname?: string; name?: string };
@@ -119,7 +120,7 @@ export default function SellerReturnsPage() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: C.textSec }}>
-                  {fmtId('R', r.id)} · 딜 #{r.deal_id}
+                  주문 {r.order_number || `#${r.id}`} · 딜 #{r.deal_id}
                 </span>
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
@@ -127,7 +128,7 @@ export default function SellerReturnsPage() {
                 }}>{st}</span>
               </div>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>
-                {r.deal?.product_name ?? `예약 ${fmtId('R', r.id)}`}
+                {r.deal?.product_name ?? `주문 ${r.order_number || '#' + r.id}`}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 6 }}>
                 <div><div style={{ fontSize: 10, color: C.textDim }}>수량</div><div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{r.qty}개</div></div>

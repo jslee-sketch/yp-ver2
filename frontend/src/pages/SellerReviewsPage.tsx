@@ -124,8 +124,19 @@ export default function SellerReviewsPage() {
               리뷰 {items.length}건
             </div>
 
+            {items.length === 0 && !summary && (
+              <div style={{
+                background: C.bgCard, border: `1px solid ${C.border}`, borderTop: `3px solid ${C.yellow}`,
+                borderRadius: 16, padding: 16, marginBottom: 16, textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 32, fontWeight: 800, color: C.yellow }}>-</div>
+                <div style={{ fontSize: 11, color: C.textDim }}>평균 평점</div>
+                <div style={{ fontSize: 11, color: C.textDim, marginTop: 8 }}>아직 리뷰가 없습니다</div>
+              </div>
+            )}
+
             {items.length === 0 && (
-              <EmptyState icon="⭐" message="아직 받은 리뷰가 없어요" />
+              <EmptyState icon="⭐" message="아직 받은 리뷰가 없어요" sub="구매자가 리뷰를 남기면 여기에 표시됩니다" />
             )}
 
             {items.map(review => (
