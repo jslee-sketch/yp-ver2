@@ -3,7 +3,7 @@ Pingpongi 100Q Save - 새 100문항 + 실제 답변 전문 저장
 API: POST /v3_6/pingpong/ask
 """
 import json, time, urllib.request, urllib.error, sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 BASE = "https://www.yeokping.com"
@@ -198,7 +198,7 @@ def main():
     print(f"Pass rate: {pct:.1f}%")
 
     output = {
-        "test_date": datetime.now(timezone.utc).isoformat(),
+        "test_date": datetime.now(timezone(timedelta(hours=9))).isoformat(),
         "endpoint": ENDPOINT,
         "summary": {"total": total, **counts, "pass_rate_pct": round(pct, 1)},
         "results": results,
