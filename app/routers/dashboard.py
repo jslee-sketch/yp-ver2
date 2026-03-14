@@ -86,8 +86,9 @@ def buyer_dashboard(
         return _buyer_dashboard_impl(buyer_id, db)
     except Exception as e:
         import traceback
-        traceback.print_exc()
-        raise
+        tb = traceback.format_exc()
+        print(f"[dashboard/buyer/{buyer_id}] ERROR: {tb}")
+        return {"error": str(e), "traceback": tb, "buyer_id": buyer_id}
 
 
 def _buyer_dashboard_impl(buyer_id: int, db: Session) -> Dict[str, Any]:
