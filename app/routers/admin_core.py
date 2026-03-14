@@ -288,32 +288,40 @@ def admin_list_reservations(
 
     result = []
     for r in items:
-        sid = offer_seller_map.get(getattr(r, "offer_id", None))
-        result.append({
-            "id": r.id,
-            "deal_id": getattr(r, "deal_id", None),
-            "offer_id": getattr(r, "offer_id", None),
-            "product_name": deal_map.get(getattr(r, "deal_id", None), ""),
-            "quantity": getattr(r, "qty", None),
-            "buyer_id": r.buyer_id,
-            "buyer_name": buyer_map.get(r.buyer_id, ""),
-            "seller_id": sid,
-            "seller_name": seller_map.get(sid, "") if sid else "",
-            "amount": getattr(r, "amount_total", 0),
-            "status": getattr(r.status, "value", str(r.status)) if r.status else "",
-            "is_disputed": getattr(r, "is_disputed", False),
-            "dispute_reason": getattr(r, "dispute_reason", None),
-            "dispute_resolution": getattr(r, "dispute_resolution", None),
-            "dispute_opened_at": str(r.dispute_opened_at) if getattr(r, "dispute_opened_at", None) else None,
-            "dispute_closed_at": str(r.dispute_closed_at) if getattr(r, "dispute_closed_at", None) else None,
-            "shipped_at": str(r.shipped_at) if getattr(r, "shipped_at", None) else None,
-            "carrier": getattr(r, "shipping_carrier", None),
-            "tracking_number": getattr(r, "tracking_number", None),
-            "refund_type": getattr(r, "refund_type", None),
-            "refunded_qty": getattr(r, "refunded_qty", 0),
-            "refunded_amount_total": getattr(r, "refunded_amount_total", 0),
-            "created_at": str(getattr(r, "created_at", "")),
-        })
+        try:
+            sid = offer_seller_map.get(getattr(r, "offer_id", None))
+            st = getattr(r, "status", None)
+            st_str = ""
+            if st is not None:
+                st_str = getattr(st, "value", None) or str(st)
+            result.append({
+                "id": r.id,
+                "order_number": getattr(r, "order_number", None),
+                "deal_id": getattr(r, "deal_id", None),
+                "offer_id": getattr(r, "offer_id", None),
+                "product_name": deal_map.get(getattr(r, "deal_id", None), ""),
+                "quantity": getattr(r, "qty", None),
+                "buyer_id": getattr(r, "buyer_id", None),
+                "buyer_name": buyer_map.get(getattr(r, "buyer_id", 0), ""),
+                "seller_id": sid,
+                "seller_name": seller_map.get(sid, "") if sid else "",
+                "amount": getattr(r, "amount_total", 0),
+                "status": st_str,
+                "is_disputed": getattr(r, "is_disputed", False),
+                "dispute_reason": getattr(r, "dispute_reason", None),
+                "dispute_resolution": getattr(r, "dispute_resolution", None),
+                "dispute_opened_at": str(r.dispute_opened_at) if getattr(r, "dispute_opened_at", None) else None,
+                "dispute_closed_at": str(r.dispute_closed_at) if getattr(r, "dispute_closed_at", None) else None,
+                "shipped_at": str(r.shipped_at) if getattr(r, "shipped_at", None) else None,
+                "carrier": getattr(r, "shipping_carrier", None),
+                "tracking_number": getattr(r, "tracking_number", None),
+                "refund_type": getattr(r, "refund_type", None),
+                "refunded_qty": getattr(r, "refunded_qty", 0),
+                "refunded_amount_total": getattr(r, "refunded_amount_total", 0),
+                "created_at": str(getattr(r, "created_at", "")),
+            })
+        except Exception as row_err:
+            result.append({"id": getattr(r, "id", 0), "error": str(row_err)})
     total = db.query(sa_func.count(models.Reservation.id)).scalar() or 0
     return {"items": result, "total": total}
 
