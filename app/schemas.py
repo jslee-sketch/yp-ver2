@@ -598,6 +598,15 @@ class OfferOut(ORMModel):
     shipping_fee_per_reservation: Optional[int] = None
     shipping_fee_per_qty: Optional[int] = None
 
+    # offer 상세 확장 (4-step wizard)
+    confirmed_options: Optional[str] = None
+    extra_options: Optional[str] = None
+    conditions: Optional[str] = None
+    components: Optional[str] = None
+    product_description: Optional[str] = None
+    product_images: Optional[str] = None
+    option_agreement: Optional[bool] = None
+
 
 # 하위호환: 기존 코드가 OfferOutExtended를 참조한다면 그대로 동작
 class OfferOutExtended(OfferOut):
