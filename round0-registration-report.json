@@ -1,0 +1,613 @@
+{
+  "round": "0",
+  "entity": "Registration + Auth + Role Access",
+  "checkpoints": 93,
+  "PASS": 93,
+  "FAIL": 0,
+  "sub_rounds": {
+    "0-A": {
+      "checkpoints": 26,
+      "PASS": 26,
+      "FAIL": 0
+    },
+    "0-B": {
+      "checkpoints": 22,
+      "PASS": 22,
+      "FAIL": 0
+    },
+    "0-C": {
+      "checkpoints": 7,
+      "PASS": 7,
+      "FAIL": 0
+    },
+    "0-D": {
+      "checkpoints": 6,
+      "PASS": 6,
+      "FAIL": 0
+    },
+    "0-E": {
+      "checkpoints": 14,
+      "PASS": 14,
+      "FAIL": 0
+    },
+    "0-F": {
+      "checkpoints": 18,
+      "PASS": 18,
+      "FAIL": 0
+    }
+  },
+  "created_accounts": {
+    "buyer": {
+      "email": "qa_buyer_5398@test.com",
+      "password": "QaTest1234!",
+      "id": 1225,
+      "nickname": "QA구매자5398"
+    },
+    "seller": {
+      "email": "qa_seller_5398@test.com",
+      "password": "QaTest1234!",
+      "id": 1193,
+      "nickname": "QA판매자5398"
+    }
+  },
+  "details": [
+    {
+      "name": "CP-1a: Nickname check returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-1b: Nickname available",
+      "status": "PASS",
+      "detail": "got={'available': True}",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-2a: Banned nickname check returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-2b: Banned nickname rejected",
+      "status": "PASS",
+      "detail": "got={'available': False, 'reason': 'banned'}",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-3a: Email check returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-3b: Email available",
+      "status": "PASS",
+      "detail": "got={'available': True}",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-4a: Existing email check returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-4b: Existing email rejected",
+      "status": "PASS",
+      "detail": "got={'available': False}",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-5a: Buyer register returns 200/201",
+      "status": "PASS",
+      "detail": "code=200, data={'id': 1225, 'created_at': '2026-03-14T12:41:42.094646', 'points': 0, 'email': 'qa_buyer_5398@test.com', 'name': 'QA테스트구매자5398', 'nickname': 'QA구매자5398', 'phone': '010-9999-5398', 'addr",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-5b: id returned",
+      "status": "PASS",
+      "detail": "got=1225",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-5c: email matches",
+      "status": "PASS",
+      "detail": "got=qa_buyer_5398@test.com",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-5d: nickname matches",
+      "status": "PASS",
+      "detail": "got=QA구매자5398",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-5e: created_at set",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:41:42.094646",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-6a: Returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-6b: Email no longer available",
+      "status": "PASS",
+      "detail": "got={'available': False}",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-7a: Login success",
+      "status": "PASS",
+      "detail": "token received",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-7b: JWT role is buyer",
+      "status": "PASS",
+      "detail": "got=buyer",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-7c: JWT sub matches",
+      "status": "PASS",
+      "detail": "sub=1225, id=1225",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-8a: Buyer profile returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-8b: Profile has email",
+      "status": "PASS",
+      "detail": "got=qa_buyer_5398@test.com",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-8c: Profile has nickname",
+      "status": "PASS",
+      "detail": "got=QA구매자5398",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-9: Buyer dashboard returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-10a: Points endpoint returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-10b: Initial balance >= 0",
+      "status": "PASS",
+      "detail": "got=0",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-11: Register Page loads",
+      "status": "PASS",
+      "detail": "status=200",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-11: Login Page loads",
+      "status": "PASS",
+      "detail": "status=200",
+      "sub_round": "0-A"
+    },
+    {
+      "name": "CP-1: Seller nickname available",
+      "status": "PASS",
+      "detail": "code=200, data={'available': True}",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-2: Seller email available",
+      "status": "PASS",
+      "detail": "code=200, data={'available': True}",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-3a: Seller register returns 200/201",
+      "status": "PASS",
+      "detail": "code=200, data={'id': 1193, 'created_at': '2026-03-14T12:41:52.032661', 'email': 'qa_seller_5398@test.com', 'business_name': 'QA테스트상점5398', 'nickname': 'QA판매자5398', 'business_number': '123539867890', ",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-3b: id returned",
+      "status": "PASS",
+      "detail": "got=1193",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-3c: email matches",
+      "status": "PASS",
+      "detail": "got=qa_seller_5398@test.com",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-3d: nickname matches",
+      "status": "PASS",
+      "detail": "got=QA판매자5398",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-3e: business_name set",
+      "status": "PASS",
+      "detail": "got=QA테스트상점5398",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-3f: Level is 6 (default)",
+      "status": "PASS",
+      "detail": "got=6",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-3g: Not verified yet",
+      "status": "PASS",
+      "detail": "got=None",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-4a: Seller login success",
+      "status": "PASS",
+      "detail": "token received",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-4b: JWT role is seller",
+      "status": "PASS",
+      "detail": "got=seller",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-4c: JWT has seller_id",
+      "status": "PASS",
+      "detail": "got={'sub': '1193', 'role': 'seller', 'seller_id': 1193, 'verified': False, 'exp': 1773495713}",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-4d: JWT verified=false (unverified)",
+      "status": "PASS",
+      "detail": "got=False",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-5a: Seller profile returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-5b: Has business_number",
+      "status": "PASS",
+      "detail": "got=123539867890",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-5c: Has bank_name",
+      "status": "PASS",
+      "detail": "got=국민은행",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-6a: Approve returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'id': 1193, 'created_at': '2026-03-14T12:41:52.032661', 'email': 'qa_seller_5398@test.com', 'business_name': 'QA테스트상점5398', 'nickname': 'QA판매자5398', 'business_number': '123539867890', ",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-6b: verified_at is now set",
+      "status": "PASS",
+      "detail": "got=2026-03-14T12:41:55.339437",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-6c: JWT verified=true after approval",
+      "status": "PASS",
+      "detail": "got=True",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-7: Seller dashboard returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-8a: Sellers list returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-8b: New seller found in list",
+      "status": "PASS",
+      "detail": "checked 977",
+      "sub_round": "0-B"
+    },
+    {
+      "name": "CP-1: kakao authorize returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-C"
+    },
+    {
+      "name": "CP-1: kakao URL contains auth domain",
+      "status": "PASS",
+      "detail": "url=https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=fb035a07b7eef8ed996eb1c4fe5d559",
+      "sub_round": "0-C"
+    },
+    {
+      "name": "CP-1: naver authorize returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-C"
+    },
+    {
+      "name": "CP-1: naver URL contains auth domain",
+      "status": "PASS",
+      "detail": "url=https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=aMBSVMd_PIWTyoPjWN_j&redirect_",
+      "sub_round": "0-C"
+    },
+    {
+      "name": "CP-1: google authorize returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-C"
+    },
+    {
+      "name": "CP-1: google URL contains auth domain",
+      "status": "PASS",
+      "detail": "url=https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=319364652449-rg2n1miki6upk",
+      "sub_round": "0-C"
+    },
+    {
+      "name": "CP-2: Social register endpoint exists",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-C"
+    },
+    {
+      "name": "CP-1: Reset password request returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'success': True, 'message': '비밀번호 재설정 안내가 이메일로 발송되었습니다.'}",
+      "sub_round": "0-D"
+    },
+    {
+      "name": "CP-2a: Verify endpoint responds",
+      "status": "PASS",
+      "detail": "code=400",
+      "sub_round": "0-D"
+    },
+    {
+      "name": "CP-2b: Invalid token rejected (via HTTP status)",
+      "status": "PASS",
+      "detail": "code=400",
+      "sub_round": "0-D"
+    },
+    {
+      "name": "CP-3: Invalid token confirm rejected",
+      "status": "PASS",
+      "detail": "code=400",
+      "sub_round": "0-D"
+    },
+    {
+      "name": "CP-4a: Change password returns 200",
+      "status": "PASS",
+      "detail": "code=200, data={'success': True}",
+      "sub_round": "0-D"
+    },
+    {
+      "name": "CP-4b: Login with new password works",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "0-D"
+    },
+    {
+      "name": "CP-1: Buyer can access /deals/",
+      "status": "PASS",
+      "detail": "status=200",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-1: Buyer can access /my-orders",
+      "status": "PASS",
+      "detail": "status=200",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-1: Buyer can access /login",
+      "status": "PASS",
+      "detail": "status=200",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-1: Buyer can access /register",
+      "status": "PASS",
+      "detail": "status=200",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-2a: Buyer can search own reservations",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-2b: Buyer can access own dashboard",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-3a: No-auth admin API rejected",
+      "status": "PASS",
+      "detail": "code=401",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-3b: No-auth deal creation rejected",
+      "status": "PASS",
+      "detail": "code=422",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-4: Buyer cannot access admin API",
+      "status": "PASS",
+      "detail": "code=403",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-5: Seller cannot access admin API",
+      "status": "PASS",
+      "detail": "code=403",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-6a: Admin can access admin API",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-6b: Admin can access settlements",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-7a: Health check public",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-7b: Deals list public",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-E"
+    },
+    {
+      "name": "CP-1a: Deal created",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-1b: Offer created",
+      "status": "PASS",
+      "detail": "code=201",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-1c: Reservation created",
+      "status": "PASS",
+      "detail": "code=201",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-1d: Buyer sees own reservation",
+      "status": "PASS",
+      "detail": "checked 10",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-1e: Seller sees buyer's reservation",
+      "status": "PASS",
+      "detail": "checked 10",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-1f: Admin sees reservation",
+      "status": "PASS",
+      "detail": "checked 20",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-2a: Buyer profile returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-2b: Buyer has nickname",
+      "status": "PASS",
+      "detail": "got=buyer1",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-2c: Seller profile returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-2d: Seller has nickname",
+      "status": "PASS",
+      "detail": "got=데모셀러",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-3a: Seller level returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-3b: Level is valid (1-6)",
+      "status": "PASS",
+      "detail": "got=Lv.6",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-4a: Buyer notifications accessible",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-4b: Seller notifications accessible",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-5a: Pingpong responds to buyer",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-5b: Pingpong responds to seller",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-6a: New buyer can create deal",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "0-F"
+    },
+    {
+      "name": "CP-6b: New seller can create offer",
+      "status": "PASS",
+      "detail": "code=201, data={'id': 1137, 'deal_id': 1653, 'seller_id': 1193, 'price': 48000.0, 'total_available_qty': 3, 'reserved_qty': 0, 'sold_qty': 0, 'is_active': True, 'is_confirmed': False, 'delivery_days':",
+      "sub_round": "0-F"
+    }
+  ]
+}

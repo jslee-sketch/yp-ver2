@@ -286,7 +286,7 @@ if new_seller_id:
 
 # CP-8: 관리자에서 판매자 목록
 print("\n--- CP-8: 관리자 판매자 목록 ---")
-code, sellers_list = api('GET', '/sellers/?limit=500', admin_token)
+code, sellers_list = api('GET', '/sellers/?limit=1000', admin_token)
 if check("CP-8a: Sellers list returns 200", code == 200, f"code={code}"):
     items = sellers_list if isinstance(sellers_list, list) else sellers_list.get('items', [])
     if isinstance(items, list):
@@ -537,7 +537,14 @@ print("\n--- CP-3: 판매자 레벨/수수료 ---")
 code, level_info = api('GET', f'/reviews/seller/{existing_seller_id}/level', existing_seller_token)
 if check("CP-3a: Seller level returns 200", code == 200, f"code={code}"):
     level = level_info.get('level', level_info.get('seller_level'))
-    check("CP-3b: Level is valid (1-6)", level is not None and 1 <= int(level) <= 6 if level else False,
+    # level can be "Lv.6" or "6" or int
+    level_num = None
+    if level is not None:
+        import re
+        m = re.search(r'(\d+)', str(level))
+        if m:
+            level_num = int(m.group(1))
+    check("CP-3b: Level is valid (1-6)", level_num is not None and 1 <= level_num <= 6,
           f"got={level}")
 
 # CP-4: 알림 시스템 — 각 역할별
