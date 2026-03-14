@@ -312,8 +312,46 @@ export default function DealDetailPage() {
           onPredict={price => setSpectatorStats(prev => ({ ...prev, my_prediction: price }))}
         />
 
+        {/* 요청 옵션 표시 */}
+        {productDetail && productDetail.options.length > 0 && (
+          <div style={{ margin: '0 16px 16px' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>📦 요청 옵션</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {productDetail.options.map((opt, i) => (
+                <span key={i} style={{
+                  padding: '4px 10px', borderRadius: 20, fontSize: 12,
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-subtle)',
+                  color: 'var(--text-primary)',
+                }}>
+                  {opt.title}: {opt.selected_value || opt.values[0] || ''}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 오퍼 목록 */}
         <OfferList offers={offers} />
+
+        {/* 판매자 전용: 오퍼 제출 버튼 */}
+        {user?.role === 'seller' && (
+          <div style={{ margin: '0 16px 16px' }}>
+            <button
+              onClick={() => navigate(`/deal/${dealId}/offer/create`)}
+              style={{
+                width: '100%', padding: '16px', borderRadius: 14,
+                fontSize: 16, fontWeight: 800, cursor: 'pointer',
+                background: 'linear-gradient(135deg, #ff2d78, #ff6a99)',
+                color: '#fff', border: 'none',
+                boxShadow: '0 4px 16px rgba(255,45,120,0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
+            >
+              📋 이 딜에 오퍼 제출하기
+            </button>
+          </div>
+        )}
 
         {/* 핑퐁이 인사이트 */}
         <div style={{ margin: '0 16px 16px' }}>
