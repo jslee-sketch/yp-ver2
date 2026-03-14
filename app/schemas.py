@@ -519,6 +519,14 @@ class OfferCreate(OfferBase):
     delivery_days: Optional[int] = None
     cooling_days: int | None = None
 
+    # offer 상세 확장 (4-step wizard)
+    confirmed_options: Optional[str] = None  # JSON string
+    extra_options: Optional[str] = None  # JSON string
+    conditions: Optional[str] = None  # JSON string
+    components: Optional[str] = None
+    product_description: Optional[str] = None
+    product_images: Optional[str] = None  # JSON string
+    option_agreement: Optional[bool] = False
 
     # ✅ 레거시 호환:
     # - 입력 "NONE" 허용 (기존 클라/스크립트 안 깨짐)

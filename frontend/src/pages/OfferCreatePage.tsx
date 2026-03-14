@@ -144,14 +144,26 @@ export default function OfferCreatePage() {
   const [step, setStep] = useState(1);
   const [dir,  setDir]  = useState(1);
 
-  // Step 1: 가격 & 수량
+  // Step 1: 옵션 확인 + 조건 + 구성품
+  const [confirmedOptions, setConfirmedOptions] = useState<Record<string, boolean>>({});
+  const [extraOptions, setExtraOptions] = useState<{ key: string; value: string }[]>([]);
+  const [condWarranty, setCondWarranty] = useState('없음');
+  const [condRefund, setCondRefund] = useState('7일');
+  const [condShipping, setCondShipping] = useState('무료');
+  const [condDelivery, setCondDelivery] = useState('1~3일');
+  const [componentsText, setComponentsText] = useState('');
+  const [optionAgreement, setOptionAgreement] = useState(false);
+
+  // Step 2: 가격 & 수량
   const [priceStr,  setPriceStr]  = useState('');
   const [totalQty,  setTotalQty]  = useState(20);
   const [comment,   setComment]   = useState('');
+
+  // Step 3: 제품 상세 + 사진
   const [detail,    setDetail]    = useState('');
   const [images,    setImages]    = useState<string[]>([]);
 
-  // Step 2: 배송 & 정책
+  // Step 2 (old): 배송 & 정책
   const [shippingMode,      setShippingMode]      = useState<'INCLUDED' | 'PER_RESERVATION' | 'PER_QTY'>('INCLUDED');
   const [feePerReservation, setFeePerReservation] = useState(3000);
   const [feePerQty,         setFeePerQty]         = useState(1000);
@@ -503,7 +515,7 @@ export default function OfferCreatePage() {
         </button>
         <div style={{ fontSize: 13, fontWeight: 700 }}>
           <span style={{ color: C.cyan }}>{step}</span>
-          <span style={{ color: C.textSec }}>/3</span>
+          <span style={{ color: C.textSec }}>/4</span>
         </div>
         <div style={{ width: 64 }} />
       </div>
@@ -511,7 +523,7 @@ export default function OfferCreatePage() {
       {/* ── 진행 바 ── */}
       <div style={{ position: 'fixed', top: 56, left: 0, right: 0, height: 3, zIndex: 10, background: C.border }}>
         <div style={{
-          height: '100%', width: `${(step / 3) * 100}%`,
+          height: '100%', width: `${(step / 4) * 100}%`,
           background: `linear-gradient(90deg, ${C.cyan}, ${C.green})`,
           transition: 'width 0.35s ease',
         }} />
@@ -530,8 +542,12 @@ export default function OfferCreatePage() {
             style={{ width: '100%', maxWidth: 500, margin: '0 auto', padding: '24px 20px 100px' }}
           >
 
-            {/* ══ Step 1: 가격 & 수량 ══ */}
-            {step === 1 && (
+            {/* ══ Step 1: 옵션 확인 + 조건 + 구성품 ══ */}
+            {step === 1 && (() => {
+              const dealOptions = deal?.options ?? [];
+              const allConfirmed = dealOptions.length === 0 || dealOptions.every((_, i) => confirmedOptions[`opt_${i}`]);
+              const canProceed = allConfirmed && optionAgreement;
+              return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
                 {/* 딜 정보 헤더 */}
                 <div>
@@ -541,10 +557,198 @@ export default function OfferCreatePage() {
                   </div>
                   <div style={{ fontSize: 12, color: C.textSec }}>
                     {(deal?.brand ?? '')}
-                    {(deal?.options ?? []).map(o => ` · ${o.title}: ${o.value}`).join('')}
                   </div>
                 </div>
 
+                {/* 딜 요청 옵션 확인 */}
+                {dealOptions.length > 0 && (
+                  <div>
+                    <Label required>딜 요청 옵션 확인</Label>
+                    <div style={{ fontSize: 12, color: C.textSec, marginBottom: 10 }}>
+                      구매자가 요청한 옵션을 하나씩 확인해주세요. 모든 옵션을 확인해야 다음 단계로 진행할 수 있습니다.
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {dealOptions.map((opt, i) => {
+                        const key = `opt_${i}`;
+                        const isConfirmed = !!confirmedOptions[key];
+                        return (
+                          <div key={key} style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '12px 14px', borderRadius: 12,
+                            background: isConfirmed ? `${C.green}10` : C.bgSurface,
+                            border: `1px solid ${isConfirmed ? C.green + '50' : C.border}`,
+                            transition: 'all 0.15s',
+                          }}>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{opt.title}</div>
+                              <div style={{ fontSize: 12, color: C.textSec }}>{opt.value}</div>
+                            </div>
+                            <button
+                              onClick={() => setConfirmedOptions(prev => ({ ...prev, [key]: !prev[key] }))}
+                              style={{
+                                padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                                cursor: 'pointer', transition: 'all 0.15s',
+                                background: isConfirmed ? C.green : 'transparent',
+                                color: isConfirmed ? '#0a0e1a' : C.textSec,
+                                border: `1px solid ${isConfirmed ? C.green : C.border}`,
+                              }}
+                            >
+                              {isConfirmed ? '확인됨' : '확인'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {!allConfirmed && (
+                      <div style={{ fontSize: 11, color: C.magenta, marginTop: 6 }}>
+                        모든 옵션을 확인해주세요 ({Object.values(confirmedOptions).filter(Boolean).length}/{dealOptions.length})
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 추가 옵션 (최대 5개) */}
+                <div>
+                  <Label>추가 옵션 (선택, 최대 5개)</Label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {extraOptions.map((opt, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          placeholder="옵션명"
+                          value={opt.key}
+                          onChange={e => {
+                            const next = [...extraOptions];
+                            next[i] = { ...next[i], key: e.target.value };
+                            setExtraOptions(next);
+                          }}
+                          className="oc-input"
+                          style={{ ...inputStyle, flex: 1 }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="옵션값"
+                          value={opt.value}
+                          onChange={e => {
+                            const next = [...extraOptions];
+                            next[i] = { ...next[i], value: e.target.value };
+                            setExtraOptions(next);
+                          }}
+                          className="oc-input"
+                          style={{ ...inputStyle, flex: 1 }}
+                        />
+                        <button
+                          onClick={() => setExtraOptions(prev => prev.filter((_, idx) => idx !== i))}
+                          style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,45,120,0.12)', border: `1px solid rgba(255,45,120,0.3)`, color: C.magenta, fontSize: 14, cursor: 'pointer', flexShrink: 0 }}
+                        >✕</button>
+                      </div>
+                    ))}
+                    {extraOptions.length < 5 && (
+                      <button
+                        onClick={() => setExtraOptions(prev => [...prev, { key: '', value: '' }])}
+                        style={{
+                          padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                          background: C.bgSurface, border: `1.5px dashed ${C.border}`,
+                          color: C.textSec, cursor: 'pointer',
+                        }}
+                      >+ 추가 옵션</button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 조건 설정 */}
+                <div>
+                  <Label>판매 조건</Label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>보증</div>
+                      <select value={condWarranty} onChange={e => setCondWarranty(e.target.value)} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
+                        <option value="없음">없음</option>
+                        <option value="3개월">3개월</option>
+                        <option value="6개월">6개월</option>
+                        <option value="1년">1년</option>
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>환불</div>
+                      <select value={condRefund} onChange={e => setCondRefund(e.target.value)} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
+                        <option value="7일">7일</option>
+                        <option value="14일">14일</option>
+                        <option value="불가">불가</option>
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>배송비</div>
+                      <select value={condShipping} onChange={e => setCondShipping(e.target.value)} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
+                        <option value="무료">무료</option>
+                        <option value="유료">유료</option>
+                        <option value="조건부">조건부</option>
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4 }}>배송일</div>
+                      <select value={condDelivery} onChange={e => setCondDelivery(e.target.value)} className="oc-input" style={{ ...inputStyle, cursor: 'pointer' }}>
+                        <option value="1~3일">1~3일</option>
+                        <option value="3~5일">3~5일</option>
+                        <option value="5~7일">5~7일</option>
+                        <option value="7일+">7일+</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 구성품 */}
+                <div>
+                  <Label>구성품 (선택)</Label>
+                  <textarea
+                    value={componentsText}
+                    onChange={e => setComponentsText(e.target.value.slice(0, 500))}
+                    placeholder="본체, 충전기, 케이블, 설명서 등"
+                    rows={3}
+                    className="oc-input"
+                    style={{ ...inputStyle, resize: 'none', lineHeight: 1.55 }}
+                  />
+                  <div style={{ fontSize: 11, color: C.textDim, textAlign: 'right', marginTop: 4 }}>{componentsText.length}/500</div>
+                </div>
+
+                {/* 동의 체크박스 */}
+                <div
+                  onClick={() => setOptionAgreement(prev => !prev)}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer',
+                    padding: '14px', borderRadius: 12,
+                    background: optionAgreement ? `${C.green}08` : C.bgSurface,
+                    border: `1px solid ${optionAgreement ? C.green + '40' : C.border}`,
+                  }}
+                >
+                  <div style={{
+                    width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                    border: `2px solid ${optionAgreement ? C.green : C.textDim}`,
+                    background: optionAgreement ? C.green : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#0a0e1a', fontSize: 12, fontWeight: 900,
+                  }}>
+                    {optionAgreement && '✓'}
+                  </div>
+                  <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.5 }}>
+                    위 딜 옵션과 판매 조건을 확인했으며, 해당 조건으로 오퍼를 제출하는 것에 동의합니다.
+                  </div>
+                </div>
+
+                {ctaBtn('다음 →', () => {
+                  if (!canProceed) {
+                    showToast('모든 옵션을 확인하고 동의 체크를 해주세요.', 'error');
+                    return;
+                  }
+                  goTo(2);
+                }, !canProceed)}
+              </div>
+              );
+            })()}
+
+            {/* ══ Step 2: 가격 & 수량 ══ */}
+            {step === 2 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
                 {/* 딜 정보 카드 */}
                 <div style={{ ...cardStyle }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -561,18 +765,6 @@ export default function OfferCreatePage() {
                       </div>
                     ))}
                   </div>
-                </div>
-
-                {/* 구매자 목표가 근거 */}
-                <div style={{ ...cardStyle, borderColor: 'rgba(255,225,86,0.25)', background: 'rgba(255,225,86,0.04)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#ffe156', marginBottom: 10 }}>💡 구매자 목표가 근거</div>
-                  <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.65, marginBottom: 10 }}>
-                    "네이버 쇼핑에서 해당 모델이 265,000원에 판매되는 것을 확인했습니다. 해당 가격이 충분히 현실적인 목표가라고 판단합니다."
-                  </div>
-                  <button
-                    onClick={() => showToast('이미지 미리보기 준비 중입니다', 'info')}
-                    style={{ fontSize: 12, color: C.textSec, background: C.bgSurface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}
-                  >📷 증빙 이미지 2장 보기</button>
                 </div>
 
                 {/* 가격 입력 */}
@@ -697,23 +889,43 @@ export default function OfferCreatePage() {
                   <div style={{ fontSize: 11, color: C.textDim, textAlign: 'right', marginTop: 4 }}>{comment.length}/200</div>
                 </div>
 
+                {ctaBtn('다음 →', () => {
+                  if (price <= 0 || totalQty <= 0) {
+                    showToast("'내 오퍼 가격'과 '수량'을 기입해주세요.", 'error');
+                    return;
+                  }
+                  goTo(3);
+                })}
+              </div>
+            )}
+
+            {/* ══ Step 3: 제품 상세 + 사진 ══ */}
+            {step === 3 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                <div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: C.textPri, lineHeight: 1.3, marginBottom: 6 }}>
+                    📝 제품 상세 + 사진
+                  </div>
+                  <div style={{ fontSize: 13, color: C.textSec }}>제품에 대한 상세 설명과 사진을 등록하세요.</div>
+                </div>
+
                 {/* 제품 상세 설명 */}
                 <div>
-                  <Label>📝 제품 상세 설명 (선택)</Label>
+                  <Label>제품 상세 설명 (최소 20자)</Label>
                   <textarea
                     value={detail}
-                    onChange={e => setDetail(e.target.value.slice(0, 5000))}
-                    placeholder="제품 상태, 구성품, 특이사항 등 상세하게 적어주세요"
+                    onChange={e => setDetail(e.target.value.slice(0, 1000))}
+                    placeholder="제품 상태, 구성품, 특이사항 등 상세하게 적어주세요 (최소 20자)"
                     rows={6}
                     className="oc-input"
                     style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
                   />
-                  <div style={{ fontSize: 11, color: C.textDim, textAlign: 'right', marginTop: 4 }}>{detail.length}/5,000</div>
+                  <div style={{ fontSize: 11, color: detail.length < 20 ? C.magenta : C.textDim, textAlign: 'right', marginTop: 4 }}>{detail.length}/1,000 {detail.length < 20 ? `(최소 ${20 - detail.length}자 더 입력)` : ''}</div>
                 </div>
 
                 {/* 제품 이미지 */}
                 <div>
-                  <Label>📸 제품 이미지 (최대 10장, 선택)</Label>
+                  <Label>제품 이미지 (1~10장, jpg/png, 최대 10MB)</Label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {images.map((src, idx) => (
                       <div key={idx} style={{ position: 'relative', width: 72, height: 72, borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.border}`, flexShrink: 0 }}>
@@ -741,7 +953,7 @@ export default function OfferCreatePage() {
                           pointerEvents: 'none',
                         }}>+</div>
                         <input
-                          type="file" accept="image/*" multiple
+                          type="file" accept="image/jpeg,image/png" multiple
                           onClick={() => {
                             const sy = window.scrollY;
                             const restore = () => { window.scrollTo(0, sy); window.removeEventListener('focus', restore); };
@@ -759,274 +971,64 @@ export default function OfferCreatePage() {
                 </div>
 
                 {ctaBtn('다음 →', () => {
-                  if (price <= 0 || totalQty <= 0) {
-                    showToast("'내 오퍼 가격'과 '수량'을 기입해주세요.", 'error');
+                  if (detail.length < 20) {
+                    showToast('제품 상세 설명을 최소 20자 이상 입력해주세요.', 'error');
                     return;
                   }
-                  goTo(2);
+                  if (images.length < 1) {
+                    showToast('제품 이미지를 최소 1장 등록해주세요.', 'error');
+                    return;
+                  }
+                  goTo(4);
                 })}
               </div>
             )}
 
-            {/* ══ Step 2: 배송 & 정책 ══ */}
-            {step === 2 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-                <div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: C.textPri, lineHeight: 1.3, marginBottom: 6 }}>
-                    🚚 배송 & 정책
-                  </div>
-                  <div style={{ fontSize: 13, color: C.textSec }}>구매자에게 보여줄 배송 및 취소 정책을 설정하세요.</div>
-                </div>
+            {/* ══ Step 4 (old Step 2): 배송 & 정책 — hidden, kept for data ══ */}
 
-                {/* Phase 2 안내 */}
-                <div style={{
-                  padding: '12px 14px',
-                  background: 'rgba(0,240,255,0.06)',
-                  border: '1px solid rgba(0,240,255,0.18)',
-                  borderRadius: 12,
-                  fontSize: 13, color: C.cyan, lineHeight: 1.6,
-                }}>
-                  💡 판매자 프로필에서 기본 배송·환불 조건을 설정하면, 오퍼 생성 시 자동으로 채워집니다.
-                  <span style={{ color: C.textDim }}> (Phase 2 오픈 예정)</span>
-                </div>
-
-                {/* 배송비 — 3가지 모드 */}
-                <div>
-                  <Label>배송비</Label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-
-                    {/* INCLUDED */}
-                    <div
-                      onClick={() => setShippingMode('INCLUDED')}
-                      style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', padding: '12px 14px', borderRadius: 12, background: shippingMode === 'INCLUDED' ? `${C.green}10` : C.bgSurface, border: `1px solid ${shippingMode === 'INCLUDED' ? C.green + '50' : C.border}`, transition: 'all 0.15s' }}
-                    >
-                      <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 2, border: `2px solid ${shippingMode === 'INCLUDED' ? C.green : C.textDim}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {shippingMode === 'INCLUDED' && <div style={{ width: 9, height: 9, borderRadius: '50%', background: C.green }} />}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: C.textPri }}>무료배송 (상품가 포함)</div>
-                        <div style={{ fontSize: 12, color: C.textSec }}>추가 배송비 없이 상품가에 포함</div>
-                      </div>
-                    </div>
-
-                    {/* PER_RESERVATION */}
-                    <div
-                      onClick={() => setShippingMode('PER_RESERVATION')}
-                      style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', padding: '12px 14px', borderRadius: 12, background: shippingMode === 'PER_RESERVATION' ? `${C.green}10` : C.bgSurface, border: `1px solid ${shippingMode === 'PER_RESERVATION' ? C.green + '50' : C.border}`, transition: 'all 0.15s' }}
-                    >
-                      <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 2, border: `2px solid ${shippingMode === 'PER_RESERVATION' ? C.green : C.textDim}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {shippingMode === 'PER_RESERVATION' && <div style={{ width: 9, height: 9, borderRadius: '50%', background: C.green }} />}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: C.textPri }}>참여당 고정 배송비</div>
-                        <div style={{ fontSize: 12, color: C.textSec }}>참여 1건당 동일한 배송비</div>
-                        {shippingMode === 'PER_RESERVATION' && (
-                          <div style={{ marginTop: 8, position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14, pointerEvents: 'none' }}>원</span>
-                            <input
-                              type="number" min={0}
-                              value={feePerReservation}
-                              onChange={e => setFeePerReservation(Math.max(0, parseInt(e.target.value) || 0))}
-                              onClick={e => e.stopPropagation()}
-                              className="oc-input"
-                              style={{ ...inputStyle, paddingLeft: 30 }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* PER_QTY */}
-                    <div
-                      onClick={() => setShippingMode('PER_QTY')}
-                      style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', padding: '12px 14px', borderRadius: 12, background: shippingMode === 'PER_QTY' ? `${C.green}10` : C.bgSurface, border: `1px solid ${shippingMode === 'PER_QTY' ? C.green + '50' : C.border}`, transition: 'all 0.15s' }}
-                    >
-                      <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 2, border: `2px solid ${shippingMode === 'PER_QTY' ? C.green : C.textDim}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {shippingMode === 'PER_QTY' && <div style={{ width: 9, height: 9, borderRadius: '50%', background: C.green }} />}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: C.textPri }}>수량별 배송비</div>
-                        <div style={{ fontSize: 12, color: C.textSec }}>구매 수량 1개당 배송비 부과</div>
-                        {shippingMode === 'PER_QTY' && (
-                          <>
-                            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <div style={{ flex: 1, position: 'relative' }}>
-                                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14, pointerEvents: 'none' }}>원</span>
-                                <input
-                                  type="number" min={0}
-                                  value={feePerQty}
-                                  onChange={e => setFeePerQty(Math.max(0, parseInt(e.target.value) || 0))}
-                                  onClick={e => e.stopPropagation()}
-                                  className="oc-input"
-                                  style={{ ...inputStyle, paddingLeft: 30 }}
-                                />
-                              </div>
-                              <span style={{ fontSize: 13, color: C.textSec, flexShrink: 0 }}>/ 개</span>
-                            </div>
-                            <div style={{ marginTop: 6, fontSize: 12, color: C.cyan }}>
-                              💡 {totalQty}개 참여 시 배송비: {(feePerQty * totalQty).toLocaleString()}원
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* 배송 소요일 */}
-                <div>
-                  <Label>배송 소요일</Label>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {DELIVERY_CHIPS.map(d => (
-                      <Chip key={d} active={deliveryDays === d && !showCustomDel} onClick={() => { setDeliveryDays(d); setShowCustomDel(false); }}>
-                        {d}일
-                      </Chip>
-                    ))}
-                    <Chip active={showCustomDel} onClick={() => { setShowCustomDel(true); if (!showCustomDel || deliveryDays < 6) setDeliveryDays(6); }}>
-                      5일+
-                    </Chip>
-                  </div>
-                  {showCustomDel && (
-                    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <input
-                        type="number"
-                        min={6} max={14}
-                        value={deliveryDays}
-                        autoFocus
-                        onChange={e => {
-                          const v = parseInt(e.target.value) || 6;
-                          setDeliveryDays(Math.max(6, Math.min(14, v)));
-                        }}
-                        onBlur={() => {
-                          if (deliveryDays < 6) { setDeliveryDays(6); showToast('6~14일까지 선택 기입해주세요.', 'error'); }
-                        }}
-                        className="oc-input"
-                        style={{ ...inputStyle, width: 90, textAlign: 'center' }}
-                      />
-                      <span style={{ fontSize: 13, color: C.textSec }}>일 이내 (6~14일)</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* 보증 기간 */}
-                <div>
-                  <Label>보증 기간</Label>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {WARRANTY_OPTIONS.map(opt => (
-                      <Chip
-                        key={opt.months}
-                        active={opt.months === -1 ? showCustomWarranty : (!showCustomWarranty && warrantyMonths === opt.months)}
-                        onClick={() => {
-                          if (opt.months === -1) {
-                            setShowCustomWarranty(true);
-                            if (warrantyMonths < 13) setWarrantyMonths(13);
-                          } else {
-                            setShowCustomWarranty(false);
-                            setWarrantyMonths(opt.months);
-                          }
-                        }}
-                      >
-                        {opt.label}
-                      </Chip>
-                    ))}
-                  </div>
-                  {showCustomWarranty && (
-                    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <input
-                        type="number"
-                        min={13} max={60}
-                        value={warrantyMonths}
-                        autoFocus
-                        onChange={e => setWarrantyMonths(Math.max(13, Math.min(60, parseInt(e.target.value) || 13)))}
-                        className="oc-input"
-                        style={{ ...inputStyle, width: 90, textAlign: 'center' }}
-                      />
-                      <span style={{ fontSize: 13, color: C.textSec }}>개월 (13~60개월)</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* 환불/취소 정책 */}
-                <div>
-                  <Label>환불/취소 정책</Label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {CANCEL_RULES.map(rule => (
-                      <div key={rule.id}>
-                        <label
-                          style={{
-                            display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer',
-                            padding: '12px 14px', borderRadius: 12,
-                            background: cancelRule === rule.id ? `${C.green}10` : C.bgSurface,
-                            border: `1px solid ${cancelRule === rule.id ? C.green + '50' : C.border}`,
-                            transition: 'all 0.15s',
-                          }}
-                          onClick={() => setCancelRule(rule.id)}
-                        >
-                          <div style={{
-                            width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 1,
-                            border: `2px solid ${cancelRule === rule.id ? C.green : C.textDim}`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                            {cancelRule === rule.id && (
-                              <div style={{ width: 9, height: 9, borderRadius: '50%', background: C.green }} />
-                            )}
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: C.textPri, marginBottom: 2 }}>
-                              {rule.id}: {rule.label}
-                            </div>
-                            <div style={{ fontSize: 12, color: C.textSec }}>{rule.desc}</div>
-                          </div>
-                        </label>
-                        {rule.id === 'A3' && cancelRule === 'A3' && (
-                          <div style={{ marginTop: 8, marginLeft: 30, display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <input
-                              type="number"
-                              min={1} max={365}
-                              value={cancelWithinDays}
-                              autoFocus
-                              onChange={e => setCancelWithinDays(Math.max(1, Math.min(365, parseInt(e.target.value) || 7)))}
-                              className="oc-input"
-                              style={{ ...inputStyle, width: 80, textAlign: 'center' }}
-                            />
-                            <span style={{ fontSize: 13, color: C.textSec }}>일 이내 (최대 365일)</span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 추가 안내 */}
-                <div>
-                  <Label>추가 안내 (선택)</Label>
-                  <textarea
-                    value={extraText}
-                    onChange={e => setExtraText(e.target.value.slice(0, 1000))}
-                    placeholder="구매자에게 알리고 싶은 추가 정보를 적어주세요"
-                    rows={4}
-                    className="oc-input"
-                    style={{ ...inputStyle, resize: 'none', lineHeight: 1.55 }}
-                  />
-                  <div style={{ fontSize: 11, color: C.textDim, textAlign: 'right', marginTop: 4 }}>{extraText.length}/1000</div>
-                </div>
-
-                {ctaBtn('다음 →', () => goTo(3))}
-              </div>
-            )}
-
-            {/* ══ Step 3: 확인 & 제출 ══ */}
-            {step === 3 && (
+            {/* ══ Step 4: 최종 확인 ══ */}
+            {step === 4 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: C.textPri, marginBottom: 4 }}>📋 오퍼 확인</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: C.textPri, marginBottom: 4 }}>📋 오퍼 최종 확인</div>
                   <div style={{ fontSize: 13, color: C.textSec }}>제출 전에 내용을 확인해주세요.</div>
                 </div>
 
                 {/* 딜 명 */}
                 <div style={{ fontSize: 14, fontWeight: 600, color: C.textSec }}>
                   📦 {(deal?.product_name ?? '')}
+                </div>
+
+                {/* 확인된 옵션 */}
+                {(deal?.options ?? []).length > 0 && (
+                  <div style={{ ...cardStyle }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 10 }}>확인된 옵션</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {(deal?.options ?? []).map((opt, i) => (
+                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
+                          <span style={{ fontSize: 13, color: C.textSec }}>{opt.title}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{opt.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 조건 요약 */}
+                <div style={{ ...cardStyle }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 10 }}>판매 조건</div>
+                  {[
+                    { label: '보증', value: condWarranty },
+                    { label: '환불', value: condRefund },
+                    { label: '배송비', value: condShipping },
+                    { label: '배송일', value: condDelivery },
+                    ...(componentsText ? [{ label: '구성품', value: componentsText.length > 30 ? componentsText.slice(0, 30) + '...' : componentsText }] : []),
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
+                      <span style={{ fontSize: 13, color: C.textSec }}>{label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: C.textPri }}>{value}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* 오퍼 요약 카드 */}
@@ -1052,12 +1054,11 @@ export default function OfferCreatePage() {
                   {/* 상세 목록 */}
                   {[
                     { icon: '📦', label: '판매 수량',  value: `${totalQty}개` },
-                    ...(comment ? [{ icon: '💬', label: '코멘트', value: comment.length > 28 ? comment.slice(0, 28) + '…' : comment }] : []),
+                    ...(comment ? [{ icon: '💬', label: '코멘트', value: comment.length > 28 ? comment.slice(0, 28) + '...' : comment }] : []),
                     { icon: '🚚', label: '배송비',    value: getShippingDisplay() },
-                    { icon: '📅', label: '배송일',    value: showCustomDel ? `${deliveryDays}일 이내` : `${deliveryDays}일 이내` },
+                    { icon: '📅', label: '배송일',    value: `${deliveryDays}일 이내` },
                     { icon: '🛡️', label: '보증',      value: warrantyMonths === 0 ? '없음' : `${warrantyMonths}개월` },
                     { icon: '↩️', label: '환불정책',  value: cancelRuleLabels[cancelRule] },
-                    ...(extraText ? [{ icon: '📝', label: '추가안내', value: extraText.length > 24 ? extraText.slice(0, 24) + '…' : extraText }] : []),
                   ].map(({ icon, label, value }) => (
                     <div key={label} style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -1074,7 +1075,7 @@ export default function OfferCreatePage() {
                   <div style={{ ...cardStyle }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, marginBottom: 8 }}>📝 제품 상세 설명</div>
                     <div style={{ fontSize: 13, color: C.textPri, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                      {detail.length > 100 ? detail.slice(0, 100) + '…' : detail}
+                      {detail.length > 100 ? detail.slice(0, 100) + '...' : detail}
                     </div>
                     {detail.length > 100 && (
                       <div style={{ fontSize: 11, color: C.textSec, marginTop: 6 }}>{detail.length.toLocaleString()}자 입력됨</div>
@@ -1120,7 +1121,20 @@ export default function OfferCreatePage() {
                   ⚠️ 제출 후에도 수정/철회 가능해요
                 </div>
 
-                {ctaBtn('오퍼 제출하기 🚀', handleSubmit, false, submitting)}
+                {/* 버튼 영역 */}
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    onClick={() => goTo(1)}
+                    style={{
+                      flex: '0 0 auto', padding: '15px 20px', borderRadius: 14, fontSize: 14, fontWeight: 700,
+                      background: C.bgSurface, border: `1px solid ${C.border}`,
+                      color: C.textSec, cursor: 'pointer',
+                    }}
+                  >← 수정</button>
+                  <div style={{ flex: 1 }}>
+                    {ctaBtn('오퍼 제출', handleSubmit, false, submitting)}
+                  </div>
+                </div>
               </div>
             )}
 

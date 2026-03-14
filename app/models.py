@@ -609,6 +609,15 @@ class Offer(Base):
     decision_made_at = Column(DateTime, nullable=True)
     decision_reason = Column(String, nullable=True)
 
+    # offer 상세 확장 (4-step wizard)
+    confirmed_options = Column(Text, nullable=True)  # JSON: confirmed option list from deal
+    extra_options = Column(Text, nullable=True)  # JSON: seller-added extra options
+    conditions = Column(Text, nullable=True)  # JSON: {"warranty":"1년","refund":"7일","shipping":"무료","delivery":"1~3일"}
+    components = Column(Text, nullable=True)  # 구성품 free text
+    product_description = Column(Text, nullable=True)  # 제품 상세 설명
+    product_images = Column(Text, nullable=True)  # JSON: ["url1","url2"]
+    option_agreement = Column(Boolean, default=False)  # 옵션 동의
+
     deal = relationship("Deal", back_populates="offers")
     seller = relationship("Seller", back_populates="offers")
 

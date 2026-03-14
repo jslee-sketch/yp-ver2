@@ -1391,6 +1391,15 @@ def create_offer(db: Session, offer: schemas.OfferCreate):
         shipping_fee_per_reservation=shipping_fee_per_reservation,
         shipping_fee_per_qty=shipping_fee_per_qty,
 
+        # offer 상세 확장 (4-step wizard)
+        confirmed_options=getattr(offer, "confirmed_options", None),
+        extra_options=getattr(offer, "extra_options", None),
+        conditions=getattr(offer, "conditions", None),
+        components=getattr(offer, "components", None),
+        product_description=getattr(offer, "product_description", None),
+        product_images=getattr(offer, "product_images", None),
+        option_agreement=getattr(offer, "option_agreement", False),
+
         created_at=_utcnow(),
     )
 

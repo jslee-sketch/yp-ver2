@@ -308,6 +308,14 @@ _alter_cols = [
     ("spectator_predictions", "error_pct", "DOUBLE PRECISION"),
     ("spectator_predictions", "tier_name", "VARCHAR(20)"),
     ("spectator_predictions", "points_earned", "INTEGER DEFAULT 0"),
+    # offer 상세 확장 컬럼 (4-step wizard)
+    ("offers", "confirmed_options", "TEXT"),
+    ("offers", "extra_options", "TEXT"),
+    ("offers", "conditions", "TEXT"),
+    ("offers", "components", "TEXT"),
+    ("offers", "product_description", "TEXT"),
+    ("offers", "product_images", "TEXT"),
+    ("offers", "option_agreement", "BOOLEAN DEFAULT FALSE"),
 ]
 try:
     _insp = _sa.inspect(engine)

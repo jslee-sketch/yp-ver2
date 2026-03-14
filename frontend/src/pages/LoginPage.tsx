@@ -131,7 +131,10 @@ export default function LoginPage() {
             login(access_token, { id: 0, email: email.trim(), name: email.split('@')[0], role: 'buyer', level: 1, points: 0 });
           }
         }
-        navigate('/');
+        // 역할별 화면 이동
+        if (jwtRole === 'seller') navigate('/seller');
+        else if (jwtRole === 'actuator') navigate('/actuator');
+        else navigate('/');
       } catch (err: unknown) {
         const e = err as { response?: { data?: { detail?: unknown } } };
         const detail = e.response?.data?.detail;
