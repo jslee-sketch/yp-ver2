@@ -82,6 +82,15 @@ def buyer_dashboard(
     buyer_id: int = Path(..., ge=1),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
+    try:
+        return _buyer_dashboard_impl(buyer_id, db)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise
+
+
+def _buyer_dashboard_impl(buyer_id: int, db: Session) -> Dict[str, Any]:
     # ───────────────────────────────
     # 1) 프로필
     # ───────────────────────────────
