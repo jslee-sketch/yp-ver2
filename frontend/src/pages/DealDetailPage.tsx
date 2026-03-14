@@ -142,7 +142,7 @@ export default function DealDetailPage() {
   // ── 타임라인 배너 tracking ──
   const timelineStage = mapDealToTimelineStage(rawDealRef.current);
   const [shownStages, setShownStages] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem(`deal_${dealId}_shown_stages`);
+    const saved = localStorage.getItem(`deal_${dealId}_shown_stages`);
     return saved ? JSON.parse(saved) : [];
   });
   const shouldShowBanner = !shownStages.includes(timelineStage);
@@ -151,7 +151,7 @@ export default function DealDetailPage() {
     if (shouldShowBanner && timelineStage) {
       const updated = [...shownStages, timelineStage];
       setShownStages(updated);
-      sessionStorage.setItem(`deal_${dealId}_shown_stages`, JSON.stringify(updated));
+      localStorage.setItem(`deal_${dealId}_shown_stages`, JSON.stringify(updated));
     }
   }, [timelineStage]); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { trackBehavior } from '../utils/behaviorTracker';
-import { fetchDeal } from '../api/dealApi';
+import { fetchDeal, updateDealTarget } from '../api/dealApi';
 import { fetchOffersByDeal } from '../api/offerApi';
 import { fetchChatMessages, sendChatMessage } from '../api/chatApi';
 import { submitPrediction } from '../api/spectatorApi';
@@ -290,13 +290,13 @@ export default function PriceJourneyPage() {
     if (shouldShowBanner) {
       const updated = [...shownStages, timelineStage];
       setShownStages(updated);
-      sessionStorage.setItem(`deal_${dealId}_shown_stages`, JSON.stringify(updated));
+      localStorage.setItem(`deal_${dealId}_shown_stages`, JSON.stringify(updated));
     }
   }, [timelineStage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load shown stages from sessionStorage
   useEffect(() => {
-    const saved = sessionStorage.getItem(`deal_${dealId}_shown_stages`);
+    const saved = localStorage.getItem(`deal_${dealId}_shown_stages`);
     if (saved) setShownStages(JSON.parse(saved));
   }, [dealId]);
 
@@ -869,10 +869,16 @@ export default function PriceJourneyPage() {
               disabled={targetReason.length < 20 || newTargetPrice <= 0 || targetSubmitting}
               onClick={async () => {
                 setTargetSubmitting(true);
-                await new Promise(r => setTimeout(r, 1000));
-                setCurrentDisplayPrice(newTargetPrice);
-                setCurrentTargetReason(targetReason);
-                setCurrentTargetImages(targetImages);
+                try {
+                  await updateDealTarget(Number(dealId), newTargetPrice, targetReason);
+                  setCurrentDisplayPrice(newTargetPrice);
+                  setCurrentTargetReason(targetReason);
+                  setCurrentTargetImages(targetImages);
+                  showToast('목표가가 변경되었습니다', 'success');
+                } catch (err: unknown) {
+                  const e = err as { response?: { data?: { detail?: unknown } } };
+                  showToast(typeof e.response?.data?.detail === 'string' ? e.response.data.detail as string : '목표가 변경 실패', 'error');
+                }
                 setTargetSubmitting(false);
                 setShowTargetEditModal(false);
               }}
