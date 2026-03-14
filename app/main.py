@@ -65,6 +65,7 @@ from app.models import (  # noqa: F401
     DonzzulActuator, DonzzulStore, DonzzulDeal, DonzzulVoucher,
     DonzzulVoteWeek, DonzzulVote, DonzzulSettlement, DonzzulChatMessage,
     Dispute, SellerExternalRating, SellerVerificationScore, ActuatorSellerDisconnection,
+    ArenaPlayer, ArenaGame, ArenaRegionStats,
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -258,6 +259,16 @@ _alter_cols = [
     ("offers", "decision_deadline_at", "TIMESTAMP"),
     ("offers", "decision_made_at", "TIMESTAMP"),
     ("offers", "decision_reason", "VARCHAR"),
+    # user_notifications 확장 컬럼
+    ("user_notifications", "is_read", "BOOLEAN DEFAULT FALSE"),
+    ("user_notifications", "meta_json", "TEXT"),
+    ("user_notifications", "deal_id", "INTEGER"),
+    ("user_notifications", "offer_id", "INTEGER"),
+    ("user_notifications", "reservation_id", "INTEGER"),
+    ("user_notifications", "settlement_id", "INTEGER"),
+    ("user_notifications", "sent_app", "BOOLEAN DEFAULT FALSE"),
+    ("user_notifications", "sent_push", "BOOLEAN DEFAULT FALSE"),
+    ("user_notifications", "sent_email", "BOOLEAN DEFAULT FALSE"),
 ]
 try:
     _insp = _sa.inspect(engine)

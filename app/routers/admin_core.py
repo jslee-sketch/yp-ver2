@@ -592,30 +592,36 @@ def admin_stats_status_summary(db: Session = Depends(get_db)):
 @router.get("/notifications/all")
 def admin_list_notifications(
     user_id: Optional[int] = None,
-    type: Optional[str] = None,
+    ntype: Optional[str] = Query(None, alias="type"),
     limit: int = Query(100, le=500),
     db: Session = Depends(get_db),
 ):
+  try:
     q = db.query(models.UserNotification)
     if user_id:
         q = q.filter(models.UserNotification.user_id == user_id)
-    if type:
-        q = q.filter(models.UserNotification.type == type)
+    if ntype:
+        q = q.filter(models.UserNotification.type == ntype)
 
     items = q.order_by(models.UserNotification.id.desc()).limit(limit).all()
     result = []
     for n in items:
-        result.append({
-            "id": n.id,
-            "user_id": getattr(n, "user_id", None),
-            "type": getattr(n, "type", ""),
-            "title": getattr(n, "title", ""),
-            "message": getattr(n, "message", ""),
-            "is_read": getattr(n, "is_read", False),
-            "created_at": str(getattr(n, "created_at", "")),
-        })
+        try:
+            result.append({
+                "id": n.id,
+                "user_id": getattr(n, "user_id", None),
+                "type": getattr(n, "type", ""),
+                "title": getattr(n, "title", ""),
+                "message": getattr(n, "message", ""),
+                "is_read": getattr(n, "is_read", False),
+                "created_at": str(getattr(n, "created_at", "")),
+            })
+        except Exception:
+            result.append({"id": getattr(n, "id", 0), "error": "serialization_error"})
     total = db.query(sa_func.count(models.UserNotification.id)).scalar() or 0
     return {"items": result, "total": total}
+  except Exception as e:
+    return {"items": [], "total": 0, "error": str(e)}
 
 
 # ── POST /admin/notifications/broadcast ──────────────────
