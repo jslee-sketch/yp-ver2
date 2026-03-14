@@ -261,64 +261,188 @@ def _normalize_for_matching(text: str) -> str:
 def find_similar_deals(
     product_name: str = Query(..., min_length=2),
     brand: str = Query(""),
+    category: str = Query(""),
+    options: str = Query(""),
     db: Session = Depends(get_db),
 ):
-    """동일/유사 제품의 진행 중인 딜 찾기."""
+    """동일/유사 제품의 진행 중인 딜 찾기 (3-tier matching).
+
+    Returns:
+        exact_match: product_name + all options match
+        option_different: product_name matches but options differ
+        similar_product: same brand/category, different product
+        similar_deals / count: backward compat (all tiers combined)
+    """
     from sqlalchemy import or_, func
+    import json as _json
 
     q = db.query(models.Deal).filter(models.Deal.status == "open")
 
     normalized = _normalize_for_matching(product_name)
     keywords = [kw for kw in normalized.split() if len(kw) >= 2]
     if not keywords:
-        return {"similar_deals": [], "count": 0}
+        return {
+            "exact_match": [], "option_different": [], "similar_product": [],
+            "counts": {"exact": 0, "option_different": 0, "similar": 0},
+            "similar_deals": [], "count": 0,
+        }
 
-    # 키워드 OR 매칭 (원본 + 정규화 둘 다)
+    # ── 1) 넓은 OR 매칭으로 후보 수집 ──────────────────
     conditions = []
     for kw in keywords:
         conditions.append(models.Deal.product_name.ilike(f"%{kw}%"))
         conditions.append(models.Deal.product_detail.ilike(f"%{kw}%"))
-    # 원본 키워드도 추가 (공백 있는 원본)
     for kw in product_name.strip().split():
         if len(kw) >= 2:
             conditions.append(models.Deal.product_name.ilike(f"%{kw}%"))
+    # brand/category 추가 조건으로 범위 확장
+    if brand:
+        conditions.append(models.Deal.brand.ilike(f"%{brand}%"))
+    if category:
+        conditions.append(models.Deal.category.ilike(f"%{category}%"))
     q = q.filter(or_(*conditions))
 
-    if brand:
-        q = q.filter(
-            or_(
-                models.Deal.brand.ilike(f"%{brand}%"),
-                models.Deal.product_name.ilike(f"%{brand}%"),
-            )
-        )
+    results = q.order_by(models.Deal.created_at.desc()).limit(40).all()
 
-    results = q.order_by(models.Deal.created_at.desc()).limit(20).all()
+    # ── 2) 요청 옵션 파싱 ─────────────────────────────
+    req_options_map: dict = {}  # {title_lower: selected_value_lower}
+    if options:
+        try:
+            parsed = _json.loads(options)
+            if isinstance(parsed, list):
+                for opt in parsed:
+                    t = (opt.get("title") or "").strip().lower()
+                    v = (opt.get("selected_value") or "").strip().lower()
+                    if t:
+                        req_options_map[t] = v
+        except Exception:
+            pass
 
-    similar = []
+    # ── 3) 분류 함수 ──────────────────────────────────
+    def _deal_to_dict(deal, score):
+        offer_count = len(deal.offers) if hasattr(deal, "offers") and deal.offers else 0
+        participant_count = len(deal.participants) if hasattr(deal, "participants") and deal.participants else 0
+        # best price from offers
+        best_price = None
+        if hasattr(deal, "offers") and deal.offers:
+            prices = [o.unit_price for o in deal.offers if hasattr(o, "unit_price") and o.unit_price]
+            if prices:
+                best_price = min(prices)
+        # parse deal options
+        deal_options_str = ""
+        if deal.options:
+            try:
+                dopts = _json.loads(deal.options) if isinstance(deal.options, str) else deal.options
+                if isinstance(dopts, list):
+                    deal_options_str = ", ".join(
+                        f"{o.get('title','')}: {o.get('selected_value','') or (o.get('values',[''])[0] if o.get('values') else '')}"
+                        for o in dopts
+                    )
+            except Exception:
+                deal_options_str = str(deal.options)[:100]
+        return {
+            "id": deal.id,
+            "product_name": deal.product_name,
+            "product_detail": deal.product_detail,
+            "brand": deal.brand,
+            "category": deal.category,
+            "target_price": deal.target_price,
+            "market_price": deal.market_price,
+            "best_price": best_price,
+            "status": deal.status,
+            "offer_count": offer_count,
+            "participant_count": participant_count,
+            "options_display": deal_options_str,
+            "match_score": score,
+            "created_at": str(deal.created_at) if deal.created_at else None,
+        }
+
+    def _parse_deal_options(deal) -> dict:
+        """Parse deal.options JSON -> {title_lower: value_lower}"""
+        if not deal.options:
+            return {}
+        try:
+            dopts = _json.loads(deal.options) if isinstance(deal.options, str) else deal.options
+            if not isinstance(dopts, list):
+                return {}
+            result = {}
+            for o in dopts:
+                t = (o.get("title") or "").strip().lower()
+                v = (o.get("selected_value") or "").strip().lower()
+                if not v and o.get("values"):
+                    v = str(o["values"][0]).strip().lower()
+                if t:
+                    result[t] = v
+            return result
+        except Exception:
+            return {}
+
+    exact_match = []
+    option_different = []
+    similar_product = []
+
     for deal in results:
         deal_normalized = _normalize_for_matching(
             f"{deal.product_name or ''} {deal.product_detail or ''}"
         )
         match_count = sum(1 for kw in keywords if kw in deal_normalized)
         score = round(match_count / len(keywords) * 100) if keywords else 0
-        if score < 40:
-            continue
-        offer_count = len(deal.offers) if hasattr(deal, "offers") and deal.offers else 0
-        similar.append({
-            "id": deal.id,
-            "product_name": deal.product_name,
-            "product_detail": deal.product_detail,
-            "brand": deal.brand,
-            "target_price": deal.target_price,
-            "market_price": deal.market_price,
-            "status": deal.status,
-            "offer_count": offer_count,
-            "match_score": score,
-            "created_at": str(deal.created_at) if deal.created_at else None,
-        })
 
-    similar.sort(key=lambda x: x["match_score"], reverse=True)
-    return {"similar_deals": similar[:5], "count": len(similar)}
+        if score >= 70:
+            # High product name match -> check options
+            if req_options_map:
+                deal_opts = _parse_deal_options(deal)
+                opts_match = True
+                for t, v in req_options_map.items():
+                    if t in deal_opts:
+                        if v and deal_opts[t] and v != deal_opts[t]:
+                            opts_match = False
+                            break
+                    # option title not present in deal -> treat as different
+                    elif v:
+                        opts_match = False
+                        break
+                if opts_match:
+                    exact_match.append(_deal_to_dict(deal, score))
+                else:
+                    option_different.append(_deal_to_dict(deal, score))
+            else:
+                # No options provided by requester -> exact if product matches well
+                exact_match.append(_deal_to_dict(deal, score))
+        elif score >= 40:
+            similar_product.append(_deal_to_dict(deal, score))
+        else:
+            # Low score — check brand/category match for similar_product tier
+            brand_match = brand and deal.brand and brand.lower() in deal.brand.lower()
+            cat_match = category and deal.category and category.lower() in deal.category.lower()
+            if brand_match or cat_match:
+                similar_product.append(_deal_to_dict(deal, max(score, 30)))
+
+    exact_match.sort(key=lambda x: x["match_score"], reverse=True)
+    option_different.sort(key=lambda x: x["match_score"], reverse=True)
+    similar_product.sort(key=lambda x: x["match_score"], reverse=True)
+
+    # Limit each tier
+    exact_match = exact_match[:5]
+    option_different = option_different[:5]
+    similar_product = similar_product[:5]
+
+    # Backward compat: similar_deals = all tiers combined
+    all_deals = exact_match + option_different + similar_product
+    all_deals.sort(key=lambda x: x["match_score"], reverse=True)
+
+    return {
+        "exact_match": exact_match,
+        "option_different": option_different,
+        "similar_product": similar_product,
+        "counts": {
+            "exact": len(exact_match),
+            "option_different": len(option_different),
+            "similar": len(similar_product),
+        },
+        "similar_deals": all_deals[:5],
+        "count": len(all_deals),
+    }
 
 
 # ---------------------------
