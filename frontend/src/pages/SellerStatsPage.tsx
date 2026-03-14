@@ -54,7 +54,7 @@ export default function SellerStatsPage() {
     (async () => {
       try {
         const [offersRes, resvRes, reviewRes] = await Promise.all([
-          apiClient.get(API.OFFERS.LIST, { params: { seller_id: sellerId } }).catch(() => ({ data: [] })),
+          apiClient.get(API.OFFERS_V36.LIST, { params: { seller_id: sellerId } }).catch(() => ({ data: [] })),
           apiClient.get(API.RESERVATIONS.LIST_SELLER(sellerId)).catch(() => ({ data: [] })),
           apiClient.get(API.REVIEWS.SUMMARY(sellerId)).catch(() => ({ data: null })),
         ]);

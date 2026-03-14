@@ -40,7 +40,7 @@ export default function SellerDashboardPage() {
         const [resvRes, reviewRes, offerRes, sellerRes] = await Promise.all([
           apiClient.get(API.RESERVATIONS.LIST_SELLER(sellerId)).catch(() => ({ data: [] })),
           apiClient.get(API.REVIEWS.SUMMARY(sellerId)).catch(() => ({ data: null })),
-          apiClient.get(API.OFFERS.LIST, { params: { seller_id: sellerId } }).catch(() => ({ data: [] })),
+          apiClient.get(API.OFFERS_V36.LIST, { params: { seller_id: sellerId } }).catch(() => ({ data: [] })),
           apiClient.get(`/sellers/me`).catch(() => ({ data: null })),
         ]);
         const resvs = Array.isArray(resvRes.data) ? resvRes.data : [];

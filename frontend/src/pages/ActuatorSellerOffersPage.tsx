@@ -50,7 +50,7 @@ export default function ActuatorSellerOffersPage() {
       try {
         const [sellerRes, offersRes] = await Promise.all([
           apiClient.get(API.SELLERS.DETAIL(Number(sellerId))).catch(() => null),
-          apiClient.get(API.OFFERS.LIST, { params: { seller_id: sellerId } }),
+          apiClient.get(API.OFFERS_V36.LIST, { params: { seller_id: sellerId } }),
         ]);
         if (sellerRes?.data) setSeller(sellerRes.data);
         const data = offersRes.data;
