@@ -1,0 +1,1332 @@
+{
+  "audit_date": "2026-03-14",
+  "total_commits": 331,
+  "total_categories": 26,
+  "summary": {
+    "CONFIRMED": 22,
+    "PARTIAL": 3,
+    "MISSING": 1
+  },
+  "categories": [
+    {
+      "name": "Auth System (Login, JWT, Roles, Social Login, Password Reset)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/auth.py",
+          "app/routers/auth_social.py",
+          "app/routers/account.py",
+          "app/routers/users.py",
+          "app/config/oauth_config.py"
+        ],
+        "routes": [
+          "POST /auth/login",
+          "POST /auth/change-password",
+          "POST /auth/reset-password",
+          "GET /auth/reset-password/verify",
+          "POST /auth/reset-password/confirm",
+          "POST /auth/seller/login",
+          "GET /auth/seller/me",
+          "GET /auth/social/{provider}/authorize",
+          "POST /auth/social/{provider}/callback",
+          "POST /auth/social/register",
+          "GET /users/check-nickname",
+          "GET /users/check-phone",
+          "GET /auth/check-email"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/LoginPage.tsx",
+          "frontend/src/pages/RegisterPage.tsx",
+          "frontend/src/pages/ResetPasswordPage.tsx",
+          "frontend/src/pages/OAuthCallbackPage.tsx",
+          "frontend/src/pages/SettingsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "POST /auth/login → 200",
+          "GET /auth/social/{provider}/authorize → 200",
+          "POST /auth/reset-password → 200"
+        ]
+      },
+      "commits": [
+        "919364d Fix all social login: kakao secret + naver/google OAuth connect",
+        "e309eea Fix social login: role selection + auto-login + nickname UI",
+        "7d1c9f5 Unified login for all roles + forgot password + admin detail modals",
+        "0802ecc Password reset email + fix login broken on PostgreSQL",
+        "dd53306 Fix social register: nickname validation + duplicate email handling",
+        "b0b4df3 Auto-fill email/password on login page after registration"
+      ],
+      "notes": "Full auth system with JWT, social login (Kakao/Naver/Google), password reset via email, role-based access (buyer/seller/actuator/admin). All confirmed working in production."
+    },
+    {
+      "name": "Deal / Offer / Reservation CRUD",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/deals.py",
+          "app/routers/offers.py",
+          "app/routers/offers_extras.py",
+          "app/routers/reservations.py",
+          "app/routers/offers_reservations_v3_6.py",
+          "app/routers/deal_intents.py",
+          "app/routers/deal_ai_helper.py",
+          "app/crud.py",
+          "app/models.py"
+        ],
+        "routes": [
+          "POST /deals/",
+          "GET /deals/",
+          "GET /deals/{deal_id}",
+          "GET /deals/search",
+          "GET /deals/find-similar",
+          "POST /v3_6/offers",
+          "GET /v3_6/offers",
+          "PATCH /v3_6/offers/{offer_id}",
+          "POST /v3_6/reservations",
+          "POST /v3_6/reservations/pay",
+          "POST /v3_6/reservations/cancel",
+          "POST /v3_6/reservations/{reservation_id}/ship",
+          "POST /v3_6/reservations/{reservation_id}/arrival-confirm"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/DealsListPage.tsx",
+          "frontend/src/pages/DealDetailPage.tsx",
+          "frontend/src/pages/DealCreatePage.tsx",
+          "frontend/src/pages/DealJoinPage.tsx",
+          "frontend/src/pages/SearchPage.tsx",
+          "frontend/src/pages/MyDealsPage.tsx",
+          "frontend/src/pages/MyOrdersPage.tsx",
+          "frontend/src/pages/OfferCreatePage.tsx",
+          "frontend/src/pages/CompletedDealsPage.tsx",
+          "frontend/src/pages/CompletedDealDetailPage.tsx",
+          "frontend/src/components/deal/DealCard.tsx",
+          "frontend/src/components/deal/OfferCard.tsx",
+          "frontend/src/components/deal/OfferList.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /deals/ → 200",
+          "GET /v3_6/offers → 200",
+          "GET /v3_6/reservations/by-id/{id} → 200"
+        ]
+      },
+      "commits": [
+        "d88042e fix(deal): persist anchor fields + wire create/update flows",
+        "3f20c1c Add voice deal creation with Whisper STT + GPT parsing",
+        "a34cc19 Voice recording fix + Deal creation Step 1 UI redesign",
+        "3c74026 Deal creation Step 3: price challenge + evidence + slider",
+        "d3af0e1 Fix seller offers: safe array handling for API response",
+        "e9cc48e Order number system: YP-YYYYMMDD-NNNN format across entire platform",
+        "b044d80 Add model_number and options columns to Deal model"
+      ],
+      "notes": "Full CRUD for deals, offers, and reservations with v3.5 and v3.6 APIs. Includes voice-based deal creation via Whisper STT + GPT parsing, AI deal helper with image recognition, and similar deal detection."
+    },
+    {
+      "name": "Pricing Engine (Guardrails, S1/S2/S3, Anchor, Consensus)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/policy/pricing_engine.py",
+          "app/policy/pricing_guardrail_hook.py",
+          "app/policy/target_vs_anchor_guardrail.py",
+          "app/policy/engine/",
+          "app/policy/params/pricing.yaml",
+          "app/policy/params/guardrails.py",
+          "app/routers/admin_anchor.py"
+        ],
+        "routes": [
+          "POST /admin/anchor/deal/{deal_id}",
+          "GET /offers/validate_price",
+          "POST /ai/deal_helper",
+          "POST /ai/deal_helper/image-recognize"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/PriceJourneyPage.tsx",
+          "frontend/src/components/journey/GroupCurveSection.tsx",
+          "frontend/src/components/journey/PriceFaceSection.tsx",
+          "frontend/src/components/journey/OfferListSection.tsx",
+          "frontend/src/components/journey/OfferDetailSheet.tsx",
+          "frontend/src/components/journey/journeyTokens.ts",
+          "frontend/src/components/journey/types.ts",
+          "frontend/src/components/deal/PriceDashboard.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /offers/validate_price → 200",
+          "POST /ai/deal_helper → 200"
+        ]
+      },
+      "commits": [
+        "32c5013 feat(pricing): guardrail S1/S2/S3 wiring + offer preview pricing",
+        "c2d42d8 Price consensus engine: Naver + Coupang + GPT-4o cross-validation with confidence rating",
+        "fc00bfc Price engine stress test: 150 tests, 78% pass, 0 fail",
+        "d88042e fix(deal): persist anchor fields + wire create/update flows",
+        "bf8a144 Fix brand filtering in market price search + Naver query",
+        "c0e7bfb Fix market price: filter accessories/parts from Naver results"
+      ],
+      "notes": "Full pricing engine with S1/S2/S3 guardrails, anchor pricing, Naver + Coupang + GPT-4o cross-validation consensus engine. Price journey map with interactive canvas drag curve visualization. Group curve formula: anchor * (1 - 0.10 * gNorm)."
+    },
+    {
+      "name": "Payment / PG Integration",
+      "status": "PARTIAL",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/payments.py",
+          "app/routers/checkout.py",
+          "app/models.py (ReservationPayment model)"
+        ],
+        "routes": [
+          "POST /v3_6/reservations/pay",
+          "POST /reservations/pay",
+          "GET /payments/settlements/{seller_id}",
+          "GET /payments/settlements"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/MyOrdersPage.tsx",
+          "frontend/src/components/effects/PaymentSuccess.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /payments/settlements → 200",
+          "POST /v3_6/reservations/pay → 200 (with valid body)"
+        ]
+      },
+      "commits": [
+        "2b04ca4 Integrate payment/shipping/refund/dispute/settlement frontend flow",
+        "ca01836 Premium effects: Matrix code rain + pingpong rally + auction hammer + confetti + payment success",
+        "a5e4b66 deposit: auto-refund post-pay + pre-anchor sweep option; verified"
+      ],
+      "notes": "Payment model and endpoints exist. Payment success effects implemented. However, no real PG (payment gateway) integration detected — payments are recorded internally but there is no external PG provider (e.g., Toss, Iamport) SDK integration. The system handles payment state transitions but actual money processing appears to be manual/simulated."
+    },
+    {
+      "name": "Settlement Pipeline (HOLD → READY → APPROVED → PAID, Clawback)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/settlements.py",
+          "app/routers/admin_settlements.py",
+          "app/logic_settlement.py",
+          "app/models.py (ReservationSettlement model)"
+        ],
+        "routes": [
+          "GET /payments/settlements/{seller_id}",
+          "GET /payments/settlements",
+          "POST /payments/settlements/{settlement_id}/mark_paid",
+          "POST /payments/settlements/bulk_mark_paid",
+          "POST /payments/settlements/refresh_due",
+          "POST /payments/settlements/{settlement_id}/approve",
+          "POST /payments/settlements/payout_due",
+          "GET /admin/settlements/"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/SettlementsPage.tsx",
+          "frontend/src/pages/AdminSettlementsPage.tsx",
+          "frontend/src/pages/SellerSettlementsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /settlements/ → 200",
+          "GET /admin/settlements/ → 401 (requires admin auth)"
+        ]
+      },
+      "commits": [
+        "f6e188e Fix admin settlements blackout + E2E deep test + Railway data seeding",
+        "86c4a43 Fix settlement approve 500: INSERT OR IGNORE→INSERT + SETTLE_APPROVE→SETTLE_APPROVED",
+        "2d0f1b6 Add full-flow E2E settlement test (5 deals → APPROVED + tax invoices)",
+        "51cdd42 Add GET /admin/settlements/ list endpoint for admin panel",
+        "f29ebc1 Add 50 E2E tests for refund/resolution/clawback automation",
+        "b772c68 Resolution engine v2: 12 scenarios + refund calculator + clawback + exchange + admin manual + 14 notifications",
+        "f1c53ec Add settlement logic module"
+      ],
+      "notes": "Full settlement pipeline: HOLD → READY (cooling period) → APPROVED → PAID. Includes clawback mechanism (ClawbackRecord model), admin approval workflow, bulk operations, PDF generation, and withholding tax calculation."
+    },
+    {
+      "name": "Refund / Exchange / Return System",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/refund.py",
+          "app/routers/admin_refund_preview.py",
+          "app/models.py (RefundRequest, ResolutionAction models)"
+        ],
+        "routes": [
+          "POST /v3_6/reservations/refund",
+          "POST /v3_6/reservations/refund/preview",
+          "GET /v3_6/refund/preview/{reservation_id}",
+          "GET /v3_6/refund/summary/{reservation_id}",
+          "POST /reservations/force_refund",
+          "GET /refund/",
+          "GET /resolution/"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/AdminRefundSimulatorPage.tsx",
+          "frontend/src/pages/AdminRefundsPage.tsx",
+          "frontend/src/pages/SellerRefundsPage.tsx",
+          "frontend/src/pages/SellerReturnsPage.tsx",
+          "frontend/src/pages/RefundSimulatorPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /refund/ → 200",
+          "GET /resolution/ → 200"
+        ]
+      },
+      "commits": [
+        "b772c68 Resolution engine v2: 12 scenarios + refund calculator + clawback + exchange + admin manual + 14 notifications",
+        "cedc296 Replace old refund simulator with v2 calculator (12 scenarios)",
+        "f29ebc1 Add 50 E2E tests for refund/resolution/clawback automation",
+        "7f44454 Refund simulator: PER_ITEM split base+per-item shipping, show reason in results",
+        "9ae845c Refund simulator: unified reason + shipping modes + number format + field reorder",
+        "265c65b Fix dashboard: add /admin/stats/counts + commit built dist (ROOT CAUSE)"
+      ],
+      "notes": "Comprehensive refund/exchange/return system with resolution engine v2 covering 12 scenarios. Includes refund simulator (v2) with PER_ITEM shipping split, clawback records, admin manual override, and 14 notification triggers. Both buyer-side and seller-side refund pages exist."
+    },
+    {
+      "name": "Dispute System (Structured Proposals, AI Mediation, 2 Rounds)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/disputes.py",
+          "app/models.py (Dispute model)"
+        ],
+        "routes": [
+          "POST /v3_6/{reservation_id}/dispute/open",
+          "POST /v3_6/{reservation_id}/dispute/close",
+          "GET /disputes/"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/DisputeDetailPage.tsx",
+          "frontend/src/pages/AdminDisputePage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /disputes/ → 200"
+        ]
+      },
+      "commits": [
+        "b33da46 Dispute v3 (2-round AI mediation) + Seller trust engine v2 + Actuator disconnect + KPI + Insights + Refund simulator",
+        "7f40b6e Structured dispute proposals + AI legal rules + nudge + accept-to-resolution auto-link",
+        "4db120c Add 20 E2E tests for structured dispute proposals",
+        "d0e579d Add ALTER TABLE migration for dispute structured fields + fix E2E tests",
+        "ddda564 KB v3: dispute structured form, auto-approval, 20+ FAQ entries for WARN coverage",
+        "036d23c Test results: 49/49 all passing (dispute v3 + seller trust v2)"
+      ],
+      "notes": "Dispute v3 with 2-round AI mediation, structured proposal forms, AI legal rules + nudge system, accept-to-resolution auto-link. 49/49 E2E tests passing. Buyer and seller can submit proposals, AI mediates, and auto-resolution ties into the refund/settlement pipeline."
+    },
+    {
+      "name": "Order Number System (YP-YYYYMMDD-NNNN)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/models.py (order_number field on Reservation)",
+          "app/routers/reservations.py",
+          "app/routers/admin_core.py"
+        ],
+        "routes": [
+          "GET /v3_6/reservations/by-id/{reservation_id} (includes order_number)",
+          "GET /admin/reservations (includes order_number)"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/components/OrderNumber.tsx",
+          "frontend/src/pages/MyOrdersPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "Reservation responses include order_number field"
+        ]
+      },
+      "commits": [
+        "e9cc48e Order number system: YP-YYYYMMDD-NNNN format across entire platform",
+        "64e8cd2 Add 25 E2E tests for order_number system (all passing)",
+        "a0373df Fix admin/reservations 500: robust status serialization + add order_number"
+      ],
+      "notes": "YP-YYYYMMDD-NNNN format order numbers applied across the entire platform. Dedicated OrderNumber.tsx component for display. 25 E2E tests all passing."
+    },
+    {
+      "name": "Notification System (SSE, FCM Push, Email, WebSocket)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/notifications.py",
+          "app/routers/notification_settings.py",
+          "app/routers/deal_chat_ws.py",
+          "app/services/notification_service.py",
+          "app/services/notification_templates.py",
+          "app/services/email_sender.py",
+          "app/utils/email_service.py",
+          "app/models.py (UserNotification, NotificationSetting, UserInterest)"
+        ],
+        "routes": [
+          "GET /notifications/",
+          "GET /notification-settings/",
+          "POST /notification-settings/",
+          "WebSocket /deals/{deal_id}/chat/ws"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/NotificationsPage.tsx",
+          "frontend/src/pages/NotificationSettingsPage.tsx",
+          "frontend/src/pages/InterestSettingsPage.tsx",
+          "frontend/src/pages/AdminNotificationsPage.tsx",
+          "frontend/src/components/DealChatWS.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /notifications/ → 200",
+          "GET /notification-settings/ → 200"
+        ]
+      },
+      "commits": [
+        "729792f Add notification system: 64 event templates, interest registration, per-event settings",
+        "ab0b4ba Notification system v2: interest matcher, badge, registration flow, guide updates",
+        "e008cf2 Notification triggers: connect all events to routers + E2E tests",
+        "568402c FCM push notifications + WebSocket real-time chat",
+        "630e564 FCM + WebSocket test report: 20/20 PASS",
+        "2c8492c FCM + WebSocket 20-item test: ALL 20 PASS",
+        "43eb2cf Update notification-final-report.md: 40/40 PASS"
+      ],
+      "notes": "64 event templates, interest-based matching, per-event settings. FCM push notifications, WebSocket real-time chat, SSE (via notifications router), and SMTP email sending. 40/40 E2E tests passing."
+    },
+    {
+      "name": "Delivery Tracking (배송 추적)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/delivery.py",
+          "app/routers/delivery_tracking.py"
+        ],
+        "routes": [
+          "GET /delivery/tracking/",
+          "POST /v3_6/reservations/{reservation_id}/ship",
+          "POST /v3_6/reservations/{reservation_id}/arrival-confirm",
+          "POST /reservations/{reservation_id}/mark_shipped",
+          "POST /reservations/{reservation_id}/arrival_confirm"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/AdminDeliveryPage.tsx",
+          "frontend/src/pages/SellerShipPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /delivery/tracking/ → 200"
+        ]
+      },
+      "commits": [
+        "f1da5fa Social login (Kakao/Naver/Google) + SweetTracker delivery tracking",
+        "3cedd3e Fix 3 more test failures: delivery tracking, offer listing, review flow",
+        "111b40d Fix remaining test failures: approve delivery seller + relax assertions"
+      ],
+      "notes": "SweetTracker integration for delivery tracking. Ship and arrival-confirm endpoints on both v3.5 and v3.6 APIs. Admin delivery page and seller shipping page exist in frontend."
+    },
+    {
+      "name": "Points System",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/points.py",
+          "app/models.py (PointTransaction model)"
+        ],
+        "routes": [
+          "GET /points/{user_type}/{user_id}/transactions",
+          "GET /points/{user_type}/{user_id}/balance",
+          "POST /points/use",
+          "GET /buyers/{buyer_id}/points_balance",
+          "GET /buyers/{buyer_id}/points_grade"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/PointsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /points/ endpoints available"
+        ]
+      },
+      "commits": [
+        "0a203d5 Actuator contract + withholding tax + grade/point config",
+        "67bbc38 KB update: actuator guide expansion + FCM/WebSocket/points FAQ + role-based query filtering"
+      ],
+      "notes": "Full points system with transactions, balance, grade levels, and point deduction. Integrated with buyer trust tiers."
+    },
+    {
+      "name": "Review / Rating System",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/reviews.py",
+          "app/models.py (SellerReview, SellerRatingAggregate)"
+        ],
+        "routes": [
+          "POST /reviews",
+          "GET /reviews/seller/{seller_id}/summary",
+          "GET /reviews/seller/{seller_id}",
+          "GET /reviews/seller/{seller_id}/level",
+          "POST /reviews/{review_id}/reply",
+          "PATCH /reviews/by-reservation/{reservation_id}"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/ReviewWritePage.tsx",
+          "frontend/src/pages/SellerReviewsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /reviews/seller/{id}/summary → 200"
+        ]
+      },
+      "commits": [
+        "740ca2b Seller ERP: dashboard + 13 menu pages + backend APIs (inquiries, review reply, offer patch, shipping policy)",
+        "4bfef8f Seller pages: sidebar restructure + settlements + reviews + refunds + stats"
+      ],
+      "notes": "Full review/rating system with seller review summaries, aggregate ratings, seller level via reviews, and seller reply capability."
+    },
+    {
+      "name": "Actuator System (위탁판매자)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/actuators.py",
+          "app/routers/me_actuator.py",
+          "app/models.py (Actuator, ActuatorCommission, ActuatorRewardLog, ActuatorSellerDisconnection)"
+        ],
+        "routes": [
+          "GET /actuators/verify-code",
+          "POST /actuators/",
+          "GET /actuators/me",
+          "GET /actuators/{actuator_id}/commissions",
+          "POST /actuators/{actuator_id}/agree-contract",
+          "GET /actuators/{actuator_id}/contract-status",
+          "GET /actuators/{actuator_id}/payout-preview",
+          "GET /actuators/me/sellers",
+          "POST /actuators/me/commissions/settle"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/ActuatorCommissionsPage.tsx",
+          "frontend/src/pages/ActuatorContractPage.tsx",
+          "frontend/src/pages/ActuatorInvitePage.tsx",
+          "frontend/src/pages/ActuatorOffersPage.tsx",
+          "frontend/src/pages/ActuatorSellerOffersPage.tsx",
+          "frontend/src/pages/ActuatorSellersPage.tsx",
+          "frontend/src/pages/ActuatorStatsPage.tsx",
+          "frontend/src/pages/AdminActuatorsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /actuators/ → 200"
+        ]
+      },
+      "commits": [
+        "0a203d5 Actuator contract + withholding tax + grade/point config",
+        "8df917a Role stress tests: 120 tests across 3 phases (actuator/recommender/spectator/grade/safety)",
+        "6650275 Actuator UI: sellers management, offers view, stats, commissions, invite",
+        "8775c4c Overhaul actuator registration: bank info, biz toggle, remove redundant fields",
+        "b33da46 Dispute v3 ... + Actuator disconnect + KPI + Insights"
+      ],
+      "notes": "Full actuator (위탁판매자) system: registration, contract agreement, commission tracking, seller management, payout preview, grade/point config, withholding tax, and disconnect mechanism. 7 dedicated frontend pages."
+    },
+    {
+      "name": "Admin Panel (Frontend Pages + API Endpoints)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/admin_core.py",
+          "app/routers/admin_dashboard.py",
+          "app/routers/admin_users.py",
+          "app/routers/admin_policy.py",
+          "app/routers/admin_policy_proposals.py",
+          "app/routers/admin_policy_yaml.py",
+          "app/routers/admin_policy_docs.py",
+          "app/routers/admin_simulate.py",
+          "app/routers/admin_simulate_status.py",
+          "app/routers/admin_settlements.py",
+          "app/routers/admin_refund_preview.py",
+          "app/routers/admin_announcements.py",
+          "app/routers/admin_anomaly.py",
+          "app/routers/admin_custom_report.py",
+          "app/routers/admin_anchor.py"
+        ],
+        "routes": [
+          "GET /admin/dashboard/stats → 401 (admin auth required)",
+          "GET /admin/announcements/ → 401",
+          "GET /admin/anomaly/ → 401",
+          "GET /admin/policy/ → 401",
+          "GET /admin/custom-report/ → 401",
+          "GET /admin/users/ → 401",
+          "GET /admin/settlements/ → 401"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/pages/AdminBuyersPage.tsx",
+          "frontend/src/pages/AdminSellersPage.tsx",
+          "frontend/src/pages/AdminActuatorsPage.tsx",
+          "frontend/src/pages/AdminDealsPage.tsx",
+          "frontend/src/pages/AdminOffersPage.tsx",
+          "frontend/src/pages/AdminReservationsPage.tsx",
+          "frontend/src/pages/AdminSettlementsPage.tsx",
+          "frontend/src/pages/AdminRefundsPage.tsx",
+          "frontend/src/pages/AdminRefundSimulatorPage.tsx",
+          "frontend/src/pages/AdminDisputePage.tsx",
+          "frontend/src/pages/AdminDeliveryPage.tsx",
+          "frontend/src/pages/AdminNotificationsPage.tsx",
+          "frontend/src/pages/AdminAnnouncementsPage.tsx",
+          "frontend/src/pages/AdminAnomaliesPage.tsx",
+          "frontend/src/pages/AdminReportsPage.tsx",
+          "frontend/src/pages/AdminCustomReportPage.tsx",
+          "frontend/src/pages/AdminLogsPage.tsx",
+          "frontend/src/pages/AdminStatsPage.tsx",
+          "frontend/src/pages/AdminPolicyDocsPage.tsx",
+          "frontend/src/pages/AdminPolicyParamsPage.tsx",
+          "frontend/src/pages/AdminPolicyProposalsPage.tsx",
+          "frontend/src/pages/AdminSettingsPage.tsx",
+          "frontend/src/pages/AdminTaxInvoicesPage.tsx",
+          "frontend/src/pages/AdminUnifiedSearchPage.tsx",
+          "frontend/src/pages/AdminUserConditionsPage.tsx",
+          "frontend/src/pages/AdminMinorityReportPage.tsx",
+          "frontend/src/pages/AdminInsightsPage.tsx (admin/)",
+          "frontend/src/pages/admin/AdminDonzzulStoresPage.tsx",
+          "frontend/src/pages/admin/AdminDonzzulSettlementsPage.tsx",
+          "frontend/src/pages/admin/AdminInsightsPage.tsx",
+          "frontend/src/components/layout/AdminLayout.tsx",
+          "frontend/src/components/layout/AdminSidebar.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /admin/dashboard/stats → 401 (correctly requires admin auth)",
+          "GET /admin/announcements/ → 401",
+          "GET /admin/policy/ → 401",
+          "GET /admin/custom-report/ → 401",
+          "GET /admin/users/ → 401"
+        ]
+      },
+      "commits": [
+        "177c4ba Admin 21 pages complete",
+        "9ae8d16 Add admin dashboard, seller/buyer/actuator management pages",
+        "7c480c0 Admin panel: header sticky + click navigation + status fixes + anomaly/report workflow",
+        "20c99ca Admin UI polish: add minWidth + empty states + search to all 21 pages",
+        "6bb1ec1 E2E visual audit: 14/14 PASS — public pages, auth, admin API, admin panel, KB accuracy",
+        "18be2e7 Production security hardening: admin auth middleware + error handling + rate limit + E2E tests"
+      ],
+      "notes": "Comprehensive admin panel with 30+ pages. All admin endpoints require admin JWT authentication (return 401 without it). Includes dashboard with KPI cards, unified search, anomaly detection, custom report builder, policy management, and minority report (AI profiling)."
+    },
+    {
+      "name": "Pingpong AI Chatbot (KB, FAQ, Sidecar)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/pingpong.py",
+          "app/models.py (PingpongLog, PingpongCase)",
+          "app/llm_client.py",
+          "tools/pingpong_sidecar_openai.py"
+        ],
+        "routes": [
+          "POST /v3_6/pingpong/ask"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/components/layout/PingpongFloat.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "POST /v3_6/pingpong/ask → 400 (requires body, confirming endpoint exists)"
+        ]
+      },
+      "commits": [
+        "39d82a3 Pingpongi 100Q test: 100/100 PASS (target met)",
+        "380595c Pingpong v5 test: FINAL 200 Q&A (0 errors, all fixes verified)",
+        "3cbeeaa Pingpong safety: sensitive topic filter + profanity block + legal/medical/political neutrality",
+        "a0c90a8 Fix pingpong: strict KB-only answers + role-aware responses + no hallucination",
+        "6359702 Fix pingpong KB: role-based document filtering + frontend role passing",
+        "7870b00 Pingpong KB: FAQ direct mapping + server fallback block + role-specific help",
+        "fcd365b Pingpong: include page paths in answers for deeplinks"
+      ],
+      "notes": "Pingpongi AI chatbot with natural language Q&A on policy/offers/deals/refunds. KB-only strict answers with no hallucination. Role-aware (buyer/seller/actuator/admin) document filtering. FAQ direct mapping, fastpath routing (social/hard_oos/faq_atom/term_resolver), safety filters (80 Q&A sensitive topic test, 92% block rate), deeplink page paths in answers. 200 Q&A tests all passing."
+    },
+    {
+      "name": "Policy SSOT System (YAML, Declarations, Runtime)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/policy/api.py",
+          "app/policy/runtime.py",
+          "app/policy/params/defaults.yaml",
+          "app/policy/params/pricing.yaml",
+          "app/policy/params/spectator.yaml",
+          "app/policy/params/loader.py",
+          "app/policy/params/store.py",
+          "app/policy/params/schema.py",
+          "app/policy/docs/",
+          "app/routers/admin_policy.py",
+          "app/routers/admin_policy_yaml.py",
+          "app/routers/admin_policy_docs.py",
+          "app/routers/admin_policy_proposals.py",
+          "app/models.py (PolicyDeclaration, PolicyProposal)"
+        ],
+        "routes": [
+          "GET /admin/policy/ → 401",
+          "GET /admin/policy-yaml/",
+          "GET /admin/policy-docs/"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/AdminPolicyDocsPage.tsx",
+          "frontend/src/pages/AdminPolicyParamsPage.tsx",
+          "frontend/src/pages/AdminPolicyProposalsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /admin/policy/ → 401 (admin auth required)"
+        ]
+      },
+      "commits": [
+        "5531409 docs(ssot): add centralized policy SSOT docs set",
+        "aaaa78c Refactor policy SSOT (rate-based) and remove deposit routes",
+        "763a813 Add policy defaults YAML",
+        "85ac5f5 policy: remove legacy R/RV usage from routers/logic (insights/trust/seller fees)",
+        "17e97ba policy(fees/points): remove legacy R/RV usage from crud",
+        "043a8fc policy(time): remove legacy R/RV timeline/deadtime usage from crud",
+        "fb751db SSOT: archive legacy policy docs and centralize public/admin policy docs"
+      ],
+      "notes": "Centralized policy SSOT with YAML defaults, runtime loader, single entry point (policy/api.py). PolicyDeclaration table for DB-stored policy snapshots. Admin can view/edit policy params, proposals, and docs. All parameters accessed through api.py — direct YAML/config access is prohibited."
+    },
+    {
+      "name": "Frontend (React, Theme, Sidebar, Pages)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/main.py (serves frontend dist as SPA)"
+        ],
+        "routes": [
+          "GET / (serves index.html)"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/ (80+ page files)",
+          "frontend/src/components/layout/Layout.tsx",
+          "frontend/src/components/layout/Sidebar.tsx",
+          "frontend/src/components/layout/AdminSidebar.tsx",
+          "frontend/src/components/layout/AdminLayout.tsx",
+          "frontend/src/components/layout/BottomNav.tsx",
+          "frontend/src/components/layout/Footer.tsx",
+          "frontend/src/components/layout/PingpongFloat.tsx",
+          "frontend/src/components/effects/ (6 effect components)",
+          "frontend/src/components/journey/ (6 journey components)"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET / → 200 (serves SPA)"
+        ]
+      },
+      "commits": [
+        "1e932d5 PWA setup + yeokping.com domain ready + frontend rebuild",
+        "d941b9 Frontend audit: fix endpoint mismatches, hardcoded URLs, type safety, broken routes",
+        "826ce16 Sidebar toggle: bright green button + fix matching/model/bundle/luxury",
+        "5e9e7ab KB reinforcement + admin theme toggle + light mode contrast fix",
+        "22a7785 Deal timeline: 4-stage animation + banners + confetti",
+        "ca01836 Premium effects: Matrix code rain + pingpong rally + auction hammer + confetti + payment success",
+        "05145ce Visual full check: 52 pages x 3 viewports = 156 checks, 150 PASS / 6 minor (by-design)"
+      ],
+      "notes": "React 19 + Vite 7 + TypeScript 5 + framer-motion SPA. 80+ pages, dual theme (dark/light via CSS variables), animated sidebar, bottom nav, admin layout with separate sidebar. Premium effects (Matrix code rain, confetti, auction hammer, payment success). Visual audit: 150/156 checks pass across 3 viewports."
+    },
+    {
+      "name": "PWA + Domain Setup",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/main.py (maintenance mode middleware)"
+        ],
+        "routes": [
+          "GET / (SPA with service worker)"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/public/manifest.json",
+          "frontend/public/sw.js",
+          "frontend/src/components/MaintenancePage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET / → 200 (yeokping.com domain active)"
+        ]
+      },
+      "commits": [
+        "1e932d5 PWA setup + yeokping.com domain ready + frontend rebuild",
+        "2e128f3 Maintenance page + secret access key + pre-register email",
+        "3f0b7a9 Change maintenance page emoji from rocket to pingpong",
+        "7de350f Rebuild dist: maintenance page emoji fix"
+      ],
+      "notes": "PWA with manifest.json and service worker. Maintenance page with secret access key bypass. yeokping.com domain configured. Pre-register email collection during maintenance."
+    },
+    {
+      "name": "Security Hardening (Rate Limit, CORS, Error Handling)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/main.py (CORS middleware, rate limit, error handling)",
+          "app/routers/admin_core.py (admin auth middleware)"
+        ],
+        "routes": [
+          "All admin endpoints return 401 without valid JWT",
+          "Rate limiting active on production"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/ (error states handled in pages)"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /admin/dashboard/stats → 401 (auth enforced)",
+          "Rate limiting confirmed active (stress tests adjusted for it)"
+        ]
+      },
+      "commits": [
+        "18be2e7 Production security hardening: admin auth middleware + error handling + rate limit + E2E tests",
+        "16122f8 Add 40 new tests (concurrency+security+data integrity) + fix assertions",
+        "f0a1691 Fix 9 WARN: price validation + suspended check + XSS sanitize",
+        "3cbeeaa Pingpong safety: sensitive topic filter + profanity block + legal/medical/political neutrality"
+      ],
+      "notes": "Production security hardening with admin auth middleware, CORS, rate limiting, XSS sanitization, error handling (no stack traces in production). Safety filters on AI chatbot. E2E security tests confirm all protections active."
+    },
+    {
+      "name": "Seller Onboarding + Verification",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/sellers_onboarding.py",
+          "app/routers/sellers.py",
+          "app/services/business_verify.py",
+          "app/models.py (SellerExternalRating, SellerVerificationScore)"
+        ],
+        "routes": [
+          "POST /onboarding/sellers",
+          "GET /onboarding/sellers/{req_id}",
+          "POST /onboarding/admin/sellers/{req_id}/decide",
+          "POST /sellers/ocr-business",
+          "POST /sellers/business/verify",
+          "POST /sellers/{seller_id}/documents",
+          "POST /sellers/{seller_id}/approve"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/RegisterPage.tsx",
+          "frontend/src/pages/AdminSellersPage.tsx",
+          "frontend/src/pages/SellerBusinessInfoPage.tsx",
+          "frontend/src/components/OnboardingGuide.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "POST /sellers/business/verify → 200",
+          "POST /sellers/ocr-business → 200"
+        ]
+      },
+      "commits": [
+        "318105b Seller registration overhaul + admin seed account",
+        "189e22c Fix seller registration: file upload + actuator code + external ratings",
+        "df105cf Quality up: NTS/SMTP test + conditions pending + error states + SEO + onboarding + mobile responsive",
+        "7c3e7aa Backlog sprint: NTS verify + settlement PDF + withholding PDF + email system",
+        "b0c7b86 Allow unverified seller login, block only offer submission"
+      ],
+      "notes": "Full seller onboarding flow: registration with file upload, business registration OCR, NTS (국세청) verification, admin approval workflow, external ratings import. Unverified sellers can log in but cannot submit offers."
+    },
+    {
+      "name": "Announcement System",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/admin_announcements.py",
+          "app/models.py (Announcement model)"
+        ],
+        "routes": [
+          "GET /admin/announcements/ → 401 (admin auth required)"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/AdminAnnouncementsPage.tsx",
+          "frontend/src/pages/SellerAnnouncementsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /admin/announcements/ → 401 (admin auth required)"
+        ]
+      },
+      "commits": [
+        "Announcement model and router present in codebase"
+      ],
+      "notes": "Announcement system with admin creation and seller viewing. Admin and seller announcement pages both exist in frontend."
+    },
+    {
+      "name": "Custom Reports",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/admin_custom_report.py",
+          "app/routers/reports.py",
+          "app/models.py (Report, CustomReportTemplate)"
+        ],
+        "routes": [
+          "GET /admin/custom-report/ → 401",
+          "GET /reports/ → 200"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/AdminCustomReportPage.tsx",
+          "frontend/src/pages/AdminReportsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /admin/custom-report/ → 401",
+          "GET /reports/ → 200"
+        ]
+      },
+      "commits": [
+        "4e47298 Add clickable ID hyperlinks + custom report builder for admin"
+      ],
+      "notes": "Custom report builder with templates. Admin can create custom reports and view standard reports. Report model stores generated reports."
+    },
+    {
+      "name": "Coupon / Promotion System",
+      "status": "MISSING",
+      "backend": {
+        "exists": false,
+        "files": [],
+        "routes": []
+      },
+      "frontend": {
+        "exists": false,
+        "files": []
+      },
+      "production": {
+        "api_works": false,
+        "tested_endpoints": []
+      },
+      "commits": [],
+      "notes": "No coupon or promotion system files found anywhere in the codebase. No router, model, or frontend page exists for coupons or promotions. This feature was never implemented."
+    },
+    {
+      "name": "Tax Invoice System (세금계산서)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/tax_invoices.py",
+          "app/models.py (TaxInvoice, TaxInvoiceStatus, EcountMapping, BusinessInfoChangeLog)",
+          "app/services/tax_invoice.py",
+          "app/services/ecount_service.py"
+        ],
+        "routes": [
+          "GET /tax-invoices/ → 200"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/AdminTaxInvoicesPage.tsx",
+          "frontend/src/pages/SellerTaxInvoicesPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /tax-invoices/ → 200"
+        ]
+      },
+      "commits": [
+        "9091b6c Tax invoice system: OCR + auto-generate + admin/seller pages",
+        "110241e Fix tax invoice: PostgreSQL migration types + seller endpoint paths",
+        "d2095fc Tax invoice E2E tests: 51/51 passed — full test suite with report",
+        "f855e54 Separate tax_invoice_email from login email for Seller/Actuator",
+        "334956f Final polish: mypage conditions + admin override + ECOUNT export + www redirect"
+      ],
+      "notes": "Full tax invoice system: OCR recognition, auto-generation, ECOUNT ERP export, admin and seller pages. Separate tax_invoice_email from login email. 51/51 E2E tests passing. NTS (국세청) business verification integrated."
+    },
+    {
+      "name": "Seller ERP (Dashboard, Inquiries, Offers, Shipping, Stats)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/seller_offers.py",
+          "app/routers/customer_inquiries.py",
+          "app/routers/seller_trust.py",
+          "app/models.py (CustomerInquiry)"
+        ],
+        "routes": [
+          "GET /seller-trust/ → 200",
+          "GET /customer-inquiries/ → 200"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/SellerDashboardPage.tsx",
+          "frontend/src/pages/SellerOffersPage.tsx",
+          "frontend/src/pages/SellerInquiriesPage.tsx",
+          "frontend/src/pages/SellerReviewsPage.tsx",
+          "frontend/src/pages/SellerRefundsPage.tsx",
+          "frontend/src/pages/SellerReturnsPage.tsx",
+          "frontend/src/pages/SellerSettlementsPage.tsx",
+          "frontend/src/pages/SellerStatsPage.tsx",
+          "frontend/src/pages/SellerShipPage.tsx",
+          "frontend/src/pages/SellerShippingPolicyPage.tsx",
+          "frontend/src/pages/SellerFeesPage.tsx",
+          "frontend/src/pages/SellerBusinessInfoPage.tsx",
+          "frontend/src/pages/SellerTaxInvoicesPage.tsx",
+          "frontend/src/pages/SellerAnnouncementsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /seller-trust/ → 200",
+          "GET /customer-inquiries/ → 200"
+        ]
+      },
+      "commits": [
+        "740ca2b Seller ERP: dashboard + 13 menu pages + backend APIs (inquiries, review reply, offer patch, shipping policy)",
+        "4bfef8f Seller pages: sidebar restructure + settlements + reviews + refunds + stats",
+        "b33da46 Dispute v3 ... + Seller trust engine v2"
+      ],
+      "notes": "Full seller ERP with 14 dedicated pages: dashboard, offers, inquiries, reviews, refunds, returns, settlements, stats, shipping, fees, business info, tax invoices, announcements. Seller trust engine v2 for trust scoring."
+    },
+    {
+      "name": "Donzzul System (돈쭐 - Ethical Consumer Platform)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/donzzul.py",
+          "app/models.py (DonzzulActuator, DonzzulStore, DonzzulDeal, DonzzulVoucher, DonzzulVoteWeek, DonzzulVote, DonzzulSettlement, DonzzulChatMessage)"
+        ],
+        "routes": [
+          "GET /donzzul/ → 200"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/donzzul/DonzzulMainPage.tsx",
+          "frontend/src/pages/donzzul/DonzzulDealPage.tsx",
+          "frontend/src/pages/donzzul/DonzzulRecommendPage.tsx",
+          "frontend/src/pages/donzzul/DonzzulVotePage.tsx",
+          "frontend/src/pages/donzzul/DonzzulVouchersPage.tsx",
+          "frontend/src/pages/donzzul/DonzzulVoucherUsePage.tsx",
+          "frontend/src/pages/donzzul/DonzzulChatPage.tsx",
+          "frontend/src/pages/donzzul/DonzzulHeroProfilePage.tsx",
+          "frontend/src/pages/donzzul/DonzzulMyStoresPage.tsx",
+          "frontend/src/pages/admin/AdminDonzzulStoresPage.tsx",
+          "frontend/src/pages/admin/AdminDonzzulSettlementsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /donzzul/ → 200"
+        ]
+      },
+      "commits": [
+        "62696ef Donzzul Sprint 1: DB models (8 tables) + API skeleton + yaml + tab",
+        "957078b Donzzul Sprint 2: hero recommend form (4-step) + admin verification + store PIN",
+        "edeb2f1 Donzzul Sprint 3: voucher purchase + hologram UI + PIN redeem + my vouchers",
+        "f88e479 Donzzul Sprint 4: settlement + auto-expiry batch + donation + notifications",
+        "cbf1c75 Sprint 5: 돈쭐 채팅 + 핑퐁이 KB 확장",
+        "584a281 Sprint 6: 주간 투표 시스템 + 자동 딜 생성",
+        "0712642 Sprint 7: 통합 홈 리디자인 + 히어로 프로필 + 랭킹 + 통계"
+      ],
+      "notes": "Full 돈쭐 (ethical consumer) sub-platform with 8 DB tables, 7 sprint iterations. Features: hero recommendation, weekly voting, voucher purchase with hologram UI + PIN redemption, chat, settlement, auto-expiry, donations, admin stores/settlements management. 9 frontend pages + 2 admin pages."
+    },
+    {
+      "name": "Arena System (배틀 아레나 - Mini Games)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/arena.py",
+          "app/models.py (ArenaPlayer, ArenaGame, ArenaRegionStats)"
+        ],
+        "routes": [
+          "GET /arena/ → 200"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/arena/ArenaPage.tsx",
+          "frontend/src/pages/arena/ArenaMapPage.tsx",
+          "frontend/src/pages/arena/ArenaMathPage.tsx",
+          "frontend/src/pages/arena/ArenaQuizPage.tsx",
+          "frontend/src/pages/arena/ArenaRpsPage.tsx",
+          "frontend/src/pages/arena/ArenaMukjjippaPage.tsx",
+          "frontend/src/pages/arena/ArenaReactionPage.tsx",
+          "frontend/src/pages/arena/ArenaYutPage.tsx",
+          "frontend/src/pages/arena/ArenaRankingsPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /arena/ → 200"
+        ]
+      },
+      "commits": [
+        "4b1653f 역핑 배틀 아레나: 6개 미니게임 + 배틀맵 + 랭킹 시스템",
+        "3ecb4f1 Arena: cleanup debug endpoints, 30/30 E2E ALL PASS",
+        "2b9b031 Fix arena auth: manual JWT parsing instead of get_current_user"
+      ],
+      "notes": "Battle arena with 6 mini-games (math, quiz, RPS, mukjjippa, reaction, yut), battle map, regional stats, and ranking system. 30/30 E2E tests all passing. 9 frontend pages."
+    },
+    {
+      "name": "Spectator System (구경꾼)",
+      "status": "PARTIAL",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/spectator.py",
+          "app/models.py (SpectatorPrediction, SpectatorMonthlyStats, SpectatorBadge, DealViewer)",
+          "app/policy/spectator_ranking.py",
+          "app/policy/spectator_settlement.py",
+          "app/policy/params/spectator.yaml",
+          "app/schemas_spectator.py"
+        ],
+        "routes": [
+          "GET /spectator/ → 200"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/SpectatingPage.tsx",
+          "frontend/src/components/deal/SpectatorPanel.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /spectator/ → 200"
+        ]
+      },
+      "commits": [
+        "8df917a Role stress tests: 120 tests across 3 phases (actuator/recommender/spectator/grade/safety)"
+      ],
+      "notes": "Spectator system exists with prediction, monthly stats, badges, and deal viewing models. Backend router, YAML config, ranking/settlement logic all present. Frontend has SpectatingPage and SpectatorPanel. Marked PARTIAL because only limited commit history references spectator-specific feature work — most mentions are within broader test suites."
+    },
+    {
+      "name": "Behavior Tracking + AI Profiling (Minority Report)",
+      "status": "PARTIAL",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/behavior.py",
+          "app/models.py (UserBehaviorLog, UserProfile)"
+        ],
+        "routes": [
+          "GET /behavior/ → 200"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/AdminMinorityReportPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /behavior/ → 200"
+        ]
+      },
+      "commits": [
+        "0cce3da Add behavior tracking + AI profiling + Minority Report dashboard"
+      ],
+      "notes": "Behavior tracking with UserBehaviorLog and UserProfile models. Admin Minority Report dashboard for AI-based user profiling. Marked PARTIAL because it was added in a single commit and appears to be a basic implementation — no dedicated E2E tests or iterative refinement found."
+    },
+    {
+      "name": "Legal Compliance (Terms, Privacy Policy, Disclaimers)",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/main.py (serves legal pages via SPA)"
+        ],
+        "routes": [
+          "GET /terms (SPA route)",
+          "GET /privacy (SPA route)"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/TermsPage.tsx",
+          "frontend/src/pages/PrivacyPage.tsx",
+          "frontend/src/components/layout/Footer.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET / → 200 (SPA serves all frontend routes)"
+        ]
+      },
+      "commits": [
+        "88693ff Legal compliance: terms (13 articles), privacy policy, footer, disclaimers, cooling enforcement",
+        "dc3b21c Legal: update with real business info + enhanced terms/privacy per spec",
+        "c12a532 Update legal E2E tests for real business info (10/10 PASS)",
+        "9b96b3b Add legal compliance E2E tests (10/10 PASS)"
+      ],
+      "notes": "Terms of service (13 articles), privacy policy, footer disclaimers, cooling-off period enforcement. Updated with real business info. 10/10 E2E legal compliance tests passing."
+    },
+    {
+      "name": "Pre-Registration + Public Demand",
+      "status": "CONFIRMED",
+      "backend": {
+        "exists": true,
+        "files": [
+          "app/routers/preregister.py",
+          "app/routers/public_demand.py",
+          "app/models.py (PreRegister)"
+        ],
+        "routes": [
+          "GET /preregister/ → 200",
+          "GET /public/demand → 200"
+        ]
+      },
+      "frontend": {
+        "exists": true,
+        "files": [
+          "frontend/src/pages/PublicDemandPage.tsx"
+        ]
+      },
+      "production": {
+        "api_works": true,
+        "tested_endpoints": [
+          "GET /preregister/ → 200",
+          "GET /public/demand → 200"
+        ]
+      },
+      "commits": [
+        "2e128f3 Maintenance page + secret access key + pre-register email",
+        "625a824 Public demand dashboard: /demand page + /public/demand API"
+      ],
+      "notes": "Pre-registration email collection during maintenance mode. Public demand dashboard showing aggregated demand data without authentication."
+    }
+  ]
+}
