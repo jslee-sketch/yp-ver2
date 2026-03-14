@@ -28,8 +28,11 @@ def check_email(
     email: str = Query(..., description="확인할 이메일"),
     db: Session = Depends(database.get_db),
 ):
-    """Buyer + Seller + Actuator 테이블에서 이메일 중복 여부를 확인합니다."""
+    """User + Buyer + Seller + Actuator 테이블에서 이메일 중복 여부를 확인합니다."""
     email_lower = email.strip().lower()
+    user = db.query(models.User).filter(models.User.email == email_lower).first()
+    if user:
+        return {"available": False}
     buyer = db.query(models.Buyer).filter(models.Buyer.email == email_lower).first()
     if buyer:
         return {"available": False}

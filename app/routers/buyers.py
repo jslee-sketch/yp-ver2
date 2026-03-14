@@ -180,6 +180,7 @@ def update_buyer(
 class BuyerBasicOut(BaseModel):
     buyer_id: int
     name: Optional[str] = None
+    nickname: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
@@ -202,6 +203,7 @@ def get_buyer_basic(
         return BuyerBasicOut(
             buyer_id=row.id,
             name=row.name,
+            nickname=getattr(row, "nickname", None),
             email=row.email,
             phone=row.phone,
             address=row.address,

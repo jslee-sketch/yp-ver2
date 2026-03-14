@@ -555,21 +555,6 @@ def compute_seller_level_info(db: Session, seller_id: int) -> SellerLevelOut:
         total_orders=total_orders,
     )
 
-@router.get(
-    "/seller/{seller_id}/level",
-    response_model=SellerLevelOut,
-    summary="Seller 레벨 및 수수료 정보 조회",
-)
-def get_seller_level_api(
-    seller_id: int = Path(..., ge=1),
-    db: Session = Depends(get_db),
-):
-    """
-    ✅ Seller 레벨/수수료 API
-    - compute_seller_level_info() 를 thin wrapper 로 감싼 것
-    - 리뷰와 누적 주문 수를 기반으로 레벨/fee_percent 계산
-    """
-    return compute_seller_level_info(db, seller_id)
 
 
 ############ 추천인 포인트 적립 핼퍼 ################################

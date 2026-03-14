@@ -197,6 +197,7 @@ def list_sellers(
 class SellerBasicOut(BaseModel):
     seller_id: int
     name: Optional[str] = None          # 포털 normalizeBasicInfo는 name/company_name 둘 다 인식
+    nickname: Optional[str] = None
     company_name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
@@ -211,6 +212,10 @@ class SellerBasicOut(BaseModel):
     business_item: Optional[str] = None
     tax_invoice_email: Optional[str] = None
     verified_at: Optional[datetime] = None
+    # 은행 정보
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    account_holder: Optional[str] = None
 
 # -----------------------------------------------------
 # 4️⃣ Seller 단건 조회 (기본 프로필 + 승인 상태)
@@ -287,6 +292,10 @@ def get_seller_basic(
         business_item=getattr(seller_row, "business_item", None) if seller_row else None,
         tax_invoice_email=getattr(seller_row, "tax_invoice_email", None) if seller_row else None,
         verified_at=getattr(seller_row, "verified_at", None) if seller_row else None,
+        nickname=getattr(seller_row, "nickname", None) if seller_row else None,
+        bank_name=getattr(seller_row, "bank_name", None) if seller_row else None,
+        account_number=getattr(seller_row, "account_number", None) if seller_row else None,
+        account_holder=getattr(seller_row, "account_holder", None) if seller_row else None,
     )
 
 # -----------------------------------------------------
