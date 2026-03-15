@@ -1157,6 +1157,8 @@ _include_router_safe("donzzul", ("router",), label="donzzul")
 
 # 분쟁 프로세스 v3
 _include_router_safe("disputes", ("router",), label="disputes")
+_include_router_safe("cs_disputes", ("router",), label="cs_disputes")
+_include_router_safe("cs_orders", ("router",), label="cs_orders")
 
 # 판매자 신뢰 엔진 v2
 _include_router_safe("seller_trust", ("router",), label="seller_trust")

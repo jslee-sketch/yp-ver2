@@ -36,7 +36,7 @@ interface RefundReservation {
   buyer?: { nickname?: string; name?: string };
 }
 
-type ViewFilter = '전체' | '환불요청' | '완료' | '분쟁중';
+type ViewFilter = '전체' | '환불요청' | '완료' | '중재중';
 
 export default function SellerRefundsPage() {
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ export default function SellerRefundsPage() {
   }, [sellerId]);
 
   const getRefundStatus = (r: RefundReservation) => {
-    if (r.is_disputed) return '분쟁중';
+    if (r.is_disputed) return '중재중';
     if (r.status === 'CANCELLED') return '완료';
     if (r.refunded_qty && r.refunded_qty > 0) return '완료';
     return '환불요청';
@@ -128,10 +128,10 @@ export default function SellerRefundsPage() {
       setItems(prev => prev.map(r => r.id === disagreeTarget.id ? { ...r, is_disputed: true } : r));
       setDisagreeTarget(null);
       setDisagreeReason('');
-      showToast('분쟁으로 전환되었습니다', 'success');
+      showToast('중재로 전환되었습니다', 'success');
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: unknown } } };
-      showToast(typeof e.response?.data?.detail === 'string' ? e.response.data.detail as string : '분쟁 전환 실패', 'error');
+      showToast(typeof e.response?.data?.detail === 'string' ? e.response.data.detail as string : '중재 전환 실패', 'error');
     }
     setDisputeLoading(false);
   };
@@ -139,7 +139,7 @@ export default function SellerRefundsPage() {
   const statusColor: Record<string, string> = {
     '환불요청': '#ff9100',
     '완료': '#78909c',
-    '분쟁중': '#ff5252',
+    '중재중': '#ff5252',
   };
 
   return (
@@ -150,14 +150,14 @@ export default function SellerRefundsPage() {
         padding: '0 16px', background: C.bg, borderBottom: `1px solid ${C.border}`,
       }}>
         <button onClick={() => navigate(-1)} style={{ fontSize: 20, color: C.text, cursor: 'pointer' }}>←</button>
-        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>환불 관리</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>반품/취소 관리</span>
         <div style={{ width: 24 }} />
       </div>
 
       <div style={{ padding: '14px 16px 0' }}>
         {/* 필터 */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-          {(['전체', '환불요청', '완료', '분쟁중'] as ViewFilter[]).map(s => (
+          {(['전체', '환불요청', '완료', '중재중'] as ViewFilter[]).map(s => (
             <button key={s} onClick={() => setFilter(s)} style={{
               padding: '6px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
               background: filter === s ? `${C.green}22` : C.bgEl,
@@ -234,7 +234,7 @@ export default function SellerRefundsPage() {
                 </div>
               )}
 
-              {st === '분쟁중' && (
+              {st === '중재중' && (
                 <div style={{ fontSize: 11, color: '#ff5252', marginTop: 6 }}>
                   관리자 처리 대기 중
                 </div>
@@ -290,13 +290,13 @@ export default function SellerRefundsPage() {
               style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 10, fontSize: 13, background: C.bgEl, border: `1px solid ${C.border}`, color: C.text, resize: 'none', marginBottom: 12 }}
             />
             <div style={{ fontSize: 11, color: '#ff9100', marginBottom: 16, lineHeight: 1.5 }}>
-              분쟁으로 전환됩니다. 관리자가 중재합니다.
+              중재로 전환됩니다. AI가 양측 의견을 분석합니다.
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => setDisagreeTarget(null)} style={{ flex: 1, padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700, background: C.bgEl, border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer' }}>취소</button>
               <button disabled={disputeLoading || !disagreeReason.trim()} onClick={() => void handleDisagreeSubmit()}
                 style={{ flex: 1, padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700, background: disputeLoading ? 'rgba(255,82,82,0.3)' : '#ff5252', border: 'none', color: '#fff', cursor: disputeLoading || !disagreeReason.trim() ? 'not-allowed' : 'pointer' }}>
-                {disputeLoading ? '처리 중...' : '분쟁 전환'}
+                {disputeLoading ? '처리 중...' : '중재 전환'}
               </button>
             </div>
           </div>

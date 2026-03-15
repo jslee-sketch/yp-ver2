@@ -66,7 +66,7 @@ export default function SellerDisputesPage() {
           product_name: (d.product_name as string) || undefined,
         })));
       } catch {
-        setError('분쟁 목록을 불러오지 못했습니다.');
+        setError('중재 목록을 불러오지 못했습니다.');
       } finally {
         setLoading(false);
       }
@@ -91,7 +91,7 @@ export default function SellerDisputesPage() {
         padding: '0 16px', background: C.bg, borderBottom: `1px solid ${C.border}`,
       }}>
         <button onClick={() => navigate(-1)} style={{ fontSize: 20, color: C.text, cursor: 'pointer' }}>←</button>
-        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>분쟁 관리</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>중재 관리</span>
         <div style={{ width: 24 }} />
       </div>
 
@@ -101,7 +101,7 @@ export default function SellerDisputesPage() {
           background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.2)',
           borderRadius: 12, padding: '12px 14px', marginBottom: 14, fontSize: 12, color: C.orange, lineHeight: 1.6,
         }}>
-          분쟁은 구매자 또는 판매자가 신청할 수 있습니다. 1차(3영업일) → AI 중재 → 2차(2영업일) 순으로 진행되며, 기한 내 미응답 시 자동 종결됩니다.
+          중재는 구매자 또는 판매자가 신청할 수 있습니다. 1차(3영업일) → AI 중재 → 2차(2영업일) 순으로 진행되며, 기한 내 미응답 시 자동 종결됩니다.
         </div>
 
         {/* 필터 */}
@@ -131,7 +131,7 @@ export default function SellerDisputesPage() {
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 0', color: C.textDim }}>
             <div style={{ fontSize: 40, marginBottom: 8 }}>⚖️</div>
-            <div style={{ fontSize: 13 }}>분쟁 내역이 없습니다</div>
+            <div style={{ fontSize: 13 }}>중재 내역이 없습니다</div>
           </div>
         ) : filtered.map(d => {
           const meta = statusMeta[d.status] || { label: d.status, color: '#888' };
@@ -144,7 +144,7 @@ export default function SellerDisputesPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
-                    {d.product_name || `분쟁 #${d.id}`}
+                    {d.product_name || `중재 #${d.id}`}
                   </div>
                   <div style={{ fontSize: 11, color: C.textSec }}>
                     주문 {d.order_number || `#${d.reservation_id}`}

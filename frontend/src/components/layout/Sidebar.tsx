@@ -266,8 +266,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="📦" label="배송 관리"    onClick={() => go('/seller/delivery')} />
                     <MenuItem icon="↩️" label="반품/교환"    onClick={() => go('/seller/returns')} />
                     <MenuItem icon="💰" label="정산 관리"    onClick={() => go('/seller/settlements')} />
-                    <MenuItem icon="💸" label="환불 관리"    onClick={() => go('/seller/refunds')} />
-                    <MenuItem icon="⚠️" label="분쟁 관리"    onClick={() => go('/seller/disputes')} />
+                    <MenuItem icon="💸" label="반품/취소 관리" onClick={() => go('/seller/refunds')} />
+                    <MenuItem icon="⚖️" label="중재 관리"    onClick={() => go('/seller/disputes')} />
                     <MenuItem icon="🧮" label="환불 시뮬레이터" onClick={() => go('/seller/refund-simulator')} />
                     <MenuItem icon="💬" label="고객 문의"    onClick={() => go('/seller/inquiries')} />
                     <MenuItem icon="⭐" label="리뷰 관리"    onClick={() => go('/seller/reviews')} />
@@ -305,16 +305,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="➕" label="딜 만들기"    onClick={() => go('/deal/create')} />
 
                     <SectionTitle>내 활동</SectionTitle>
-                    <MenuItem icon="👤" label="마이페이지"      onClick={() => go('/mypage')} />
-                    <MenuItem icon="🔥" label="내딜 현황"       onClick={() => go('/my-deals')} />
-                    <MenuItem icon="💰" label="포인트 내역"     onClick={() => go('/points')} />
-                    <MenuItem icon="📦" label="참여/결제/배송"   onClick={() => go('/my-orders')} />
-                    <MenuItem icon="🧮" label="환불 시뮬레이터"  onClick={() => go('/refund-simulator')} />
-                    <MenuItem icon="👀" label="관전 모드"       onClick={() => go('/spectating')} />
-
-                    <MenuItem icon="💚" label="돈쭐"           onClick={() => go('/donzzul')} />
+                    <MenuItem icon="📊" label="내 딜"           onClick={() => go('/my-deals')} />
+                    <MenuItem icon="📦" label="주문/배송"       onClick={() => go('/my-orders')} />
+                    <MenuItem icon="🔄" label="교환/반품 내역"   onClick={() => go('/my-returns')} />
+                    <MenuItem icon="⚖️" label="중재"            onClick={() => go('/my-disputes')} />
+                    <MenuItem icon="⭐" label="리뷰"            onClick={() => go('/my-reviews')} />
+                    <MenuItem icon="🔔" label="알림"            onClick={() => go('/notifications')} badge={unreadCount > 0 ? unreadCount : undefined} badgeColor="red" />
+                    <MenuItem icon="💰" label="포인트"          onClick={() => go('/points')} />
+                    <MenuItem icon="⚙️" label="설정"           onClick={() => go('/settings')} />
 
                     <SectionTitle>탐색</SectionTitle>
+                    <MenuItem icon="👀" label="관전 모드"       onClick={() => go('/spectating')} />
+                    <MenuItem icon="💚" label="돈쭐"           onClick={() => go('/donzzul')} />
                     <MenuItem icon="📊" label="지난딜 가격조회" onClick={() => go('/completed-deals')} />
                   </>
                 )}
@@ -322,11 +324,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
 
               {/* 하단 */}
               <div style={{ borderTop: '1px solid var(--border-subtle)', paddingBottom: 8 }}>
-                {!isSeller && (
+                {isSeller && (
                   <MenuItem icon="🔔" label="알림"    badge={unreadCount > 0 ? unreadCount : undefined} badgeColor="red"
                     onClick={() => go('/notifications')} />
                 )}
-                <MenuItem icon="⚙️" label="설정"    onClick={() => go('/settings')} />
+                {(isSeller || isActuator || isAdmin) && (
+                  <MenuItem icon="⚙️" label="설정"    onClick={() => go('/settings')} />
+                )}
                 <MenuItem icon="🎯" label="관심 상품" onClick={() => go('/settings/interests')} />
                 <MenuItem icon="🔧" label="알림 설정" onClick={() => go('/settings/notifications')} />
                 <MenuItem icon="📋" label="이용약관" onClick={() => go('/terms')} />

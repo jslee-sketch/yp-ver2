@@ -35,9 +35,11 @@ interface DisputeData {
     ai_amount: number;
     ai_explanation: { to_initiator?: string; to_respondent?: string; reasoning?: string };
     respondent_amount_type?: string;
+    respondent_amount_value?: number;
     respondent_shipping_burden?: string;
     respondent_return_required?: boolean;
     ai_amount_type?: string;
+    ai_amount_value?: number;
     ai_shipping_burden?: string;
     ai_return_required?: boolean;
     ai_legal_basis?: string;
@@ -55,6 +57,8 @@ interface DisputeData {
     ai_recommendation: string;
     ai_amount: number;
     ai_explanation: { to_initiator?: string; to_respondent?: string; reasoning?: string };
+    ai_amount_type?: string;
+    ai_amount_value?: number;
     ai_legal_basis?: string;
     ai_nudge_buyer?: string;
     ai_nudge_seller?: string;
@@ -74,6 +78,32 @@ interface DisputeData {
   current_deadline: string;
   days_remaining: number;
   created_at: string;
+  // Post-failure fields
+  post_failure_status?: string;
+  post_failure_deadline?: string;
+  post_failure_grace_days_remaining?: number;
+  direct_agreement?: {
+    proposed_by: number;
+    description: string;
+    compensation_type: string;
+    compensation_amount: number;
+    resolution: string;
+    accepted?: boolean;
+    created_at: string;
+  };
+  external_filing?: {
+    agency_type: string;
+    case_number?: string;
+    evidence_url?: string;
+    filed_at: string;
+  };
+  admin_force_close?: {
+    basis: string;
+    reason: string;
+    amount: number;
+    resolution: string;
+    closed_at: string;
+  };
 }
 
 /* ── 상수 ── */
@@ -93,7 +123,10 @@ const statusLabels: Record<string, { label: string; color: string; icon: string 
   ROUND2_REVIEW:   { label: 'Round 2 최종 검토', color: C.pink, icon: '🔍' },
   ACCEPTED:        { label: '합의 완료', color: C.green, icon: '🎉' },
   REJECTED:        { label: '미합의 (법적 안내)', color: C.red, icon: '⚖️' },
+  FAILED:          { label: '결렬 — 후속 절차', color: C.red, icon: '🚨' },
   AUTO_CLOSED:     { label: '자동 종결', color: C.textDim, icon: '⏰' },
+  RESOLVED:        { label: '해결 완료', color: C.green, icon: '✅' },
+  ADMIN_DECIDED:   { label: '관리자 판정', color: C.yellow, icon: '🏛️' },
 };
 
 const categoryLabels: Record<string, string> = {
@@ -155,11 +188,26 @@ export default function DisputeDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [actionMsg, setActionMsg] = useState('');
 
+  // Three-way choice state
+  const [chosenProposal, setChosenProposal] = useState<'initiator' | 'ai' | 'respondent' | null>(null);
+
+  // Post-failure modals
+  const [showDirectAgreementModal, setShowDirectAgreementModal] = useState(false);
+  const [daDescription, setDaDescription] = useState('');
+  const [daCompType, setDaCompType] = useState<'fixed' | 'percent'>('fixed');
+  const [daCompAmount, setDaCompAmount] = useState(0);
+  const [daResolution, setDaResolution] = useState('full_refund');
+
+  const [showExternalFilingModal, setShowExternalFilingModal] = useState(false);
+  const [efAgencyType, setEfAgencyType] = useState('consumer_agency');
+  const [efCaseNumber, setEfCaseNumber] = useState('');
+  const [efEvidenceUrl, setEfEvidenceUrl] = useState('');
+
   const load = useCallback(() => {
     fetch(`${BASE}/v3_6/disputes/${id}`)
       .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
       .then(setDispute)
-      .catch(() => setError('분쟁 정보를 불러오지 못했습니다.'))
+      .catch(() => setError('중재 정보를 불러오지 못했습니다.'))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -171,12 +219,12 @@ export default function DisputeDetailPage() {
   if (error || !dispute) return (
     <div style={{ padding: 40, textAlign: 'center', color: C.textSec }}>
       <div style={{ fontSize: 48, marginBottom: 12 }}>⚖️</div>
-      <div style={{ fontSize: 14, marginBottom: 16 }}>{error || '분쟁을 찾을 수 없습니다'}</div>
+      <div style={{ fontSize: 14, marginBottom: 16 }}>{error || '중재를 찾을 수 없습니다'}</div>
       <button onClick={() => navigate(-1)} style={btnStyle(C.textDim)}>뒤로가기</button>
     </div>
   );
 
-  const isClosed = ['ACCEPTED', 'REJECTED', 'AUTO_CLOSED'].includes(dispute.status);
+  const isClosed = ['ACCEPTED', 'REJECTED', 'FAILED', 'AUTO_CLOSED', 'RESOLVED', 'ADMIN_DECIDED'].includes(dispute.status);
   const isInitiator = userId === dispute.initiator.id;
   const isRespondent = userId === dispute.respondent.id;
   const isParty = isInitiator || isRespondent;
@@ -231,6 +279,99 @@ export default function DisputeDetailPage() {
     }
   };
 
+  /* ── 액션: 3자 선택 (Phase 4/8) ── */
+  const handleChooseProposal = async () => {
+    if (!chosenProposal) return;
+    setSubmitting(true);
+    setActionMsg('');
+    try {
+      const res = await fetch(`${BASE}/v3/disputes/${id}/choose`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, chosen: chosenProposal }),
+      });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || '선택 실패'); }
+      setActionMsg('선택이 확정되었습니다!');
+      setChosenProposal(null);
+      load();
+    } catch (e: unknown) {
+      setActionMsg(e instanceof Error ? e.message : '오류 발생');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  /* ── 액션: 직접 합의안 등록 ── */
+  const handleDirectAgreement = async () => {
+    setSubmitting(true);
+    setActionMsg('');
+    try {
+      const res = await fetch(`${BASE}/v3/disputes/${id}/direct-agreement`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          description: daDescription,
+          compensation_type: daCompType,
+          compensation_amount: daCompAmount,
+          resolution: daResolution,
+        }),
+      });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || '등록 실패'); }
+      setActionMsg('합의안이 등록되었습니다!');
+      setShowDirectAgreementModal(false);
+      setDaDescription(''); setDaCompAmount(0);
+      load();
+    } catch (e: unknown) {
+      setActionMsg(e instanceof Error ? e.message : '오류 발생');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  /* ── 액션: 직접 합의안 수락/거절 ── */
+  const handleDirectAgreementAccept = async (accepted: boolean) => {
+    setSubmitting(true);
+    setActionMsg('');
+    try {
+      const res = await fetch(`${BASE}/v3/disputes/${id}/direct-agreement/accept`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, accepted }),
+      });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || '처리 실패'); }
+      setActionMsg(accepted ? '합의안을 수락했습니다!' : '합의안을 거절했습니다.');
+      load();
+    } catch (e: unknown) {
+      setActionMsg(e instanceof Error ? e.message : '오류 발생');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  /* ── 액션: 외부기관 신청 등록 ── */
+  const handleExternalFiling = async () => {
+    setSubmitting(true);
+    setActionMsg('');
+    try {
+      const res = await fetch(`${BASE}/v3/disputes/${id}/external-filing`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          agency_type: efAgencyType,
+          case_number: efCaseNumber || undefined,
+          evidence_url: efEvidenceUrl || undefined,
+        }),
+      });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || '등록 실패'); }
+      setActionMsg('외부기관 신청이 등록되었습니다!');
+      setShowExternalFilingModal(false);
+      setEfCaseNumber(''); setEfEvidenceUrl('');
+      load();
+    } catch (e: unknown) {
+      setActionMsg(e instanceof Error ? e.message : '오류 발생');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   /* ── 현재 상태에서 가능한 액션 ── */
   const canRespond = isRespondent && dispute.status === 'ROUND1_RESPONSE';
   const canRebuttal = isParty && dispute.status === 'ROUND2_RESPONSE';
@@ -250,7 +391,7 @@ export default function DisputeDetailPage() {
         padding: '0 16px', background: C.bg, borderBottom: `1px solid ${C.border}`,
       }}>
         <button onClick={() => navigate(-1)} style={{ fontSize: 20, color: C.text, cursor: 'pointer', background: 'none', border: 'none' }}>←</button>
-        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>분쟁 상세</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>중재 상세</span>
         <div style={{ width: 24 }} />
       </div>
 
@@ -264,7 +405,7 @@ export default function DisputeDetailPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <span style={{ fontSize: 22 }}>{st.icon}</span>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>분쟁 #{dispute.id}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>중재 #{dispute.id}</div>
               <div style={{ fontSize: 11, color: C.textSec }}>
                 {dispute.order_number ? `주문번호: ${dispute.order_number}` : `예약 #${dispute.reservation_id}`}
                 {dispute.created_at && ` · ${fmtDate(dispute.created_at)}`}
@@ -312,7 +453,7 @@ export default function DisputeDetailPage() {
           {/* 내 역할 안내 */}
           {isParty && !isClosed && (
             <div style={{ marginTop: 8, fontSize: 11, color: C.cyan }}>
-              나는 이 분쟁의 <strong>{myLabel}</strong>입니다
+              나는 이 중재의 <strong>{myLabel}</strong>입니다
             </div>
           )}
         </div>
@@ -320,8 +461,8 @@ export default function DisputeDetailPage() {
         {/* ━━ ROUND 1 타임라인 ━━ */}
         <SectionDivider label="Round 1" color={C.pink} />
 
-        {/* 분쟁 신청 */}
-        <TimelineStep icon="📌" title="분쟁 신청" subtitle={fmtDate(dispute.created_at)} done>
+        {/* 중재 신청 */}
+        <TimelineStep icon="📌" title="중재 신청" subtitle={fmtDate(dispute.created_at)} done>
           <InfoRow label="카테고리" value={categoryLabels[dispute.category] || dispute.category} />
           <InfoRow label="희망 처리" value={`${resolutionLabels[dispute.requested_resolution] || dispute.requested_resolution} (${fmt(dispute.requested_amount)}원)`} />
           {dispute.initiator_shipping_burden && (
@@ -330,9 +471,10 @@ export default function DisputeDetailPage() {
           <div style={{ fontSize: 12, color: C.text, marginTop: 6, lineHeight: 1.6, padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
             {dispute.description}
           </div>
+          <CompensationLine label="보상 요청" amountType={dispute.initiator_amount_type} amountValue={dispute.initiator_amount_value} orderAmount={dispute.reservation_amount} color={C.cyan} />
           {dispute.evidence.length > 0 && (
             <div style={{ fontSize: 11, color: C.cyan, marginTop: 4 }}>
-              📷 증거 {dispute.evidence.length}건 첨부
+              증거 {dispute.evidence.length}건 첨부
             </div>
           )}
         </TimelineStep>
@@ -348,6 +490,7 @@ export default function DisputeDetailPage() {
                 제안: {resolutionLabels[dispute.round1.proposal_type] || dispute.round1.proposal_type} / {fmt(dispute.round1.proposal_amount)}원
                 {dispute.round1.respondent_shipping_burden && ` · 배송비: ${dispute.round1.respondent_shipping_burden === 'seller' ? '판매자' : '구매자'}`}
               </div>
+              <CompensationLine label="보상 제안" amountType={dispute.round1.respondent_amount_type} amountValue={dispute.round1.respondent_amount_value} orderAmount={dispute.reservation_amount} color={C.orange} />
             </>
           ) : (
             <div style={{ fontSize: 12, color: C.textDim }}>반론 대기 중</div>
@@ -387,6 +530,9 @@ export default function DisputeDetailPage() {
               shippingBurden={dispute.round1.ai_shipping_burden}
               returnRequired={dispute.round1.ai_return_required}
               myRole={myRole}
+              amountType={dispute.round1.ai_amount_type}
+              amountValue={dispute.round1.ai_amount_value}
+              orderAmount={dispute.reservation_amount}
             />
           ) : (
             <div style={{ fontSize: 12, color: C.textDim }}>
@@ -406,19 +552,34 @@ export default function DisputeDetailPage() {
           <DecisionDisplay label="상대방" decision={dispute.round1.respondent_decision} />
         </TimelineStep>
 
-        {/* 1차 동의/거절 액션 */}
+        {/* 1차 3자 선택 (Phase 4/8) */}
         {canDecideR1 && !myR1Decision && (
           <ActionCard>
             <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 10 }}>
-              AI 중재안에 동의하시겠습니까?
+              아래 3가지 제안 중 하나를 선택하세요:
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => handleDecision('accept')} disabled={submitting} style={actionBtnStyle(C.green)}>
-                ✅ 동의
+            <ThreeWayChoice
+              initiatorAmount={dispute.requested_amount}
+              aiAmount={dispute.round1.ai_amount}
+              respondentAmount={dispute.round1.proposal_amount}
+              chosen={chosenProposal}
+              onChoose={setChosenProposal}
+            />
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <button onClick={handleChooseProposal} disabled={submitting || !chosenProposal} style={actionBtnStyle(C.green)}>
+                선택 확정
               </button>
-              <button onClick={() => handleDecision('reject')} disabled={submitting} style={actionBtnStyle(C.red)}>
-                ❌ 거절
-              </button>
+            </div>
+            <div style={{ marginTop: 8, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
+              <div style={{ fontSize: 11, color: C.textDim, marginBottom: 6 }}>또는 기존 방식:</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => handleDecision('accept')} disabled={submitting} style={actionBtnStyle(C.green)}>
+                  동의
+                </button>
+                <button onClick={() => handleDecision('reject')} disabled={submitting} style={actionBtnStyle(C.red)}>
+                  거절
+                </button>
+              </div>
             </div>
           </ActionCard>
         )}
@@ -483,6 +644,9 @@ export default function DisputeDetailPage() {
                     nudgeBuyer={dispute.round2.ai_nudge_buyer}
                     nudgeSeller={dispute.round2.ai_nudge_seller}
                     myRole={myRole}
+                    amountType={dispute.round2.ai_amount_type}
+                    amountValue={dispute.round2.ai_amount_value}
+                    orderAmount={dispute.reservation_amount}
                   />
                 ) : (
                   <div style={{ fontSize: 12, color: C.textDim }}>
@@ -505,22 +669,37 @@ export default function DisputeDetailPage() {
               </TimelineStep>
             )}
 
-            {/* 2차 동의/거절 액션 */}
+            {/* 2차 3자 선택 (Phase 4/8) */}
             {canDecideR2 && !myR2Decision && (
               <ActionCard>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 10 }}>
-                  AI 2차 중재안에 동의하시겠습니까?
+                  아래 3가지 제안 중 하나를 선택하세요:
                 </div>
                 <div style={{ fontSize: 11, color: C.red, marginBottom: 10 }}>
-                  2차 거절 시 법적 절차 안내로 전환됩니다
+                  2차 거절 시 결렬 후속 절차로 전환됩니다
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => handleDecision('accept')} disabled={submitting} style={actionBtnStyle(C.green)}>
-                    ✅ 동의
+                <ThreeWayChoice
+                  initiatorAmount={dispute.requested_amount}
+                  aiAmount={dispute.round2?.ai_amount ?? 0}
+                  respondentAmount={dispute.round1.proposal_amount}
+                  chosen={chosenProposal}
+                  onChoose={setChosenProposal}
+                />
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <button onClick={handleChooseProposal} disabled={submitting || !chosenProposal} style={actionBtnStyle(C.green)}>
+                    선택 확정
                   </button>
-                  <button onClick={() => handleDecision('reject')} disabled={submitting} style={actionBtnStyle(C.red)}>
-                    ❌ 거절
-                  </button>
+                </div>
+                <div style={{ marginTop: 8, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
+                  <div style={{ fontSize: 11, color: C.textDim, marginBottom: 6 }}>또는 기존 방식:</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => handleDecision('accept')} disabled={submitting} style={actionBtnStyle(C.green)}>
+                      동의
+                    </button>
+                    <button onClick={() => handleDecision('reject')} disabled={submitting} style={actionBtnStyle(C.red)}>
+                      거절
+                    </button>
+                  </div>
                 </div>
               </ActionCard>
             )}
@@ -555,7 +734,9 @@ export default function DisputeDetailPage() {
                   <InfoRow label="반품" value={dispute.accepted_return_required ? '필요' : '불필요'} />
                 )}
                 <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 8, background: 'rgba(0,230,118,0.08)', fontSize: 11, color: C.green }}>
-                  후속 처리(환불/정산 재계산)가 자동으로 진행됩니다.
+                  {(dispute.accepted_proposal_type || dispute.resolution || '').toLowerCase().includes('refund')
+                    ? '환불 자동 처리 중...'
+                    : '정산 자동 재계산 중...'}
                 </div>
               </div>
             )}
@@ -598,7 +779,266 @@ export default function DisputeDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* ── RESOLVED / ADMIN_DECIDED 해결 완료 ── */}
+            {(dispute.status === 'RESOLVED' || dispute.status === 'ADMIN_DECIDED') && (
+              <div style={{
+                padding: 18, borderRadius: 14,
+                background: 'rgba(0,230,118,0.06)', border: '1px solid rgba(0,230,118,0.2)',
+              }}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{dispute.status === 'RESOLVED' ? '✅' : '🏛️'}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: C.green, marginBottom: 8 }}>
+                  {dispute.status === 'RESOLVED' ? '해결 완료' : '관리자 판정 완료'}
+                </div>
+                {dispute.accepted_proposal_source && (
+                  <InfoRow label="채택안"
+                    value={dispute.accepted_proposal_source === 'ai' ? 'AI 추천안' :
+                           dispute.accepted_proposal_source === 'respondent' ? '상대방 제안' :
+                           dispute.accepted_proposal_source === 'direct_agreement' ? '직접 합의' : '신청자 제안'} />
+                )}
+                <InfoRow label="합의 유형" value={resolutionLabels[dispute.accepted_proposal_type || dispute.resolution || ''] || dispute.accepted_proposal_type || dispute.resolution || ''} />
+                <div style={{ fontSize: 18, fontWeight: 800, color: C.green, margin: '8px 0' }}>
+                  합의 금액: {fmt(dispute.accepted_amount ?? dispute.resolution_amount)}원
+                </div>
+                {dispute.accepted_shipping_burden && (
+                  <InfoRow label="배송비" value={dispute.accepted_shipping_burden === 'seller' ? '판매자 부담' : dispute.accepted_shipping_burden === 'buyer' ? '구매자 부담' : '분담'} />
+                )}
+                {dispute.accepted_return_required != null && (
+                  <InfoRow label="반품" value={dispute.accepted_return_required ? '필요' : '불필요'} />
+                )}
+                <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 8, background: 'rgba(0,230,118,0.08)', fontSize: 11, color: C.green }}>
+                  {(dispute.accepted_proposal_type || dispute.resolution || '').toLowerCase().includes('refund')
+                    ? '환불 자동 처리 중...'
+                    : '정산 자동 재계산 중...'}
+                </div>
+              </div>
+            )}
+
+            {/* ── ADMIN_FORCE_CLOSED 관리자 강제 종결 ── */}
+            {dispute.post_failure_status === 'ADMIN_FORCE_CLOSED' && dispute.admin_force_close && (
+              <div style={{
+                padding: 18, borderRadius: 14, marginTop: 12,
+                background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)',
+              }}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>🏛️</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: C.yellow, marginBottom: 12 }}>관리자 강제 판정</div>
+                <InfoRow label="판정 근거" value={dispute.admin_force_close.basis} />
+                <InfoRow label="사유" value={dispute.admin_force_close.reason} />
+                <InfoRow label="처리 방식" value={resolutionLabels[dispute.admin_force_close.resolution] || dispute.admin_force_close.resolution} />
+                <div style={{ fontSize: 18, fontWeight: 800, color: C.yellow, margin: '8px 0' }}>
+                  판정 금액: {fmt(dispute.admin_force_close.amount)}원
+                </div>
+                <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>
+                  판정일: {fmtDate(dispute.admin_force_close.closed_at)}
+                </div>
+              </div>
+            )}
           </>
+        )}
+
+        {/* ━━ 결렬 후 옵션 패널 (FAILED / REJECTED) ━━ */}
+        {(dispute.status === 'FAILED' || dispute.status === 'REJECTED') && isParty && !dispute.post_failure_status?.startsWith('ADMIN_FORCE') && (
+          <>
+            <SectionDivider label="결렬 후 절차" color={C.red} />
+
+            {/* Grace period progress bar */}
+            <div style={{
+              padding: 16, borderRadius: 14, marginBottom: 12,
+              background: C.card, border: `1px solid ${C.border}`,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>유예 기간</div>
+              {(() => {
+                const graceDaysRemaining = dispute.post_failure_grace_days_remaining ?? 14;
+                const totalGrace = 14;
+                const elapsed = totalGrace - graceDaysRemaining;
+                const pct = Math.min(100, Math.max(0, (elapsed / totalGrace) * 100));
+                return (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.textSec, marginBottom: 4 }}>
+                      <span>경과: {elapsed}일</span>
+                      <span>남은 기간: {graceDaysRemaining}일 / {totalGrace}일</span>
+                    </div>
+                    <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: 4, background: pct > 80 ? C.red : pct > 50 ? C.orange : C.cyan, transition: 'width 0.3s' }} />
+                    </div>
+                  </>
+                );
+              })()}
+              <div style={{ fontSize: 11, color: C.red, marginTop: 8, lineHeight: 1.5 }}>
+                14일 내 합의 또는 외부기관 신청이 없으면 관리자가 자동 판정합니다.
+              </div>
+            </div>
+
+            {/* Direct Agreement Pending - acceptance UI for other party */}
+            {dispute.post_failure_status === 'DIRECT_AGREEMENT_PENDING' && dispute.direct_agreement && (
+              <div style={{
+                padding: 16, borderRadius: 14, marginBottom: 12,
+                background: 'rgba(0,229,255,0.04)', border: '1px solid rgba(0,229,255,0.15)',
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.cyan, marginBottom: 8 }}>직접 합의안 검토</div>
+                <InfoRow label="제안자" value={dispute.direct_agreement.proposed_by === dispute.initiator.id ? dispute.initiator.name : dispute.respondent.name} />
+                <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6, padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, margin: '6px 0' }}>
+                  {dispute.direct_agreement.description}
+                </div>
+                <InfoRow label="보상 유형" value={dispute.direct_agreement.compensation_type === 'fixed' ? '정액' : '정율'} />
+                <InfoRow label="보상 금액" value={`${fmt(dispute.direct_agreement.compensation_amount)}원`} />
+                <InfoRow label="처리 방식" value={resolutionLabels[dispute.direct_agreement.resolution] || dispute.direct_agreement.resolution} />
+                <div style={{ fontSize: 10, color: C.textDim, marginTop: 4 }}>등록일: {fmtDate(dispute.direct_agreement.created_at)}</div>
+
+                {/* Show accept/reject buttons only if current user is NOT the proposer */}
+                {dispute.direct_agreement.proposed_by !== userId && (
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                    <button onClick={() => handleDirectAgreementAccept(true)} disabled={submitting} style={actionBtnStyle(C.green)}>
+                      수락하기
+                    </button>
+                    <button onClick={() => handleDirectAgreementAccept(false)} disabled={submitting} style={actionBtnStyle(C.red)}>
+                      거절하기
+                    </button>
+                  </div>
+                )}
+                {dispute.direct_agreement.proposed_by === userId && (
+                  <div style={{ fontSize: 11, color: C.textSec, marginTop: 8 }}>
+                    상대방의 수락을 기다리고 있습니다...
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* External filing info if already filed */}
+            {dispute.external_filing && (
+              <div style={{
+                padding: 16, borderRadius: 14, marginBottom: 12,
+                background: 'rgba(164,139,250,0.04)', border: '1px solid rgba(164,139,250,0.15)',
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.purple, marginBottom: 8 }}>외부기관 신청 등록됨</div>
+                <InfoRow label="기관" value={dispute.external_filing.agency_type === 'consumer_agency' ? '한국소비자원' : dispute.external_filing.agency_type === 'small_claims' ? '소액사건심판' : '기타'} />
+                {dispute.external_filing.case_number && <InfoRow label="사건번호" value={dispute.external_filing.case_number} />}
+                {dispute.external_filing.evidence_url && <InfoRow label="증빙 URL" value={dispute.external_filing.evidence_url} />}
+                <div style={{ fontSize: 10, color: C.textDim, marginTop: 4 }}>등록일: {fmtDate(dispute.external_filing.filed_at)}</div>
+                <div style={{ fontSize: 11, color: C.purple, marginTop: 8 }}>
+                  정산 보류가 외부 해결 시까지 연장됩니다.
+                </div>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            {dispute.post_failure_status !== 'DIRECT_AGREEMENT_PENDING' && !dispute.external_filing && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <button onClick={() => setShowDirectAgreementModal(true)} style={actionBtnStyle(C.cyan)}>
+                  직접 합의안 등록
+                </button>
+                <button onClick={() => setShowExternalFilingModal(true)} style={actionBtnStyle(C.purple)}>
+                  외부기관 신청 등록
+                </button>
+              </div>
+            )}
+
+            {/* External agency reference info */}
+            <div style={{
+              padding: 12, borderRadius: 10, marginBottom: 12,
+              background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`,
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 6 }}>외부 해결 기관 안내</div>
+              <div style={{ fontSize: 11, color: C.textSec, lineHeight: 1.8 }}>
+                <strong style={{ color: C.text }}>한국소비자원</strong> - 전화 1372 / 1372.go.kr<br />
+                <strong style={{ color: C.text }}>소액사건심판</strong> - 2,000만원 이하 분쟁, 관할 법원 청구<br />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ━━ 직접 합의안 등록 모달 ━━ */}
+        {showDirectAgreementModal && (
+          <ModalOverlay onClose={() => setShowDirectAgreementModal(false)}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 16 }}>직접 합의안 등록</div>
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 6 }}>합의 내용</div>
+            <textarea value={daDescription} onChange={e => setDaDescription(e.target.value)} placeholder="합의 내용을 상세히 작성하세요"
+              style={{ width: '100%', minHeight: 80, padding: 10, borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 13, resize: 'vertical', marginBottom: 12 }} />
+
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 6 }}>보상 유형</div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              {([['fixed', '정액'], ['percent', '정율']] as const).map(([v, l]) => (
+                <button key={v} onClick={() => setDaCompType(v)} style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
+                  background: daCompType === v ? `${C.cyan}15` : 'transparent',
+                  border: `1px solid ${daCompType === v ? C.cyan : C.border}`,
+                  color: daCompType === v ? C.cyan : C.textSec,
+                }}>{l}</button>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 6 }}>
+              {daCompType === 'fixed' ? '보상 금액 (원)' : '보상 비율 (%)'}
+            </div>
+            <input type="number" value={daCompAmount} onChange={e => setDaCompAmount(+e.target.value)}
+              placeholder={daCompType === 'fixed' ? '금액' : '비율 (예: 30)'}
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 13, marginBottom: 12 }} />
+            {daCompType === 'percent' && daCompAmount > 0 && (
+              <div style={{ fontSize: 11, color: C.textSec, marginBottom: 12 }}>
+                = {fmt(Math.round(dispute.reservation_amount * daCompAmount / 100))}원 (주문금액 {fmt(dispute.reservation_amount)}원의 {daCompAmount}%)
+              </div>
+            )}
+
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 6 }}>처리 방식</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+              {([['full_refund', '환불'], ['partial_refund', '부분환불'], ['exchange', '교환']] as const).map(([v, l]) => (
+                <button key={v} onClick={() => setDaResolution(v)} style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
+                  background: daResolution === v ? `${C.cyan}15` : 'transparent',
+                  border: `1px solid ${daResolution === v ? C.cyan : C.border}`,
+                  color: daResolution === v ? C.cyan : C.textSec,
+                }}>{l}</button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setShowDirectAgreementModal(false)} style={btnStyle(C.textDim)}>취소</button>
+              <button onClick={handleDirectAgreement} disabled={submitting || !daDescription.trim()} style={actionBtnStyle(C.cyan)}>
+                {submitting ? '등록 중...' : '합의안 등록'}
+              </button>
+            </div>
+          </ModalOverlay>
+        )}
+
+        {/* ━━ 외부기관 신청 모달 ━━ */}
+        {showExternalFilingModal && (
+          <ModalOverlay onClose={() => setShowExternalFilingModal(false)}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 16 }}>외부기관 신청 등록</div>
+
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 6 }}>기관 선택</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {([['consumer_agency', '한국소비자원'], ['small_claims', '소액사건심판'], ['other', '기타']] as const).map(([v, l]) => (
+                <button key={v} onClick={() => setEfAgencyType(v)} style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
+                  background: efAgencyType === v ? `${C.purple}15` : 'transparent',
+                  border: `1px solid ${efAgencyType === v ? C.purple : C.border}`,
+                  color: efAgencyType === v ? C.purple : C.textSec,
+                }}>{l}</button>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 6 }}>사건번호 (선택)</div>
+            <input type="text" value={efCaseNumber} onChange={e => setEfCaseNumber(e.target.value)}
+              placeholder="사건번호 입력"
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 13, marginBottom: 12 }} />
+
+            <div style={{ fontSize: 12, color: C.textSec, marginBottom: 6 }}>증빙 URL (선택)</div>
+            <input type="text" value={efEvidenceUrl} onChange={e => setEfEvidenceUrl(e.target.value)}
+              placeholder="https://..."
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 13, marginBottom: 12 }} />
+
+            <div style={{ fontSize: 11, color: C.purple, marginBottom: 16, lineHeight: 1.5, padding: '8px 10px', borderRadius: 8, background: 'rgba(164,139,250,0.06)' }}>
+              외부기관 신청 등록 시 정산 보류가 해결 시까지 자동 연장됩니다.
+              한국소비자원: 1372 / 소액사건심판: 관할 법원
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setShowExternalFilingModal(false)} style={btnStyle(C.textDim)}>취소</button>
+              <button onClick={handleExternalFiling} disabled={submitting} style={actionBtnStyle(C.purple)}>
+                {submitting ? '등록 중...' : '신청 등록'}
+              </button>
+            </div>
+          </ModalOverlay>
         )}
 
         {/* 액션 메시지 */}
@@ -701,11 +1141,12 @@ function ActionCard({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AIMediation({ opinion, recommendation, amount, explanation, legalBasis, nudgeBuyer, nudgeSeller, shippingBurden, returnRequired, myRole }: {
+function AIMediation({ opinion, recommendation, amount, explanation, legalBasis, nudgeBuyer, nudgeSeller, shippingBurden, returnRequired, myRole, amountType, amountValue, orderAmount }: {
   opinion: string; recommendation: string; amount: number;
   explanation: { to_initiator?: string; to_respondent?: string; reasoning?: string };
   legalBasis?: string; nudgeBuyer?: string; nudgeSeller?: string;
   shippingBurden?: string; returnRequired?: boolean; myRole: string;
+  amountType?: string; amountValue?: number; orderAmount?: number;
 }) {
   const fmt2 = (n: number) => n.toLocaleString('ko-KR');
   return (
@@ -723,6 +1164,9 @@ function AIMediation({ opinion, recommendation, amount, explanation, legalBasis,
             배송비: {shippingBurden === 'seller' ? '판매자 부담' : shippingBurden === 'buyer' ? '구매자 부담' : '분담'}
             {returnRequired != null && ` · 반품: ${returnRequired ? '필요' : '불필요'}`}
           </div>
+        )}
+        {amountType && amountValue != null && orderAmount != null && (
+          <CompensationLine label="AI 보상안" amountType={amountType} amountValue={amountValue} orderAmount={orderAmount} color={C.green} />
         )}
       </div>
       {legalBasis && (
@@ -803,6 +1247,79 @@ function ResponseForm({ text, setText, proposalType, setProposalType, proposalAm
           {submitting ? '제출 중...' : '제출'}
         </button>
       </div>
+    </div>
+  );
+}
+
+function ThreeWayChoice({ initiatorAmount, aiAmount, respondentAmount, chosen, onChoose }: {
+  initiatorAmount: number; aiAmount: number; respondentAmount: number;
+  chosen: 'initiator' | 'ai' | 'respondent' | null;
+  onChoose: (v: 'initiator' | 'ai' | 'respondent') => void;
+}) {
+  const options: { key: 'initiator' | 'ai' | 'respondent'; label: string; amount: number; color: string }[] = [
+    { key: 'initiator', label: '신청인 제안', amount: initiatorAmount, color: C.cyan },
+    { key: 'ai', label: 'AI 제안', amount: aiAmount, color: C.green },
+    { key: 'respondent', label: '상대방 제안', amount: respondentAmount, color: C.orange },
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {options.map(o => (
+        <button key={o.key} onClick={() => onChoose(o.key)} style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
+          background: chosen === o.key ? `${o.color}12` : 'rgba(255,255,255,0.02)',
+          border: `1.5px solid ${chosen === o.key ? o.color : C.border}`,
+          transition: 'all 0.15s',
+        }}>
+          <span style={{
+            width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+            border: `2px solid ${chosen === o.key ? o.color : C.textDim}`,
+            background: chosen === o.key ? o.color : 'transparent',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {chosen === o.key && <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.bg }} />}
+          </span>
+          <span style={{ fontSize: 12, color: chosen === o.key ? o.color : C.textSec, fontWeight: chosen === o.key ? 700 : 400 }}>
+            {o.label}
+          </span>
+          <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: chosen === o.key ? o.color : C.text }}>
+            {fmt(o.amount)}원
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ModalOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 300,
+      background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20,
+    }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{
+        width: '100%', maxWidth: 440, maxHeight: '80vh', overflowY: 'auto',
+        background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+        padding: 20,
+      }} onClick={e => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function CompensationLine({ label, amountType, amountValue, orderAmount, color }: {
+  label: string; amountType?: string; amountValue?: number; orderAmount: number; color: string;
+}) {
+  if (!amountType || amountValue == null) return null;
+  const isPercent = amountType === 'percent' || amountType === 'percentage';
+  const calculated = isPercent ? Math.round(orderAmount * (amountValue / 100)) : amountValue;
+  return (
+    <div style={{ fontSize: 11, color, marginTop: 4 }}>
+      {label}: {fmt(calculated)}원 ({amountType})
+      {isPercent && (
+        <span style={{ color: C.textSec }}> = {fmt(calculated)}원 (주문금액의 {amountValue}%)</span>
+      )}
     </div>
   );
 }

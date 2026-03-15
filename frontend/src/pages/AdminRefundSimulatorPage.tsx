@@ -38,11 +38,35 @@ const btnStyle = (active: boolean): React.CSSProperties => ({
   background: active ? '#4ade80' : '#333', color: active ? '#000' : '#e0e0e0', fontWeight: active ? 700 : 400,
 });
 
+/* ── dispute simulation types ── */
+type SimType = 'normal' | 'dispute_agreed' | 'dispute_direct' | 'dispute_external' | 'dispute_admin';
+const simTypeOptions: { v: SimType; l: string }[] = [
+  { v: 'normal', l: '일반 환불 (기존)' },
+  { v: 'dispute_agreed', l: '분쟁 합의 후 환불' },
+  { v: 'dispute_direct', l: '분쟁 결렬 → 직접 합의' },
+  { v: 'dispute_external', l: '분쟁 결렬 → 외부기관 결정' },
+  { v: 'dispute_admin', l: '분쟁 결렬 → 관리자 강제 종결' },
+];
+const externalOrgOptions = ['한국소비자원', '공정거래위원회', '전자상거래분쟁조정위원회', '소비자분쟁조정위원회'];
+const PLATFORM_FEE_RATE = 0.035;
+
 export default function AdminRefundSimulatorPage() {
   const [mode, setMode] = useState<'manual' | 'by_reservation'>('manual');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
+
+  // Simulation type
+  const [simType, setSimType] = useState<SimType>('normal');
+
+  // Dispute fields
+  const [disputeDays, setDisputeDays] = useState(7);
+  const [compensationType, setCompensationType] = useState<'fixed' | 'rate'>('fixed');
+  const [compensationAmount, setCompensationAmount] = useState(5000);
+  const [compensationRate, setCompensationRate] = useState(10);
+  const [disputeHandling, setDisputeHandling] = useState<'refund' | 'partial' | 'exchange'>('refund');
+  const [externalOrg, setExternalOrg] = useState(externalOrgOptions[0]);
+  const [holdPeriod, setHoldPeriod] = useState(30);
 
   // Manual
   const [productPrice, setProductPrice] = useState(50000);
@@ -61,6 +85,8 @@ export default function AdminRefundSimulatorPage() {
   // By reservation
   const [reservationId, setReservationId] = useState('');
   const [resvReason, setResvReason] = useState('BUYER');
+
+  const isDispute = simType !== 'normal';
 
   const totalShipping = shippingMode === 'FREE' ? 0 : shippingMode === 'PER_RESERVATION' ? shippingBase : shippingBase + shippingPerItem * refundQty;
   const mapped = reasonMap[refundReason];
@@ -100,6 +126,93 @@ export default function AdminRefundSimulatorPage() {
             color: mode === t.v ? C.cyan : C.textSec, cursor: 'pointer', fontSize: 13, fontWeight: 600,
           }}>{t.l}</button>
         ))}
+      </div>
+
+      {/* Simulation Type Selector */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, marginBottom: 20 }}>
+        <label style={{ ...labelStyle, marginBottom: 8 }}>시뮬레이션 유형</label>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {simTypeOptions.map(t => (
+            <button key={t.v} onClick={() => { setSimType(t.v); setResult(null); setError(''); }} style={{
+              padding: '7px 14px', borderRadius: 6, border: `1px solid ${simType === t.v ? C.cyan : '#444'}`,
+              background: simType === t.v ? 'rgba(0,229,255,0.12)' : '#1a1a2e',
+              color: simType === t.v ? C.cyan : '#bbb', cursor: 'pointer', fontSize: 12, fontWeight: simType === t.v ? 700 : 400,
+            }}>{t.l}</button>
+          ))}
+        </div>
+
+        {/* Dispute fields */}
+        {isDispute && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #333' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={labelStyle}>분쟁 경과일 (일)</label>
+                <input type="text" value={fmtNum(disputeDays)}
+                  onChange={e => setDisputeDays(parseNum(e.target.value))}
+                  onFocus={e => e.target.select()} placeholder="7" style={numInput} />
+              </div>
+              <div>
+                <label style={labelStyle}>보상 방식</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => setCompensationType('fixed')} style={btnStyle(compensationType === 'fixed')}>정액</button>
+                  <button onClick={() => setCompensationType('rate')} style={btnStyle(compensationType === 'rate')}>정율</button>
+                </div>
+              </div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>{compensationType === 'fixed' ? '보상 금액 (원)' : '보상 비율 (%)'}</label>
+              {compensationType === 'fixed' ? (
+                <input type="text" value={fmtNum(compensationAmount)}
+                  onChange={e => setCompensationAmount(parseNum(e.target.value))}
+                  onFocus={e => e.target.select()} placeholder="0" style={numInput} />
+              ) : (
+                <input type="text" value={fmtNum(compensationRate)}
+                  onChange={e => { const v = parseNum(e.target.value); setCompensationRate(Math.min(v, 100)); }}
+                  onFocus={e => e.target.select()} placeholder="10" style={numInput} />
+              )}
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={labelStyle}>처리 방식</label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => setDisputeHandling('refund')} style={btnStyle(disputeHandling === 'refund')}>환불</button>
+                <button onClick={() => setDisputeHandling('partial')} style={btnStyle(disputeHandling === 'partial')}>부분환불</button>
+                <button onClick={() => setDisputeHandling('exchange')} style={btnStyle(disputeHandling === 'exchange')}>교환</button>
+              </div>
+            </div>
+
+            {/* 관리자 강제 종결: AI 중재안 금액 */}
+            {simType === 'dispute_admin' && (() => {
+              const goodsTotal = productPrice * refundQty;
+              const aiMediation = Math.round(goodsTotal * 0.5);
+              return (
+                <div style={{ marginBottom: 12, padding: 10, background: 'rgba(224,64,251,0.08)', border: '1px solid rgba(224,64,251,0.25)', borderRadius: 8 }}>
+                  <label style={{ ...labelStyle, color: '#e040fb' }}>AI 중재안 금액</label>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#e040fb' }}>{aiMediation.toLocaleString()}원</div>
+                  <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>상품 환불액의 50% 자동 산정 (상품 {goodsTotal.toLocaleString()}원 × 50%)</div>
+                </div>
+              );
+            })()}
+
+            {/* 외부기관: 기관 유형, 정산 보류 기간 */}
+            {simType === 'dispute_external' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>기관 유형</label>
+                  <select value={externalOrg} onChange={e => setExternalOrg(e.target.value)}
+                    style={{ background: '#1a1a2e', color: '#e0e0e0', border: '1px solid #444', borderRadius: 6, padding: '8px 12px', width: '100%', fontSize: 13 }}>
+                    {externalOrgOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>정산 보류 기간 (일)</label>
+                  <input type="text" value={fmtNum(holdPeriod)}
+                    onChange={e => setHoldPeriod(parseNum(e.target.value))}
+                    onFocus={e => e.target.select()} placeholder="30" style={numInput} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
@@ -312,6 +425,97 @@ export default function AdminRefundSimulatorPage() {
                 <Row label="구매자 포인트 회수" value={result.decision?.revoke_buyer_points ? 'Y' : 'N'} color={C.textSec} />
                 <Row label="판매자 포인트 회수" value={result.decision?.revoke_seller_points ? 'Y' : 'N'} color={C.textSec} />
               </div>
+
+              {/* ── Dispute: 정산 영향 (client-side) ── */}
+              {isDispute && (() => {
+                const goodsTotal = mode === 'manual'
+                  ? productPrice * refundQty
+                  : (result.breakdown?.goods_refund || 0);
+                const shippingTotal = mode === 'manual'
+                  ? totalShipping
+                  : (result.breakdown?.shipping_refund || 0);
+                const paymentTotal = goodsTotal + shippingTotal;
+                const compAmount = compensationType === 'fixed'
+                  ? compensationAmount
+                  : Math.round(goodsTotal * compensationRate / 100);
+                const handlingLabel = disputeHandling === 'refund' ? '전액 환불'
+                  : disputeHandling === 'partial' ? '부분 환불' : '교환';
+                const refundAmount = disputeHandling === 'exchange' ? 0
+                  : disputeHandling === 'refund' ? paymentTotal : Math.round(paymentTotal * 0.5);
+                const totalWithComp = refundAmount + compAmount;
+                const platformFeeOriginal = Math.round(paymentTotal * PLATFORM_FEE_RATE);
+                const platformFeeAfter = disputeHandling === 'refund' ? 0
+                  : Math.round((paymentTotal - refundAmount) * PLATFORM_FEE_RATE);
+                const sellerPayoutOriginal = paymentTotal - platformFeeOriginal;
+                const sellerPayoutAfter = (paymentTotal - refundAmount) - platformFeeAfter;
+                const isSettled = settlementState === 'SETTLED_TO_SELLER';
+                const clawbackAmount = isSettled ? Math.max(0, sellerPayoutOriginal - sellerPayoutAfter) : 0;
+                const disputeHoldDays = simType === 'dispute_external' ? holdPeriod
+                  : simType === 'dispute_admin' ? 14 : disputeDays;
+                const currentSettlementLabel = isSettled ? 'PAID (정산 완료)' : 'HOLD (보류 중)';
+                const aiMediation = simType === 'dispute_admin' ? Math.round(goodsTotal * 0.5) : null;
+
+                return (
+                  <div style={{ marginBottom: 16, padding: 14, background: 'rgba(224,64,251,0.05)', border: '1px solid rgba(224,64,251,0.2)', borderRadius: 8 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#e040fb', marginBottom: 10 }}>분쟁 정산 영향</div>
+
+                    {/* 분쟁 개요 */}
+                    <div style={{ marginBottom: 10, padding: 10, background: 'rgba(0,0,0,0.2)', borderRadius: 6 }}>
+                      <Row label="시뮬레이션 유형" value={simTypeOptions.find(t => t.v === simType)?.l || ''} color={C.cyan} />
+                      <Row label="분쟁 경과일" value={`${disputeDays}일`} color={C.textSec} />
+                      <Row label="처리 방식" value={handlingLabel} color={C.text} />
+                      <Row label="보상 방식" value={compensationType === 'fixed' ? `정액 ${compAmount.toLocaleString()}원` : `정율 ${compensationRate}% (${compAmount.toLocaleString()}원)`} color={C.text} />
+                      {simType === 'dispute_external' && <Row label="외부 기관" value={externalOrg} color={C.textSec} />}
+                      {aiMediation !== null && <Row label="AI 중재안 금액" value={`${aiMediation.toLocaleString()}원`} color="#e040fb" />}
+                    </div>
+
+                    {/* 정산 상태 */}
+                    <div style={{ marginBottom: 10 }}>
+                      <Row label="현재 정산 상태" value={currentSettlementLabel} color={isSettled ? C.green : C.orange} bold />
+                      <Row label="정산 보류 기간" value={`${disputeHoldDays}일`} color={C.textSec} />
+                    </div>
+
+                    {/* 보류 해제 후 */}
+                    <div style={{ marginBottom: 10, paddingTop: 8, borderTop: '1px solid rgba(224,64,251,0.15)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#888', marginBottom: 6 }}>보류 해제 후 정산</div>
+                      <Row label="환불 금액" value={`${refundAmount.toLocaleString()}원`} color={C.text} />
+                      <Row label="보상 금액" value={`+${compAmount.toLocaleString()}원`} color={C.orange} />
+                      <Row label="총 지급액 (환불+보상)" value={`${totalWithComp.toLocaleString()}원`} color={C.green} bold />
+                    </div>
+
+                    {/* 판매자 정산 재계산 */}
+                    <div style={{ marginBottom: 10, paddingTop: 8, borderTop: '1px solid rgba(224,64,251,0.15)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#888', marginBottom: 6 }}>판매자 정산 재계산</div>
+                      <Row label="판매자 정산 (기존)" value={`${sellerPayoutOriginal.toLocaleString()}원`} color={C.textSec} />
+                      <Row label={`플랫폼 수수료 (기존, ${(PLATFORM_FEE_RATE * 100).toFixed(1)}%)`} value={`${platformFeeOriginal.toLocaleString()}원`} color={C.textSec} />
+                      <Row label={`플랫폼 수수료 (재계산, ${(PLATFORM_FEE_RATE * 100).toFixed(1)}%)`} value={`${platformFeeAfter.toLocaleString()}원`} color={C.text} />
+                      <Row label="보류 해제 후 판매자 정산 금액" value={`${sellerPayoutAfter.toLocaleString()}원`} color={sellerPayoutAfter >= 0 ? C.green : C.red} bold />
+                    </div>
+
+                    {/* 이미 정산 완료된 경우 (clawback) */}
+                    <div style={{ paddingTop: 8, borderTop: '1px solid rgba(224,64,251,0.15)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#888', marginBottom: 6 }}>이미 정산 완료된 경우</div>
+                      {isSettled ? (
+                        <>
+                          <Row label="정산 회수(clawback) 필요" value="Y" color={C.red} bold />
+                          <Row label="회수 금액" value={`${clawbackAmount.toLocaleString()}원`} color={C.red} />
+                          <div style={{ fontSize: 11, color: '#888', marginTop: 6, lineHeight: 1.5, padding: '6px 8px', background: 'rgba(255,82,82,0.06)', borderRadius: 4 }}>
+                            판매자에게 이미 정산된 {sellerPayoutOriginal.toLocaleString()}원 중 {clawbackAmount.toLocaleString()}원을
+                            회수해야 합니다. 회수 방법: 다음 정산에서 차감 또는 별도 청구.
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Row label="정산 회수(clawback) 필요" value="N" color={C.green} />
+                          <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
+                            아직 정산 전이므로 보류 상태에서 직접 차감 가능합니다.
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Policy notes */}
               {result.policy_notes && (

@@ -1915,6 +1915,129 @@ class Dispute(Base):
     legal_guidance_sent_at = Column(DateTime, nullable=True)
     timeout_warned = Column(Boolean, default=False)
 
+    # ── 거절된 CS 요청 참조 ──
+    rejected_request_id = Column(Integer, nullable=True)
+
+    # ── 보상금: Round 1 신청인 ──
+    initiator_comp_type = Column(String(20), nullable=True)      # 'fixed' | 'percentage'
+    initiator_comp_amount = Column(Float, nullable=True)
+
+    # ── 보상금: Round 1 상대방 ──
+    respondent_comp_type = Column(String(20), nullable=True)
+    respondent_comp_amount = Column(Float, nullable=True)
+
+    # ── 보상금: Round 1 AI ──
+    ai_r1_comp_type = Column(String(20), nullable=True)
+    ai_r1_comp_amount = Column(Float, nullable=True)
+
+    # ── 보상금: Round 2 신청인 ──
+    r2_initiator_comp_type = Column(String(20), nullable=True)
+    r2_initiator_comp_amount = Column(Float, nullable=True)
+
+    # ── 보상금: Round 2 상대방 ──
+    r2_respondent_comp_type = Column(String(20), nullable=True)
+    r2_respondent_comp_amount = Column(Float, nullable=True)
+
+    # ── 보상금: Round 2 AI ──
+    ai_r2_comp_type = Column(String(20), nullable=True)
+    ai_r2_comp_amount = Column(Float, nullable=True)
+
+    # ── 3자 선택: Round 1 ──
+    r1_initiator_choice = Column(String(20), nullable=True)      # 'initiator' | 'ai' | 'respondent'
+    r1_respondent_choice = Column(String(20), nullable=True)
+
+    # ── 3자 선택: Round 2 ──
+    r2_initiator_choice = Column(String(20), nullable=True)
+    r2_respondent_choice = Column(String(20), nullable=True)
+
+    # ── 합의 결과 ──
+    agreed_comp_type = Column(String(20), nullable=True)
+    agreed_comp_amount = Column(Float, nullable=True)
+    agreed_resolution = Column(String(30), nullable=True)        # 'refund' | 'partial_refund' | 'exchange'
+
+    # ── 결렬 후 ──
+    grace_deadline = Column(DateTime, nullable=True)
+    max_hold_deadline = Column(DateTime, nullable=True)
+    admin_decided = Column(Boolean, default=False)
+    admin_decided_at = Column(DateTime, nullable=True)
+    admin_decision_basis = Column(String(30), nullable=True)     # 'ai_proposal' | 'manual'
+    admin_decision_reason = Column(Text, nullable=True)
+    admin_decision_comp_type = Column(String(20), nullable=True)
+    admin_decision_comp_amount = Column(Float, nullable=True)
+    admin_decision_resolution = Column(String(30), nullable=True)
+
+    post_failure_status = Column(String(40), nullable=True)
+    # NULL, 'GRACE_PERIOD', 'DIRECT_AGREEMENT_PENDING', 'DIRECT_AGREEMENT_ACCEPTED',
+    # 'EXTERNAL_FILED', 'EXTERNAL_RESULT_RECEIVED', 'ADMIN_FORCE_CLOSED'
+
+    # ── 직접 합의 (시나리오 A) ──
+    direct_agreement_requested_by = Column(Integer, nullable=True)
+    direct_agreement_comp_type = Column(String(20), nullable=True)
+    direct_agreement_comp_amount = Column(Float, nullable=True)
+    direct_agreement_resolution = Column(String(30), nullable=True)
+    direct_agreement_description = Column(Text, nullable=True)
+    direct_agreement_accepted = Column(Boolean, nullable=True)
+    direct_agreement_accepted_at = Column(DateTime, nullable=True)
+
+    # ── 외부기관 (시나리오 B/C) ──
+    external_agency_type = Column(String(30), nullable=True)     # 'kca' | 'small_claims' | 'other'
+    external_agency_case_number = Column(String(100), nullable=True)
+    external_agency_filed_at = Column(DateTime, nullable=True)
+    external_agency_filed_by = Column(Integer, nullable=True)
+    external_agency_evidence_urls = Column(Text, default="[]")
+    external_agency_hold_extended = Column(Boolean, default=False)
+    external_agency_hold_deadline = Column(DateTime, nullable=True)
+
+    # ── 외부기관 결과 (시나리오 E) ──
+    external_result_received_at = Column(DateTime, nullable=True)
+    external_result_description = Column(Text, nullable=True)
+    external_result_document_urls = Column(Text, default="[]")
+    external_result_comp_type = Column(String(20), nullable=True)
+    external_result_comp_amount = Column(Float, nullable=True)
+    external_result_resolution = Column(String(30), nullable=True)
+    external_result_applied_by = Column(Integer, nullable=True)
+    external_result_applied_at = Column(DateTime, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# -------------------------------------------------------
+# 📋 CSReturnRequest (교환/반품/취소 통합 요청)
+# -------------------------------------------------------
+class CSReturnRequest(Base):
+    __tablename__ = "cs_return_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_number = Column(String(50), nullable=False, index=True)
+    reservation_id = Column(Integer, ForeignKey("reservations.id"), nullable=True)
+    buyer_id = Column(Integer, ForeignKey("buyers.id"), nullable=False, index=True)
+    seller_id = Column(Integer, nullable=False, index=True)
+
+    # 요청 유형
+    request_type = Column(String(40), nullable=False)
+    # 'cancel_full', 'cancel_partial', 'exchange_same', 'exchange_different',
+    # 'return_full', 'partial_return', 'partial_refund_request'
+
+    # 대상 상품
+    items = Column(Text, default="[]")  # JSON: [{"item_id": 1, "quantity": 1}]
+
+    # 사유
+    reason_code = Column(String(30), nullable=False)
+    reason_detail = Column(Text, nullable=True)
+    evidence_urls = Column(Text, default="[]")
+
+    # 부분환불 시 요청 금액
+    requested_amount = Column(Integer, nullable=True)
+
+    # 상태
+    status = Column(String(30), default="REQUESTED")
+    # 'REQUESTED', 'SELLER_APPROVED', 'SELLER_REJECTED',
+    # 'RETURN_SHIPPING', 'RETURN_RECEIVED', 'COMPLETED', 'CANCELLED'
+
+    seller_response = Column(Text, nullable=True)
+    seller_responded_at = Column(DateTime, nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

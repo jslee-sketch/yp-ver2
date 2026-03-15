@@ -105,6 +105,9 @@ import AdminDonzzulSettlementsPage from './pages/admin/AdminDonzzulSettlementsPa
 import DisputeDetailPage from './pages/DisputeDetailPage';
 import SellerDisputesPage from './pages/SellerDisputesPage';
 import RefundSimulatorPage from './pages/RefundSimulatorPage';
+import MyReturnsPage from './pages/MyReturnsPage';
+import MyDisputesPage from './pages/MyDisputesPage';
+import DisputeNewPage from './pages/DisputeNewPage';
 import AdminInsightsPage from './pages/admin/AdminInsightsPage';
 
 const MAINTENANCE_KEY = 'yeokping2026';
@@ -227,8 +230,11 @@ function App() {
           <Route path="/settings/notifications" element={<ProtectedRoute><NotificationSettingsPage /></ProtectedRoute>} />
           <Route path="/settings/interests"     element={<ProtectedRoute><InterestSettingsPage /></ProtectedRoute>} />
 
-          {/* 분쟁 */}
-          <Route path="/disputes/:id" element={<DisputeDetailPage />} />
+          {/* 중재 */}
+          <Route path="/my-returns"    element={<ProtectedRoute><MyReturnsPage /></ProtectedRoute>} />
+          <Route path="/my-disputes"   element={<ProtectedRoute><MyDisputesPage /></ProtectedRoute>} />
+          <Route path="/my-disputes/new" element={<ProtectedRoute><DisputeNewPage /></ProtectedRoute>} />
+          <Route path="/disputes/:id"  element={<DisputeDetailPage />} />
           <Route path="/seller/disputes" element={<ProtectedRoute><SellerDisputesPage /></ProtectedRoute>} />
           <Route path="/refund-simulator" element={<RefundSimulatorPage role="buyer" />} />
           <Route path="/buyer/refund-simulator" element={<RefundSimulatorPage role="buyer" />} />
