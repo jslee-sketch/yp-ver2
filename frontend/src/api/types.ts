@@ -168,6 +168,11 @@ export interface SpectatorPrediction {
   predicted_price: number;
   comment?: string;
   created_at: string;
+  reason?: string;  // alias for comment
+  likes?: number;
+  mehs?: number;
+  my_vote?: string;
+  nickname?: string;
   // settle 후 추가 필드
   settled_price?: number;
   error_pct?: number;

@@ -59,6 +59,22 @@ interface RankingEntry {
   badge?: string;
 }
 
+export async function votePrediction(
+  predictionId: number,
+  userId: number,
+  voteType: 'like' | 'meh',
+): Promise<{ prediction_id: number; likes: number; mehs: number; my_vote: string } | null> {
+  try {
+    const res = await apiClient.post(
+      `/spectator/prediction-vote/${predictionId}?user_id=${userId}&vote_type=${voteType}`
+    );
+    return res.data;
+  } catch (err) {
+    console.error('투표 API 실패:', err);
+    return null;
+  }
+}
+
 export async function fetchRankings(): Promise<RankingEntry[]> {
   try {
     const res = await apiClient.get(API.SPECTATOR.RANKINGS);

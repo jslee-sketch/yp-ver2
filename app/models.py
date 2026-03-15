@@ -1115,6 +1115,21 @@ class SpectatorPrediction(Base):
     )
 
 
+class PredictionVote(Base):
+    __tablename__ = "prediction_votes"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    prediction_id = Column(Integer, ForeignKey("spectator_predictions.id", ondelete="CASCADE"), nullable=False)
+    user_id       = Column(Integer, nullable=False)
+    vote_type     = Column(String(10), nullable=False)  # "like" or "meh"
+    created_at    = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("prediction_id", "user_id", name="uq_prediction_vote_once"),
+        Index("ix_prediction_vote_pred", "prediction_id"),
+    )
+
+
 class SpectatorMonthlyStats(Base):
     __tablename__ = "spectator_monthly_stats"
 

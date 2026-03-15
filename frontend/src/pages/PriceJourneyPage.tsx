@@ -5,10 +5,10 @@ import { trackBehavior } from '../utils/behaviorTracker';
 import { fetchDeal, updateDealTarget } from '../api/dealApi';
 import { fetchOffersByDeal } from '../api/offerApi';
 import { fetchChatMessages, sendChatMessage } from '../api/chatApi';
-import { submitPrediction } from '../api/spectatorApi';
+import { submitPrediction, fetchPredictions, votePrediction } from '../api/spectatorApi';
 import { createReservation } from '../api/reservationApi';
 import { showToast } from '../components/common/Toast';
-import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer } from 'recharts';
+// recharts removed — prediction section now uses custom list UI
 import { PriceFaceSection }   from '../components/journey/PriceFaceSection';
 import { OfferListSection }   from '../components/journey/OfferListSection';
 import DealTimeline, { mapDealToTimelineStage } from '../components/DealTimeline';
@@ -72,11 +72,11 @@ function mapApiOfferToJourney(raw: Record<string, unknown>, targetPrice: number,
 // ── 딜 단계 (DealTimeline 컴포넌트 사용) ──────────────────
 
 function getCountdownColor(diff: number): string {
-  if (diff < 10 * 60 * 1000)  return '#ff2d78';
-  if (diff < 60 * 60 * 1000)  return '#ff2d78';
-  if (diff < 3 * 60 * 60 * 1000)  return '#ff8c42';
-  if (diff < 12 * 60 * 60 * 1000) return '#ffe156';
-  return '#e8eaed';
+  if (diff <= 0) return '#ff0000';
+  if (diff < 60 * 1000)       return '#ff0000';   // 1분 미만 — 빨강 점멸
+  if (diff < 10 * 60 * 1000)  return '#ff4444';   // 10분 미만 — 빨강 pulse
+  if (diff < 60 * 60 * 1000)  return '#ffaa00';   // 1시간 미만 — 노랑
+  return '#00ff88';                                 // 여유 — 초록
 }
 
 // ── 채팅 ──────────────────────────────────────────────────
@@ -109,10 +109,7 @@ export default function PriceJourneyPage() {
   });
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const shouldShowBanner = !bannerDismissed && !shownStages.includes(timelineStage);
-  const [predBuckets, _setPredBuckets] = useState<{range: string; count: number}[]>([]);
-  const [avgPrediction, _setAvgPrediction] = useState(0);
-  void _setPredBuckets; void _setAvgPrediction; // TODO: wire to spectator API
-  const predMax = Math.max(1, ...predBuckets.map(b => b.count));
+  // predBuckets 제거 — 관전자 예측은 목록 UI로 전환
   const lowestOffer = offers.length > 0 ? [...offers].sort((a, b) => a.adjPrice - b.adjPrice)[0] : null;
 
   // ── 방장 목표가 수정 상태 ──
@@ -130,8 +127,15 @@ export default function PriceJourneyPage() {
   // ── 예측 모달 ──
   const [showPredModal, setShowPredModal] = useState(false);
   const [predPrice, setPredPrice]         = useState('');
+  const [predReason, setPredReason]       = useState('');
   const [predSubmitting, setPredSubmitting] = useState(false);
   const [predDone, setPredDone]           = useState(false);
+  const [predictions, setPredictions]     = useState<Array<{
+    id: number; buyer_id: number; predicted_price: number;
+    comment?: string; nickname?: string; created_at: string;
+    likes?: number; mehs?: number; my_vote?: string;
+  }>>([]);
+  const [predExpanded, setPredExpanded]   = useState(false);
 
   // ── 신규 오퍼 URL 파라미터 처리 (OfferCreatePage → redirect) ──
   useEffect(() => {
@@ -180,11 +184,11 @@ export default function PriceJourneyPage() {
     const tick = () => {
       const diff = deadlineMs - Date.now();
       setCountdownDiff(diff);
-      if (diff <= 0) { setCountdown('마감'); clearInterval(timerRef.current); return; }
+      if (diff <= 0) { setCountdown('마감!'); clearInterval(timerRef.current); return; }
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
-      setCountdown(`${h}시간 ${String(m).padStart(2,'0')}분 ${String(s).padStart(2,'0')}초`);
+      setCountdown(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
     };
     tick();
     timerRef.current = setInterval(tick, 1000);
@@ -192,7 +196,7 @@ export default function PriceJourneyPage() {
   }, [deadlineMs]);
 
   const countdownColor = getCountdownColor(countdownDiff);
-  const isBlinking = countdownDiff < 10 * 60 * 1000;
+  const isBlinking = countdownDiff > 0 && countdownDiff < 10 * 60 * 1000;
 
   // ── API: 딜 메타 + 오퍼 + 채팅 로드 ──
   useEffect(() => {
@@ -237,6 +241,14 @@ export default function PriceJourneyPage() {
       }).catch(() => {});
     }).catch(() => { setPageError('딜 정보를 불러오지 못했습니다.'); setPageLoading(false); });
 
+    // 관전자 예측 로드
+    fetchPredictions(numId).then(preds => {
+      if (Array.isArray(preds)) {
+        const items = (preds as any).predictions ?? preds;
+        if (Array.isArray(items)) setPredictions(items);
+      }
+    }).catch(() => {});
+
     // 채팅
     const buyerId = user?.id ?? 0;
     if (buyerId) {
@@ -273,6 +285,7 @@ export default function PriceJourneyPage() {
   const [chatExpanded, setChatExpanded] = useState(false);
   const [chatSearch, setChatSearch] = useState('');
   const [chatSearchOpen, setChatSearchOpen] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const nextChatId = useRef(1);
 
@@ -291,7 +304,10 @@ export default function PriceJourneyPage() {
   };
 
   useEffect(() => {
-    if (chatExpanded) chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // 채팅 컨테이너 내부만 스크롤 — 페이지 전체 스크롤 방지
+    if (chatExpanded && chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [chatMessages, chatExpanded]);
 
   // Banner shown tracking (localStorage per deal)
@@ -332,6 +348,7 @@ export default function PriceJourneyPage() {
       <style>{`
         @keyframes blink     { 0%,100%{opacity:1} 50%{opacity:0.3} }
         @keyframes blinkFast { 0%,100%{opacity:1} 25%{opacity:0.2} }
+        @keyframes clockPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.03)} }
         @keyframes spin      { to { transform: rotate(360deg); } }
         @keyframes stagePulse {
           0%   { box-shadow: 0 0 0 0 rgba(0,230,118,0.5); }
@@ -386,13 +403,21 @@ export default function PriceJourneyPage() {
           <span style={{ fontSize: 11, fontWeight: 700, color: T.green, letterSpacing: 1 }}>LIVE</span>
         </div>
 
-        {/* 카운트다운 */}
+        {/* 카운트다운 — 디지털 시계 */}
         {countdown && (
           <span style={{
-            fontSize: 14, fontWeight: 700, color: countdownColor,
-            fontFamily: "'Courier New', monospace",
-            letterSpacing: 1,
-            animation: isBlinking ? 'blinkFast 0.5s infinite' : undefined,
+            fontSize: 28, fontWeight: 700, color: countdownColor,
+            fontFamily: "'Courier New', 'Consolas', monospace",
+            letterSpacing: 2,
+            background: 'rgba(0,0,0,0.6)',
+            border: `1px solid ${countdownDiff < 10 * 60 * 1000 ? 'rgba(255,50,50,0.3)' : 'rgba(0,255,136,0.2)'}`,
+            borderRadius: 8,
+            padding: '4px 12px',
+            animation: countdownDiff < 60 * 1000
+              ? 'blinkFast 0.3s infinite'
+              : countdownDiff < 10 * 60 * 1000
+              ? 'clockPulse 1.5s infinite'
+              : undefined,
           }}>
             {countdown}
           </span>
@@ -420,10 +445,27 @@ export default function PriceJourneyPage() {
         }}>
           <DealTimeline currentStage={timelineStage} showBanner={shouldShowBanner} onBannerDismiss={handleBannerDismiss} />
           <div style={{
-            padding: '6px 8px 10px', borderTop: `1px solid ${T.border}`,
+            padding: '8px 12px 10px', borderTop: `1px solid ${T.border}`,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <span style={{ fontSize: 14, fontFamily: "'Courier New', monospace", fontWeight: 700, letterSpacing: 1, color: countdownColor, animation: isBlinking ? 'blinkFast 0.5s infinite' : undefined }}>⏰ {countdown || '로딩 중'}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+                {timelineStage === 'recruiting' ? '오퍼경쟁까지' :
+                 timelineStage === 'offer_competition' ? '예약/결제까지' :
+                 timelineStage === 'reservation_payment' ? '완료까지' : ''}
+              </span>
+              <span style={{
+                fontSize: 22, fontWeight: 700, color: countdownColor,
+                fontFamily: "'Courier New', 'Consolas', monospace",
+                letterSpacing: 2,
+                background: 'rgba(0,0,0,0.5)',
+                border: `1px solid ${countdownDiff < 10 * 60 * 1000 ? 'rgba(255,50,50,0.3)' : 'rgba(0,255,136,0.15)'}`,
+                borderRadius: 6, padding: '4px 10px',
+                animation: countdownDiff > 0 && countdownDiff < 60 * 1000
+                  ? 'blinkFast 0.3s infinite'
+                  : isBlinking ? 'clockPulse 1.5s infinite' : undefined,
+              }}>⏰ {countdown || '로딩 중'}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -488,9 +530,9 @@ export default function PriceJourneyPage() {
           {/* 메시지 영역 */}
           {chatExpanded ? (
             <div>
-              {/* 전체 메시지 스크롤 */}
-              <div className="chat-scroll" style={{
-                maxHeight: 260, overflowY: 'auto', padding: '0 16px 12px',
+              {/* 전체 메시지 스크롤 — 내부만 스크롤, 페이지 이동 없음 */}
+              <div ref={chatContainerRef} className="chat-scroll" style={{
+                height: 300, overflowY: 'auto', padding: '0 16px 12px',
                 display: 'flex', flexDirection: 'column', gap: 10,
               }}>
                 {(chatSearch ? chatMessages.filter(m => m.msg.toLowerCase().includes(chatSearch.toLowerCase())) : chatMessages).map(m => (
@@ -697,56 +739,106 @@ export default function PriceJourneyPage() {
       {/* ── divider before spectator ── */}
       <div style={{ margin: '24px 20px', height: 2, background: 'linear-gradient(90deg, transparent, rgba(138,43,226,0.4), rgba(255,215,0,0.4), transparent)', borderRadius: 1 }} />
 
-      {/* ── ④ 관전자 예측 분포 차트 ── */}
+      {/* ── ④ 관전자 예측 ── */}
       <div style={{ padding: '24px 20px 0' }}>
         <div style={{
           background: T.bgSurface, border: `1px solid ${T.border}`,
           borderRadius: 14, padding: '16px',
         }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 4 }}>
-            {predBuckets.length === 0 || predBuckets.every(b => b.count === 0)
+            {predictions.length === 0
               ? '🔮 아직 아무도 예측하지 않았어요. 첫 예언자가 되어보세요!'
               : '🔮 관전자들은 얼마를 예측했을까?'}
           </div>
           <div style={{ fontSize: 12, color: T.textSec, marginBottom: 14 }}>
-            {chatMessages.length + 45}명이 예측에 참여했어요 · 평균 예측가:&nbsp;
-            <span style={{ color: T.green, fontWeight: 700 }}>
-              {avgPrediction.toLocaleString()}원
-            </span>
+            {predictions.length}명이 예측에 참여했어요
+            {predictions.length > 0 && (<>
+              {' '}· 평균 예측가:&nbsp;
+              <span style={{ color: T.green, fontWeight: 700 }}>
+                ₩{Math.round(predictions.reduce((s, p) => s + p.predicted_price, 0) / predictions.length).toLocaleString()}
+              </span>
+            </>)}
           </div>
 
-          {/* 바 차트 (div-based for design consistency) */}
-          <div style={{ height: 140 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={predBuckets} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
-                <XAxis
-                  dataKey="range"
-                  tick={{ fill: T.textSec, fontSize: 10 }}
-                  axisLine={{ stroke: T.border }}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: T.textSec, fontSize: 9 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {predBuckets.map((b, i) => (
-                    <Cell
-                      key={i}
-                      fill={b.count === predMax ? T.green : 'rgba(0,230,118,0.25)'}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {/* 예측 목록 (좋아요 순 → 최신순) */}
+          {predictions.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+              {[...predictions]
+                .sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, predExpanded ? undefined : 3)
+                .map(p => (
+                <div key={p.id} style={{
+                  padding: '10px 12px', borderRadius: 10,
+                  background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.border}`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: p.comment ? 6 : 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 13 }}>😎</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{p.nickname || `예측자${p.buyer_id}`}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: T.cyan, fontFamily: "'Space Mono', monospace" }}>
+                        ₩{p.predicted_price.toLocaleString()}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <button
+                        onClick={async () => {
+                          const uid = user?.id ?? 0;
+                          if (!uid) return;
+                          const res = await votePrediction(p.id, uid, 'like');
+                          if (res) setPredictions(prev => prev.map(x => x.id === p.id ? { ...x, likes: res.likes, mehs: res.mehs, my_vote: res.my_vote } : x));
+                        }}
+                        style={{
+                          padding: '2px 8px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
+                          background: p.my_vote === 'like' ? 'rgba(0,230,118,0.15)' : 'transparent',
+                          border: `1px solid ${p.my_vote === 'like' ? 'rgba(0,230,118,0.4)' : T.border}`,
+                          color: p.my_vote === 'like' ? T.green : T.textSec,
+                        }}
+                      >👍 {p.likes ?? 0}</button>
+                      <button
+                        onClick={async () => {
+                          const uid = user?.id ?? 0;
+                          if (!uid) return;
+                          const res = await votePrediction(p.id, uid, 'meh');
+                          if (res) setPredictions(prev => prev.map(x => x.id === p.id ? { ...x, likes: res.likes, mehs: res.mehs, my_vote: res.my_vote } : x));
+                        }}
+                        style={{
+                          padding: '2px 8px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
+                          background: p.my_vote === 'meh' ? 'rgba(255,152,0,0.15)' : 'transparent',
+                          border: `1px solid ${p.my_vote === 'meh' ? 'rgba(255,152,0,0.4)' : T.border}`,
+                          color: p.my_vote === 'meh' ? '#ff9800' : T.textSec,
+                        }}
+                      >🤔 {p.mehs ?? 0}</button>
+                    </div>
+                  </div>
+                  {p.comment && (
+                    <div style={{ fontSize: 12, color: T.textSec, lineHeight: 1.5, marginTop: 4 }}>
+                      {p.comment.length > 80 ? (
+                        <details>
+                          <summary style={{ cursor: 'pointer', color: T.textSec }}>{p.comment.slice(0, 80)}… [더보기]</summary>
+                          <div style={{ marginTop: 4 }}>{p.comment}</div>
+                        </details>
+                      ) : p.comment}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {predictions.length > 3 && (
+                <button
+                  onClick={() => setPredExpanded(v => !v)}
+                  style={{
+                    fontSize: 12, color: T.textSec, background: 'none', border: 'none',
+                    cursor: 'pointer', textAlign: 'center', padding: 4,
+                  }}
+                >{predExpanded ? '접기 ▲' : `전체 ${predictions.length}개 보기 ▼`}</button>
+              )}
+            </div>
+          )}
 
           <button
             onClick={() => { if (predDone) return; setShowPredModal(true); }}
             disabled={predDone}
             style={{
-              marginTop: 12, width: '100%',
+              marginTop: 4, width: '100%',
               padding: '11px', borderRadius: 10,
               background: predDone ? 'rgba(0,230,118,0.05)' : 'rgba(0,230,118,0.1)',
               border: `1px solid rgba(0,230,118,0.3)`,
@@ -1013,10 +1105,25 @@ export default function PriceJourneyPage() {
               }}
             />
             {predPrice && Number(predPrice) > 0 && (
-              <div style={{ fontSize: 12, color: T.textSec, marginBottom: 12 }}>
+              <div style={{ fontSize: 12, color: T.textSec, marginBottom: 8 }}>
                 예측가: ₩{Number(predPrice).toLocaleString('ko-KR')}
               </div>
             )}
+            <textarea
+              value={predReason}
+              onChange={e => setPredReason(e.target.value.slice(0, 2000))}
+              placeholder="이 가격을 예측한 근거를 알려주세요 (최대 2,000자)"
+              rows={3}
+              style={{
+                width: '100%', boxSizing: 'border-box', padding: '10px 14px',
+                borderRadius: 12, fontSize: 13,
+                background: T.bgSurface, border: `1px solid ${T.border}`,
+                color: T.text, resize: 'none', marginBottom: 4,
+              }}
+            />
+            <div style={{ textAlign: 'right', fontSize: 11, color: T.textSec, marginBottom: 12 }}>
+              {predReason.length}/2,000
+            </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={() => setShowPredModal(false)}
@@ -1026,14 +1133,33 @@ export default function PriceJourneyPage() {
                 disabled={predSubmitting || !predPrice || Number(predPrice) <= 0}
                 onClick={async () => {
                   setPredSubmitting(true);
+                  const price = Number(predPrice);
                   try {
-                    await submitPrediction(Number(dealId), Number(predPrice));
+                    const result = await submitPrediction(Number(dealId), price, predReason || undefined);
                     setPredDone(true);
                     setShowPredModal(false);
+                    // 즉시 목록에 추가 (optimistic)
+                    setPredictions(prev => [{
+                      id: result?.id ?? Date.now(),
+                      buyer_id: user?.id ?? 0,
+                      predicted_price: price,
+                      comment: predReason || undefined,
+                      nickname: user?.nickname ?? `예측자${user?.id ?? 0}`,
+                      created_at: new Date().toISOString(),
+                      likes: 0, mehs: 0,
+                    }, ...prev]);
                   } catch {
-                    // API 실패해도 UI는 성공 처리 (mock 모드 대응)
                     setPredDone(true);
                     setShowPredModal(false);
+                    setPredictions(prev => [{
+                      id: Date.now(),
+                      buyer_id: user?.id ?? 0,
+                      predicted_price: price,
+                      comment: predReason || undefined,
+                      nickname: '나',
+                      created_at: new Date().toISOString(),
+                      likes: 0, mehs: 0,
+                    }, ...prev]);
                   }
                   setPredSubmitting(false);
                 }}

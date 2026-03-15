@@ -26,6 +26,7 @@ from app import database
 from app.models import (
     Deal, Buyer, DealParticipant,
     SpectatorPrediction, DealViewer,
+    PredictionVote,
 )
 from app.schemas_spectator import (
     SpectatorPredictIn,
@@ -399,3 +400,37 @@ def get_rankings(
     rankings_data = compute_rankings(db, year_month)
     rankings = [SpectatorRankingEntry(**entry) for entry in rankings_data]
     return SpectatorRankingsOut(year_month=year_month, rankings=rankings)
+
+
+# ── 좋아요/글쎄요 투표 ──────────────────────────────────
+@router.post("/prediction-vote/{prediction_id}")
+def vote_prediction(
+    prediction_id: int,
+    user_id: int = Query(...),
+    vote_type: str = Query(..., pattern="^(like|meh)$"),
+    db: Session = Depends(get_db),
+):
+    pred = db.query(SpectatorPrediction).filter(SpectatorPrediction.id == prediction_id).first()
+    if not pred:
+        raise HTTPException(status_code=404, detail="예측을 찾을 수 없습니다.")
+    if pred.buyer_id == user_id:
+        raise HTTPException(status_code=400, detail="본인 예측에는 투표할 수 없습니다.")
+
+    existing = db.query(PredictionVote).filter(
+        PredictionVote.prediction_id == prediction_id,
+        PredictionVote.user_id == user_id,
+    ).first()
+
+    if existing:
+        if existing.vote_type == vote_type:
+            raise HTTPException(status_code=400, detail="이미 투표했습니다.")
+        existing.vote_type = vote_type
+    else:
+        db.add(PredictionVote(prediction_id=prediction_id, user_id=user_id, vote_type=vote_type))
+
+    db.commit()
+
+    likes = db.query(PredictionVote).filter(PredictionVote.prediction_id == prediction_id, PredictionVote.vote_type == "like").count()
+    mehs = db.query(PredictionVote).filter(PredictionVote.prediction_id == prediction_id, PredictionVote.vote_type == "meh").count()
+
+    return {"prediction_id": prediction_id, "likes": likes, "mehs": mehs, "my_vote": vote_type}
