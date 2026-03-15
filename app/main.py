@@ -1331,7 +1331,11 @@ try:
     from fastapi.staticfiles import StaticFiles as _SpaStatic
     from fastapi.responses import FileResponse as _FileResponse
 
+    # frontend/dist (nixpacks 빌드) 우선, app/static (git 커밋) fallback
     _FRONTEND_DIST = _SpaPath(__file__).parent.parent / "frontend" / "dist"
+    _APP_STATIC = _SpaPath(__file__).parent / "static"
+    if not (_FRONTEND_DIST.is_dir() and (_FRONTEND_DIST / "index.html").is_file()):
+        _FRONTEND_DIST = _APP_STATIC
     _INDEX_HTML = _FRONTEND_DIST / "index.html"
 
     if _FRONTEND_DIST.is_dir() and _INDEX_HTML.is_file():
