@@ -1,0 +1,568 @@
+{
+  "round": "11",
+  "entity": "CS Process",
+  "checkpoints": 87,
+  "PASS": 87,
+  "FAIL": 0,
+  "sub_rounds": {
+    "11-A": {
+      "PASS": 11,
+      "FAIL": 0,
+      "total": 11
+    },
+    "11-B": {
+      "PASS": 10,
+      "FAIL": 0,
+      "total": 10
+    },
+    "11-C": {
+      "PASS": 10,
+      "FAIL": 0,
+      "total": 10
+    },
+    "11-D": {
+      "PASS": 21,
+      "FAIL": 0,
+      "total": 21
+    },
+    "11-E": {
+      "PASS": 14,
+      "FAIL": 0,
+      "total": 14
+    },
+    "11-F": {
+      "PASS": 9,
+      "FAIL": 0,
+      "total": 9
+    },
+    "11-G": {
+      "PASS": 12,
+      "FAIL": 0,
+      "total": 12
+    }
+  },
+  "details": [
+    {
+      "name": "CP-1: cancellation.instant_cancel_before exists",
+      "status": "PASS",
+      "detail": "got=shipping",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-2a: return.cooling_days = 7",
+      "status": "PASS",
+      "detail": "got=7",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-2b: return has 5 reason codes",
+      "status": "PASS",
+      "detail": "count=5",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-3a: dispute.r1_respondent_deadline_days = 5",
+      "status": "PASS",
+      "detail": "got=5",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-3b: dispute.r2_initiator_deadline_days = 3",
+      "status": "PASS",
+      "detail": "got=3",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-4a: grace_period_days = 14",
+      "status": "PASS",
+      "detail": "got=14",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-4b: max_hold_days = 90",
+      "status": "PASS",
+      "detail": "got=90",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-4c: direct_agreement.enabled = true",
+      "status": "PASS",
+      "detail": "got=True",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-4d: external_agency has kca + small_claims",
+      "status": "PASS",
+      "detail": "types=['kca', 'small_claims', 'other']",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-5a: chat.retention_days = 90",
+      "status": "PASS",
+      "detail": "got=90",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-5b: chat.max_messages_per_deal = 5000",
+      "status": "PASS",
+      "detail": "got=5000",
+      "sub_round": "11-A"
+    },
+    {
+      "name": "CP-6a: Dispute class exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-B"
+    },
+    {
+      "name": "CP-6b: disputes table",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-B"
+    },
+    {
+      "name": "CP-7a: CSReturnRequest class exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-B"
+    },
+    {
+      "name": "CP-7b: cs_return_requests table",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-B"
+    },
+    {
+      "name": "CP-8a: DealChatMessage class exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-B"
+    },
+    {
+      "name": "CP-8b: deal_chat_messages table",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-B"
+    },
+    {
+      "name": "CP-9a: SpectatorPrediction exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-B"
+    },
+    {
+      "name": "CP-9b: PredictionVote exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-B"
+    },
+    {
+      "name": "CP-10a: direct_agreement columns",
+      "status": "PASS",
+      "detail": "direct_agreement_* columns in Dispute",
+      "sub_round": "11-B"
+    },
+    {
+      "name": "CP-10b: external_agency columns",
+      "status": "PASS",
+      "detail": "external_agency_* columns in Dispute",
+      "sub_round": "11-B"
+    },
+    {
+      "name": "CP-11: /health returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-C"
+    },
+    {
+      "name": "CP-12: GET /v3_6/search (reservations) returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-C"
+    },
+    {
+      "name": "CP-13: GET /deals/ returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-C"
+    },
+    {
+      "name": "CP-14: GET /deals/{id} returns 200",
+      "status": "PASS",
+      "detail": "code=200, deal_id=1708",
+      "sub_round": "11-C"
+    },
+    {
+      "name": "CP-15: GET /v3_6/offers/my returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-C"
+    },
+    {
+      "name": "CP-16: 5 return reason codes",
+      "status": "PASS",
+      "detail": "codes=['change_mind', 'size_color', 'defective', 'wrong_delivery', 'other']",
+      "sub_round": "11-C"
+    },
+    {
+      "name": "CP-17: cs_disputes.py exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-C"
+    },
+    {
+      "name": "CP-18: deal_chat.py exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-C"
+    },
+    {
+      "name": "CP-19: GET /notifications/ returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-C"
+    },
+    {
+      "name": "CP-20: GET /activity-log/ returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-C"
+    },
+    {
+      "name": "CP-21: file_dispute function exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-22: respond_to_dispute exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-23a: choose_proposal exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-23b: 3-way choice options (initiator/ai/respondent)",
+      "status": "PASS",
+      "detail": "3-way: initiator, ai, respondent",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-24a: round2_initiator exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-24b: round2_respond exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-25: GET /v3/disputes/my returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-26: POST /v3/disputes empty body -> 422",
+      "status": "PASS",
+      "detail": "code=422",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-27: GET /v3/disputes/my responds",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-28a: FILED status",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-28b: RESOLVED status",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-28c: FAILED status",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-29: compensation field in dispute",
+      "status": "PASS",
+      "detail": "compensation handling in dispute router",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-30: settlement hold reference",
+      "status": "PASS",
+      "detail": "settlement hold in dispute logic",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-31: Admin can list disputes",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-32a: dispute_failed template",
+      "status": "PASS",
+      "detail": "keys=['dispute_failed', 'direct_agreement_proposed', 'direct_agreement_completed', 'direct_agreement_rejected', 'direct_agreement_expired']",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-32b: direct_agreement_proposed template",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-33: default_basis = ai_proposal",
+      "status": "PASS",
+      "detail": "got=ai_proposal",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-34a: entry_requires_rejection",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-34b: entry_requires_payment",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-35: fixed + percentage compensation types",
+      "status": "PASS",
+      "detail": "types=['fixed', 'percentage']",
+      "sub_round": "11-D"
+    },
+    {
+      "name": "CP-36: register_direct_agreement exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-37: accept_direct_agreement exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-38: register_external_filing exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-39: apply_external_result exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-40: admin_force_close exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-41: run_post_failure_deadline_batch in main.py",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-42: 7-day agreement expiry in batch",
+      "status": "PASS",
+      "detail": "batch function in cs_disputes.py",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-43: grace period handling",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-44: hold limit handling",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-45: ADMIN_PENDING status exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-46: All 8 notification templates present",
+      "status": "PASS",
+      "detail": "found 8/8: ['dispute_failed', 'direct_agreement_proposed', 'direct_agreement_completed', 'direct_agreement_rejected', 'direct_agreement_expired', 'external_agency_filed', 'external_result_applied', 'a",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-47a: auto_on_grace_expiry",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-47b: auto_on_max_hold_expiry",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-47c: reason_required",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-E"
+    },
+    {
+      "name": "CP-48: GET /deals/{id}/chat/messages endpoint works",
+      "status": "PASS",
+      "detail": "code=409, deal=1708",
+      "sub_round": "11-F"
+    },
+    {
+      "name": "CP-49: GET /deals/{id}/chat/messages/export endpoint works",
+      "status": "PASS",
+      "detail": "code=409",
+      "sub_round": "11-F"
+    },
+    {
+      "name": "CP-50: GET /spectator/predictions/{id} returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-F"
+    },
+    {
+      "name": "CP-51: GET /spectator/predictions/{id}/count returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-F"
+    },
+    {
+      "name": "CP-52a: prediction-vote route exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-F"
+    },
+    {
+      "name": "CP-52b: vote_prediction function exists",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-F"
+    },
+    {
+      "name": "CP-53: GET /spectator/rankings returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-F"
+    },
+    {
+      "name": "CP-54: POST /v3_6/pingpong/ask returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-F"
+    },
+    {
+      "name": "CP-55: GET /spectator/my_predictions returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-F"
+    },
+    {
+      "name": "CP-56a: Seller disputes menu",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-56b: Buyer disputes menu",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-56c: Return/exchange menu",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-57: App.tsx has route declarations",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-58a: cs_disputes router mounted",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-58b: deal_chat router mounted",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-58c: spectator router mounted",
+      "status": "PASS",
+      "detail": "",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-59: GET /docs returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-60a: GET /openapi.json returns 200",
+      "status": "PASS",
+      "detail": "code=200",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-60b: /disputes paths in OpenAPI",
+      "status": "PASS",
+      "detail": "dispute paths found: True",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-60c: /chat paths in OpenAPI",
+      "status": "PASS",
+      "detail": "chat paths found: True",
+      "sub_round": "11-G"
+    },
+    {
+      "name": "CP-60d: /spectator paths in OpenAPI",
+      "status": "PASS",
+      "detail": "spectator paths found: True",
+      "sub_round": "11-G"
+    }
+  ]
+}
