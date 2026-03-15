@@ -40,6 +40,85 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v3/disputes", tags=["cs-disputes"])
 
+# ── 기존 disputes 테이블에 새 컬럼 추가 (ALTER TABLE) ──
+def _ensure_dispute_columns():
+    """기존 SQLite disputes 테이블에 새 컬럼이 없으면 추가"""
+    from app.database import engine
+    new_cols = [
+        ("rejected_request_id", "INTEGER"),
+        ("initiator_comp_type", "VARCHAR(20)"),
+        ("initiator_comp_amount", "FLOAT"),
+        ("respondent_comp_type", "VARCHAR(20)"),
+        ("respondent_comp_amount", "FLOAT"),
+        ("ai_r1_comp_type", "VARCHAR(20)"),
+        ("ai_r1_comp_amount", "FLOAT"),
+        ("r2_initiator_comp_type", "VARCHAR(20)"),
+        ("r2_initiator_comp_amount", "FLOAT"),
+        ("r2_respondent_comp_type", "VARCHAR(20)"),
+        ("r2_respondent_comp_amount", "FLOAT"),
+        ("ai_r2_comp_type", "VARCHAR(20)"),
+        ("ai_r2_comp_amount", "FLOAT"),
+        ("r1_initiator_choice", "VARCHAR(20)"),
+        ("r1_respondent_choice", "VARCHAR(20)"),
+        ("r2_initiator_choice", "VARCHAR(20)"),
+        ("r2_respondent_choice", "VARCHAR(20)"),
+        ("agreed_comp_type", "VARCHAR(20)"),
+        ("agreed_comp_amount", "FLOAT"),
+        ("agreed_resolution", "VARCHAR(30)"),
+        ("grace_deadline", "TIMESTAMP"),
+        ("max_hold_deadline", "TIMESTAMP"),
+        ("admin_decided", "BOOLEAN DEFAULT FALSE"),
+        ("admin_decided_at", "TIMESTAMP"),
+        ("admin_decision_basis", "VARCHAR(30)"),
+        ("admin_decision_reason", "TEXT"),
+        ("admin_decision_comp_type", "VARCHAR(20)"),
+        ("admin_decision_comp_amount", "FLOAT"),
+        ("admin_decision_resolution", "VARCHAR(30)"),
+        ("post_failure_status", "VARCHAR(40)"),
+        ("direct_agreement_requested_by", "INTEGER"),
+        ("direct_agreement_comp_type", "VARCHAR(20)"),
+        ("direct_agreement_comp_amount", "FLOAT"),
+        ("direct_agreement_resolution", "VARCHAR(30)"),
+        ("direct_agreement_description", "TEXT"),
+        ("direct_agreement_accepted", "BOOLEAN"),
+        ("direct_agreement_accepted_at", "TIMESTAMP"),
+        ("external_agency_type", "VARCHAR(30)"),
+        ("external_agency_case_number", "VARCHAR(100)"),
+        ("external_agency_filed_at", "TIMESTAMP"),
+        ("external_agency_filed_by", "INTEGER"),
+        ("external_agency_evidence_urls", "TEXT DEFAULT '[]'"),
+        ("external_agency_hold_extended", "BOOLEAN DEFAULT FALSE"),
+        ("external_agency_hold_deadline", "TIMESTAMP"),
+        ("external_result_received_at", "TIMESTAMP"),
+        ("external_result_description", "TEXT"),
+        ("external_result_document_urls", "TEXT DEFAULT '[]'"),
+        ("external_result_comp_type", "VARCHAR(20)"),
+        ("external_result_comp_amount", "FLOAT"),
+        ("external_result_resolution", "VARCHAR(30)"),
+        ("external_result_applied_by", "INTEGER"),
+        ("external_result_applied_at", "TIMESTAMP"),
+    ]
+    try:
+        with engine.connect() as conn:
+            for col_name, col_type in new_cols:
+                try:
+                    conn.execute(
+                        __import__("sqlalchemy").text(
+                            f"ALTER TABLE disputes ADD COLUMN {col_name} {col_type}"
+                        )
+                    )
+                    conn.commit()
+                except Exception:
+                    pass  # 이미 존재하는 컬럼은 무시
+        print("[cs_disputes] ALTER TABLE disputes — columns ensured", flush=True)
+    except Exception as e:
+        print(f"[cs_disputes] ALTER TABLE skip: {e}", flush=True)
+
+try:
+    _ensure_dispute_columns()
+except Exception:
+    pass
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Pydantic schemas
@@ -414,7 +493,7 @@ def my_disputes(user_id: int = Query(...), db: Session = Depends(get_db)):
             "reservation_id": d.reservation_id,
             "order_number": getattr(reservation, "order_number", None) if reservation else None,
             "status": d.status,
-            "post_failure_status": d.post_failure_status,
+            "post_failure_status": getattr(d, "post_failure_status", None),
             "category": d.category,
             "title": d.title,
             "current_round": d.current_round,

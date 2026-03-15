@@ -20,6 +20,15 @@ except ImportError:
 
 router = APIRouter(tags=["cs-orders"])
 
+# ── cs_return_requests 테이블 자동 생성 ──
+try:
+    from app.database import engine
+    from app.models import Base
+    Base.metadata.create_all(bind=engine)
+    print("[cs_orders] create_all OK (cs_return_requests table ensured)", flush=True)
+except Exception as _e:
+    print(f"[cs_orders] create_all skip: {_e}", flush=True)
+
 
 # ───────────────────────── Schemas ─────────────────────────
 
