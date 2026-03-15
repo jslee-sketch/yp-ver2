@@ -91,16 +91,15 @@ export function GroupCurveSection({ anchor, target, currentQ, qTarget, lowestOff
       ctx.textAlign = 'left';
       ctx.fillText(`최저오퍼 ${(lowestOfferPrice / 10000).toFixed(1)}만`, PL + 4, pToY(lowestOfferPrice) - 4);
 
-      // ── 부드러운 곡선: 600+ 포인트 + Catmull-Rom 스플라인 ──
-      // 1) 포인트 생성 (20개 키포인트)
-      const CURVE_STEPS = 20;
+      // ── 부드러운 곡선: 300 포인트 직접 렌더링 (꺾임 제로) ──
+      const CURVE_STEPS = 300;
       const keyPts: {x: number; y: number}[] = [];
       for (let i = 0; i <= CURVE_STEPS; i++) {
         const q = 1 + (MAX_Q - 1) * (i / CURVE_STEPS);
         keyPts.push({ x: qToX(q), y: pToY(groupPrice(q, anchor, qTarget, target)) });
       }
 
-      // 2) Catmull-Rom 스플라인 → 부드러운 곡선
+      // Catmull-Rom은 유지하되 포인트 밀도가 충분하여 직선 연결도 매끄러움
       function drawCatmullRom(points: {x:number;y:number}[], tension: number = 0.5) {
         if (points.length < 2 || !ctx) return;
         ctx.moveTo(points[0].x, points[0].y);

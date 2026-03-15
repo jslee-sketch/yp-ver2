@@ -404,33 +404,6 @@ export default function PriceJourneyPage() {
 
       </div>
 
-      {/* ── 디지털 시계 (메인) ── */}
-      {countdown && (
-        <div style={{
-          padding: '10px 20px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(0,0,0,0.5)',
-          borderBottom: `1px solid ${T.border}`,
-        }}>
-          <div style={{
-            fontSize: 32, fontWeight: 700, color: countdownColor,
-            fontFamily: "'Courier New', 'Consolas', monospace",
-            letterSpacing: 4,
-            background: 'rgba(0,0,0,0.7)',
-            border: `2px solid ${countdownDiff < 10 * 60 * 1000 ? 'rgba(255,50,50,0.6)' : 'rgba(0,255,136,0.35)'}`,
-            borderRadius: 12, padding: '8px 24px',
-            textShadow: `0 0 20px ${countdownColor}88, 0 0 40px ${countdownColor}44`,
-            animation: countdownDiff < 60 * 1000
-              ? 'blinkFast 0.3s infinite'
-              : countdownDiff < 10 * 60 * 1000
-              ? 'clockPulse 1.5s infinite'
-              : undefined,
-          }}>
-            {countdown}
-          </div>
-        </div>
-      )}
-
       {/* ── 딜 정보 스트립 ── */}
       <div style={{ padding: '12px 20px 14px', fontSize: 14, fontWeight: 500, color: T.text }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>

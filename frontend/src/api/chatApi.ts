@@ -22,13 +22,12 @@ export async function sendChatMessage(
   dealId: number,
   message: string,
   userId: number,
-  userType = 'buyer',
+  _userType = 'buyer',
 ) {
   if (!FEATURES.USE_API_DEALS) return null;
   const res = await apiClient.post(API.DEAL_CHAT.SEND(dealId), {
-    message,
-    user_id: userId,
-    user_type: userType,
+    buyer_id: userId,
+    text: message,
   });
   return res.data;
 }

@@ -29,7 +29,7 @@ interface SimResult {
 export default function RefundSimulatorPage({ role = 'buyer' }: { role?: string }) {
   const [amount, setAmount] = useState(350000);
   const [reason, setReason] = useState('buyer_change_mind');
-  const [deliveryStatus, setDeliveryStatus] = useState('before');
+  const [deliveryStatus, setDeliveryStatus] = useState('before_shipping');
   const [shippingMode, setShippingMode] = useState('free');
   const [shippingCost] = useState(3000);
   const [daysSince, setDaysSince] = useState(0);
@@ -55,7 +55,7 @@ export default function RefundSimulatorPage({ role = 'buyer' }: { role?: string 
   ];
 
   const deliveryStatuses = [
-    { value: 'before', label: '배송 전' },
+    { value: 'before_shipping', label: '배송 전' },
     { value: 'in_transit', label: '배송 중' },
     { value: 'delivered', label: '수령 후' },
   ];
