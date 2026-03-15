@@ -1,7 +1,7 @@
 {
   "round": 1,
   "entity": "Deal",
-  "created_id": 1654,
+  "created_id": 1692,
   "checkpoints": 42,
   "PASS": 42,
   "FAIL": 0,
@@ -54,7 +54,7 @@
     {
       "name": "CP-1j: created_at present",
       "status": "PASS",
-      "detail": "got=2026-03-14T12:50:59.915009"
+      "detail": "got=2026-03-15T12:31:49.060685"
     },
     {
       "name": "CP-1k: desired_qty matches",
@@ -84,7 +84,7 @@
     {
       "name": "CP-2b: New deal in list",
       "status": "PASS",
-      "detail": "checked 20 items, deal_id=1654"
+      "detail": "checked 20 items, deal_id=1692"
     },
     {
       "name": "CP-3a: My deals returns 200",
@@ -104,7 +104,7 @@
     {
       "name": "CP-4b: Creator auto-added as participant",
       "status": "PASS",
-      "detail": "participants=[{\"id\": 1526, \"deal_id\": 1654, \"buyer_id\": 11, \"qty\": 3, \"created_at\": \"2026-03-14T12:50:59.933819\"}]"
+      "detail": "participants=[{\"id\": 1561, \"deal_id\": 1692, \"buyer_id\": 11, \"qty\": 3, \"created_at\": \"2026-03-15T12:31:49.073808\"}]"
     },
     {
       "name": "CP-5a: Find-similar returns 200",
@@ -114,7 +114,7 @@
     {
       "name": "CP-5b: New deal in matching results",
       "status": "PASS",
-      "detail": "exact=4, opt_diff=0, similar=5, counts={'exact': 4, 'option_different': 0, 'similar': 5}"
+      "detail": "exact=2, opt_diff=0, similar=5, counts={'exact': 2, 'option_different': 0, 'similar': 5}"
     },
     {
       "name": "CP-6a: Seller can fetch deal detail",
@@ -154,7 +154,7 @@
     {
       "name": "CP-9b: Deal count incremented",
       "status": "PASS",
-      "detail": "before=1518, after=1519"
+      "detail": "before=1553, after=1554"
     },
     {
       "name": "CP-10a: Buyer dashboard returns 200",
@@ -164,7 +164,7 @@
     {
       "name": "CP-10b: Buyer dashboard has deals stats",
       "status": "PASS",
-      "detail": "stats.deals={'participated': 189}"
+      "detail": "stats.deals={'participated': 230}"
     },
     {
       "name": "CP-11a: Search returns 200",
@@ -197,7 +197,7 @@
       "detail": "code=200, keys=['ok', 'reason_code', 'entity', 'id', 'actor']"
     },
     {
-      "name": "CP-15: Deal detail page (/deal/1654) loads",
+      "name": "CP-15: Deal detail page (/deal/1692) loads",
       "status": "PASS",
       "detail": "status=200, is_spa=True"
     },

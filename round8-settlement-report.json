@@ -1,9 +1,9 @@
 {
   "round": 8,
   "entity": "Settlement Pipeline",
-  "reservation_id": 1449,
-  "order_number": "YP-20260314-0022",
-  "settlement_id": 1275,
+  "reservation_id": 1490,
+  "order_number": "YP-20260315-0007",
+  "settlement_id": 1311,
   "checkpoints": 39,
   "PASS": 39,
   "FAIL": 0,
@@ -11,22 +11,22 @@
     {
       "name": "CP-1a: Settlement found by reservation_id",
       "status": "PASS",
-      "detail": "code=200, data={'id': 1275, 'reservation_id': 1449, 'order_number': None, 'deal_id': 1661, 'offer_id': 1144, 'seller_id': 9, 'buyer_id': 11, 'buyer_paid_amount': 290000, 'pg_fee_amount': 9570, 'platfo"
+      "detail": "code=200, data={'id': 1311, 'reservation_id': 1490, 'order_number': None, 'deal_id': 1699, 'offer_id': 1186, 'seller_id': 9, 'buyer_id': 11, 'buyer_paid_amount': 290000, 'pg_fee_amount': 9570, 'platfo"
     },
     {
       "name": "CP-1b: reservation_id matches",
       "status": "PASS",
-      "detail": "got=1449"
+      "detail": "got=1490"
     },
     {
       "name": "CP-1c: deal_id matches",
       "status": "PASS",
-      "detail": "got=1661"
+      "detail": "got=1699"
     },
     {
       "name": "CP-1d: offer_id matches",
       "status": "PASS",
-      "detail": "got=1144"
+      "detail": "got=1186"
     },
     {
       "name": "CP-1e: seller_id matches",
@@ -81,7 +81,7 @@
     {
       "name": "CP-2e: order_number present",
       "status": "PASS",
-      "detail": "got=YP-20260314-0022"
+      "detail": "got=YP-20260315-0007"
     },
     {
       "name": "CP-3a: refresh-ready returns 200",
@@ -101,7 +101,7 @@
     {
       "name": "CP-3d: ready_at is set",
       "status": "PASS",
-      "detail": "got=2026-03-21T12:53:57.799607Z"
+      "detail": "got=2026-03-22T12:34:05.836089Z"
     },
     {
       "name": "CP-4a: HOLD → approve correctly rejected (409)",
@@ -136,7 +136,7 @@
     {
       "name": "CP-6b: Found with seller filter",
       "status": "PASS",
-      "detail": "checked 18"
+      "detail": "checked 20"
     },
     {
       "name": "CP-7a: Final fetch OK",
@@ -156,7 +156,7 @@
     {
       "name": "CP-8: Batch list accessible",
       "status": "PASS",
-      "detail": "code=200, data={'ok': True, 'count': 2, 'items': [{'batch_id': 'a1b66e05091f4a1e8a42637542df6f27', 'end': {'id': 14, 'actor_type': 'system', 'actor_id': None, 'reason': 'paid_batch_end batch=a1b66e050"
+      "detail": "code=200, data={'ok': True, 'count': 3, 'items': [{'batch_id': '5572d666c699466cb780c48dca73c71f', 'end': {'id': 16, 'actor_type': 'system', 'actor_id': None, 'reason': 'paid_batch_end batch=5572d666c"
     },
     {
       "name": "CP-9a: Bulk mark paid returns 200",
@@ -166,7 +166,7 @@
     {
       "name": "CP-9b: Returns batch_id",
       "status": "PASS",
-      "detail": "got=5572d666c699466cb780c48dca73c71f"
+      "detail": "got=cac8861614974997a6b252d36842f3b1"
     },
     {
       "name": "CP-9c: Returns ok=true",
@@ -176,7 +176,7 @@
     {
       "name": "CP-10a: refresh-dispute returns 200",
       "status": "PASS",
-      "detail": "code=200, data={'checked': 10, 'updated': 10, 'updated_ids': [221, 220, 219, 218, 217, 117, 116, 115, 114, 113]}"
+      "detail": "code=200, data={'checked': 11, 'updated': 11, 'updated_ids': [1305, 221, 220, 219, 218, 217, 117, 116, 115, 114, 113]}"
     },
     {
       "name": "CP-10b: refresh-dispute-closed returns 200",
@@ -186,12 +186,12 @@
     {
       "name": "CP-10c: refresh-dispute-path-schedule returns 200",
       "status": "PASS",
-      "detail": "code=200, data={'checked': 0, 'updated': 0, 'updated_ids': [], 'delay_days': 30, 'now': '2026-03-14T12:54:13.288165+00:00'}"
+      "detail": "code=200, data={'checked': 0, 'updated': 0, 'updated_ids': [], 'delay_days': 30, 'now': '2026-03-15T12:34:20.182150+00:00'}"
     },
     {
       "name": "CP-10d: refresh-dispute-path-ready returns 200",
       "status": "PASS",
-      "detail": "code=200, data={'checked': 0, 'updated': 0, 'updated_ids': [], 'now': '2026-03-14T12:54:14.284918+00:00'}"
+      "detail": "code=200, data={'checked': 0, 'updated': 0, 'updated_ids': [], 'now': '2026-03-15T12:34:20.785328+00:00'}"
     },
     {
       "name": "CP-11a: Buyer dashboard returns 200",

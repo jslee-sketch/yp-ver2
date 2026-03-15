@@ -2051,7 +2051,7 @@ export default function DealCreatePage() {
                 </div>
 
                 {/* 예상 가격 입력 — F-019 순차 하이라이트 */}
-                <div className={!marketChecked ? 'field-active' : 'field-completed'} style={{ background: C.bgCard, border: `1px solid ${!marketChecked ? '#00ff88' : C.border}`, borderRadius: 16, padding: 18, transition: 'all 0.3s ease' }}>
+                <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18, transition: 'all 0.3s ease' }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 10 }}>내 예상 가격: {marketChecked && '✅'}</div>
                   <div style={{ position: 'relative' }}>
                     <input
@@ -2060,7 +2060,7 @@ export default function DealCreatePage() {
                       onChange={e => setGuessPrice(e.target.value.replace(/[^0-9]/g, ''))}
                       onFocus={e => e.target.select()}
                       placeholder="예상 가격 입력"
-                      className="dc-input"
+                      className={`dc-input ${!marketChecked ? 'field-active' : 'field-completed'}`}
                       style={{ padding: '13px 40px 13px 14px', fontSize: 18, fontWeight: 700, borderRadius: 12, background: C.bgInput, border: `1px solid ${C.border}`, color: C.textPri, textAlign: 'right' }}
                     />
                     <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14 }}>원</span>
@@ -2246,7 +2246,7 @@ export default function DealCreatePage() {
                     </div>
 
                     {/* 목표가 설정 — F-019 순차 하이라이트 */}
-                    <div className={tp > 0 ? 'field-completed' : 'field-active'} style={{ background: C.bgCard, border: `1px solid ${tp > 0 ? C.border : '#00ff88'}`, borderRadius: 16, padding: 18, transition: 'all 0.3s ease' }}>
+                    <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18, transition: 'all 0.3s ease' }}>
                       <div style={{ fontSize: 16, fontWeight: 800, color: C.textPri, marginBottom: 14 }}>
                         자, 이제 목표가를 정해볼까요? {tp > 0 && '✅'}
                       </div>
@@ -2255,6 +2255,7 @@ export default function DealCreatePage() {
                       <input
                         type="range" min={0} max={50} step={1}
                         value={discountPercent}
+                        className={tp > 0 ? 'field-completed' : 'field-active'}
                         onChange={e => {
                           const pct = Number(e.target.value);
                           setDiscountPercent(pct);
@@ -2293,7 +2294,7 @@ export default function DealCreatePage() {
                               }
                             }}
                             placeholder="목표가 입력"
-                            className="dc-input"
+                            className={`dc-input ${tp > 0 ? 'field-completed' : 'field-active'}`}
                             style={{ padding: '13px 40px 13px 14px', fontSize: 16, fontWeight: 700, borderRadius: 12, background: C.bgInput, border: `1px solid ${C.border}`, color: C.textPri, textAlign: 'right' }}
                           />
                           <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14 }}>원</span>
@@ -2307,7 +2308,7 @@ export default function DealCreatePage() {
                     </div>
 
                     {/* 수량 — F-019 순차 하이라이트 */}
-                    <div className={tp > 0 && quantity >= 1 ? 'field-completed' : (tp > 0 ? 'field-active' : 'field-pending')} style={{ background: C.bgCard, border: `1px solid ${tp > 0 && !quantity ? '#00ff88' : C.border}`, borderRadius: 16, padding: 18, transition: 'all 0.3s ease' }}>
+                    <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18, transition: 'all 0.3s ease' }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 10 }}>수량 {tp > 0 && quantity >= 1 && '✅'}</div>
                       <div style={{ position: 'relative' }}>
                         <input
@@ -2317,7 +2318,7 @@ export default function DealCreatePage() {
                             const n = Number(e.target.value.replace(/[^0-9]/g, ''));
                             setQuantity(Math.max(1, Math.min(9999, n || 1)));
                           }}
-                          className="dc-input"
+                          className={`dc-input ${tp > 0 && quantity >= 1 ? 'field-completed' : (tp > 0 ? 'field-active' : 'field-pending')}`}
                           style={{ padding: '13px 40px 13px 14px', fontSize: 16, fontWeight: 700, borderRadius: 12, background: C.bgInput, border: `1px solid ${C.border}`, color: C.textPri, textAlign: 'right' }}
                         />
                         <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: C.textSec, fontSize: 14 }}>개</span>

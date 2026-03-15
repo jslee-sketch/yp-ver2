@@ -38,16 +38,16 @@
   },
   "created_accounts": {
     "buyer": {
-      "email": "qa_buyer_5398@test.com",
+      "email": "qa_buyer_3538@test.com",
       "password": "QaTest1234!",
-      "id": 1225,
-      "nickname": "QA구매자5398"
+      "id": 1232,
+      "nickname": "QA구매자3538"
     },
     "seller": {
-      "email": "qa_seller_5398@test.com",
+      "email": "qa_seller_3538@test.com",
       "password": "QaTest1234!",
-      "id": 1193,
-      "nickname": "QA판매자5398"
+      "id": 1200,
+      "nickname": "QA판매자3538"
     }
   },
   "details": [
@@ -102,31 +102,31 @@
     {
       "name": "CP-5a: Buyer register returns 200/201",
       "status": "PASS",
-      "detail": "code=200, data={'id': 1225, 'created_at': '2026-03-14T12:41:42.094646', 'points': 0, 'email': 'qa_buyer_5398@test.com', 'name': 'QA테스트구매자5398', 'nickname': 'QA구매자5398', 'phone': '010-9999-5398', 'addr",
+      "detail": "code=200, data={'id': 1232, 'created_at': '2026-03-15T12:41:37.284609', 'points': 0, 'email': 'qa_buyer_3538@test.com', 'name': 'QA테스트구매자3538', 'nickname': 'QA구매자3538', 'phone': '010-9999-3538', 'addr",
       "sub_round": "0-A"
     },
     {
       "name": "CP-5b: id returned",
       "status": "PASS",
-      "detail": "got=1225",
+      "detail": "got=1232",
       "sub_round": "0-A"
     },
     {
       "name": "CP-5c: email matches",
       "status": "PASS",
-      "detail": "got=qa_buyer_5398@test.com",
+      "detail": "got=qa_buyer_3538@test.com",
       "sub_round": "0-A"
     },
     {
       "name": "CP-5d: nickname matches",
       "status": "PASS",
-      "detail": "got=QA구매자5398",
+      "detail": "got=QA구매자3538",
       "sub_round": "0-A"
     },
     {
       "name": "CP-5e: created_at set",
       "status": "PASS",
-      "detail": "got=2026-03-14T12:41:42.094646",
+      "detail": "got=2026-03-15T12:41:37.284609",
       "sub_round": "0-A"
     },
     {
@@ -156,7 +156,7 @@
     {
       "name": "CP-7c: JWT sub matches",
       "status": "PASS",
-      "detail": "sub=1225, id=1225",
+      "detail": "sub=1232, id=1232",
       "sub_round": "0-A"
     },
     {
@@ -168,13 +168,13 @@
     {
       "name": "CP-8b: Profile has email",
       "status": "PASS",
-      "detail": "got=qa_buyer_5398@test.com",
+      "detail": "got=qa_buyer_3538@test.com",
       "sub_round": "0-A"
     },
     {
       "name": "CP-8c: Profile has nickname",
       "status": "PASS",
-      "detail": "got=QA구매자5398",
+      "detail": "got=QA구매자3538",
       "sub_round": "0-A"
     },
     {
@@ -222,31 +222,31 @@
     {
       "name": "CP-3a: Seller register returns 200/201",
       "status": "PASS",
-      "detail": "code=200, data={'id': 1193, 'created_at': '2026-03-14T12:41:52.032661', 'email': 'qa_seller_5398@test.com', 'business_name': 'QA테스트상점5398', 'nickname': 'QA판매자5398', 'business_number': '123539867890', ",
+      "detail": "code=200, data={'id': 1200, 'created_at': '2026-03-15T12:41:45.679840', 'email': 'qa_seller_3538@test.com', 'business_name': 'QA테스트상점3538', 'nickname': 'QA판매자3538', 'business_number': '123353867890', ",
       "sub_round": "0-B"
     },
     {
       "name": "CP-3b: id returned",
       "status": "PASS",
-      "detail": "got=1193",
+      "detail": "got=1200",
       "sub_round": "0-B"
     },
     {
       "name": "CP-3c: email matches",
       "status": "PASS",
-      "detail": "got=qa_seller_5398@test.com",
+      "detail": "got=qa_seller_3538@test.com",
       "sub_round": "0-B"
     },
     {
       "name": "CP-3d: nickname matches",
       "status": "PASS",
-      "detail": "got=QA판매자5398",
+      "detail": "got=QA판매자3538",
       "sub_round": "0-B"
     },
     {
       "name": "CP-3e: business_name set",
       "status": "PASS",
-      "detail": "got=QA테스트상점5398",
+      "detail": "got=QA테스트상점3538",
       "sub_round": "0-B"
     },
     {
@@ -276,7 +276,7 @@
     {
       "name": "CP-4c: JWT has seller_id",
       "status": "PASS",
-      "detail": "got={'sub': '1193', 'role': 'seller', 'seller_id': 1193, 'verified': False, 'exp': 1773495713}",
+      "detail": "got={'sub': '1200', 'role': 'seller', 'seller_id': 1200, 'verified': False, 'exp': 1773582106}",
       "sub_round": "0-B"
     },
     {
@@ -294,7 +294,7 @@
     {
       "name": "CP-5b: Has business_number",
       "status": "PASS",
-      "detail": "got=123539867890",
+      "detail": "got=123353867890",
       "sub_round": "0-B"
     },
     {
@@ -306,13 +306,13 @@
     {
       "name": "CP-6a: Approve returns 200",
       "status": "PASS",
-      "detail": "code=200, data={'id': 1193, 'created_at': '2026-03-14T12:41:52.032661', 'email': 'qa_seller_5398@test.com', 'business_name': 'QA테스트상점5398', 'nickname': 'QA판매자5398', 'business_number': '123539867890', ",
+      "detail": "code=200, data={'id': 1200, 'created_at': '2026-03-15T12:41:45.679840', 'email': 'qa_seller_3538@test.com', 'business_name': 'QA테스트상점3538', 'nickname': 'QA판매자3538', 'business_number': '123353867890', ",
       "sub_round": "0-B"
     },
     {
       "name": "CP-6b: verified_at is now set",
       "status": "PASS",
-      "detail": "got=2026-03-14T12:41:55.339437",
+      "detail": "got=2026-03-15T12:41:48.241038",
       "sub_round": "0-B"
     },
     {
@@ -336,7 +336,7 @@
     {
       "name": "CP-8b: New seller found in list",
       "status": "PASS",
-      "detail": "checked 977",
+      "detail": "checked 984",
       "sub_round": "0-B"
     },
     {
@@ -606,7 +606,7 @@
     {
       "name": "CP-6b: New seller can create offer",
       "status": "PASS",
-      "detail": "code=201, data={'id': 1137, 'deal_id': 1653, 'seller_id': 1193, 'price': 48000.0, 'total_available_qty': 3, 'reserved_qty': 0, 'sold_qty': 0, 'is_active': True, 'is_confirmed': False, 'delivery_days':",
+      "detail": "code=201, data={'id': 1195, 'deal_id': 1708, 'seller_id': 1200, 'price': 48000.0, 'total_available_qty': 3, 'reserved_qty': 0, 'sold_qty': 0, 'is_active': True, 'is_confirmed': False, 'delivery_days':",
       "sub_round": "0-F"
     }
   ]

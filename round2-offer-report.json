@@ -1,8 +1,8 @@
 {
   "round": 2,
   "entity": "Offer",
-  "deal_id": 1655,
-  "created_id": 1138,
+  "deal_id": 1693,
+  "created_id": 1180,
   "checkpoints": 39,
   "PASS": 39,
   "FAIL": 0,
@@ -15,7 +15,7 @@
     {
       "name": "CP-1b: deal_id matches",
       "status": "PASS",
-      "detail": "got=1655"
+      "detail": "got=1693"
     },
     {
       "name": "CP-1c: seller_id matches",
@@ -80,7 +80,7 @@
     {
       "name": "CP-2b: New offer in seller's list",
       "status": "PASS",
-      "detail": "checked 28 offers"
+      "detail": "checked 68 offers"
     },
     {
       "name": "CP-3a: Deal offers returns 200",
@@ -140,7 +140,7 @@
     {
       "name": "CP-8b: Offer count incremented",
       "status": "PASS",
-      "detail": "before=1129, after=1130"
+      "detail": "before=1171, after=1172"
     },
     {
       "name": "CP-9a: Seller dashboard returns 200",
@@ -178,12 +178,12 @@
       "detail": "code=200, data={'_html': True, '_len': 2276}"
     },
     {
-      "name": "CP-13: Deal detail (with offer) (/deal/1655) loads",
+      "name": "CP-13: Deal detail (with offer) (/deal/1693) loads",
       "status": "PASS",
       "detail": "status=200"
     },
     {
-      "name": "CP-13: Offer create page (/deal/1655/offer/create) loads",
+      "name": "CP-13: Offer create page (/deal/1693/offer/create) loads",
       "status": "PASS",
       "detail": "status=200"
     },

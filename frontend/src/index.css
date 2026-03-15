@@ -5,19 +5,27 @@ body {
   min-width: 320px;
 }
 
-/* ── F-019 전역 순차 하이라이트 ── */
-.field-active {
+/* ── F-019 전역 순차 하이라이트 — input/textarea/select에만 적용 ── */
+input.field-active,
+textarea.field-active,
+select.field-active {
   border: 2px solid #00ff88 !important;
-  box-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
-  transition: border 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.4) !important;
+  outline: none !important;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
-.field-pending {
+
+input.field-pending,
+textarea.field-pending,
+select.field-pending {
   opacity: 0.4;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s;
 }
-.field-completed {
-  opacity: 1.0;
+
+input.field-completed,
+textarea.field-completed,
+select.field-completed {
   border-color: #4CAF50 !important;
-  transition: border-color 0.3s ease, opacity 0.3s ease;
+  opacity: 1.0;
+  transition: border-color 0.3s, opacity 0.3s;
 }

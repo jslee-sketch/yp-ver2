@@ -66,10 +66,11 @@ function InputField({
   const [focused, setFocused] = useState(false);
   const borderColor = error ? C.red : focused ? C.borderFocus : C.border;
   return (
-    <div className={hlClass || ''} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>{label} {hlClass === 'field-completed' && '✅'}</label>
       <div style={{ position: 'relative' }}>
         <input
+          className={hlClass || ''}
           type={type}
           value={value}
           onChange={e => onChange(e.target.value)}

@@ -9,8 +9,14 @@ import { T } from './journeyTokens';
 function groupPrice(q: number, anchor: number, qTarget: number, target?: number): number {
   if (qTarget <= 0) return anchor;
   const t = target ?? anchor * 0.9;
-  const ratio = Math.min(1, Math.max(0, q / qTarget));
-  return anchor - (anchor - t) * Math.pow(ratio, 0.7);
+  const x = Math.max(0, q / qTarget);
+  // x <= 1: original power curve downward
+  // x > 1 : smooth exponential continuation (C1-continuous at x=1, no sharp corner)
+  //          derivative of x^0.7 at x=1 is 0.7, so a*b = 0.7 with a=0.1,b=7
+  if (x <= 1) {
+    return anchor - (anchor - t) * Math.pow(x, 0.7);
+  }
+  return anchor - (anchor - t) * (1 + 0.1 * (1 - Math.exp(-7 * (x - 1))));
 }
 
 interface Props {

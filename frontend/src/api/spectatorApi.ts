@@ -30,9 +30,12 @@ export async function submitPrediction(
   }
 }
 
-export async function fetchPredictions(dealId: number): Promise<SpectatorPrediction[]> {
+export async function fetchPredictions(dealId: number, buyerId?: number): Promise<SpectatorPrediction[]> {
   try {
-    const res = await apiClient.get(API.SPECTATOR.PREDICTIONS(dealId));
+    const url = buyerId
+      ? `${API.SPECTATOR.PREDICTIONS(dealId)}?buyer_id=${buyerId}`
+      : API.SPECTATOR.PREDICTIONS(dealId);
+    const res = await apiClient.get(url);
     const data = res.data;
     // API returns DealPredictionsOut wrapper: { predictions: [...], predictions_count, ... }
     if (data && typeof data === 'object' && Array.isArray(data.predictions)) {

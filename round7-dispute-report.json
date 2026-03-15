@@ -1,8 +1,8 @@
 {
   "round": 7,
   "entity": "Dispute",
-  "reservation_id": 1448,
-  "order_number": "YP-20260314-0021",
+  "reservation_id": 1489,
+  "order_number": "YP-20260315-0006",
   "checkpoints": 18,
   "PASS": 18,
   "FAIL": 0,
@@ -10,7 +10,7 @@
     {
       "name": "DISPUTE OPEN: Accepted",
       "status": "PASS",
-      "detail": "code=200, result={'reservation_id': 1448, 'order_number': 'YP-20260314-0021', 'is_disputed': True, 'dispute_opened_at': '2026-03-14T12:53:38.940418+00:00', 'dispute_reason': 'Product defective - QA Ro"
+      "detail": "code=200, result={'reservation_id': 1489, 'order_number': 'YP-20260315-0006', 'is_disputed': True, 'dispute_opened_at': '2026-03-15T12:33:48.120298+00:00', 'dispute_reason': 'Product defective - QA Ro"
     },
     {
       "name": "CP-1a: Returns 200",
@@ -25,7 +25,7 @@
     {
       "name": "CP-1c: dispute_opened_at set",
       "status": "PASS",
-      "detail": "got=2026-03-14T12:53:38.940418Z"
+      "detail": "got=2026-03-15T12:33:48.120298Z"
     },
     {
       "name": "CP-1d: dispute_reason saved",
@@ -75,7 +75,7 @@
     {
       "name": "DISPUTE CLOSE: Accepted",
       "status": "PASS",
-      "detail": "code=200, result={'reservation_id': 1448, 'order_number': 'YP-20260314-0021', 'is_disputed': False, 'dispute_closed_at': '2026-03-14T12:53:44.979481+00:00', 'dispute_resolution': 'Refund approved afte"
+      "detail": "code=200, result={'reservation_id': 1489, 'order_number': 'YP-20260315-0006', 'is_disputed': False, 'dispute_closed_at': '2026-03-15T12:33:52.341800+00:00', 'dispute_resolution': 'Refund approved afte"
     },
     {
       "name": "CP-6a: Returns 200",
@@ -90,7 +90,7 @@
     {
       "name": "CP-6c: dispute_closed_at set",
       "status": "PASS",
-      "detail": "got=2026-03-14T12:53:44.979481Z"
+      "detail": "got=2026-03-15T12:33:52.341800Z"
     },
     {
       "name": "CP-6d: dispute_resolution saved",

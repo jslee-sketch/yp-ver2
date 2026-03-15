@@ -242,8 +242,8 @@ export default function PriceJourneyPage() {
       }).catch(() => {});
     }).catch(() => { setPageError('딜 정보를 불러오지 못했습니다.'); setPageLoading(false); });
 
-    // 관전자 예측 로드
-    fetchPredictions(numId).then(preds => {
+    // 관전자 예측 로드 (buyer_id 전달 → open 딜에서도 본인 예측 표시)
+    fetchPredictions(numId, user?.id).then(preds => {
       if (Array.isArray(preds)) {
         setPredictions(preds);
       }

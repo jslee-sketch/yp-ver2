@@ -1,8 +1,8 @@
 {
   "round": 4,
   "entity": "Shipping",
-  "reservation_id": 1445,
-  "order_number": "YP-20260314-0018",
+  "reservation_id": 1486,
+  "order_number": "YP-20260315-0003",
   "checkpoints": 20,
   "PASS": 20,
   "FAIL": 0,
@@ -10,7 +10,7 @@
     {
       "name": "SHIP: Mark shipped accepted",
       "status": "PASS",
-      "detail": "code=200, result={'id': 1445, 'deal_id': 1657, 'offer_id': 1140, 'buyer_id': 11, 'qty': 1, 'order_number': 'YP-20260314-0018', 'status': 'PAID', 'created_at': '2026-03-14T12:52:37.258012Z', 'expires_a"
+      "detail": "code=200, result={'id': 1486, 'deal_id': 1695, 'offer_id': 1182, 'buyer_id': 11, 'qty': 1, 'order_number': 'YP-20260315-0003', 'status': 'PAID', 'created_at': '2026-03-15T12:33:02.189490Z', 'expires_a"
     },
     {
       "name": "CP-1a: Reservation detail returns 200",
@@ -20,7 +20,7 @@
     {
       "name": "CP-1b: shipped_at is set",
       "status": "PASS",
-      "detail": "shipped_at=2026-03-14T12:52:39.063870Z"
+      "detail": "shipped_at=2026-03-15T12:33:04.079735Z"
     },
     {
       "name": "CP-1c: tracking_number saved",
@@ -55,7 +55,7 @@
     {
       "name": "CP-2c: Buyer sees shipped_at",
       "status": "PASS",
-      "detail": "shipped_at=2026-03-14T12:52:39.063870Z"
+      "detail": "shipped_at=2026-03-15T12:33:04.079735Z"
     },
     {
       "name": "CP-2d: Buyer sees tracking_number",
@@ -75,7 +75,7 @@
     {
       "name": "CP-3c: Seller sees shipped_at",
       "status": "PASS",
-      "detail": "shipped_at=2026-03-14T12:52:39.063870Z"
+      "detail": "shipped_at=2026-03-15T12:33:04.079735Z"
     },
     {
       "name": "CP-4a: Admin reservations returns 200",
@@ -100,7 +100,7 @@
     {
       "name": "CP-5b: Shipping pipeline data exists",
       "status": "PASS",
-      "detail": "pipeline={'paid_not_shipped': 80, 'shipped_not_arrived': 42, 'arrived_confirmed': 41}"
+      "detail": "pipeline={'paid_not_shipped': 81, 'shipped_not_arrived': 51, 'arrived_confirmed': 58}"
     },
     {
       "name": "CP-6: My Orders page loads",

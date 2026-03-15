@@ -1,10 +1,10 @@
 {
   "round": 3,
   "entity": "Reservation + Payment",
-  "deal_id": 1656,
-  "offer_id": 1139,
-  "reservation_id": 1444,
-  "order_number": "YP-20260314-0017",
+  "deal_id": 1694,
+  "offer_id": 1181,
+  "reservation_id": 1485,
+  "order_number": "YP-20260315-0002",
   "amount_total": 1280000,
   "checkpoints": 42,
   "PASS": 42,
@@ -23,12 +23,12 @@
     {
       "name": "CP-1c: deal_id matches",
       "status": "PASS",
-      "detail": "got=1656"
+      "detail": "got=1694"
     },
     {
       "name": "CP-1d: offer_id matches",
       "status": "PASS",
-      "detail": "got=1139"
+      "detail": "got=1181"
     },
     {
       "name": "CP-1e: buyer_id matches",
@@ -43,7 +43,7 @@
     {
       "name": "CP-1g: order_number exists",
       "status": "PASS",
-      "detail": "got=YP-20260314-0017"
+      "detail": "got=YP-20260315-0002"
     },
     {
       "name": "CP-1h: amount_total > 0",
@@ -53,7 +53,7 @@
     {
       "name": "CP-1i: created_at present",
       "status": "PASS",
-      "detail": "got=2026-03-14T12:52:02.328278Z"
+      "detail": "got=2026-03-15T12:32:33.144123Z"
     },
     {
       "name": "CP-2a: Buyer reservations returns 200",
@@ -73,7 +73,7 @@
     {
       "name": "CP-3b: New reservation in seller's list",
       "status": "PASS",
-      "detail": "checked 17 items"
+      "detail": "checked 50 items"
     },
     {
       "name": "CP-4a: Admin reservations returns 200",
@@ -103,12 +103,12 @@
     {
       "name": "CP-6b: Reservation count incremented",
       "status": "PASS",
-      "detail": "before=1441, after=1442"
+      "detail": "before=1482, after=1483"
     },
     {
       "name": "PAY: Payment accepted",
       "status": "PASS",
-      "detail": "code=200, result={'id': 1444, 'deal_id': 1656, 'offer_id': 1139, 'buyer_id': 11, 'qty': 2, 'order_number': 'YP-20260314-0017', 'status': 'PAID', 'created_at': '2026-03-14T12:52:02.328278Z', 'expires_a"
+      "detail": "code=200, result={'id': 1485, 'deal_id': 1694, 'offer_id': 1181, 'buyer_id': 11, 'qty': 2, 'order_number': 'YP-20260315-0002', 'status': 'PAID', 'created_at': '2026-03-15T12:32:33.144123Z', 'expires_a"
     },
     {
       "name": "CP-7a: Reservation detail still accessible",
@@ -123,7 +123,7 @@
     {
       "name": "CP-7c: paid_at is set",
       "status": "PASS",
-      "detail": "got=2026-03-14T12:52:08.741709Z"
+      "detail": "got=2026-03-15T12:32:39.608143Z"
     },
     {
       "name": "CP-8a: Offer detail returns 200",
@@ -158,7 +158,7 @@
     {
       "name": "CP-10b: Dashboard has reservation stats",
       "status": "PASS",
-      "detail": "reservations={'total': 190, 'by_status': {'PENDING': 0, 'PAID': 162, 'CANCELLED': 22, 'EXPIRED': 6}, 'amounts': {'paid_total': 62593000, 'cancelled_total': 12460000}, 'shipping_pipeline': {'paid_not_s"
+      "detail": "reservations={'total': 231, 'by_status': {'PENDING': 1, 'PAID': 189, 'CANCELLED': 31, 'EXPIRED': 10}, 'amounts': {'paid_total': 80492000, 'cancelled_total': 19268000}, 'shipping_pipeline': {'paid_not_"
     },
     {
       "name": "CP-11a: Seller dashboard returns 200",
@@ -201,7 +201,7 @@
       "detail": "status=200"
     },
     {
-      "name": "CP-15: Deal detail page (/deal/1656) loads",
+      "name": "CP-15: Deal detail page (/deal/1694) loads",
       "status": "PASS",
       "detail": "status=200"
     },

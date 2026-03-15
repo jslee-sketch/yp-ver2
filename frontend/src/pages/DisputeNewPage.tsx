@@ -86,6 +86,8 @@ export default function DisputeNewPage() {
 
   // Step tracking
   const [currentStep, setCurrentStep] = useState(0);
+  const fieldCls = (step: number) =>
+    step < currentStep ? 'field-completed' : step === currentStep ? 'field-active' : 'field-pending';
 
   // Step 0: Order search
   const [searchQuery, setSearchQuery] = useState('');
@@ -228,6 +230,7 @@ export default function DisputeNewPage() {
             <StepLabel step={0} currentStep={currentStep} label="주문번호 검색" />
             <div style={{ display: 'flex', gap: 8 }}>
               <input
+                className={fieldCls(0)}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') void handleSearch(); }}
@@ -318,6 +321,7 @@ export default function DisputeNewPage() {
             }}>
               <StepLabel step={2} currentStep={currentStep} label="변론 내용" />
               <textarea
+                className={fieldCls(2)}
                 value={claimText}
                 onChange={e => {
                   if (e.target.value.length <= 2000) setClaimText(e.target.value);
@@ -347,6 +351,7 @@ export default function DisputeNewPage() {
             }}>
               <StepLabel step={3} currentStep={currentStep} label="증거 자료 (선택)" />
               <input
+                className={fieldCls(3)}
                 value={evidenceUrl}
                 onChange={e => setEvidenceUrl(e.target.value)}
                 onBlur={() => { if (currentStep === 3) setCurrentStep(4); }}
@@ -400,6 +405,7 @@ export default function DisputeNewPage() {
               </div>
 
               <input
+                className={fieldCls(4)}
                 type="number"
                 value={compensationAmount}
                 onChange={e => {

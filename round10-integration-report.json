@@ -18,7 +18,7 @@
     {
       "name": "CP-3a: Mark all read returns 200",
       "status": "PASS",
-      "detail": "code=200, data={'updated': 24}"
+      "detail": "code=200, data={'updated': 83}"
     },
     {
       "name": "CP-3b: Updated count returned",
@@ -68,7 +68,7 @@
     {
       "name": "CP-7e: Has shipping pipeline",
       "status": "PASS",
-      "detail": "pipeline={'paid_not_shipped': 80, 'shipped_not_arrived': 43, 'arrived_confirmed': 44}"
+      "detail": "pipeline={'paid_not_shipped': 81, 'shipped_not_arrived': 52, 'arrived_confirmed': 61}"
     },
     {
       "name": "CP-8a: Returns 200",
@@ -118,12 +118,12 @@
     {
       "name": "CP-11d: Has offer_id",
       "status": "PASS",
-      "detail": "got=1145"
+      "detail": "got=1187"
     },
     {
       "name": "CP-11e: Has order_number",
       "status": "PASS",
-      "detail": "got=YP-20260314-0023"
+      "detail": "got=YP-20260315-0008"
     },
     {
       "name": "CP-12a: Seller search returns 200",

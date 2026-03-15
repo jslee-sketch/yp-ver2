@@ -1,10 +1,10 @@
 {
   "round": 9,
   "entity": "Tax Invoice",
-  "reservation_id": 1450,
-  "order_number": "YP-20260314-0023",
-  "settlement_id": 1276,
-  "invoice_id": 13,
+  "reservation_id": 1491,
+  "order_number": "YP-20260315-0008",
+  "settlement_id": 1312,
+  "invoice_id": 14,
   "checkpoints": 32,
   "PASS": 32,
   "FAIL": 0,
@@ -12,12 +12,12 @@
     {
       "name": "CP-1a: Generate returns 200/201",
       "status": "PASS",
-      "detail": "code=200, data={'ok': True, 'invoice': {'id': 13, 'invoice_number': 'YP-20260314-000003', 'status': 'PENDING', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'suppli"
+      "detail": "code=200, data={'ok': True, 'invoice': {'id': 14, 'invoice_number': 'YP-20260315-000001', 'status': 'PENDING', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'suppli"
     },
     {
       "name": "CP-1b: invoice_number starts with YP-",
       "status": "PASS",
-      "detail": "got=YP-20260314-000003"
+      "detail": "got=YP-20260315-000001"
     },
     {
       "name": "CP-1c: status is PENDING",
@@ -27,7 +27,7 @@
     {
       "name": "CP-1d: settlement_id matches",
       "status": "PASS",
-      "detail": "got=1276"
+      "detail": "got=1312"
     },
     {
       "name": "CP-1e: total_amount > 0",
@@ -72,12 +72,12 @@
     {
       "name": "CP-2c: Our invoice found in list",
       "status": "PASS",
-      "detail": "checked 13"
+      "detail": "checked 14"
     },
     {
       "name": "CP-3a: Seller list returns 200",
       "status": "PASS",
-      "detail": "code=200, data={'total': 3, 'items': [{'id': 13, 'invoice_number': 'YP-20260314-000003', 'status': 'PENDING', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'supplie"
+      "detail": "code=200, data={'total': 4, 'items': [{'id': 14, 'invoice_number': 'YP-20260315-000001', 'status': 'PENDING', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'supplie"
     },
     {
       "name": "CP-3b: Seller response has items",
@@ -87,7 +87,7 @@
     {
       "name": "CP-3c: Seller sees our invoice",
       "status": "PASS",
-      "detail": "checked 3"
+      "detail": "checked 4"
     },
     {
       "name": "CP-4a: Status filter returns 200",
@@ -102,7 +102,7 @@
     {
       "name": "CP-5a: Confirm returns 200",
       "status": "PASS",
-      "detail": "code=200, data={'ok': True, 'invoice': {'id': 13, 'invoice_number': 'YP-20260314-000003', 'status': 'CONFIRMED', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'supp"
+      "detail": "code=200, data={'ok': True, 'invoice': {'id': 14, 'invoice_number': 'YP-20260315-000001', 'status': 'CONFIRMED', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'supp"
     },
     {
       "name": "CP-5b: status is CONFIRMED",
@@ -112,12 +112,12 @@
     {
       "name": "CP-5c: confirmed_at is set",
       "status": "PASS",
-      "detail": "got=2026-03-14T12:54:35.873910"
+      "detail": "got=2026-03-15T12:34:37.921741"
     },
     {
       "name": "CP-6a: Issue returns 200",
       "status": "PASS",
-      "detail": "code=200, data={'ok': True, 'invoice': {'id': 13, 'invoice_number': 'YP-20260314-000003', 'status': 'ISSUED', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'supplie"
+      "detail": "code=200, data={'ok': True, 'invoice': {'id': 14, 'invoice_number': 'YP-20260315-000001', 'status': 'ISSUED', 'supplier_business_name': '(주)텔러스테크', 'supplier_business_number': '113-86-39805', 'supplie"
     },
     {
       "name": "CP-6b: status is ISSUED",
@@ -127,7 +127,7 @@
     {
       "name": "CP-6c: issued_at is set",
       "status": "PASS",
-      "detail": "got=2026-03-14T12:54:36.832400"
+      "detail": "got=2026-03-15T12:34:38.677184"
     },
     {
       "name": "CP-7a: ISSUED filter returns 200",
