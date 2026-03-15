@@ -581,6 +581,13 @@ def run_dispute_timeout_batch(db: Session) -> dict:
             if days_left == 1 and not d.timeout_warned:
                 d.timeout_warned = True
                 warnings_sent += 1
+                # 기한 1일 전 경고 알림 발송
+                _safe_notify(d.initiator_id, "DISPUTE_TIMEOUT_WARNING", {
+                    "dispute_id": d.id, "deadline": str(deadline), "days_left": 1,
+                }, db)
+                _safe_notify(d.respondent_id, "DISPUTE_TIMEOUT_WARNING", {
+                    "dispute_id": d.id, "deadline": str(deadline), "days_left": 1,
+                }, db)
 
             if now > deadline:
                 d.status = "AUTO_CLOSED"

@@ -73,6 +73,20 @@ def job_daily_report():
     from app.batch.daily_report import generate_daily_report
     run_sync("daily_report", generate_daily_report)
 
+def job_dispute_timeout():
+    try:
+        import requests
+        requests.post("http://127.0.0.1:9000/v3_6/disputes/batch/timeout", timeout=10)
+    except Exception:
+        pass
+
+def job_refund_auto_approve():
+    try:
+        import requests
+        requests.post("http://127.0.0.1:9000/v3_6/batch/refund-auto-approve", timeout=10)
+    except Exception:
+        pass
+
 
 def setup_schedule():
     schedule.every(10).minutes.do(job_expire_reservations)
@@ -84,6 +98,8 @@ def setup_schedule():
     schedule.every().day.at("04:00").do(job_expire_reservations)
     schedule.every().day.at("10:00").do(job_review_request)
     schedule.every().day.at("08:00").do(job_daily_report)
+    schedule.every(1).hours.do(job_dispute_timeout)
+    schedule.every(1).hours.do(job_refund_auto_approve)
 
 
 if __name__ == "__main__":

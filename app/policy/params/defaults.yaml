@@ -138,6 +138,7 @@ refund:
   max_inspection_deduction_rate: 0.5
   auto_approve_on_seller_timeout: true
   platform_fee_refund_on_full_refund: true
+  minor_compensation_threshold_rate: 0.1   # 10% 이하 → 반품 면제 즉시 보상
 
 # ✅ 교환 정책
 exchange:

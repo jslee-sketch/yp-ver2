@@ -36,6 +36,6 @@ export async function askPingpong(
     return res.data;
   } catch (err) {
     console.error('핑퐁이 API 실패:', err);
-    return null;
+    return { answer: '핑퐁이가 잠시 쉬고 있어요 🏓 잠시 후 다시 시도해주세요!' };
   }
 }

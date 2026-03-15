@@ -63,6 +63,7 @@ def calculate_refund(
     seller_fault_cooling = rp.get("seller_fault_cooling_days", 90)
     default_return_ship = rp.get("default_return_shipping_cost", 3000)
     max_deduction = rp.get("max_inspection_deduction_rate", 0.5)
+    minor_threshold = rp.get("minor_compensation_threshold_rate", 0.1)
     fee_rate = mp.get("platform_fee_rate", 0.035)
 
     total_paid = original_amount + shipping_fee
@@ -87,6 +88,12 @@ def calculate_refund(
             return_required = True
     if resolution_type == "EXCHANGE":
         return_required = True
+
+    # ── 소액 보상 판정: 결제금액의 10% 이하 → 반품 면제 ──
+    if dispute_agreed_amount is not None and total_paid > 0:
+        if dispute_agreed_amount <= int(total_paid * minor_threshold):
+            if resolution_type in ("PARTIAL_REFUND", "COMPENSATION", None):
+                return_required = False
 
     # ── 시나리오별 비용 계산 ──
     deductions = []

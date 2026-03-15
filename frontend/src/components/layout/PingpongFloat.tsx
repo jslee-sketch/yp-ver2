@@ -184,7 +184,7 @@ export default function PingpongFloat() {
       ? (typeof result === 'string'
           ? result
           : String(result.answer ?? result.message ?? result.text ?? ''))
-      : '네트워크 연결을 확인해 주세요. 다시 질문하시면 도움을 드릴게요!';
+      : '핑퐁이가 잠시 쉬고 있어요 🏓 잠시 후 다시 시도해주세요!';
 
     const botId = Date.now() + 1;
     setMessages(prev => [...prev, { id: botId, from: 'bot', text: botText }]);
