@@ -2050,9 +2050,9 @@ export default function DealCreatePage() {
                   </div>
                 </div>
 
-                {/* 예상 가격 입력 */}
-                <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 10 }}>내 예상 가격:</div>
+                {/* 예상 가격 입력 — F-019 순차 하이라이트 */}
+                <div className={!marketChecked ? 'field-active' : 'field-completed'} style={{ background: C.bgCard, border: `1px solid ${!marketChecked ? '#00ff88' : C.border}`, borderRadius: 16, padding: 18, transition: 'all 0.3s ease' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 10 }}>내 예상 가격: {marketChecked && '✅'}</div>
                   <div style={{ position: 'relative' }}>
                     <input
                       type="text" inputMode="numeric"
@@ -2245,10 +2245,10 @@ export default function DealCreatePage() {
                       AI 시장가 분석은 참고용이며, 실제 가격과 다를 수 있습니다. 거래 결정은 이용자 본인의 책임입니다.
                     </div>
 
-                    {/* 목표가 설정 */}
-                    <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18 }}>
+                    {/* 목표가 설정 — F-019 순차 하이라이트 */}
+                    <div className={tp > 0 ? 'field-completed' : 'field-active'} style={{ background: C.bgCard, border: `1px solid ${tp > 0 ? C.border : '#00ff88'}`, borderRadius: 16, padding: 18, transition: 'all 0.3s ease' }}>
                       <div style={{ fontSize: 16, fontWeight: 800, color: C.textPri, marginBottom: 14 }}>
-                        자, 이제 목표가를 정해볼까요?
+                        자, 이제 목표가를 정해볼까요? {tp > 0 && '✅'}
                       </div>
 
                       {/* 할인율 슬라이더 */}
@@ -2306,9 +2306,9 @@ export default function DealCreatePage() {
                       )}
                     </div>
 
-                    {/* 수량 */}
-                    <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 10 }}>수량</div>
+                    {/* 수량 — F-019 순차 하이라이트 */}
+                    <div className={tp > 0 && quantity >= 1 ? 'field-completed' : (tp > 0 ? 'field-active' : 'field-pending')} style={{ background: C.bgCard, border: `1px solid ${tp > 0 && !quantity ? '#00ff88' : C.border}`, borderRadius: 16, padding: 18, transition: 'all 0.3s ease' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.textPri, marginBottom: 10 }}>수량 {tp > 0 && quantity >= 1 && '✅'}</div>
                       <div style={{ position: 'relative' }}>
                         <input
                           type="text" inputMode="numeric"

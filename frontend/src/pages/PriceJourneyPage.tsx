@@ -136,6 +136,7 @@ export default function PriceJourneyPage() {
     likes?: number; mehs?: number; my_vote?: string;
   }>>([]);
   const [predExpanded, setPredExpanded]   = useState(false);
+  const [predDetailTarget, setPredDetailTarget] = useState<typeof predictions[0] | null>(null);
 
   // ── 신규 오퍼 URL 파라미터 처리 (OfferCreatePage → redirect) ──
   useEffect(() => {
@@ -406,12 +407,24 @@ export default function PriceJourneyPage() {
 
       {/* ── 딜 정보 스트립 ── */}
       <div style={{ padding: '12px 20px 14px', fontSize: 14, fontWeight: 500, color: T.text }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#00b0ff', background: 'rgba(0,176,255,0.15)', padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(0,176,255,0.25)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <span
+            onClick={() => navigate(`/deals/${dealId}`)}
+            style={{ fontSize: 14, fontWeight: 700, color: '#00b0ff', background: 'rgba(0,176,255,0.15)', padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(0,176,255,0.25)', cursor: 'pointer', transition: 'opacity 0.15s' }}
+            onMouseEnter={e => { (e.target as HTMLElement).style.textDecoration = 'underline'; (e.target as HTMLElement).style.opacity = '0.85'; }}
+            onMouseLeave={e => { (e.target as HTMLElement).style.textDecoration = 'none'; (e.target as HTMLElement).style.opacity = '1'; }}
+          >
             Deal #{dealId}
           </span>
         </div>
-        🎧 {apiDeal ? String(apiDeal.product_name ?? '에어팟 프로 2 (USB-C)') : '에어팟 프로 2 (USB-C)'}
+        <div
+          onClick={() => navigate(`/deals/${dealId}`)}
+          style={{ fontSize: 24, fontWeight: 700, color: T.text, cursor: 'pointer', lineHeight: 1.3, transition: 'opacity 0.15s', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}
+          onMouseEnter={e => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+          onMouseLeave={e => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
+        >
+          🎧 {apiDeal ? String(apiDeal.product_name ?? '에어팟 프로 2 (USB-C)') : '에어팟 프로 2 (USB-C)'}
+        </div>
         <div style={{ fontSize: 12, color: T.textSec, marginTop: 4 }}>
           👥 현재 {currentQ}명 참여 · 목표 {qTarget}명 · 🏷️ 오퍼 {offers.length}건 · ⏰ {countdown || '로딩 중'}
         </div>
@@ -749,10 +762,14 @@ export default function PriceJourneyPage() {
                 .sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                 .slice(0, predExpanded ? undefined : 3)
                 .map(p => (
-                <div key={p.id} style={{
-                  padding: '10px 12px', borderRadius: 10,
+                <div key={p.id} onClick={() => setPredDetailTarget(p)} style={{
+                  padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
                   background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.border}`,
-                }}>
+                  transition: 'background 0.15s',
+                }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: p.comment ? 6 : 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 13 }}>😎</span>
@@ -1062,6 +1079,85 @@ export default function PriceJourneyPage() {
           </div>
         );
       })()}
+
+      {/* ── 관전자 예측 상세 팝업 (F-005) ── */}
+      {predDetailTarget && (
+        <>
+          <div onClick={() => setPredDetailTarget(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9998 }} />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999,
+            background: T.bgCard, borderRadius: 16, padding: '24px 20px', width: 'min(90vw, 420px)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.5)', border: `1px solid ${T.border}`,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={{ fontSize: 16, fontWeight: 800, color: T.text }}>⚖️ 예측 상세</span>
+              <button onClick={() => setPredDetailTarget(null)} style={{ background: 'none', border: 'none', fontSize: 20, color: T.textSec, cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 18 }}>😎</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{predDetailTarget.nickname || `예측자${predDetailTarget.buyer_id}`}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(0,230,118,0.06)', border: `1px solid rgba(0,230,118,0.15)` }}>
+              <span style={{ fontSize: 13, color: T.textSec }}>예측 가격</span>
+              <span style={{ fontSize: 20, fontWeight: 800, color: T.cyan, fontFamily: "'Space Mono', monospace" }}>₩{predDetailTarget.predicted_price.toLocaleString()}</span>
+            </div>
+            <div style={{ fontSize: 12, color: T.textSec, marginBottom: 12 }}>
+              📅 {new Date(predDetailTarget.created_at).toLocaleString('ko-KR')}
+            </div>
+            {predDetailTarget.comment && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 6 }}>근거:</div>
+                <div style={{
+                  padding: '12px 14px', borderRadius: 10, fontSize: 13, lineHeight: 1.7, color: T.textSec,
+                  background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.border}`,
+                  maxHeight: 200, overflowY: 'auto',
+                }}>
+                  {predDetailTarget.comment}
+                </div>
+              </div>
+            )}
+            <div style={{ fontSize: 13, color: T.textSec, marginBottom: 14 }}>
+              👍 좋아요 ({predDetailTarget.likes ?? 0})&nbsp;&nbsp;&nbsp;🤔 글쎄요 ({predDetailTarget.mehs ?? 0})
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const uid = user?.id ?? 0; if (!uid) return;
+                  const res = await votePrediction(predDetailTarget.id, uid, 'like');
+                  if (res) {
+                    setPredictions(prev => prev.map(x => x.id === predDetailTarget.id ? { ...x, likes: res.likes, mehs: res.mehs, my_vote: res.my_vote } : x));
+                    setPredDetailTarget(prev => prev ? { ...prev, likes: res.likes, mehs: res.mehs, my_vote: res.my_vote } : null);
+                  }
+                }}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  background: predDetailTarget.my_vote === 'like' ? 'rgba(0,230,118,0.15)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${predDetailTarget.my_vote === 'like' ? 'rgba(0,230,118,0.4)' : T.border}`,
+                  color: predDetailTarget.my_vote === 'like' ? T.green : T.textSec,
+                }}
+              >👍 좋아요</button>
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const uid = user?.id ?? 0; if (!uid) return;
+                  const res = await votePrediction(predDetailTarget.id, uid, 'meh');
+                  if (res) {
+                    setPredictions(prev => prev.map(x => x.id === predDetailTarget.id ? { ...x, likes: res.likes, mehs: res.mehs, my_vote: res.my_vote } : x));
+                    setPredDetailTarget(prev => prev ? { ...prev, likes: res.likes, mehs: res.mehs, my_vote: res.my_vote } : null);
+                  }
+                }}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  background: predDetailTarget.my_vote === 'meh' ? 'rgba(255,152,0,0.15)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${predDetailTarget.my_vote === 'meh' ? 'rgba(255,152,0,0.4)' : T.border}`,
+                  color: predDetailTarget.my_vote === 'meh' ? '#ff9800' : T.textSec,
+                }}
+              >🤔 글쎄요</button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── 예측 모달 ── */}
       {showPredModal && (

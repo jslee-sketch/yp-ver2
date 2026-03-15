@@ -57,17 +57,17 @@ const variants = {
 
 // ── 공용 InputField ──────────────────────────────────────
 function InputField({
-  label, value, onChange, placeholder, type = 'text', disabled, hint, error, suffix,
+  label, value, onChange, placeholder, type = 'text', disabled, hint, error, suffix, hlClass,
 }: {
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; type?: string; disabled?: boolean;
-  hint?: string; error?: string; suffix?: React.ReactNode;
+  hint?: string; error?: string; suffix?: React.ReactNode; hlClass?: string;
 }) {
   const [focused, setFocused] = useState(false);
   const borderColor = error ? C.red : focused ? C.borderFocus : C.border;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>{label}</label>
+    <div className={hlClass || ''} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: C.textSec }}>{label} {hlClass === 'field-completed' && '✅'}</label>
       <div style={{ position: 'relative' }}>
         <input
           type={type}
@@ -237,7 +237,7 @@ function ProfileStep({
           </div>
         )}
 
-        {/* 이메일 — 소셜이면 숨김 */}
+        {/* 이메일 — 소셜이면 숨김 — F-019 */}
         {!isSocial && (
           <div>
             <InputField
@@ -245,6 +245,7 @@ function ProfileStep({
               placeholder="example@email.com" type="email"
               hint="실제 사용하는 이메일을 입력해주세요"
               error={emailMsg && emailStatus !== 'ok' && emailStatus !== 'idle' && emailStatus !== 'checking' ? emailMsg : undefined}
+              hlClass={emailStatus === 'ok' ? 'field-completed' : !email ? 'field-active' : undefined}
             />
             {emailMsg && (emailStatus === 'ok' || emailStatus === 'checking') && (
               <div style={{ fontSize: 11, color: emailColor, marginTop: 4, paddingLeft: 2 }}>{emailMsg}</div>
@@ -252,7 +253,7 @@ function ProfileStep({
           </div>
         )}
 
-        {/* 비밀번호 — 소셜이면 숨김 */}
+        {/* 비밀번호 — 소셜이면 숨김 — F-019 */}
         {!isSocial && (
           <>
             <InputField
@@ -262,6 +263,7 @@ function ProfileStep({
               hint={!pwError ? '비밀번호는 8자 이상, 영문+숫자+특수문자를 포함해야 해요' : undefined}
               error={pwError}
               suffix={<EyeBtn show={showPw} toggle={() => setShowPw(!showPw)} />}
+              hlClass={password && !pwError ? 'field-completed' : emailStatus === 'ok' && !password ? 'field-active' : (!email ? 'field-pending' : undefined)}
             />
             <InputField
               label="비밀번호 확인" value={passwordConfirm} onChange={setPasswordConfirm}
@@ -269,17 +271,19 @@ function ProfileStep({
               type={showPwConfirm ? 'text' : 'password'}
               error={pwConfirmError}
               suffix={<EyeBtn show={showPwConfirm} toggle={() => setShowPwConfirm(!showPwConfirm)} />}
+              hlClass={passwordConfirm && !pwConfirmError ? 'field-completed' : (password && !pwError && !passwordConfirm) ? 'field-active' : (!password ? 'field-pending' : undefined)}
             />
           </>
         )}
 
-        {/* 닉네임 */}
+        {/* 닉네임 — F-019 */}
         <div>
           <InputField
             label="닉네임" value={nickname} onChange={setNickname}
             placeholder="한글/영문/숫자/_ (2~20자)"
             hint="딜에서 사용할 닉네임을 입력해주세요"
             error={nickMsg && nickStatus !== 'ok' && nickStatus !== 'idle' && nickStatus !== 'checking' ? nickMsg : undefined}
+            hlClass={nickStatus === 'ok' ? 'field-completed' : ((isSocial || (emailStatus === 'ok' && password && !pwError && passwordConfirm && !pwConfirmError)) && !nickname) ? 'field-active' : undefined}
           />
           {nickMsg && (nickStatus === 'ok' || nickStatus === 'checking') && (
             <div style={{ fontSize: 11, color: nickColor, marginTop: 4, paddingLeft: 2 }}>{nickMsg}</div>

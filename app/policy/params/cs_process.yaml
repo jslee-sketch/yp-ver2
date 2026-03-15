@@ -104,3 +104,9 @@ cs_process:
     settlement_hold:
       scope: "dispute_amount_only"
       other_orders_affected: false
+
+# ── 채팅 보존 정책 ──
+chat:
+  retention_days: 90
+  max_messages_per_deal: 5000
+  read_only_after_deal_end: true

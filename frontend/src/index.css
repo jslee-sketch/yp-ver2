@@ -4,3 +4,20 @@ body {
   display: block;
   min-width: 320px;
 }
+
+/* ── F-019 전역 순차 하이라이트 ── */
+.field-active {
+  border: 2px solid #00ff88 !important;
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+  transition: border 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+}
+.field-pending {
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.field-completed {
+  opacity: 1.0;
+  border-color: #4CAF50 !important;
+  transition: border-color 0.3s ease, opacity 0.3s ease;
+}
