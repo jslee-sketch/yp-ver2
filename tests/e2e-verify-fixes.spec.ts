@@ -70,7 +70,7 @@ test('F-004 소스코드: Courier New 28px+', async () => {
   const src = fs.readFileSync('C:/dev/yp-ver2/frontend/src/pages/PriceJourneyPage.tsx', 'utf-8');
   expect(src).toContain("padStart(2,'0')");
   expect(src).toContain("Courier New");
-  expect(src).toContain("fontSize: 32");
+  expect(src).toContain("fontSize: 36");
   expect(src).toContain("textShadow");
   expect(src).toContain("#00ff88");
 });
