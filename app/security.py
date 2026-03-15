@@ -39,8 +39,22 @@ if SECRET_KEY == "dev-only-change-in-production":
 # -----------------------------------------------------
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+def _bcrypt_secret_bytes(pw: str, *, limit_bytes: int = 72) -> bytes:
+    """crud.py와 동일한 bytes 변환 — 해싱/검증 일관성 보장"""
+    b = (pw or "").encode("utf-8")
+    return b[:limit_bytes]
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    # crud.py의 bcrypt_hash_password()가 bytes로 해싱하므로, 검증도 bytes로
+    secret = _bcrypt_secret_bytes(plain_password, limit_bytes=72)
+    try:
+        return pwd_context.verify(secret, hashed_password)
+    except Exception:
+        # fallback: str 그대로 (User 등 get_password_hash로 생성된 경우)
+        try:
+            return pwd_context.verify(plain_password, hashed_password)
+        except Exception:
+            return False
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
