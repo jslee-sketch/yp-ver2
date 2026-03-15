@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { API } from '../api/endpoints';
 
@@ -6,10 +7,12 @@ const C = { cyan: '#00e5ff', green: '#00e676', orange: '#ff9100', red: '#ff5252'
 const stickyHead = { position: 'sticky' as const, top: 0, backgroundColor: '#1a1a2e', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' };
 
 export default function AdminDisputePage() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<any[]>([]);
   const [closed, setClosed] = useState<any[]>([]);
+  const [v3Disputes, setV3Disputes] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<'open' | 'closed'>('open');
+  const [tab, setTab] = useState<'v3' | 'open' | 'closed'>('v3');
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<any>(null);
   const [resolution, setResolution] = useState('');
@@ -17,14 +20,15 @@ export default function AdminDisputePage() {
 
   const load = async () => {
     try {
-      const [openR, closedR] = await Promise.allSettled([
+      const [openR, closedR, v3R] = await Promise.allSettled([
         apiClient.get(API.ADMIN.RESERVATIONS, { params: { is_disputed: true, limit: 200 } }),
         apiClient.get(API.ADMIN.RESERVATIONS, { params: { is_disputed: false, limit: 200 } }),
+        apiClient.get('/v3_6/disputes'),
       ]);
       setItems(openR.status === 'fulfilled' ? (openR.value.data?.items || []) : []);
-      // closed disputes = those with dispute_closed_at set
       const allNonDisputed = closedR.status === 'fulfilled' ? (closedR.value.data?.items || []) : [];
       setClosed(allNonDisputed.filter((r: any) => r.dispute_closed_at));
+      setV3Disputes(v3R.status === 'fulfilled' ? (Array.isArray(v3R.value.data) ? v3R.value.data : []) : []);
     } catch {}
     setLoading(false);
   };
@@ -60,24 +64,76 @@ export default function AdminDisputePage() {
 
       {/* 탭 */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
+        <button onClick={() => setTab('v3')} style={{
+          padding: '6px 16px', borderRadius: 6, border: 'none', fontSize: 13, cursor: 'pointer',
+          background: tab === 'v3' ? C.cyan : 'transparent',
+          color: tab === 'v3' ? '#000' : C.textSec, fontWeight: tab === 'v3' ? 700 : 400,
+        }}>
+          AI 중재 분쟁 ({v3Disputes.length})
+        </button>
         {(['open', 'closed'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
             padding: '6px 16px', borderRadius: 6, border: 'none', fontSize: 13, cursor: 'pointer',
             background: tab === t ? (t === 'open' ? C.red : C.green) : 'transparent',
             color: tab === t ? '#fff' : C.textSec, fontWeight: tab === t ? 700 : 400,
           }}>
-            {t === 'open' ? `진행 중 (${items.length})` : `종료됨 (${closed.length})`}
+            {t === 'open' ? `구 분쟁 (${items.length})` : `종료됨 (${closed.length})`}
           </button>
         ))}
       </div>
 
       {/* 검색 */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="R-#/D-#/구매자/판매자/사유 검색" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }} />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="분쟁 ID/카테고리 검색" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 13 }} />
       </div>
 
-      {/* 테이블 */}
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+      {/* V3 AI 중재 분쟁 목록 */}
+      {tab === 'v3' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+          {v3Disputes.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 0', color: C.textSec }}>AI 중재 분쟁 없음</div>
+          ) : v3Disputes
+            .filter(d => {
+              const q = search.toLowerCase();
+              return !q || [String(d.id), d.category, d.title, d.status].some(v => v && String(v).toLowerCase().includes(q));
+            })
+            .map((d: any) => {
+              const stMap: Record<string,{label:string;color:string}> = {
+                ROUND1_RESPONSE: { label: '1차 반론 대기', color: C.orange },
+                ROUND1_AI: { label: 'AI 분석', color: '#a78bfa' },
+                ROUND1_REVIEW: { label: '1차 검토', color: C.cyan },
+                ROUND2_RESPONSE: { label: '2차 반론 대기', color: '#fbbf24' },
+                ROUND2_AI: { label: 'AI 2차', color: '#a78bfa' },
+                ROUND2_REVIEW: { label: '2차 검토', color: '#f472b6' },
+                ACCEPTED: { label: '합의', color: C.green },
+                REJECTED: { label: '미합의', color: C.red },
+                AUTO_CLOSED: { label: '자동종결', color: '#78909c' },
+              };
+              const st = stMap[d.status] || { label: d.status, color: '#888' };
+              return (
+                <div key={d.id} onClick={() => navigate(`/disputes/${d.id}`)} style={{
+                  background: C.card, border: `1px solid ${C.border}`, borderLeft: `3px solid ${st.color}`,
+                  borderRadius: 12, padding: '12px 14px', cursor: 'pointer',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>분쟁 #{d.id}: {d.title || d.category}</div>
+                      <div style={{ fontSize: 11, color: C.textSec, marginTop: 2 }}>
+                        Round {d.current_round} · 신청자 #{d.initiator_id} → 상대방 #{d.respondent_id}
+                        {d.created_at && ` · ${d.created_at.split('T')[0]}`}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 6, background: `${st.color}22`, color: st.color }}>{st.label}</span>
+                  </div>
+                </div>
+              );
+            })
+          }
+        </div>
+      )}
+
+      {/* 구 분쟁 테이블 */}
+      {tab !== 'v3' && <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
         <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
           <thead style={stickyHead}>
@@ -111,8 +167,8 @@ export default function AdminDisputePage() {
           </tbody>
         </table>
         </div>
-      </div>
-      <div style={{ marginTop: 8, fontSize: 12, color: C.textSec }}>{filtered.length}건</div>
+      </div>}
+      {tab !== 'v3' && <div style={{ marginTop: 8, fontSize: 12, color: C.textSec }}>{filtered.length}건</div>}
 
       {/* 상세/처리 모달 */}
       {modal && (

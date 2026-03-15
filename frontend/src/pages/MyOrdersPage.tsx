@@ -332,7 +332,16 @@ export default function MyOrdersPage() {
                       <span style={{ fontSize: 10, color: 'var(--accent-orange)' }}>🚚 {item.shipping_carrier ? `${item.shipping_carrier} ` : ''}{item.tracking_number}</span>
                     )}
                     {item.is_disputed && (
-                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: 'rgba(255,82,82,0.12)', color: '#ff5252', fontWeight: 700 }}>분쟁중</span>
+                      <span onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          const res = await apiClient.get('/v3_6/disputes', { params: { user_id: user?.id } });
+                          const list = Array.isArray(res.data) ? res.data : [];
+                          const match = list.find((d: Record<string,unknown>) => d.reservation_id === item.id);
+                          if (match) navigate(`/disputes/${match.id}`);
+                          else showToast('분쟁 정보를 찾을 수 없습니다', 'error');
+                        } catch { showToast('분쟁 조회 실패', 'error'); }
+                      }} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: 'rgba(255,82,82,0.12)', color: '#ff5252', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>분쟁중 → 상세</span>
                     )}
                   </div>
                 </div>

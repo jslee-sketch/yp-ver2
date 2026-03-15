@@ -53,6 +53,15 @@ def api_get_dispute(id: int, db: Session = Depends(get_db)):
 
     reservation = db.query(Reservation).filter(Reservation.id == d.reservation_id).first()
 
+    # 이름 조회
+    def _user_name(uid):
+        if not uid:
+            return "알 수 없음"
+        u = db.query(User).filter(User.id == uid).first()
+        if u:
+            return getattr(u, "nickname", None) or getattr(u, "name", None) or f"사용자#{uid}"
+        return f"사용자#{uid}"
+
     deadline_map = {
         "ROUND1_RESPONSE": d.r1_respondent_deadline,
         "ROUND1_REVIEW": d.r1_initiator_deadline,
@@ -73,9 +82,10 @@ def api_get_dispute(id: int, db: Session = Depends(get_db)):
         "current_round": d.current_round,
         "category": d.category,
         "title": d.title,
-        "initiator": {"id": d.initiator_id, "role": d.initiator_role},
-        "respondent": {"id": d.respondent_id},
+        "initiator": {"id": d.initiator_id, "role": d.initiator_role, "name": _user_name(d.initiator_id)},
+        "respondent": {"id": d.respondent_id, "name": _user_name(d.respondent_id)},
         "reservation_id": d.reservation_id,
+        "order_number": getattr(reservation, "order_number", None) if reservation else None,
         "reservation_amount": getattr(reservation, "total_amount", 0) if reservation else 0,
         "description": d.description,
         "evidence": json.loads(d.evidence_urls or "[]"),
@@ -135,6 +145,7 @@ def api_list_disputes(
     return [
         {
             "id": d.id,
+            "reservation_id": d.reservation_id,
             "status": d.status,
             "category": d.category,
             "title": d.title,
