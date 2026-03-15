@@ -49,6 +49,11 @@ class SpectatorPredictOut(ORMModel):
     tier_name: Optional[str] = None
     points_earned: int = 0
     settled_at: Optional[datetime] = None
+    # 투표 집계 + 닉네임 (프론트 표시용)
+    nickname: Optional[str] = None
+    likes: int = 0
+    mehs: int = 0
+    my_vote: Optional[str] = None
 
 
 # ── 판정 결과 포함 출력 (마감 후) ────────────────────────

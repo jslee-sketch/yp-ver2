@@ -270,13 +270,41 @@ def get_predictions(
         avg = None
         median = None
 
+    # Enrich predictions with likes, mehs, nickname, my_vote
+    enriched = []
+    for p in preds:
+        likes = db.query(PredictionVote).filter(
+            PredictionVote.prediction_id == p.id, PredictionVote.vote_type == "like"
+        ).count()
+        mehs = db.query(PredictionVote).filter(
+            PredictionVote.prediction_id == p.id, PredictionVote.vote_type == "meh"
+        ).count()
+        my_vote = None
+        if buyer_id:
+            my_v = db.query(PredictionVote).filter(
+                PredictionVote.prediction_id == p.id, PredictionVote.user_id == buyer_id
+            ).first()
+            if my_v:
+                my_vote = my_v.vote_type
+        # Get nickname
+        buyer = db.query(Buyer).filter(Buyer.id == p.buyer_id).first()
+        nickname = buyer.nickname if buyer and hasattr(buyer, 'nickname') else f"예측자{p.buyer_id}"
+        enriched.append(SpectatorPredictOut(
+            id=p.id, deal_id=p.deal_id, buyer_id=p.buyer_id,
+            predicted_price=p.predicted_price, comment=p.comment,
+            created_at=p.created_at, settled_price=p.settled_price,
+            error_pct=p.error_pct, tier_name=p.tier_name,
+            points_earned=p.points_earned, settled_at=p.settled_at,
+            nickname=nickname, likes=likes, mehs=mehs, my_vote=my_vote,
+        ))
+
     return DealPredictionsOut(
         deal_id=deal_id,
         deal_status=deal.status,
         predictions_count=total_count,
         avg_predicted_price=avg,
         median_predicted_price=median,
-        predictions=preds,
+        predictions=enriched,
     )
 
 

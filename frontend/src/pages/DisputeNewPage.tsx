@@ -55,7 +55,7 @@ function stepStyle(currentStep: number, thisStep: number): React.CSSProperties {
 }
 
 function stepBorder(currentStep: number, thisStep: number): string {
-  if (thisStep === currentStep) return `2px solid ${C.green}`;
+  // Container never gets green border — only input elements get green glow via CSS class
   if (thisStep < currentStep) return `1px solid ${C.border}`;
   return `1px solid ${C.border}`;
 }
