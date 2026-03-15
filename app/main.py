@@ -703,6 +703,15 @@ async def lifespan(app: FastAPI):
                     r3 = run_donzzul_deal_expiry_batch(_db)
                     if r1["donated_count"] or r2["warnings_sent"] or r3["closed_deals"]:
                         print(f"[DONZZUL BATCH] expired={r1['donated_count']} warned={r2['warnings_sent']} closed={r3['closed_deals']}", flush=True)
+
+                    # 결렬 후속 기한 자동 처리
+                    try:
+                        from app.routers.cs_disputes import run_post_failure_deadline_batch
+                        pf = run_post_failure_deadline_batch(_db)
+                        if pf["expired_agreements"] or pf["grace_expired"] or pf["hold_expired"]:
+                            print(f"[CS BATCH] agreements_expired={pf['expired_agreements']} grace_expired={pf['grace_expired']} hold_expired={pf['hold_expired']}", flush=True)
+                    except Exception as pf_err:
+                        print(f"[CS BATCH ERROR] {pf_err}", flush=True)
                 finally:
                     _db.close()
             except Exception as e:

@@ -1012,3 +1012,88 @@ def admin_force_close(
         "admin_basis": body.basis,
         "admin_reason": body.reason,
     }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 배치: 결렬 후속 기한 자동 처리
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def run_post_failure_deadline_batch(db: Session) -> dict:
+    """
+    결렬 후속 자동 처리 배치 (1시간 간격 실행 권장):
+    1. 직접 합의 7일 무응답 → 자동 만료 → GRACE_PERIOD 복귀
+    2. 유예 기간 14일 만료 → 관리자 판정 대기 (ADMIN_PENDING)
+    3. 정산 보류 90일 한도 초과 → 관리자 강제 종결
+    """
+    now = datetime.utcnow()
+    expired_agreements = 0
+    grace_expired = 0
+    hold_expired = 0
+
+    # 1) 직접 합의 7일 무응답 자동 만료
+    pending_agreements = (
+        db.query(Dispute)
+        .filter(
+            Dispute.status == "FAILED",
+            Dispute.post_failure_status == "DIRECT_AGREEMENT_PENDING",
+        )
+        .all()
+    )
+    for d in pending_agreements:
+        # direct_agreement 등록 시점: direct_agreement_accepted_at이 None이면 아직 미응답
+        filed_at = d.direct_agreement_accepted_at  # None = 미응답
+        if filed_at is None:
+            # grace_deadline을 기준으로 7일 계산 (등록 시점 정보가 없으면 grace_deadline 사용)
+            deadline = d.grace_deadline
+            if deadline and now > deadline:
+                d.post_failure_status = "GRACE_PERIOD"
+                d.direct_agreement_accepted = False
+                _safe_notify(d.direct_agreement_requested_by or d.initiator_id,
+                             "DISPUTE_AGREEMENT_EXPIRED",
+                             {"dispute_id": d.id}, db)
+                expired_agreements += 1
+
+    # 2) 유예 기간 14일 만료 → ADMIN_PENDING
+    grace_disputes = (
+        db.query(Dispute)
+        .filter(
+            Dispute.status == "FAILED",
+            Dispute.post_failure_status == "GRACE_PERIOD",
+        )
+        .all()
+    )
+    for d in grace_disputes:
+        if d.grace_deadline and now > d.grace_deadline:
+            d.post_failure_status = "ADMIN_PENDING"
+            _safe_notify(d.initiator_id, "DISPUTE_GRACE_EXPIRED", {"dispute_id": d.id}, db)
+            _safe_notify(d.respondent_id, "DISPUTE_GRACE_EXPIRED", {"dispute_id": d.id}, db)
+            grace_expired += 1
+
+    # 3) 정산 보류 90일 한도 초과 → 관리자 강제 종결
+    hold_disputes = (
+        db.query(Dispute)
+        .filter(
+            Dispute.status == "FAILED",
+            Dispute.post_failure_status.in_(["GRACE_PERIOD", "ADMIN_PENDING", "EXTERNAL_FILED"]),
+        )
+        .all()
+    )
+    for d in hold_disputes:
+        if d.max_hold_deadline and now > d.max_hold_deadline:
+            d.post_failure_status = "ADMIN_FORCE_CLOSED"
+            d.admin_decided = True
+            d.admin_decided_at = now
+            d.admin_decision_basis = "max_hold_expiry"
+            d.admin_decision_reason = "정산 보류 90일 한도 초과로 자동 종결"
+            d.status = "RESOLVED"
+            d.closed_at = now
+            hold_expired += 1
+
+    if expired_agreements or grace_expired or hold_expired:
+        db.commit()
+
+    return {
+        "expired_agreements": expired_agreements,
+        "grace_expired": grace_expired,
+        "hold_expired": hold_expired,
+    }
