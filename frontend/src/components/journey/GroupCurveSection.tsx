@@ -8,7 +8,7 @@ import { T } from './journeyTokens';
  */
 function groupPrice(q: number, anchor: number, qTarget: number, target?: number): number {
   if (qTarget <= 0) return anchor;
-  const t = target ?? anchor * 0.9;   // fallback: target not passed → 90% of anchor
+  const t = target ?? anchor * 0.9;
   const ratio = Math.min(1, Math.max(0, q / qTarget));
   return anchor - (anchor - t) * Math.pow(ratio, 0.7);
 }
@@ -91,42 +91,61 @@ export function GroupCurveSection({ anchor, target, currentQ, qTarget, lowestOff
       ctx.textAlign = 'left';
       ctx.fillText(`최저오퍼 ${(lowestOfferPrice / 10000).toFixed(1)}만`, PL + 4, pToY(lowestOfferPrice) - 4);
 
-      // Build smooth curve points
-      const pts: {x: number; y: number}[] = [];
-      for (let q = 1; q <= MAX_Q; q += 0.5) {
-        pts.push({ x: qToX(q), y: pToY(groupPrice(q, anchor, qTarget, target)) });
+      // ── 부드러운 곡선: 600+ 포인트 + Catmull-Rom 스플라인 ──
+      // 1) 포인트 생성 (20개 키포인트)
+      const CURVE_STEPS = 20;
+      const keyPts: {x: number; y: number}[] = [];
+      for (let i = 0; i <= CURVE_STEPS; i++) {
+        const q = 1 + (MAX_Q - 1) * (i / CURVE_STEPS);
+        keyPts.push({ x: qToX(q), y: pToY(groupPrice(q, anchor, qTarget, target)) });
       }
 
-      // Helper: draw smooth bezier curve through points
-      function drawSmoothCurve(points: {x:number;y:number}[]) {
+      // 2) Catmull-Rom 스플라인 → 부드러운 곡선
+      function drawCatmullRom(points: {x:number;y:number}[], tension: number = 0.5) {
         if (points.length < 2 || !ctx) return;
         ctx.moveTo(points[0].x, points[0].y);
         for (let i = 0; i < points.length - 1; i++) {
-          const cp1x = (points[i].x + points[i + 1].x) / 2;
-          const cp1y = points[i].y;
-          const cp2x = cp1x;
-          const cp2y = points[i + 1].y;
-          ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, points[i + 1].x, points[i + 1].y);
+          const p0 = points[Math.max(0, i - 1)];
+          const p1 = points[i];
+          const p2 = points[i + 1];
+          const p3 = points[Math.min(points.length - 1, i + 2)];
+          const cp1x = p1.x + (p2.x - p0.x) / (6 / tension);
+          const cp1y = p1.y + (p2.y - p0.y) / (6 / tension);
+          const cp2x = p2.x - (p3.x - p1.x) / (6 / tension);
+          const cp2y = p2.y - (p3.y - p1.y) / (6 / tension);
+          ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
         }
       }
 
-      // Curve glow
+      // Curve glow (wide soft stroke)
       ctx.beginPath();
-      ctx.strokeStyle = 'rgba(255,140,66,0.13)';
-      ctx.lineWidth = 10;
+      ctx.strokeStyle = 'rgba(255,140,66,0.12)';
+      ctx.lineWidth = 12;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
-      drawSmoothCurve(pts);
+      drawCatmullRom(keyPts);
       ctx.stroke();
 
-      // Curve main
+      // Curve main (sharp orange)
       ctx.beginPath();
       ctx.strokeStyle = T.orange;
       ctx.lineWidth = 2.5;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
-      drawSmoothCurve(pts);
+      drawCatmullRom(keyPts);
       ctx.stroke();
+
+      // Fill under curve (subtle gradient)
+      ctx.beginPath();
+      drawCatmullRom(keyPts);
+      ctx.lineTo(keyPts[keyPts.length - 1].x, H - PB);
+      ctx.lineTo(keyPts[0].x, H - PB);
+      ctx.closePath();
+      const grad = ctx.createLinearGradient(0, PT, 0, H - PB);
+      grad.addColorStop(0, 'rgba(255,140,66,0.08)');
+      grad.addColorStop(1, 'rgba(255,140,66,0.0)');
+      ctx.fillStyle = grad;
+      ctx.fill();
 
       // Original position marker (shown when dragging away from currentQ)
       if (hQ !== currentQ) {

@@ -1,0 +1,828 @@
+
+Running 310 tests using 5 workers
+
+  ✓    5 tests\e2e-seller-full.spec.ts:78:7 › A. Registration + AI Approval › A01: 헬스체크 — 서버 응답 확인 (999ms)
+  ✓    2 tests\e2e-admin-full.spec.ts:27:7 › A. Dashboard + KPI › A01: GET /admin/dashboard/ returns 200 with data (1.1s)
+  ✓    1 tests\e2e-actuator-spectator-full.spec.ts:107:7 › A. Actuator — Business Type › A-01: 사업자 액추에이터 등록 (1.4s)
+  ✓    3 tests\e2e-automation-full.spec.ts:130:9 › A. Delivery Automation › A01: Buyer registration for delivery flow (1.4s)
+  ✓    4 tests\e2e-buyer-full.spec.ts:80:7 › A. Registration & Profile › A-01 Register new buyer (1.4s)
+  ✓    7 tests\e2e-admin-full.spec.ts:36:7 › A. Dashboard + KPI › A02: GET /admin/stats/counts returns numeric counts (550ms)
+  ✓    6 tests\e2e-seller-full.spec.ts:83:7 › A. Registration + AI Approval › A02: 구매자 사전 등록 (트랜잭션용 helper buyer) (756ms)
+  ✓    8 tests\e2e-actuator-spectator-full.spec.ts:115:7 › A. Actuator — Business Type › A-02: 등록된 사업자 액추에이터 단건 조회 (558ms)
+  ✓    9 tests\e2e-automation-full.spec.ts:145:9 › A. Delivery Automation › A02: Seller registration for delivery flow (778ms)
+  ✓   11 tests\e2e-admin-full.spec.ts:45:7 › A. Dashboard + KPI › A03: GET /v3_6/admin/kpi/advanced?period=30d returns KPI fields (579ms)
+  ✓   10 tests\e2e-buyer-full.spec.ts:96:7 › A. Registration & Profile › A-02 Login buyer (799ms)
+  ✓   13 tests\e2e-actuator-spectator-full.spec.ts:123:7 › A. Actuator — Business Type › A-03: 이메일로 액추에이터 조회 (560ms)
+  ✓   12 tests\e2e-seller-full.spec.ts:100:7 › A. Registration + AI Approval › A03: 구매자 로그인 토큰 획득 (744ms)
+  ✓   15 tests\e2e-admin-full.spec.ts:54:7 › A. Dashboard + KPI › A04: KPI advanced — gmv and order_count are numeric (568ms)
+  ✓   16 tests\e2e-buyer-full.spec.ts:104:7 › A. Registration & Profile › A-03 Check email existing → taken (556ms)
+  ✓   17 tests\e2e-actuator-spectator-full.spec.ts:130:7 › A. Actuator — Business Type › A-04: 위탁계약서 동의 (567ms)
+  ✓   18 tests\e2e-seller-full.spec.ts:108:7 › A. Registration + AI Approval › A04: 셀러 회원가입 — 필수 필드 성공 (763ms)
+  ✓   19 tests\e2e-admin-full.spec.ts:65:7 › A. Dashboard + KPI › A05: KPI advanced — conversion_rate between 0 and 1 (if present) (570ms)
+  ✓   20 tests\e2e-buyer-full.spec.ts:114:7 › A. Registration & Profile › A-04 Check email new → available (561ms)
+  ✓   21 tests\e2e-actuator-spectator-full.spec.ts:138:7 › A. Actuator — Business Type › A-05: 계약 동의 상태 재조회 → 이미 동의 확인 (557ms)
+  ✓   24 tests\e2e-buyer-full.spec.ts:124:7 › A. Registration & Profile › A-05 Check nickname existing → taken (555ms)
+  ✓   23 tests\e2e-admin-full.spec.ts:78:7 › A. Dashboard + KPI › A06: GET /v3_6/admin/insights/trends returns category arrays (585ms)
+  ✓   22 tests\e2e-seller-full.spec.ts:128:7 › A. Registration + AI Approval › A05: 중복 이메일 셀러 가입 → 409 (745ms)
+  ✘   25 tests\e2e-actuator-spectator-full.spec.ts:146:7 › A. Actuator — Business Type › A-06: 셀러 모집 — actuator_id 포함 셀러 등록 (573ms)
+  -   29 tests\e2e-actuator-spectator-full.spec.ts:152:7 › A. Actuator — Business Type › A-07: 액추에이터 모집 셀러 목록 조회
+  -   30 tests\e2e-actuator-spectator-full.spec.ts:161:7 › A. Actuator — Business Type › A-08: 커미션 목록 조회 (초기 빈 배열)
+  -   31 tests\e2e-actuator-spectator-full.spec.ts:168:7 › A. Actuator — Business Type › A-09: 커미션 요약 조회 (사업자 — 세금계산서 방식)
+  -   32 tests\e2e-actuator-spectator-full.spec.ts:176:7 › A. Actuator — Business Type › A-10: 사업자 정산 미리보기 — 원천징수 0원
+  ✓   26 tests\e2e-buyer-full.spec.ts:133:7 › A. Registration & Profile › A-06 Check nickname new → available (555ms)
+  ✓   27 tests\e2e-admin-full.spec.ts:87:7 › A. Dashboard + KPI › A07: Insights trends — hot_keywords field exists (if 200) (582ms)
+  ✓   28 tests\e2e-seller-full.spec.ts:145:7 › A. Registration + AI Approval › A06: 셀러 로그인 → access_token 발급 (736ms)
+  ✓   33 tests\e2e-buyer-full.spec.ts:143:7 › A. Registration & Profile › A-07 Register duplicate email → error (763ms)
+  ✓   35 tests\e2e-seller-full.spec.ts:152:7 › A. Registration + AI Approval › A07: GET /auth/seller/me — 본인 정보 조회 (536ms)
+  ✓   37 tests\e2e-buyer-full.spec.ts:156:7 › A. Registration & Profile › A-08 Register invalid email format → 422 (555ms)
+  ✓   38 tests\e2e-seller-full.spec.ts:162:7 › A. Registration + AI Approval › A08: 잘못된 비밀번호로 로그인 → 401 (738ms)
+  ✓   36 tests\e2e-actuator-spectator-full.spec.ts:192:7 › B. Actuator — Personal Type › B-01: 개인 액추에이터 등록 (1.2s)
+  ✓   40 tests\e2e-seller-full.spec.ts:169:7 › A. Registration + AI Approval › A09: AI 신뢰점수 계산 — POST /v3_6/seller/{id}/score (548ms)
+  ✓   39 tests\e2e-buyer-full.spec.ts:169:7 › A. Registration & Profile › A-09 Login wrong password → 401 (800ms)
+  ✓   41 tests\e2e-actuator-spectator-full.spec.ts:200:7 › B. Actuator — Personal Type › B-02: 개인 액추에이터 단건 조회 — is_business=false 확인 (543ms)
+  ✓   42 tests\e2e-seller-full.spec.ts:180:7 › A. Registration + AI Approval › A10: AI 신뢰점수 재조회 — GET /v3_6/seller/{id}/score (537ms)
+  ✓   44 tests\e2e-actuator-spectator-full.spec.ts:207:7 › B. Actuator — Personal Type › B-03: 사업자 정보 수정 (개인 → 사업자 전환) (567ms)
+  ✓   45 tests\e2e-seller-full.spec.ts:189:7 › A. Registration + AI Approval › A11: AI 점수 응답에 scores 객체 포함 (537ms)
+  ✓   46 tests\e2e-actuator-spectator-full.spec.ts:222:7 › B. Actuator — Personal Type › B-04: 위탁계약서 동의 (개인 액추에이터) (563ms)
+  ✓   43 tests\e2e-buyer-full.spec.ts:181:7 › A. Registration & Profile › A-10 Register seller helper (1.5s)
+  ✘   47 tests\e2e-seller-full.spec.ts:199:7 › A. Registration + AI Approval › A12: AI 점수 응답에 weak_points 배열 포함 (542ms)
+  -   50 tests\e2e-seller-full.spec.ts:208:7 › A. Registration + AI Approval › A13: 관리자 승인 결정 — PUT /v3_6/admin/seller/{id}/decision approve
+  -   51 tests\e2e-seller-full.spec.ts:216:7 › A. Registration + AI Approval › A14: 관리자 거절 결정 — PUT /v3_6/admin/seller/{id}/decision reject
+  -   52 tests\e2e-seller-full.spec.ts:223:7 › A. Registration + AI Approval › A15: 존재하지 않는 셀러 score 조회 → 404 or 422
+  ✓   48 tests\e2e-actuator-spectator-full.spec.ts:229:7 › B. Actuator — Personal Type › B-05: 계약서 중복 동의 → 이미 동의 메시지 반환 (548ms)
+  ✓   49 tests\e2e-buyer-full.spec.ts:211:7 › B. Deal Creation › B-01 Create deal (593ms)
+  ✓   53 tests\e2e-actuator-spectator-full.spec.ts:236:7 › B. Actuator — Personal Type › B-06: 개인 정산 미리보기 — 원천징수 3.3% 확인 (554ms)
+  ✓   54 tests\e2e-buyer-full.spec.ts:251:7 › B. Deal Creation › B-02 Get deal list (584ms)
+  ✓   57 tests\e2e-buyer-full.spec.ts:259:7 › B. Deal Creation › B-03 Get deal detail (559ms)
+  ✘   56 tests\e2e-seller-full.spec.ts:235:7 › B. Offer Creation + Confirm › B01: 셀러 재로그인 (토큰 갱신) (979ms)
+  -   59 tests\e2e-seller-full.spec.ts:242:7 › B. Offer Creation + Confirm › B02: 구매자 재로그인 (토큰 갱신)
+  -   60 tests\e2e-seller-full.spec.ts:249:7 › B. Offer Creation + Confirm › B03: 딜 생성 — POST /deals/
+  -   61 tests\e2e-seller-full.spec.ts:267:7 › B. Offer Creation + Confirm › B04: 딜 ID 없이 오퍼 생성 시도 → 422
+  -   62 tests\e2e-seller-full.spec.ts:281:7 › B. Offer Creation + Confirm › B05: 오퍼 생성 — POST /v3_6/offers
+  -   63 tests\e2e-seller-full.spec.ts:300:7 › B. Offer Creation + Confirm › B06: 오퍼 목록 조회 — GET /v3_6/offers?deal_id=...
+  -   64 tests\e2e-seller-full.spec.ts:310:7 › B. Offer Creation + Confirm › B07: 오퍼 가격 수정 — PATCH /v3_6/offers/{id}
+  -   65 tests\e2e-seller-full.spec.ts:320:7 › B. Offer Creation + Confirm › B08: 수정 후 오퍼 가격 확인 — GET /v3_6/offers?deal_id=...
+  -   66 tests\e2e-seller-full.spec.ts:330:7 › B. Offer Creation + Confirm › B09: 오퍼 수량 수정 — PATCH /v3_6/offers/{id} total_available_qty
+  -   67 tests\e2e-seller-full.spec.ts:340:7 › B. Offer Creation + Confirm › B10: 존재하지 않는 오퍼 수정 → 404 or 422
+  ✘   14 tests\e2e-automation-full.spec.ts:165:9 › A. Delivery Automation › A03: Deal + Offer + Reservation + Pay → PAID state (8.1s)
+  -   68 tests\e2e-automation-full.spec.ts:224:9 › A. Delivery Automation › A04: GET /delivery/carriers → returns carrier list
+  -   69 tests\e2e-automation-full.spec.ts:234:9 › A. Delivery Automation › A05: Ship reservation → tracking number registered
+  -   70 tests\e2e-automation-full.spec.ts:246:9 › A. Delivery Automation › A06: GET /delivery/track/{reservation_id} → tracking info returned
+  -   71 tests\e2e-automation-full.spec.ts:256:9 › A. Delivery Automation › A07: GET /v3_6/reservations/by-id/{id} → status is SHIPPED or PAID
+  -   72 tests\e2e-automation-full.spec.ts:264:9 › A. Delivery Automation › A08: Arrival confirm → reservation status ARRIVED or COMPLETED
+  ✓   58 tests\e2e-buyer-full.spec.ts:267:7 › B. Deal Creation › B-04 Search deal by keyword (571ms)
+  ✓   73 tests\e2e-buyer-full.spec.ts:275:7 › B. Deal Creation › B-05 Deal list with keyword filter (585ms)
+  ✓   55 tests\e2e-actuator-spectator-full.spec.ts:245:7 › B. Actuator — Personal Type › B-07: 전체 액추에이터 목록 조회 (DEV) (2.4s)
+  ✓   75 tests\e2e-buyer-full.spec.ts:281:7 › B. Deal Creation › B-06 Deal detail has product_name (557ms)
+  ✓   74 tests\e2e-seller-full.spec.ts:355:7 › C. Offer Confirm + Delivery › C01: 오퍼 확정 — POST /v3_6/offers/{id}/confirm (809ms)
+  ✘   77 tests\e2e-actuator-spectator-full.spec.ts:253:7 › B. Actuator — Personal Type › B-08: 개인 액추에이터에 셀러 등록 후 sellers 목록 확인 (687ms)
+  -   80 tests\e2e-actuator-spectator-full.spec.ts:263:7 › B. Actuator — Personal Type › B-09: 커미션 일괄 지급 대상 조회 (payout-due)
+  -   81 tests\e2e-actuator-spectator-full.spec.ts:270:7 › B. Actuator — Personal Type › B-10: 추천코드(ACT-XXXXX) 형식 검증
+  ✘   79 tests\e2e-seller-full.spec.ts:364:7 › C. Offer Confirm + Delivery › C02: 예약 생성 — POST /v3_6/reservations (564ms)
+  -   82 tests\e2e-seller-full.spec.ts:383:7 › C. Offer Confirm + Delivery › C03: 예약 상세 조회 — GET /v3_6/reservations/by-id/{id}
+  -   83 tests\e2e-seller-full.spec.ts:396:7 › C. Offer Confirm + Delivery › C04: 결제 처리 — POST /v3_6/reservations/pay
+  -   84 tests\e2e-seller-full.spec.ts:412:7 › C. Offer Confirm + Delivery › C05: 배송 처리 — POST /v3_6/reservations/{id}/ship
+  -   85 tests\e2e-seller-full.spec.ts:427:7 › C. Offer Confirm + Delivery › C06: 도착 확인 — POST /v3_6/reservations/{id}/arrival-confirm
+  -   86 tests\e2e-seller-full.spec.ts:439:7 › C. Offer Confirm + Delivery › C07: 예약 상태 재조회 — 배송/도착 반영 확인
+  -   87 tests\e2e-seller-full.spec.ts:452:7 › C. Offer Confirm + Delivery › C08: 리뷰 작성 — POST /reviews
+  -   88 tests\e2e-seller-full.spec.ts:478:7 › C. Offer Confirm + Delivery › C09: 오퍼 취소 (신규 오퍼 후 취소 테스트)
+  -   89 tests\e2e-seller-full.spec.ts:502:7 › C. Offer Confirm + Delivery › C10: 리뷰 목록 조회 — GET /reviews/seller/{seller_id}
+  ✓   34 tests\e2e-admin-full.spec.ts:99:7 › A. Dashboard + KPI › A08: Admin dashboard UI page loads (page test) (7.3s)
+  ✓   91 tests\e2e-admin-full.spec.ts:108:7 › A. Dashboard + KPI › A09: KPI advanced — mau field is non-negative (if present) (794ms)
+  ✘   92 tests\e2e-seller-full.spec.ts:519:7 › D. Settlement + Tax Invoice › D01: 정산 목록 조회 — GET /payments/settlements?seller_id=... (936ms)
+  -   94 tests\e2e-seller-full.spec.ts:530:7 › D. Settlement + Tax Invoice › D02: 예약별 정산 조회 — GET /settlements/reservation/{id}
+  -   95 tests\e2e-seller-full.spec.ts:544:7 › D. Settlement + Tax Invoice › D03: 정산 refresh-ready — POST /settlements/refresh-ready
+  -   96 tests\e2e-seller-full.spec.ts:551:7 › D. Settlement + Tax Invoice › D04: 정산 목록에 seller_id 필터 적용 확인
+  -   97 tests\e2e-seller-full.spec.ts:568:7 › D. Settlement + Tax Invoice › D05: 포인트 잔액 조회 — GET /points/seller/{id}/balance
+  -   98 tests\e2e-seller-full.spec.ts:579:7 › D. Settlement + Tax Invoice › D06: 리뷰 요약 조회 — GET /reviews/seller/{id}/summary
+  -   99 tests\e2e-seller-full.spec.ts:588:7 › D. Settlement + Tax Invoice › D07: 셀러 레벨 조회 — GET /reviews/seller/{id}/level
+  -  100 tests\e2e-seller-full.spec.ts:597:7 › D. Settlement + Tax Invoice › D08: 리뷰 답글 — POST /reviews/{review_id}/reply
+  -  101 tests\e2e-seller-full.spec.ts:609:7 › D. Settlement + Tax Invoice › D09: 잘못된 seller_id 포인트 조회 → 404
+  -  102 tests\e2e-seller-full.spec.ts:614:7 › D. Settlement + Tax Invoice › D10: 정산 상태 HOLD → READY 흐름 확인 (구조 검사)
+  -  103 tests\e2e-seller-full.spec.ts:628:7 › D. Settlement + Tax Invoice › D11: 프론트엔드 — 셀러 대시보드 페이지 로드 확인
+  -  104 tests\e2e-seller-full.spec.ts:636:7 › D. Settlement + Tax Invoice › D12: 프론트엔드 — 정산 페이지 접근
+  ✓   93 tests\e2e-admin-full.spec.ts:120:7 › A. Dashboard + KPI › A10: KPI advanced — aov (average order value) non-negative (if present) (575ms)
+  ✓   90 tests\e2e-actuator-spectator-full.spec.ts:286:7 › C. Actuator — Donzzul Hero › C-01: 돈쭐 히어로 등록 (1.5s)
+  -  107 tests\e2e-seller-full.spec.ts:650:7 › E. Dispute Response › E01: 분쟁 생성 — POST /v3_6/disputes
+  -  108 tests\e2e-seller-full.spec.ts:675:7 › E. Dispute Response › E02: 분쟁 Round1 셀러 답변 — PUT /v3_6/disputes/{id}/round1-response
+  -  109 tests\e2e-seller-full.spec.ts:692:7 › E. Dispute Response › E03: 분쟁 결정 — PUT /v3_6/disputes/{id}/decision
+  -  110 tests\e2e-seller-full.spec.ts:707:7 › E. Dispute Response › E04: 분쟁 Round2 재반론 — PUT /v3_6/disputes/{id}/round2-rebuttal
+  ✓  106 tests\e2e-actuator-spectator-full.spec.ts:301:7 › C. Actuator — Donzzul Hero › C-02: 내 히어로 정보 조회 (543ms)
+  ✓  105 tests\e2e-admin-full.spec.ts:142:7 › B. User Management + Seller Approval › B01: Register new buyer for user management tests (770ms)
+  ✓  112 tests\e2e-actuator-spectator-full.spec.ts:309:7 › C. Actuator — Donzzul Hero › C-03: 히어로 프로필 상세 조회 (537ms)
+  ✓  113 tests\e2e-admin-full.spec.ts:159:7 › B. User Management + Seller Approval › B02: GET /admin/users/banned?user_type=buyer returns list (547ms)
+  ✓  111 tests\e2e-seller-full.spec.ts:724:7 › E. Dispute Response › E05: 존재하지 않는 분쟁 조회 → 404 or 422 (997ms)
+  ✓  115 tests\e2e-admin-full.spec.ts:168:7 › B. User Management + Seller Approval › B03: Ban buyer — POST /admin/users/ban with permanent ban (555ms)
+  ✓  116 tests\e2e-seller-full.spec.ts:731:7 › E. Dispute Response › E06: 분쟁 없이 Round1 응답 시도 → 404 or 422 (565ms)
+  ✓  114 tests\e2e-actuator-spectator-full.spec.ts:319:7 › C. Actuator — Donzzul Hero › C-04: 가게 추천 등록 (히어로 user_id 포함) (1.1s)
+  ✓  117 tests\e2e-admin-full.spec.ts:184:7 › B. User Management + Seller Approval › B04: Banned list now includes the banned buyer (if ban succeeded) (548ms)
+  ✓  118 tests\e2e-seller-full.spec.ts:739:7 › E. Dispute Response › E07: 인증 없이 분쟁 생성 시도 → 401 or 422 or 200 (563ms)
+  -  121 tests\e2e-seller-full.spec.ts:756:7 › E. Dispute Response › E08: 분쟁 ID 유효 시 상세 정보 포함 확인
+  ✓  119 tests\e2e-actuator-spectator-full.spec.ts:348:7 › C. Actuator — Donzzul Hero › C-05: 승인 후 히어로 포인트 및 가게 수 증가 확인 (540ms)
+  ✓  120 tests\e2e-admin-full.spec.ts:200:7 › B. User Management + Seller Approval › B05: Unban buyer — POST /admin/users/unban (548ms)
+  ✓  122 tests\e2e-seller-full.spec.ts:780:7 › F. Refund Sim + Dashboard › F01: 환불 시뮬레이터 — 배송완료 후 구매자 변심 (553ms)
+  ✓  123 tests\e2e-actuator-spectator-full.spec.ts:356:7 › C. Actuator — Donzzul Hero › C-06: 히어로 랭킹 조회 (533ms)
+  ✓  125 tests\e2e-seller-full.spec.ts:790:7 › F. Refund Sim + Dashboard › F02: 환불 시뮬레이터 — 미배송 상태 (556ms)
+  ✓  124 tests\e2e-admin-full.spec.ts:214:7 › B. User Management + Seller Approval › B06: Register new seller for approval tests (770ms)
+  ✓  126 tests\e2e-actuator-spectator-full.spec.ts:363:7 › C. Actuator — Donzzul Hero › C-07: 돈쭐 전체 통계 조회 (총 히어로 수 포함) (552ms)
+  ✓  127 tests\e2e-seller-full.spec.ts:799:7 › F. Refund Sim + Dashboard › F03: 환불 시뮬레이터 — 배송 중 상태 (550ms)
+  -  130 tests\e2e-seller-full.spec.ts:806:7 › F. Refund Sim + Dashboard › F04: 환불 실행 — POST /v3_6/reservations/refund
+  ✓  128 tests\e2e-admin-full.spec.ts:232:7 › B. User Management + Seller Approval › B07: GET seller score endpoint responds (581ms)
+  ✓  129 tests\e2e-actuator-spectator-full.spec.ts:372:7 › C. Actuator — Donzzul Hero › C-08: 돈쭐 히어로 중복 등록 → 기존 레코드 반환 (539ms)
+  ✓   78 tests\e2e-buyer-full.spec.ts:288:7 › B. Deal Creation › B-07 Create second deal (7.6s)
+  ✓  131 tests\e2e-seller-full.spec.ts:824:7 › F. Refund Sim + Dashboard › F05: 환불 시뮬레이터 — 금액 0 엣지 케이스 (550ms)
+  ✓  132 tests\e2e-admin-full.spec.ts:237:7 › B. User Management + Seller Approval › B08: GET seller external ratings endpoint responds (553ms)
+  ✓  134 tests\e2e-buyer-full.spec.ts:302:7 › B. Deal Creation › B-08 Create deal missing required field → 422 (549ms)
+  ✓  135 tests\e2e-seller-full.spec.ts:831:7 › F. Refund Sim + Dashboard › F06: 환불 시뮬레이터 — 고액 상품 (553ms)
+  ✓  136 tests\e2e-admin-full.spec.ts:242:7 › B. User Management + Seller Approval › B09: Admin seller decision endpoint responds (562ms)
+  ✘  133 tests\e2e-actuator-spectator-full.spec.ts:390:7 › D. Actuator Disconnect › D-01: 해지 요청용 액추에이터 + 셀러 준비 (1.3s)
+  -  140 tests\e2e-actuator-spectator-full.spec.ts:400:7 › D. Actuator Disconnect › D-02: 해지 요청 — GRACE_PERIOD 상태 생성
+  -  141 tests\e2e-actuator-spectator-full.spec.ts:419:7 › D. Actuator Disconnect › D-03: 해지 목록 조회 — 방금 요청한 건 확인
+  -  142 tests\e2e-actuator-spectator-full.spec.ts:430:7 › D. Actuator Disconnect › D-04: 해지 철회 (유예 기간 내)
+  -  143 tests\e2e-actuator-spectator-full.spec.ts:438:7 › D. Actuator Disconnect › D-05: 배치 confirm — 유예 기간 만료 건 일괄 CONFIRMED
+  ✓  139 tests\e2e-admin-full.spec.ts:252:7 › B. User Management + Seller Approval › B10: Batch external ratings POST endpoint responds (566ms)
+  ✘   76 tests\e2e-automation-full.spec.ts:283:9 › B. Settlement Automation › B01: Create fresh paid reservation for settlement (10.0s)
+  -  145 tests\e2e-automation-full.spec.ts:288:9 › B. Settlement Automation › B02: GET /settlements/reservation/{id} → HOLD state initially
+  -  146 tests\e2e-automation-full.spec.ts:300:9 › B. Settlement Automation › B03: POST /settlements/refresh-ready → returns updated + ready_ids
+  -  147 tests\e2e-automation-full.spec.ts:310:9 › B. Settlement Automation › B04: refresh-ready is idempotent (second call same day)
+  -  148 tests\e2e-automation-full.spec.ts:321:9 › B. Settlement Automation › B05: Approve a ready settlement (if any exist)
+  -  149 tests\e2e-automation-full.spec.ts:339:9 › B. Settlement Automation › B06: POST /settlements/bulk-mark-paid → mark APPROVED as PAID
+  -  150 tests\e2e-automation-full.spec.ts:354:9 › B. Settlement Automation › B07: POST /settlements/payout/execute → payout pipeline runs
+  -  151 tests\e2e-automation-full.spec.ts:363:9 › B. Settlement Automation › B08: Settlement pipeline is HOLD → READY → APPROVED → PAID (status audit)
+  ✓  144 tests\e2e-admin-full.spec.ts:269:7 › C. Transaction + Dispute Management › C01: GET /deals/?page=1&size=10 returns deal list (587ms)
+  ✓  153 tests\e2e-admin-full.spec.ts:282:7 › C. Transaction + Dispute Management › C02: GET /v3_6/offers?deal_id=1 returns offers for deal (581ms)
+  ✓  154 tests\e2e-admin-full.spec.ts:292:7 › C. Transaction + Dispute Management › C03: GET /v3_6/reservations/by-id/1 responds (559ms)
+  ✓  156 tests\e2e-admin-full.spec.ts:301:7 › C. Transaction + Dispute Management › C04: GET /v3_6/disputes returns dispute list (654ms)
+  ✓  157 tests\e2e-admin-full.spec.ts:314:7 › C. Transaction + Dispute Management › C05: GET /v3_6/disputes?status=ACCEPTED filters by status (574ms)
+  ✓  158 tests\e2e-admin-full.spec.ts:324:7 › C. Transaction + Dispute Management › C06: Create a new dispute for management tests (567ms)
+  ✓  159 tests\e2e-admin-full.spec.ts:348:7 › C. Transaction + Dispute Management › C07: GET /v3_6/disputes/{id} returns dispute detail (558ms)
+  ✓  160 tests\e2e-admin-full.spec.ts:361:7 › C. Transaction + Dispute Management › C08: POST /v3_6/disputes/batch/timeout responds (567ms)
+  ✓  161 tests\e2e-admin-full.spec.ts:366:7 › C. Transaction + Dispute Management › C09: GET /v3_6/actuator-seller/disconnections returns list (556ms)
+  ✓  162 tests\e2e-admin-full.spec.ts:375:7 › C. Transaction + Dispute Management › C10: POST /v3_6/actuator-seller/disconnect/batch/confirm responds (632ms)
+  ✓  163 tests\e2e-admin-full.spec.ts:382:7 › C. Transaction + Dispute Management › C11: GET /v3_6/refund-simulator/calculate with params returns result (556ms)
+  ✘  137 tests\e2e-buyer-full.spec.ts:316:7 › B. Deal Creation › B-09 Create deal zero qty → error (7.8s)
+  -  165 tests\e2e-buyer-full.spec.ts:330:7 › B. Deal Creation › B-10 Get deal list page 2
+  -  166 tests\e2e-buyer-full.spec.ts:336:7 › B. Deal Creation › B-11 Create deal negative price → error
+  -  167 tests\e2e-buyer-full.spec.ts:350:7 › B. Deal Creation › B-12 Deal detail non-existent → 404
+  ✓  164 tests\e2e-admin-full.spec.ts:393:7 › C. Transaction + Dispute Management › C12: Refund simulator — refund_amount non-negative (if 200) (551ms)
+  ✓  168 tests\e2e-admin-full.spec.ts:416:7 › D. Settlement + Tax Invoice Management › D01: GET /admin/settlements/?status=HOLD&limit=50 returns list (550ms)
+  ✓  138 tests\e2e-seller-full.spec.ts:842:7 › F. Refund Sim + Dashboard › F07: 프론트엔드 — 홈페이지 로드 (7.1s)
+  ✓  169 tests\e2e-admin-full.spec.ts:429:7 › D. Settlement + Tax Invoice Management › D02: GET /admin/settlements/?status=READY&limit=20 returns list (549ms)
+  ✘  170 tests\e2e-buyer-full.spec.ts:361:7 › C. Offer / Reservation / Payment › C-01 Create offer (950ms)
+  -  173 tests\e2e-buyer-full.spec.ts:380:7 › C. Offer / Reservation / Payment › C-02 Get offer list for deal
+  -  174 tests\e2e-buyer-full.spec.ts:388:7 › C. Offer / Reservation / Payment › C-03 Create reservation
+  -  175 tests\e2e-buyer-full.spec.ts:406:7 › C. Offer / Reservation / Payment › C-04 Pay reservation
+  -  176 tests\e2e-buyer-full.spec.ts:419:7 › C. Offer / Reservation / Payment › C-05 Ship reservation
+  -  177 tests\e2e-buyer-full.spec.ts:431:7 › C. Offer / Reservation / Payment › C-06 Arrival confirm
+  -  178 tests\e2e-buyer-full.spec.ts:442:7 › C. Offer / Reservation / Payment › C-07 Reservation invalid offer_id → error
+  -  179 tests\e2e-buyer-full.spec.ts:457:7 › C. Offer / Reservation / Payment › C-08 Create offer without auth → 401/403
+  -  180 tests\e2e-buyer-full.spec.ts:472:7 › C. Offer / Reservation / Payment › C-09 Points balance
+  -  181 tests\e2e-buyer-full.spec.ts:482:7 › C. Offer / Reservation / Payment › C-10 Points history
+  ✓  172 tests\e2e-admin-full.spec.ts:438:7 › D. Settlement + Tax Invoice Management › D03: GET /admin/settlements/?status=APPROVED&limit=20 returns list (550ms)
+  ✓  182 tests\e2e-admin-full.spec.ts:447:7 › D. Settlement + Tax Invoice Management › D04: GET /admin/settlements/?status=PAID&limit=20 returns list (547ms)
+  ✓  152 tests\e2e-actuator-spectator-full.spec.ts:455:7 › E. Spectator › E-01: 스펙테이터용 버이어 + 딜 + 오퍼 준비 (9.0s)
+  ✓  183 tests\e2e-admin-full.spec.ts:456:7 › D. Settlement + Tax Invoice Management › D05: GET /admin/settlements/by_reservation/1 responds (547ms)
+  ✓  185 tests\e2e-actuator-spectator-full.spec.ts:475:7 › E. Spectator › E-02: 딜 열람 로그 등록 (DealViewer) (577ms)
+  ✘  184 tests\e2e-buyer-full.spec.ts:495:7 › D. Review › D-01 Post review (760ms)
+  -  188 tests\e2e-buyer-full.spec.ts:516:7 › D. Review › D-02 Post duplicate review → error
+  -  189 tests\e2e-buyer-full.spec.ts:535:7 › D. Review › D-03 Review out-of-range rating → error
+  -  190 tests\e2e-buyer-full.spec.ts:554:7 › D. Review › D-04 Review no comment on fresh reservation
+  -  191 tests\e2e-buyer-full.spec.ts:616:7 › D. Review › D-05 Notifications after review
+  ✓  186 tests\e2e-admin-full.spec.ts:465:7 › D. Settlement + Tax Invoice Management › D06: POST /admin/settlements/{id}/approve responds (existing or 404) (550ms)
+  ✓  187 tests\e2e-actuator-spectator-full.spec.ts:484:7 › E. Spectator › E-03: 딜 뷰어 수 조회 (561ms)
+  ✓  192 tests\e2e-admin-full.spec.ts:473:7 › D. Settlement + Tax Invoice Management › D07: Settlement approve with missing X-Actor-Id header still responds (546ms)
+  ✘  195 tests\e2e-buyer-full.spec.ts:633:7 › E. Refund Simulator + Refund › E-01 Setup refund reservation (988ms)
+  -  196 tests\e2e-buyer-full.spec.ts:667:7 › E. Refund Simulator + Refund › E-02 Refund sim buyer_change_mind not_delivered
+  -  197 tests\e2e-buyer-full.spec.ts:677:7 › E. Refund Simulator + Refund › E-03 Refund sim delivered 1 day
+  -  198 tests\e2e-buyer-full.spec.ts:687:7 › E. Refund Simulator + Refund › E-04 Refund sim seller_fault
+  -  199 tests\e2e-buyer-full.spec.ts:697:7 › E. Refund Simulator + Refund › E-05 Refund sim defective_product
+  -  200 tests\e2e-buyer-full.spec.ts:705:7 › E. Refund Simulator + Refund › E-06 Refund sim wrong_item
+  -  201 tests\e2e-buyer-full.spec.ts:713:7 › E. Refund Simulator + Refund › E-07 Refund sim expired return window
+  -  202 tests\e2e-buyer-full.spec.ts:724:7 › E. Refund Simulator + Refund › E-08 Refund sim missing params → 422
+  -  203 tests\e2e-buyer-full.spec.ts:730:7 › E. Refund Simulator + Refund › E-09 Perform refund
+  -  204 tests\e2e-buyer-full.spec.ts:744:7 › E. Refund Simulator + Refund › E-10 Duplicate refund → error
+  -  205 tests\e2e-buyer-full.spec.ts:758:7 › E. Refund Simulator + Refund › E-11 Refund non-existent reservation → error
+  -  206 tests\e2e-buyer-full.spec.ts:772:7 › E. Refund Simulator + Refund › E-12 Refund sim role seller
+  ✓  193 tests\e2e-actuator-spectator-full.spec.ts:493:7 › E. Spectator › E-04: 가격 예측 제출 — 별도 구매자(미참여자) (1.4s)
+  ✓  155 tests\e2e-automation-full.spec.ts:385:9 › C. Dispute Automation › C01: Create dispute → status ROUND1_RESPONSE (10.9s)
+  ✓  171 tests\e2e-seller-full.spec.ts:849:7 › F. Refund Sim + Dashboard › F08: 프론트엔드 — 딜 목록 페이지 로드 (4.8s)
+  ✓  207 tests\e2e-actuator-spectator-full.spec.ts:515:7 › E. Spectator › E-05: 딜 예측 수 조회 (556ms)
+  ✘  208 tests\e2e-automation-full.spec.ts:411:9 › C. Dispute Automation › C02: Round 1 response by seller → AI mediates (750ms)
+  -  212 tests\e2e-automation-full.spec.ts:428:9 › C. Dispute Automation › C03: GET /v3_6/disputes/{id} → AI recommendation present
+  -  213 tests\e2e-automation-full.spec.ts:436:9 › C. Dispute Automation › C04: Buyer accepts AI recommendation → dispute resolves
+  -  214 tests\e2e-automation-full.spec.ts:447:9 › C. Dispute Automation › C05: Create second dispute for round2 rebuttal flow
+  -  215 tests\e2e-automation-full.spec.ts:493:9 › C. Dispute Automation › C06: POST /v3_6/disputes/batch/timeout → timeout batch runs
+  -  216 tests\e2e-automation-full.spec.ts:501:9 › C. Dispute Automation › C07: Timeout batch is idempotent (re-run returns 0)
+  -  217 tests\e2e-automation-full.spec.ts:511:9 › C. Dispute Automation › C08: Dispute detail has all required fields
+  ✓  209 tests\e2e-seller-full.spec.ts:863:7 › G. Business Info + External Ratings › G01: 외부평점 등록 — POST /v3_6/seller/external-ratings (581ms)
+  ✓  194 tests\e2e-admin-full.spec.ts:479:7 › D. Settlement + Tax Invoice Management › D08: Admin settlements UI page loads (2.2s)
+  ✓  210 tests\e2e-actuator-spectator-full.spec.ts:524:7 › E. Spectator › E-06: 딜 예측 목록 조회 (딜 open 중 → buyer_id 있으면 본인 것만) (779ms)
+  ✓  219 tests\e2e-admin-full.spec.ts:486:7 › D. Settlement + Tax Invoice Management › D09: GET /admin/settlements/ with no status filter returns default list (547ms)
+  ✘  211 tests\e2e-buyer-full.spec.ts:792:7 › F. Dispute › F-01 Setup dispute reservation (1.0s)
+  -  222 tests\e2e-buyer-full.spec.ts:826:7 › F. Dispute › F-02 Create dispute
+  -  223 tests\e2e-buyer-full.spec.ts:847:7 › F. Dispute › F-03 Get dispute detail
+  -  224 tests\e2e-buyer-full.spec.ts:857:7 › F. Dispute › F-04 Get dispute detail as seller
+  -  225 tests\e2e-buyer-full.spec.ts:867:7 › F. Dispute › F-05 Round1 response by seller
+  -  226 tests\e2e-buyer-full.spec.ts:880:7 › F. Dispute › F-06 Round2 rebuttal by buyer
+  -  227 tests\e2e-buyer-full.spec.ts:894:7 › F. Dispute › F-07 Dispute decision accept
+  -  228 tests\e2e-buyer-full.spec.ts:906:7 › F. Dispute › F-08 Create second dispute
+  -  229 tests\e2e-buyer-full.spec.ts:957:7 › F. Dispute › F-09 Dispute decision reject
+  -  230 tests\e2e-buyer-full.spec.ts:970:7 › F. Dispute › F-10 Create dispute no auth → 401/403
+  -  231 tests\e2e-buyer-full.spec.ts:987:7 › F. Dispute › F-11 Get non-existent dispute → 404
+  -  232 tests\e2e-buyer-full.spec.ts:995:7 › F. Dispute › F-12 Dispute missing fields → 422
+  -  233 tests\e2e-buyer-full.spec.ts:1008:7 › F. Dispute › F-13 Notifications after dispute
+  -  234 tests\e2e-buyer-full.spec.ts:1016:7 › F. Dispute › F-14 Dispute status after round1
+  -  235 tests\e2e-buyer-full.spec.ts:1027:7 › F. Dispute › F-15 Round1 response validation — proposal_amount must be positive
+  ✓  220 tests\e2e-actuator-spectator-full.spec.ts:534:7 › E. Spectator › E-07: 월간 랭킹 조회 (570ms)
+  ✓  221 tests\e2e-admin-full.spec.ts:495:7 › D. Settlement + Tax Invoice Management › D10: Settlement by_reservation endpoint with non-existent id returns 404 or data (545ms)
+  ✓  237 tests\e2e-admin-full.spec.ts:511:7 › E. Donzzul Management › E01: GET /donzzul/stores returns store list (789ms)
+  ✓  236 tests\e2e-automation-full.spec.ts:528:9 › D. Donzzul Automation › D01: GET /donzzul/stores → list returns array (1.2s)
+  ✓  238 tests\e2e-buyer-full.spec.ts:1047:7 › G. Pingpong › G-01 Pingpong basic Q&A (809ms)
+  ✓  239 tests\e2e-admin-full.spec.ts:524:7 › E. Donzzul Management › E02: PUT /donzzul/stores/{id}/verify approve responds (574ms)
+  ✘  218 tests\e2e-seller-full.spec.ts:881:7 › G. Business Info + External Ratings › G02: 외부평점 검증 — POST /v3_6/seller/external-ratings/{id}/verify (1.1s)
+  -  243 tests\e2e-seller-full.spec.ts:894:7 › G. Business Info + External Ratings › G03: 외부평점 목록 조회 — GET /v3_6/seller/{id}/external-ratings
+  -  244 tests\e2e-seller-full.spec.ts:903:7 › G. Business Info + External Ratings › G04: 외부평점 배치 등록 — POST /v3_6/seller/external-ratings/batch
+  -  245 tests\e2e-seller-full.spec.ts:931:7 › G. Business Info + External Ratings › G05: 검증 안 된 평점 조회 후 verified_rating null 확인
+  -  246 tests\e2e-seller-full.spec.ts:952:7 › G. Business Info + External Ratings › G06: 존재하지 않는 평점 검증 → 404 or 422
+  -  247 tests\e2e-seller-full.spec.ts:960:7 › G. Business Info + External Ratings › G07: 셀러 본인 정보 재확인 — GET /auth/seller/me
+  ✓  241 tests\e2e-buyer-full.spec.ts:1064:7 › G. Pingpong › G-02 Pingpong policy question (568ms)
+  ✓  242 tests\e2e-admin-full.spec.ts:532:7 › E. Donzzul Management › E03: GET /donzzul/settlements returns settlement list (560ms)
+  ✓  240 tests\e2e-automation-full.spec.ts:535:9 › D. Donzzul Automation › D02: Create donzzul store → store_id issued (1.4s)
+  ✓  249 tests\e2e-admin-full.spec.ts:545:7 › E. Donzzul Management › E04: PUT /donzzul/settlements/{id}/process approve responds (565ms)
+  ✓  250 tests\e2e-automation-full.spec.ts:557:9 › D. Donzzul Automation › D03: Verify (approve) donzzul store (591ms)
+  ✓  248 tests\e2e-buyer-full.spec.ts:1076:7 › G. Pingpong › G-03 Pingpong shipping FAQ (1.1s)
+  ✓  251 tests\e2e-seller-full.spec.ts:977:7 › H. Pingpong + Withdrawal › H01: 핑퐁 셀러 질문 — 오퍼 정책 (579ms)
+  ✓  252 tests\e2e-admin-full.spec.ts:553:7 › E. Donzzul Management › E05: POST /donzzul/batch/expiry responds (556ms)
+  ✓  253 tests\e2e-automation-full.spec.ts:566:9 › D. Donzzul Automation › D04: Set store PIN (564ms)
+  ✓  254 tests\e2e-buyer-full.spec.ts:1088:7 › G. Pingpong › G-04 Pingpong seller role (575ms)
+  ✓  255 tests\e2e-seller-full.spec.ts:993:7 › H. Pingpong + Withdrawal › H02: 핑퐁 셀러 질문 — 정산 정책 (566ms)
+  ✓  256 tests\e2e-admin-full.spec.ts:558:7 › E. Donzzul Management › E06: POST /donzzul/batch/expiry-warning responds (567ms)
+  ✓  257 tests\e2e-automation-full.spec.ts:578:9 › D. Donzzul Automation › D05: GET /donzzul/deals?status=ACTIVE → active deals list (563ms)
+  ✓  261 tests\e2e-automation-full.spec.ts:588:9 › D. Donzzul Automation › D06: Purchase voucher (if active deal exists) (7ms)
+  ✓  258 tests\e2e-buyer-full.spec.ts:1100:7 › G. Pingpong › G-05 Pingpong points question (570ms)
+  ✓  260 tests\e2e-admin-full.spec.ts:563:7 › E. Donzzul Management › E07: POST /donzzul/batch/deal-expiry responds (557ms)
+  ✓  259 tests\e2e-seller-full.spec.ts:1005:7 › H. Pingpong + Withdrawal › H03: 핑퐁 셀러 질문 — 환불 정책 (575ms)
+  ✓  263 tests\e2e-buyer-full.spec.ts:1112:7 › G. Pingpong › G-06 Pingpong empty question → handled (785ms)
+  ✓  264 tests\e2e-admin-full.spec.ts:568:7 › E. Donzzul Management › E08: GET /donzzul/votes/weeks returns vote weeks list (653ms)
+  ✓  267 tests\e2e-admin-full.spec.ts:588:7 › F. Pingpong + Other › F01: POST /v3_6/pingpong/brain/ask with admin context responds (343ms)
+  ✓  265 tests\e2e-seller-full.spec.ts:1017:7 › H. Pingpong + Withdrawal › H04: 핑퐁 셀러 질문 — 분쟁 처리 흐름 (1.2s)
+  ✘  262 tests\e2e-automation-full.spec.ts:608:9 › D. Donzzul Automation › D07: Batch expiry jobs run without error (1.7s)
+  -  270 tests\e2e-automation-full.spec.ts:621:9 › D. Donzzul Automation › D08: Donzzul hero register + GET profile
+  ✓  268 tests\e2e-admin-full.spec.ts:603:7 › F. Pingpong + Other › F02: Pingpong admin — refund policy question responds (564ms)
+  ✓  266 tests\e2e-buyer-full.spec.ts:1125:7 › G. Pingpong › G-07 Pingpong long question handled (1.3s)
+  ✓  269 tests\e2e-seller-full.spec.ts:1029:7 › H. Pingpong + Withdrawal › H05: 핑퐁 — body 없이 요청 → 422 (768ms)
+  ✓  271 tests\e2e-admin-full.spec.ts:614:7 › F. Pingpong + Other › F03: Pingpong admin — dispute resolution question responds (990ms)
+  ✓  272 tests\e2e-buyer-full.spec.ts:1138:7 › G. Pingpong › G-08 Pingpong dispute question (1.0s)
+  ✓  275 tests\e2e-admin-full.spec.ts:625:7 › F. Pingpong + Other › F04: GET /notifications?limit=10 returns notifications (778ms)
+  ✓  276 tests\e2e-buyer-full.spec.ts:1155:7 › H. Donzzul › H-01 Donzzul stats (793ms)
+  ✓  274 tests\e2e-automation-full.spec.ts:643:9 › E. External Integration Automation › E01: Register external rating for seller (1.8s)
+  ✓  273 tests\e2e-seller-full.spec.ts:1037:7 › H. Pingpong + Withdrawal › H06: 핑퐁 — 인증 없이 요청 → 401 or 422 (2.2s)
+  ✓  278 tests\e2e-buyer-full.spec.ts:1161:7 › H. Donzzul › H-02 Donzzul deals (568ms)
+  ✓  279 tests\e2e-automation-full.spec.ts:661:9 › E. External Integration Automation › E02: GET /v3_6/seller/{seller_id}/external-ratings → list includes registered rating (565ms)
+  ✓  281 tests\e2e-buyer-full.spec.ts:1167:7 › H. Donzzul › H-03 Donzzul current week (579ms)
+  ✓  283 tests\e2e-buyer-full.spec.ts:1173:7 › H. Donzzul › H-04 Donzzul my vouchers (557ms)
+  ✓  277 tests\e2e-admin-full.spec.ts:634:7 › F. Pingpong + Other › F05: Admin UI — /admin/users page loads (2.2s)
+  ✓  282 tests\e2e-automation-full.spec.ts:669:9 › E. External Integration Automation › E03: Verify external rating → status changes (1.4s)
+  ✓  284 tests\e2e-buyer-full.spec.ts:1181:7 › H. Donzzul › H-05 Donzzul voucher purchase (563ms)
+  ✘  286 tests\e2e-automation-full.spec.ts:678:9 › E. External Integration Automation › E04: POST /v3_6/seller/external-ratings/batch → batch verification runs (571ms)
+  -  288 tests\e2e-automation-full.spec.ts:686:9 › E. External Integration Automation › E05: Batch is idempotent (second run same result pattern)
+  -  289 tests\e2e-automation-full.spec.ts:697:9 › E. External Integration Automation › E06: External rating with invalid seller_id returns 4xx
+  ✓  287 tests\e2e-buyer-full.spec.ts:1200:7 › I. Grade + Withdrawal › I-01 Buyer points balance for grade (562ms)
+  ✓  290 tests\e2e-buyer-full.spec.ts:1211:7 › I. Grade + Withdrawal › I-02 Points transaction history (562ms)
+  ✓  285 tests\e2e-admin-full.spec.ts:640:7 › F. Pingpong + Other › F06: Admin UI — /admin/disputes page loads (2.4s)
+  ✓  291 tests\e2e-buyer-full.spec.ts:1222:7 › I. Grade + Withdrawal › I-03 Throwaway buyer register + login sanity (1.5s)
+  ✓  292 tests\e2e-automation-full.spec.ts:717:9 › F. Notification Automation › F01: GET /notifications?user_id={id} → array returned (1.6s)
+  ✓  293 tests\e2e-admin-full.spec.ts:646:7 › F. Pingpong + Other › F07: Admin UI — /admin/donzzul page loads (2.2s)
+  ✓  295 tests\e2e-admin-full.spec.ts:652:7 › F. Pingpong + Other › F08: POST /donzzul/votes/weeks create new vote week responds (777ms)
+  ✓  296 tests\e2e-admin-full.spec.ts:663:7 › F. Pingpong + Other › F09: POST /donzzul/votes/weeks/{id}/close responds (568ms)
+  ✓  297 tests\e2e-admin-full.spec.ts:669:7 › F. Pingpong + Other › F10: Pingpong admin — KPI summary question responds with answer field (1.1s)
+  ✓  280 tests\e2e-seller-full.spec.ts:1048:7 › H. Pingpong + Withdrawal › H07: 프론트엔드 — 로그인 페이지 UI 요소 확인 (7.2s)
+  ✓  298 tests\e2e-seller-full.spec.ts:1059:7 › H. Pingpong + Withdrawal › H08: 프론트엔드 — 회원가입 페이지 로드 (4.8s)
+  ✘  294 tests\e2e-automation-full.spec.ts:728:9 › F. Notification Automation › F02: Notification created after reservation pay (9.8s)
+  -  300 tests\e2e-automation-full.spec.ts:742:9 › F. Notification Automation › F03: Notification has expected structure
+  -  301 tests\e2e-automation-full.spec.ts:756:9 › F. Notification Automation › F04: Mark notification as read
+  -  302 tests\e2e-automation-full.spec.ts:777:9 › F. Notification Automation › F05: Notification list for seller is also available
+  -  303 tests\e2e-automation-full.spec.ts:785:9 › F. Notification Automation › F06: Duplicate read request is idempotent
+  -  299 tests\e2e-seller-full.spec.ts:1066:7 › H. Pingpong + Withdrawal › H09: 프론트엔드 — 딜 상세 페이지 로드 (딜 ID 사용)
+  ✓  305 tests\e2e-automation-full.spec.ts:804:9 › G. Points / Grade Automation › G01: GET /points/buyer/{id}/balance → balance object returned (1.9s)
+  ✘  304 tests\e2e-seller-full.spec.ts:1077:7 › H. Pingpong + Withdrawal › H10: 셀러 계정 탈퇴 전 최종 me 확인 (종료 점검) (771ms)
+  ✓  306 tests\e2e-automation-full.spec.ts:814:9 › G. Points / Grade Automation › G02: GET /points/buyer/{id}/transactions → array returned (556ms)
+  ✓  307 tests\e2e-automation-full.spec.ts:822:9 › G. Points / Grade Automation › G03: Transaction records have required fields (556ms)
+  ✓  308 tests\e2e-automation-full.spec.ts:835:9 › G. Points / Grade Automation › G04: Balance is non-negative after purchase flow (9.6s)
+  ✓  309 tests\e2e-automation-full.spec.ts:844:9 › G. Points / Grade Automation › G05: New buyer starts with zero or positive initial balance (1.3s)
+  ✓  310 tests\e2e-automation-full.spec.ts:865:9 › G. Points / Grade Automation › G06: Points transactions list is stable under double-read (1.1s)
+
+
+  1) tests\e2e-actuator-spectator-full.spec.ts:146:7 › A. Actuator — Business Type › A-06: 셀러 모집 — actuator_id 포함 셀러 등록 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m500[39m
+    Received array: [31m[200, 201][39m
+
+      63 |   if (actuatorId) payload.actuator_id = actuatorId;
+      64 |   const res = await request.post(`${BASE}/sellers/`, { data: payload });
+    > 65 |   expect([200, 201]).toContain(res.status());
+         |                      ^
+      66 |   return await res.json();
+      67 | }
+      68 |
+        at registerSeller (C:\dev\yp-ver2\tests\e2e-actuator-spectator-full.spec.ts:65:22)
+        at C:\dev\yp-ver2\tests\e2e-actuator-spectator-full.spec.ts:147:20
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-actuator-spectator-ful-1898f-러-모집-—-actuator-id-포함-셀러-등록\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-actuator-spectator-ful-1898f-러-모집-—-actuator-id-포함-셀러-등록\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\e2e-actuator-spectator-full.spec.ts:253:7 › B. Actuator — Personal Type › B-08: 개인 액추에이터에 셀러 등록 후 sellers 목록 확인 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m500[39m
+    Received array: [31m[200, 201][39m
+
+      63 |   if (actuatorId) payload.actuator_id = actuatorId;
+      64 |   const res = await request.post(`${BASE}/sellers/`, { data: payload });
+    > 65 |   expect([200, 201]).toContain(res.status());
+         |                      ^
+      66 |   return await res.json();
+      67 | }
+      68 |
+        at registerSeller (C:\dev\yp-ver2\tests\e2e-actuator-spectator-full.spec.ts:65:22)
+        at C:\dev\yp-ver2\tests\e2e-actuator-spectator-full.spec.ts:254:20
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-actuator-spectator-ful-8036f-추에이터에-셀러-등록-후-sellers-목록-확인\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-actuator-spectator-ful-8036f-추에이터에-셀러-등록-후-sellers-목록-확인\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests\e2e-actuator-spectator-full.spec.ts:390:7 › D. Actuator Disconnect › D-01: 해지 요청용 액추에이터 + 셀러 준비 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m500[39m
+    Received array: [31m[200, 201][39m
+
+      63 |   if (actuatorId) payload.actuator_id = actuatorId;
+      64 |   const res = await request.post(`${BASE}/sellers/`, { data: payload });
+    > 65 |   expect([200, 201]).toContain(res.status());
+         |                      ^
+      66 |   return await res.json();
+      67 | }
+      68 |
+        at registerSeller (C:\dev\yp-ver2\tests\e2e-actuator-spectator-full.spec.ts:65:22)
+        at C:\dev\yp-ver2\tests\e2e-actuator-spectator-full.spec.ts:395:20
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-actuator-spectator-ful-48897-ect-D-01-해지-요청용-액추에이터-셀러-준비\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-actuator-spectator-ful-48897-ect-D-01-해지-요청용-액추에이터-셀러-준비\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) tests\e2e-automation-full.spec.ts:165:9 › A. Delivery Automation › A03: Deal + Offer + Reservation + Pay → PAID state 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m409[39m
+    Received array: [31m[200, 201][39m
+
+      189 |             },
+      190 |         });
+    > 191 |         expect([200, 201]).toContain(offerRes.status());
+          |                            ^
+      192 |         const offerBody = await offerRes.json();
+      193 |         offerId = offerBody.id ?? offerBody.offer_id;
+      194 |         expect(offerId).toBeGreaterThan(0);
+        at C:\dev\yp-ver2\tests\e2e-automation-full.spec.ts:191:28
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-automation-full-A-Deli-f422b-eservation-Pay-→-PAID-state\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-automation-full-A-Deli-f422b-eservation-Pay-→-PAID-state\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) tests\e2e-automation-full.spec.ts:283:9 › B. Settlement Automation › B01: Create fresh paid reservation for settlement 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeGreaterThan[2m([22m[32mexpected[39m[2m)[22m
+
+    [1mMatcher error[22m: [31mreceived[39m value must be a number or bigint
+
+    Received has value: [31mundefined[39m
+
+      283 |     test('B01: Create fresh paid reservation for settlement', async ({ request }) => {
+      284 |         const rid = await ensurePaidReservation(request);
+    > 285 |         expect(rid).toBeGreaterThan(0);
+          |                     ^
+      286 |     });
+      287 |
+      288 |     test('B02: GET /settlements/reservation/{id} → HOLD state initially', async ({ request }) => {
+        at C:\dev\yp-ver2\tests\e2e-automation-full.spec.ts:285:21
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-automation-full-B-Sett-d5972--reservation-for-settlement\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-automation-full-B-Sett-d5972--reservation-for-settlement\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) tests\e2e-automation-full.spec.ts:411:9 › C. Dispute Automation › C02: Round 1 response by seller → AI mediates 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m422[39m
+    Received array: [31m[200, 201, 400][39m
+
+      419 |             },
+      420 |         });
+    > 421 |         expect([200, 201, 400]).toContain(res.status());
+          |                                 ^
+      422 |         if (res.status() === 200) {
+      423 |             const body = await res.json();
+      424 |             expect(body.status).toMatch(/ROUND1_REVIEW|MEDIATION/i);
+        at C:\dev\yp-ver2\tests\e2e-automation-full.spec.ts:421:33
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-automation-full-C-Disp-85785-nse-by-seller-→-AI-mediates\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-automation-full-C-Disp-85785-nse-by-seller-→-AI-mediates\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) tests\e2e-automation-full.spec.ts:608:9 › D. Donzzul Automation › D07: Batch expiry jobs run without error 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoHaveProperty[2m([22m[32mpath[39m[2m)[22m
+
+    Expected path: [32m"expired"[39m
+    Received path: [31m[][39m
+
+    Received value: [31m{"donated_count": 0, "donated_total": 0, "run_at": "2026-03-13 07:57:34.615266"}[39m
+
+      616 |
+      617 |         const expiryData = await expiryRes.json();
+    > 618 |         expect(expiryData).toHaveProperty('expired');
+          |                            ^
+      619 |     });
+      620 |
+      621 |     test('D08: Donzzul hero register + GET profile', async ({ request }) => {
+        at C:\dev\yp-ver2\tests\e2e-automation-full.spec.ts:618:28
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-automation-full-D-Donz-330d8-piry-jobs-run-without-error\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-automation-full-D-Donz-330d8-piry-jobs-run-without-error\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) tests\e2e-automation-full.spec.ts:678:9 › E. External Integration Automation › E04: POST /v3_6/seller/external-ratings/batch → batch verification runs 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoHaveProperty[2m([22m[32mpath[39m[2m)[22m
+
+    Expected path: [32m"processed"[39m
+    Received path: [31m[][39m
+
+    Received value: [31m{"checked": 0, "notified": 2, "zeroed": 0}[39m
+
+      680 |         expect([200, 201]).toContain(res.status());
+      681 |         const data = await res.json();
+    > 682 |         expect(data).toHaveProperty('processed');
+          |                      ^
+      683 |         expect(typeof data.processed).toBe('number');
+      684 |     });
+      685 |
+        at C:\dev\yp-ver2\tests\e2e-automation-full.spec.ts:682:22
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-automation-full-E-Exte-cbc2c-h-→-batch-verification-runs\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-automation-full-E-Exte-cbc2c-h-→-batch-verification-runs\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) tests\e2e-automation-full.spec.ts:728:9 › F. Notification Automation › F02: Notification created after reservation pay 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m200[39m
+    Received: [31m500[39m
+
+      731 |         // Slight delay not needed — just check notification list grows
+      732 |         const res = await request.get(`${BASE}/notifications?user_id=${bid}`);
+    > 733 |         expect(res.status()).toBe(200);
+          |                              ^
+      734 |         const data = await res.json();
+      735 |         // May be 0 if notifications are async; just verify structure
+      736 |         if (data.length > 0) {
+        at C:\dev\yp-ver2\tests\e2e-automation-full.spec.ts:733:30
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-automation-full-F-Noti-dc4a9-eated-after-reservation-pay\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-automation-full-F-Noti-dc4a9-eated-after-reservation-pay\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) tests\e2e-buyer-full.spec.ts:316:7 › B. Deal Creation › B-09 Create deal zero qty → error ────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m200[39m
+    Received array: [31m[400, 422][39m
+
+      324 |       },
+      325 |     });
+    > 326 |     expect([400, 422]).toContain(res.status());
+          |                        ^
+      327 |   });
+      328 |
+      329 |   // B-10: Get deal list page 2
+        at C:\dev\yp-ver2\tests\e2e-buyer-full.spec.ts:326:24
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-buyer-full-B-Deal-Crea-5255b-reate-deal-zero-qty-→-error\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-buyer-full-B-Deal-Crea-5255b-reate-deal-zero-qty-→-error\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) tests\e2e-buyer-full.spec.ts:361:7 › C. Offer / Reservation / Payment › C-01 Create offer ────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m404[39m
+    Received array: [31m[200, 201][39m
+
+      371 |       },
+      372 |     });
+    > 373 |     expect([200, 201]).toContain(res.status());
+          |                        ^
+      374 |     const body = await res.json();
+      375 |     expect(body).toHaveProperty('id');
+      376 |     offerId = body.id;
+        at C:\dev\yp-ver2\tests\e2e-buyer-full.spec.ts:373:24
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-buyer-full-C-Offer-Reservation-Payment-C-01-Create-offer\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-buyer-full-C-Offer-Reservation-Payment-C-01-Create-offer\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) tests\e2e-buyer-full.spec.ts:495:7 › D. Review › D-01 Post review ────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m422[39m
+    Received array: [31m[200, 201][39m
+
+      508 |       },
+      509 |     });
+    > 510 |     expect([200, 201]).toContain(res.status());
+          |                        ^
+      511 |     const body = await res.json();
+      512 |     reviewId = body.id ?? reviewId;
+      513 |   });
+        at C:\dev\yp-ver2\tests\e2e-buyer-full.spec.ts:510:24
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-buyer-full-D-Review-D-01-Post-review\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-buyer-full-D-Review-D-01-Post-review\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  13) tests\e2e-buyer-full.spec.ts:633:7 › E. Refund Simulator + Refund › E-01 Setup refund reservation 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m500[39m
+    Received array: [31m[200, 201][39m
+
+      641 |       },
+      642 |     });
+    > 643 |     expect([200, 201]).toContain(dealRes.status());
+          |                        ^
+      644 |     refundDealId = (await dealRes.json()).id;
+      645 |
+      646 |     const offerRes = await request.post(`${BASE}/v3_6/offers`, {
+        at C:\dev\yp-ver2\tests\e2e-buyer-full.spec.ts:643:24
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-buyer-full-E-Refund-Si-3349e-01-Setup-refund-reservation\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-buyer-full-E-Refund-Si-3349e-01-Setup-refund-reservation\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14) tests\e2e-buyer-full.spec.ts:792:7 › F. Dispute › F-01 Setup dispute reservation ─────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m500[39m
+    Received array: [31m[200, 201][39m
+
+      800 |       },
+      801 |     });
+    > 802 |     expect([200, 201]).toContain(dealRes.status());
+          |                        ^
+      803 |     disputeDealId = (await dealRes.json()).id;
+      804 |
+      805 |     const offerRes = await request.post(`${BASE}/v3_6/offers`, {
+        at C:\dev\yp-ver2\tests\e2e-buyer-full.spec.ts:802:24
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-buyer-full-F-Dispute-F-01-Setup-dispute-reservation\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-buyer-full-F-Dispute-F-01-Setup-dispute-reservation\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  15) tests\e2e-seller-full.spec.ts:199:7 › A. Registration + AI Approval › A12: AI 점수 응답에 weak_points 배열 포함 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mtrue[39m
+    Received: [31mfalse[39m
+
+      203 |     expect(res.status()).toBe(200);
+      204 |     const body = await res.json();
+    > 205 |     expect(Array.isArray(body.weak_points)).toBe(true);
+          |                                             ^
+      206 |   });
+      207 |
+      208 |   test('A13: 관리자 승인 결정 — PUT /v3_6/admin/seller/{id}/decision approve', async ({ request }) => {
+        at C:\dev\yp-ver2\tests\e2e-seller-full.spec.ts:205:45
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-seller-full-A-Registra-830a8-AI-점수-응답에-weak-points-배열-포함\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-seller-full-A-Registra-830a8-AI-점수-응답에-weak-points-배열-포함\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  16) tests\e2e-seller-full.spec.ts:235:7 › B. Offer Creation + Confirm › B01: 셀러 재로그인 (토큰 갱신) ─────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m200[39m
+    Received: [31m401[39m
+
+      53 |     form: { username: SELLER_EMAIL, password: SELLER_PW },
+      54 |   });
+    > 55 |   expect(res.status()).toBe(200);
+         |                        ^
+      56 |   const body = await res.json();
+      57 |   const token: string = body.access_token;
+      58 |   const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+        at sellerLogin (C:\dev\yp-ver2\tests\e2e-seller-full.spec.ts:55:24)
+        at C:\dev\yp-ver2\tests\e2e-seller-full.spec.ts:236:27
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-seller-full-B-Offer-Creation-Confirm-B01-셀러-재로그인-토큰-갱신-\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-seller-full-B-Offer-Creation-Confirm-B01-셀러-재로그인-토큰-갱신-\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  17) tests\e2e-seller-full.spec.ts:364:7 › C. Offer Confirm + Delivery › C02: 예약 생성 — POST /v3_6/reservations 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m404[39m
+    Received array: [31m[200, 201, 422][39m
+
+      373 |       },
+      374 |     });
+    > 375 |     expect([200, 201, 422]).toContain(res.status());
+          |                             ^
+      376 |     if (res.status() === 200 || res.status() === 201) {
+      377 |       const body = await res.json();
+      378 |       reservationId = body.id;
+        at C:\dev\yp-ver2\tests\e2e-seller-full.spec.ts:375:29
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-seller-full-C-Offer-Co-34857-생성-—-POST-v3-6-reservations\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-seller-full-C-Offer-Co-34857-생성-—-POST-v3-6-reservations\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  18) tests\e2e-seller-full.spec.ts:519:7 › D. Settlement + Tax Invoice › D01: 정산 목록 조회 — GET /payments/settlements?seller_id=... 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m422[39m
+    Received array: [31m[200, 404][39m
+
+      521 |       headers: authHeaders(sellerToken),
+      522 |     });
+    > 523 |     expect([200, 404]).toContain(res.status());
+          |                        ^
+      524 |     if (res.status() === 200) {
+      525 |       const body = await res.json();
+      526 |       expect(body).toBeTruthy();
+        at C:\dev\yp-ver2\tests\e2e-seller-full.spec.ts:523:24
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-seller-full-D-Settleme-22978-ents-settlements-seller-id-\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-seller-full-D-Settleme-22978-ents-settlements-seller-id-\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  19) tests\e2e-seller-full.spec.ts:881:7 › G. Business Info + External Ratings › G02: 외부평점 검증 — POST /v3_6/seller/external-ratings/{id}/verify 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected value: [32m"URL_DEAD"[39m
+    Received array: [31m["VERIFIED", "PENDING", "FAILED"][39m
+
+      888 |     if (res.status() === 200) {
+      889 |       const body = await res.json();
+    > 890 |       expect(['VERIFIED', 'PENDING', 'FAILED']).toContain(body.status);
+          |                                                 ^
+      891 |     }
+      892 |   });
+      893 |
+        at C:\dev\yp-ver2\tests\e2e-seller-full.spec.ts:890:49
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-seller-full-G-Business-acc77--external-ratings-id-verify\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-seller-full-G-Business-acc77--external-ratings-id-verify\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  20) tests\e2e-seller-full.spec.ts:1077:7 › H. Pingpong + Withdrawal › H10: 셀러 계정 탈퇴 전 최종 me 확인 (종료 점검) 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m200[39m
+    Received: [31m401[39m
+
+      1079 |       headers: authHeaders(sellerToken),
+      1080 |     });
+    > 1081 |     expect(res.status()).toBe(200);
+           |                          ^
+      1082 |     const body = await res.json();
+      1083 |     expect(body.email).toBe(SELLER_EMAIL);
+      1084 |     // Confirm all IDs are coherent
+        at C:\dev\yp-ver2\tests\e2e-seller-full.spec.ts:1081:26
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e-seller-full-H-Pingpong-d3a27--셀러-계정-탈퇴-전-최종-me-확인-종료-점검-\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e-seller-full-H-Pingpong-d3a27--셀러-계정-탈퇴-전-최종-me-확인-종료-점검-\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  20 failed
+    tests\e2e-actuator-spectator-full.spec.ts:146:7 › A. Actuator — Business Type › A-06: 셀러 모집 — actuator_id 포함 셀러 등록 
+    tests\e2e-actuator-spectator-full.spec.ts:253:7 › B. Actuator — Personal Type › B-08: 개인 액추에이터에 셀러 등록 후 sellers 목록 확인 
+    tests\e2e-actuator-spectator-full.spec.ts:390:7 › D. Actuator Disconnect › D-01: 해지 요청용 액추에이터 + 셀러 준비 
+    tests\e2e-automation-full.spec.ts:165:9 › A. Delivery Automation › A03: Deal + Offer + Reservation + Pay → PAID state 
+    tests\e2e-automation-full.spec.ts:283:9 › B. Settlement Automation › B01: Create fresh paid reservation for settlement 
+    tests\e2e-automation-full.spec.ts:411:9 › C. Dispute Automation › C02: Round 1 response by seller → AI mediates 
+    tests\e2e-automation-full.spec.ts:608:9 › D. Donzzul Automation › D07: Batch expiry jobs run without error 
+    tests\e2e-automation-full.spec.ts:678:9 › E. External Integration Automation › E04: POST /v3_6/seller/external-ratings/batch → batch verification runs 
+    tests\e2e-automation-full.spec.ts:728:9 › F. Notification Automation › F02: Notification created after reservation pay 
+    tests\e2e-buyer-full.spec.ts:316:7 › B. Deal Creation › B-09 Create deal zero qty → error ──────
+    tests\e2e-buyer-full.spec.ts:361:7 › C. Offer / Reservation / Payment › C-01 Create offer ──────
+    tests\e2e-buyer-full.spec.ts:495:7 › D. Review › D-01 Post review ──────────────────────────────
+    tests\e2e-buyer-full.spec.ts:633:7 › E. Refund Simulator + Refund › E-01 Setup refund reservation 
+    tests\e2e-buyer-full.spec.ts:792:7 › F. Dispute › F-01 Setup dispute reservation ───────────────
+    tests\e2e-seller-full.spec.ts:199:7 › A. Registration + AI Approval › A12: AI 점수 응답에 weak_points 배열 포함 
+    tests\e2e-seller-full.spec.ts:235:7 › B. Offer Creation + Confirm › B01: 셀러 재로그인 (토큰 갱신) ───────
+    tests\e2e-seller-full.spec.ts:364:7 › C. Offer Confirm + Delivery › C02: 예약 생성 — POST /v3_6/reservations 
+    tests\e2e-seller-full.spec.ts:519:7 › D. Settlement + Tax Invoice › D01: 정산 목록 조회 — GET /payments/settlements?seller_id=... 
+    tests\e2e-seller-full.spec.ts:881:7 › G. Business Info + External Ratings › G02: 외부평점 검증 — POST /v3_6/seller/external-ratings/{id}/verify 
+    tests\e2e-seller-full.spec.ts:1077:7 › H. Pingpong + Withdrawal › H10: 셀러 계정 탈퇴 전 최종 me 확인 (종료 점검) 
+  7 skipped
+  112 did not run
+  171 passed (1.3m)
