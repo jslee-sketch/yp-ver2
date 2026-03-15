@@ -9,7 +9,7 @@ cmds = [
 
 [phases.build]
 cmds = [
-    "cd frontend && npm run build"
+    "cd frontend && npm run build && echo 'build-20260315-v2'"
 ]
 
 [start]
