@@ -15,6 +15,7 @@ interface CommissionItem {
   actuator_id: number;
   seller_id?: number;
   reservation_id?: number;
+  order_number?: string;
   gmv?: number;
   rate_percent?: number;
   amount: number;
@@ -139,7 +140,7 @@ export default function ActuatorCommissionsPage() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: C.textSec }}>
-                  커미션 #{c.id} · 예약 #{c.reservation_id ?? '-'}
+                  커미션 #{c.id} · 주문 {c.order_number || `R-${c.reservation_id ?? '-'}`}
                 </span>
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,

@@ -19,6 +19,7 @@ interface Inquiry {
   seller_id: number;
   buyer_id: number;
   reservation_id?: number;
+  order_number?: string;
   category: string;
   title: string;
   content: string;
@@ -158,7 +159,7 @@ export default function SellerInquiriesPage() {
               <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>{inq.title}</div>
               <div style={{ fontSize: 12, color: C.textSec, lineHeight: 1.5, marginBottom: 6 }}>{inq.content}</div>
               <div style={{ fontSize: 10, color: C.textDim, marginBottom: 6 }}>
-                {inq.reservation_id ? `주문번호 #${inq.reservation_id} · ` : ''}{fmtDate(inq.created_at)}
+                {inq.reservation_id ? `주문번호 ${inq.order_number || `R-${inq.reservation_id}`} · ` : ''}{fmtDate(inq.created_at)}
               </div>
 
               {inq.seller_reply && (
