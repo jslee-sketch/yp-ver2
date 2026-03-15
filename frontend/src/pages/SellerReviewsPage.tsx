@@ -89,7 +89,7 @@ export default function SellerReviewsPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 32, fontWeight: 800, color: C.yellow }}>
-                  {summary.avg_rating.toFixed(1)}
+                  {(summary.avg_rating ?? 0).toFixed(1)}
                 </div>
                 <div style={{ fontSize: 11, color: C.textDim }}>평균 평점</div>
               </div>

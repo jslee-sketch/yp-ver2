@@ -2,18 +2,27 @@ import { useState, useEffect } from 'react';
 
 const BASE = import.meta.env.VITE_API_BASE || '';
 
+interface DeductionItem {
+  type: string;
+  amount: number;
+  note?: string;
+}
+
 interface SimResult {
   can_refund: boolean;
   original_amount: number;
-  refund_amount: number;
-  deductions: string[];
+  buyer_refund_amount: number;
+  deductions: DeductionItem[];
   reason: string;
-  cooling_period: number;
+  cooling_period_days: number;
   settlement_impact?: {
-    before_refund: number;
-    after_refund: number;
-    settlement_loss: number;
-    platform_fee_rate: number;
+    before: number;
+    after: number;
+    loss: number;
+    fee_rate: number;
+    return_shipping_burden?: number;
+    platform_fee_refund?: number;
+    note?: string;
   };
 }
 
@@ -133,17 +142,19 @@ export default function RefundSimulatorPage({ role = 'buyer' }: { role?: string 
           border: `1px solid ${result.can_refund ? 'rgba(74,222,128,0.2)' : 'rgba(239,68,68,0.2)'}`,
         }}>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
-            {result.can_refund ? '환불 가능' : `환불 불가 (쿨링 ${result.cooling_period}일 초과)`}
+            {result.can_refund ? '환불 가능' : `환불 불가 (쿨링 ${result.cooling_period_days}일 초과)`}
           </div>
 
           <div style={{ fontSize: 22, fontWeight: 700, color: '#4ade80', marginBottom: 8 }}>
-            {result.refund_amount.toLocaleString()}원
+            {(result.buyer_refund_amount ?? 0).toLocaleString()}원
           </div>
 
           {result.deductions.length > 0 && (
             <div style={{ marginBottom: 8 }}>
               {result.deductions.map((d, i) => (
-                <div key={i} style={{ fontSize: 12, color: '#f59e0b' }}>{d}</div>
+                <div key={i} style={{ fontSize: 12, color: '#f59e0b' }}>
+                  {d.type}: -{(d.amount ?? 0).toLocaleString()}원{d.note ? ` (${d.note})` : ''}
+                </div>
               ))}
             </div>
           )}
@@ -163,13 +174,13 @@ export default function RefundSimulatorPage({ role = 'buyer' }: { role?: string 
                 정산 영향
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                환불 전 정산금: {result.settlement_impact.before_refund.toLocaleString()}원
+                환불 전 정산금: {(result.settlement_impact.before ?? 0).toLocaleString()}원
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                환불 후 정산금: {result.settlement_impact.after_refund.toLocaleString()}원
+                환불 후 정산금: {(result.settlement_impact.after ?? 0).toLocaleString()}원
               </div>
               <div style={{ fontSize: 12, color: '#ef4444' }}>
-                정산 감소: -{result.settlement_impact.settlement_loss.toLocaleString()}원
+                정산 감소: -{(result.settlement_impact.loss ?? 0).toLocaleString()}원
               </div>
             </div>
           )}
