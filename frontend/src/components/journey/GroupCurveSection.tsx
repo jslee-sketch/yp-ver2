@@ -91,26 +91,41 @@ export function GroupCurveSection({ anchor, target, currentQ, qTarget, lowestOff
       ctx.textAlign = 'left';
       ctx.fillText(`최저오퍼 ${(lowestOfferPrice / 10000).toFixed(1)}만`, PL + 4, pToY(lowestOfferPrice) - 4);
 
+      // Build smooth curve points
+      const pts: {x: number; y: number}[] = [];
+      for (let q = 1; q <= MAX_Q; q += 0.5) {
+        pts.push({ x: qToX(q), y: pToY(groupPrice(q, anchor, qTarget, target)) });
+      }
+
+      // Helper: draw smooth bezier curve through points
+      function drawSmoothCurve(points: {x:number;y:number}[]) {
+        if (points.length < 2 || !ctx) return;
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+          const cp1x = (points[i].x + points[i + 1].x) / 2;
+          const cp1y = points[i].y;
+          const cp2x = cp1x;
+          const cp2y = points[i + 1].y;
+          ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, points[i + 1].x, points[i + 1].y);
+        }
+      }
+
       // Curve glow
       ctx.beginPath();
       ctx.strokeStyle = 'rgba(255,140,66,0.13)';
       ctx.lineWidth = 10;
       ctx.lineJoin = 'round';
-      for (let q = 1; q <= MAX_Q; q += 0.5) {
-        const p = groupPrice(q, anchor, qTarget, target);
-        q === 1 ? ctx.moveTo(qToX(q), pToY(p)) : ctx.lineTo(qToX(q), pToY(p));
-      }
+      ctx.lineCap = 'round';
+      drawSmoothCurve(pts);
       ctx.stroke();
 
       // Curve main
       ctx.beginPath();
       ctx.strokeStyle = T.orange;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
       ctx.lineJoin = 'round';
-      for (let q = 1; q <= MAX_Q; q += 0.5) {
-        const p = groupPrice(q, anchor, qTarget, target);
-        q === 1 ? ctx.moveTo(qToX(q), pToY(p)) : ctx.lineTo(qToX(q), pToY(p));
-      }
+      ctx.lineCap = 'round';
+      drawSmoothCurve(pts);
       ctx.stroke();
 
       // Original position marker (shown when dragging away from currentQ)

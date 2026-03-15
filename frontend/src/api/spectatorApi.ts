@@ -14,10 +14,12 @@ export async function submitPrediction(
   dealId: number,
   predictedPrice: number,
   comment?: string,
+  buyerId?: number,
 ): Promise<SpectatorPrediction | null> {
   try {
     const res = await apiClient.post(API.SPECTATOR.PREDICT, {
       deal_id: dealId,
+      buyer_id: buyerId ?? 0,
       predicted_price: predictedPrice,
       comment,
     });
@@ -31,7 +33,13 @@ export async function submitPrediction(
 export async function fetchPredictions(dealId: number): Promise<SpectatorPrediction[]> {
   try {
     const res = await apiClient.get(API.SPECTATOR.PREDICTIONS(dealId));
-    return (res.data ?? []) as SpectatorPrediction[];
+    const data = res.data;
+    // API returns DealPredictionsOut wrapper: { predictions: [...], predictions_count, ... }
+    if (data && typeof data === 'object' && Array.isArray(data.predictions)) {
+      return data.predictions as SpectatorPrediction[];
+    }
+    if (Array.isArray(data)) return data as SpectatorPrediction[];
+    return [];
   } catch (err) {
     console.error('예측 목록 API 실패:', err);
     return [];

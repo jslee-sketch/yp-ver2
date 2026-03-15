@@ -244,8 +244,7 @@ export default function PriceJourneyPage() {
     // 관전자 예측 로드
     fetchPredictions(numId).then(preds => {
       if (Array.isArray(preds)) {
-        const items = (preds as any).predictions ?? preds;
-        if (Array.isArray(items)) setPredictions(items);
+        setPredictions(preds);
       }
     }).catch(() => {});
 
@@ -403,16 +402,17 @@ export default function PriceJourneyPage() {
           <span style={{ fontSize: 11, fontWeight: 700, color: T.green, letterSpacing: 1 }}>LIVE</span>
         </div>
 
-        {/* 카운트다운 — 디지털 시계 */}
+        {/* 카운트다운 — 디지털 시계 (헤더 컴팩트) */}
         {countdown && (
           <span style={{
-            fontSize: 28, fontWeight: 700, color: countdownColor,
+            fontSize: 16, fontWeight: 700, color: countdownColor,
             fontFamily: "'Courier New', 'Consolas', monospace",
-            letterSpacing: 2,
+            letterSpacing: 1,
             background: 'rgba(0,0,0,0.6)',
             border: `1px solid ${countdownDiff < 10 * 60 * 1000 ? 'rgba(255,50,50,0.3)' : 'rgba(0,255,136,0.2)'}`,
-            borderRadius: 8,
-            padding: '4px 12px',
+            borderRadius: 6,
+            padding: '3px 8px',
+            textShadow: `0 0 8px ${countdownColor}44`,
             animation: countdownDiff < 60 * 1000
               ? 'blinkFast 0.3s infinite'
               : countdownDiff < 10 * 60 * 1000
@@ -445,26 +445,28 @@ export default function PriceJourneyPage() {
         }}>
           <DealTimeline currentStage={timelineStage} showBanner={shouldShowBanner} onBannerDismiss={handleBannerDismiss} />
           <div style={{
-            padding: '8px 12px 10px', borderTop: `1px solid ${T.border}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 14px 14px', borderTop: `1px solid ${T.border}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
-                {timelineStage === 'recruiting' ? '오퍼경쟁까지' :
-                 timelineStage === 'offer_competition' ? '예약/결제까지' :
-                 timelineStage === 'reservation_payment' ? '완료까지' : ''}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: '100%' }}>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: 1 }}>
+                ⏰ {timelineStage === 'recruiting' ? '다음 단계: 오퍼경쟁까지 남은 시간' :
+                 timelineStage === 'offer_competition' ? '다음 단계: 예약/결제까지 남은 시간' :
+                 timelineStage === 'reservation_payment' ? '완료까지 남은 시간' : '남은 시간'}
               </span>
-              <span style={{
-                fontSize: 22, fontWeight: 700, color: countdownColor,
+              <div style={{
+                fontSize: 36, fontWeight: 700, color: countdownColor,
                 fontFamily: "'Courier New', 'Consolas', monospace",
-                letterSpacing: 2,
-                background: 'rgba(0,0,0,0.5)',
-                border: `1px solid ${countdownDiff < 10 * 60 * 1000 ? 'rgba(255,50,50,0.3)' : 'rgba(0,255,136,0.15)'}`,
-                borderRadius: 6, padding: '4px 10px',
+                letterSpacing: 4,
+                background: 'rgba(0,0,0,0.7)',
+                border: `2px solid ${countdownDiff < 10 * 60 * 1000 ? 'rgba(255,50,50,0.5)' : 'rgba(0,255,136,0.3)'}`,
+                borderRadius: 10, padding: '8px 20px',
+                textAlign: 'center',
+                textShadow: `0 0 12px ${countdownColor}44`,
                 animation: countdownDiff > 0 && countdownDiff < 60 * 1000
                   ? 'blinkFast 0.3s infinite'
                   : isBlinking ? 'clockPulse 1.5s infinite' : undefined,
-              }}>⏰ {countdown || '로딩 중'}</span>
+              }}>{countdown || '-- : -- : --'}</div>
             </div>
           </div>
         </div>
@@ -1135,7 +1137,7 @@ export default function PriceJourneyPage() {
                   setPredSubmitting(true);
                   const price = Number(predPrice);
                   try {
-                    const result = await submitPrediction(Number(dealId), price, predReason || undefined);
+                    const result = await submitPrediction(Number(dealId), price, predReason || undefined, user?.id ?? 0);
                     setPredDone(true);
                     setShowPredModal(false);
                     // 즉시 목록에 추가 (optimistic)
