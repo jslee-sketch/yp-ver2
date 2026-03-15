@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
 import { ocrBusinessRegistration, updateBusinessInfo } from '../api/taxInvoiceApi';
@@ -20,6 +21,7 @@ const FIELDS = [
 ] as const;
 
 export default function SellerBusinessInfoPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const sellerId = user?.seller?.id ?? user?.id ?? 0;
   const [form, setForm] = useState<Record<string, string>>({});
@@ -75,7 +77,7 @@ export default function SellerBusinessInfoPage() {
   };
 
   if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
-  if (!sellerId) return <div style={{ padding: 40, color: C.textSec }}>로그인이 필요합니다.</div>;
+  if (!sellerId) { navigate('/login', { replace: true }); return null; }
 
   const inputStyle = {
     width: '100%', padding: '10px 12px', borderRadius: 8,

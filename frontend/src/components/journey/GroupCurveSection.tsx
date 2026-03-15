@@ -96,7 +96,7 @@ export function GroupCurveSection({ anchor, target, currentQ, qTarget, lowestOff
       ctx.strokeStyle = 'rgba(255,140,66,0.13)';
       ctx.lineWidth = 10;
       ctx.lineJoin = 'round';
-      for (let q = 1; q <= MAX_Q; q++) {
+      for (let q = 1; q <= MAX_Q; q += 0.5) {
         const p = groupPrice(q, anchor, qTarget, target);
         q === 1 ? ctx.moveTo(qToX(q), pToY(p)) : ctx.lineTo(qToX(q), pToY(p));
       }
@@ -107,7 +107,7 @@ export function GroupCurveSection({ anchor, target, currentQ, qTarget, lowestOff
       ctx.strokeStyle = T.orange;
       ctx.lineWidth = 2;
       ctx.lineJoin = 'round';
-      for (let q = 1; q <= MAX_Q; q++) {
+      for (let q = 1; q <= MAX_Q; q += 0.5) {
         const p = groupPrice(q, anchor, qTarget, target);
         q === 1 ? ctx.moveTo(qToX(q), pToY(p)) : ctx.lineTo(qToX(q), pToY(p));
       }

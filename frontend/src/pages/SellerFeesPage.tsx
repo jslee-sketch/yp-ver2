@@ -93,8 +93,11 @@ export default function SellerFeesPage() {
                     <tr key={lv.level} style={{
                       borderBottom: `1px solid ${C.border}`,
                       background: isMine ? `${C.green}0a` : 'transparent',
+                      borderRadius: isMine ? 12 : 0,
+                      outline: isMine ? `2px solid ${C.green}` : 'none',
+                      outlineOffset: -1,
                     }}>
-                      <td style={{ padding: '10px 6px', fontWeight: 700, color: lv.color }}>
+                      <td style={{ padding: '10px 6px', fontWeight: 700, color: isMine ? C.green : lv.color }}>
                         {lv.level} {isMine && '← 현재'}
                       </td>
                       <td style={{ padding: '10px 6px', textAlign: 'center', fontWeight: 700, color: C.text }}>{lv.fee}%</td>

@@ -91,17 +91,27 @@ export default function DisputeDetailPage() {
   const { id } = useParams();
   const [dispute, setDispute] = useState<DisputeData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetch(`${BASE}/v3_6/disputes/${id}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
       .then(setDispute)
-      .catch(() => {})
+      .catch(() => setError('분쟁 정보를 불러오지 못했습니다.'))
       .finally(() => setLoading(false));
   }, [id]);
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>로딩 중...</div>;
-  if (!dispute) return <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>분쟁을 찾을 수 없습니다</div>;
+  if (error || !dispute) return (
+    <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
+      <div style={{ fontSize: 40, marginBottom: 8 }}>⚖️</div>
+      <div style={{ fontSize: 13, marginBottom: 12 }}>{error || '분쟁을 찾을 수 없습니다'}</div>
+      <button onClick={() => window.location.reload()} style={{
+        padding: '8px 16px', borderRadius: 8, fontSize: 12, background: '#1a1a2e',
+        border: '1px solid #333', color: '#aaa', cursor: 'pointer',
+      }}>재시도</button>
+    </div>
+  );
 
   const isClosed = ['ACCEPTED', 'REJECTED', 'AUTO_CLOSED'].includes(dispute.status);
 

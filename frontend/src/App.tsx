@@ -103,6 +103,7 @@ import DonzzulHeroProfilePage from './pages/donzzul/DonzzulHeroProfilePage';
 import AdminDonzzulStoresPage from './pages/admin/AdminDonzzulStoresPage';
 import AdminDonzzulSettlementsPage from './pages/admin/AdminDonzzulSettlementsPage';
 import DisputeDetailPage from './pages/DisputeDetailPage';
+import SellerDisputesPage from './pages/SellerDisputesPage';
 import RefundSimulatorPage from './pages/RefundSimulatorPage';
 import AdminInsightsPage from './pages/admin/AdminInsightsPage';
 
@@ -228,6 +229,8 @@ function App() {
 
           {/* 분쟁 */}
           <Route path="/disputes/:id" element={<DisputeDetailPage />} />
+          <Route path="/seller/disputes" element={<ProtectedRoute><SellerDisputesPage /></ProtectedRoute>} />
+          <Route path="/refund-simulator" element={<RefundSimulatorPage role="buyer" />} />
           <Route path="/buyer/refund-simulator" element={<RefundSimulatorPage role="buyer" />} />
           <Route path="/seller/refund-simulator" element={<RefundSimulatorPage role="seller" />} />
 

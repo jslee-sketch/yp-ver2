@@ -206,11 +206,20 @@ export function OfferListSection({ offers, target, onSelectOffer }: Props) {
     <div ref={sectionRef} style={{ margin: '14px 16px 0', overflow: 'visible' }}>
       {/* Title */}
       <div style={{
-        fontSize: 13, fontWeight: 700, color: T.text,
+        fontSize: 16, fontWeight: 800, color: T.text,
         marginBottom: 10, paddingLeft: 4,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'linear-gradient(135deg, rgba(0,240,255,0.08), rgba(57,255,20,0.06))',
+        padding: '10px 14px',
+        borderRadius: 12,
       }}>
-        <span>📦 전체 오퍼 ({offers.length}건)</span>
+        <span>{
+          offers.length === 0
+            ? '🕐 아직 판매자의 오퍼가 없습니다. 첫 오퍼를 기다려보세요!'
+            : offers.length === 1
+            ? '🎯 첫 번째 판매자가 등장했습니다!'
+            : `⚔️ 판매자들의 가격 전쟁! ${offers.length}건의 오퍼가 경쟁 중!`
+        }</span>
       </div>
 
       {/* Sort chips — wrap으로 2줄 처리 (스크롤 불필요) */}

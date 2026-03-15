@@ -47,7 +47,7 @@ export default function SellerTaxInvoicesPage() {
   };
 
   if (loading) return <div style={{ padding: 40, color: C.textSec }}>로딩 중...</div>;
-  if (!sellerId) return <div style={{ padding: 40, color: C.textSec }}>로그인이 필요합니다.</div>;
+  if (!sellerId) { navigate('/login', { replace: true }); return null; }
 
   return (
     <div style={{ padding: '20px 0' }}>

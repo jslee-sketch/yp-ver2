@@ -12,8 +12,10 @@ const C = {
 
 function fmtP(n: number) { return '₩' + (n ?? 0).toLocaleString('ko-KR'); }
 
+// SSOT: app/policy/params/defaults.yaml → levels → platform_fee_rate
+// Lv.1=최고등급(2.0%), Lv.6=기본등급(3.5%)
 const COMMISSION_BY_LEVEL: Record<number, number> = {
-  1: 7, 2: 6, 3: 5.5, 4: 5, 5: 4.5, 6: 4,
+  1: 2.0, 2: 2.5, 3: 2.7, 4: 2.8, 5: 3.0, 6: 3.5,
 };
 
 interface DashData {
@@ -97,7 +99,14 @@ export default function SellerDashboardPage() {
       <div style={{ padding: '14px 16px 0', maxWidth: 1200, margin: '0 auto' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px 0', color: C.textDim }}>불러오는 중...</div>
-        ) : data && (
+        ) : !data ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: C.textDim }}>
+            <div style={{ fontSize: 13, marginBottom: 8 }}>대시보드 데이터를 불러오지 못했습니다.</div>
+            <button onClick={() => window.location.reload()} style={{
+              padding: '8px 16px', borderRadius: 8, fontSize: 12, background: C.bgEl, border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer',
+            }}>재시도</button>
+          </div>
+        ) : (
           <>
             {/* 판매자 레벨 & 수수료 */}
             <div style={{
@@ -117,7 +126,7 @@ export default function SellerDashboardPage() {
                   판매자 등급 Lv.{data.sellerLevel}
                 </div>
                 <div style={{ fontSize: 11, color: C.textDim }}>
-                  수수료율 <span style={{ fontWeight: 700, color: C.orange }}>{COMMISSION_BY_LEVEL[data.sellerLevel] ?? 7}%</span>
+                  수수료율 <span style={{ fontWeight: 700, color: C.orange }}>{COMMISSION_BY_LEVEL[data.sellerLevel] ?? 3.5}%</span>
                 </div>
               </div>
             </div>

@@ -522,7 +522,7 @@ export default function MyPage() {
             <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 12 }}>나의 거래 조건</div>
             {[
               { label: '판매자 등급', value: `Lv.${sellerProfile.level ?? 6}`, locked: true },
-              { label: '수수료율', value: `${sellerProfile.fee_rate ?? 3.0}%`, locked: true, note: '등급별 자동 적용' },
+              { label: '수수료율', value: `${sellerProfile.fee_rate ?? 3.5}%`, locked: true, note: '등급별 자동 적용' },
               { label: '무상환불기간', value: `${sellerProfile.cooling_days ?? 7}일`, locked: false },
               { label: '기본 배송료', value: `${(Number(sellerProfile.default_shipping_fee) || 0).toLocaleString()}원`, locked: false },
               { label: '정산 주기', value: `확정 후 ${sellerProfile.settlement_days ?? 7}일`, locked: true },

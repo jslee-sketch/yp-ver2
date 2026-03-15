@@ -91,6 +91,8 @@ export default function PriceJourneyPage() {
   const [selectedOffer, setSelectedOffer] = useState<JourneyOffer | null>(null);
   const [apiDeal, setApiDeal] = useState<Record<string, unknown> | null>(null);
   const [offers, setOffers] = useState<JourneyOffer[]>([]);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
 
   // ── 딜 가격 상태 (API 로드 후 업데이트) ──
   const [pAnchor, setPAnchor] = useState(0);
@@ -198,8 +200,10 @@ export default function PriceJourneyPage() {
     if (!numId) return;
 
     // 딜 메타
+    setPageLoading(true);
+    setPageError('');
     fetchDeal(numId).then(d => {
-      if (!d) return;
+      if (!d) { setPageError('딜 정보를 찾을 수 없습니다.'); setPageLoading(false); return; }
       const raw = d as Record<string, unknown>;
       setApiDeal(raw);
       let anchor = (raw.market_price as number) ?? (raw.anchor_price as number) ?? 0;
@@ -217,6 +221,7 @@ export default function PriceJourneyPage() {
       if (raw.deadline_at) {
         setDeadlineMs(new Date(raw.deadline_at as string).getTime());
       }
+      setPageLoading(false);
 
       // 오퍼 (딜 로드 후 target 확정된 상태에서)
       fetchOffersByDeal(numId).then(offersRaw => {
@@ -230,7 +235,7 @@ export default function PriceJourneyPage() {
           setOffers(mapped);
         }
       }).catch(() => {});
-    }).catch(() => {});
+    }).catch(() => { setPageError('딜 정보를 불러오지 못했습니다.'); setPageLoading(false); });
 
     // 채팅
     const buyerId = user?.id ?? 0;
@@ -303,6 +308,25 @@ export default function PriceJourneyPage() {
 
   const previewMsgs = chatMessages.slice(-3);
 
+  if (pageLoading) return (
+    <div style={{ minHeight: '100dvh', background: T.bgDeep, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+      <div style={{ fontSize: 36, animation: 'spin 1s linear infinite' }}>🎯</div>
+      <div style={{ fontSize: 14, color: '#888' }}>가격 여정 불러오는 중...</div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+
+  if (pageError) return (
+    <div style={{ minHeight: '100dvh', background: T.bgDeep, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+      <div style={{ fontSize: 40 }}>😵</div>
+      <div style={{ fontSize: 14, color: '#ff5252' }}>{pageError}</div>
+      <button onClick={() => window.location.reload()} style={{
+        padding: '8px 20px', borderRadius: 10, fontSize: 13, background: '#1a1a2e',
+        border: '1px solid #333', color: '#aaa', cursor: 'pointer', marginTop: 4,
+      }}>재시도</button>
+    </div>
+  );
+
   return (
     <div style={{ minHeight: '100dvh', background: T.bgDeep, paddingBottom: 64 }}>
       <style>{`
@@ -365,7 +389,9 @@ export default function PriceJourneyPage() {
         {/* 카운트다운 */}
         {countdown && (
           <span style={{
-            fontSize: 12, fontWeight: 600, color: countdownColor,
+            fontSize: 14, fontWeight: 700, color: countdownColor,
+            fontFamily: "'Courier New', monospace",
+            letterSpacing: 1,
             animation: isBlinking ? 'blinkFast 0.5s infinite' : undefined,
           }}>
             {countdown}
@@ -397,199 +423,15 @@ export default function PriceJourneyPage() {
             padding: '6px 8px 10px', borderTop: `1px solid ${T.border}`,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <span style={{ fontSize: 11, color: T.textSec }}>⏰ {countdown || '로딩 중'}</span>
+            <span style={{ fontSize: 14, fontFamily: "'Courier New', monospace", fontWeight: 700, letterSpacing: 1, color: countdownColor, animation: isBlinking ? 'blinkFast 0.5s infinite' : undefined }}>⏰ {countdown || '로딩 중'}</span>
           </div>
         </div>
       </div>
 
-      {/* ── ① 전면: 목표가 vs 최저오퍼 ── */}
-      <PriceFaceSection
-        anchor={pAnchor}
-        target={currentDisplayPrice}
-        lowestPrice={lowestOffer?.rawPrice ?? 0}
-        lowestSeller={lowestOffer?.seller ?? '-'}
-        lowestQty={lowestOffer?.totalQty ?? 0}
-        onEditTarget={canEditTarget ? () => {
-          setNewTargetPrice(currentDisplayPrice);
-          setTargetReason('');
-          setTargetImages([]);
-          setShowTargetEditModal(true);
-        } : undefined}
-      />
+      {/* ── divider before chat ── */}
+      <div style={{ margin: '24px 20px', height: 2, background: 'linear-gradient(90deg, transparent, rgba(0,229,255,0.4), rgba(57,255,20,0.3), transparent)', borderRadius: 1 }} />
 
-
-      {/* ── 목표가 근거 섹션 (근거 있을 때만) ── */}
-      {currentTargetReason && (
-        <div style={{ padding: '0 20px 8px' }}>
-          <div style={{ background: T.bgSurface, border: `1px solid rgba(255,225,86,0.2)`, borderLeft: '3px solid #ffe156', borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#ffe156', letterSpacing: 1, marginBottom: 8 }}>💡 목표가 근거 (방장 제시)</div>
-            <div style={{ fontSize: 13, color: T.text, lineHeight: 1.6, marginBottom: currentTargetImages.length > 0 ? 10 : 0 }}>{currentTargetReason}</div>
-            {currentTargetImages.length > 0 && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {currentTargetImages.map((src, i) => (
-                  <img key={i} src={src} alt="" style={{ width: 70, height: 70, borderRadius: 8, objectFit: 'cover', border: `1px solid ${T.border}` }} />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── ② 전체 오퍼 리스트 ── */}
-      <OfferListSection
-        offers={offers}
-        target={pTarget}
-        onSelectOffer={setSelectedOffer}
-      />
-
-      {/* 통신판매중개 면책 */}
-      {offers.length > 0 && (
-        <div style={{
-          margin: '0 16px', padding: '10px 14px',
-          background: 'rgba(255,165,0,0.08)', border: '1px solid rgba(255,165,0,0.2)',
-          borderRadius: 10, fontSize: 11, color: '#b0b0b0', lineHeight: 1.5,
-        }}>
-          역핑은 통신판매중개자로서 판매자와 구매자 간 거래를 중개하며, 상품의 품질 및 거래 이행에 대한 책임은 판매자에게 있습니다.
-        </div>
-      )}
-
-      {/* ── ③ 공동구매 기대가격 곡선 ── */}
-      <GroupCurveSection
-        anchor={pAnchor}
-        target={pTarget}
-        currentQ={currentQ}
-        qTarget={qTarget}
-        lowestOfferPrice={lowestOffer?.rawPrice ?? 0}
-      />
-
-      {/* ── 딜 참여하기 플로팅 버튼 (fixed) ── */}
-      <button
-        onClick={() => navigate(`/deal/${dealId ?? ''}/join`)}
-        style={{
-          position: 'fixed',
-          right: 20,
-          bottom: 220,
-          width: 86,
-          height: 86,
-          borderRadius: '50%',
-          background: '#00c853',
-          border: '2.5px solid rgba(0,255,136,0.6)',
-          color: '#0a0e1a',
-          fontSize: 11,
-          fontWeight: 800,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          lineHeight: 1.3,
-          textAlign: 'center' as const,
-          boxShadow: '0 6px 28px rgba(0,200,83,0.55)',
-          zIndex: 997,
-        }}
-      >
-        <span style={{ fontSize: 20 }}>🤝</span>
-        <span style={{ fontSize: 10 }}>이 딜</span>
-        <span style={{ fontSize: 10 }}>참여하기</span>
-      </button>
-
-      {/* ── ④ 관전자 예측 분포 차트 ── */}
-      <div style={{ padding: '24px 20px 0' }}>
-        <div style={{
-          background: T.bgSurface, border: `1px solid ${T.border}`,
-          borderRadius: 14, padding: '16px',
-        }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>
-            👁️ 관전자 예측 분포
-          </div>
-          <div style={{ fontSize: 12, color: T.textSec, marginBottom: 14 }}>
-            {chatMessages.length + 45}명이 예측에 참여했어요 · 평균 예측가:&nbsp;
-            <span style={{ color: T.green, fontWeight: 700 }}>
-              {avgPrediction.toLocaleString()}원
-            </span>
-          </div>
-
-          {/* 바 차트 (div-based for design consistency) */}
-          <div style={{ height: 140 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={predBuckets} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
-                <XAxis
-                  dataKey="range"
-                  tick={{ fill: T.textSec, fontSize: 10 }}
-                  axisLine={{ stroke: T.border }}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: T.textSec, fontSize: 9 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {predBuckets.map((b, i) => (
-                    <Cell
-                      key={i}
-                      fill={b.count === predMax ? T.green : 'rgba(0,230,118,0.25)'}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <button
-            onClick={() => { if (predDone) return; setShowPredModal(true); }}
-            disabled={predDone}
-            style={{
-              marginTop: 12, width: '100%',
-              padding: '11px', borderRadius: 10,
-              background: predDone ? 'rgba(0,230,118,0.05)' : 'rgba(0,230,118,0.1)',
-              border: `1px solid rgba(0,230,118,0.3)`,
-              color: T.green, fontSize: 13, fontWeight: 700,
-              cursor: predDone ? 'default' : 'pointer',
-              opacity: predDone ? 0.6 : 1,
-              transition: 'background 0.15s',
-            }}
-            onMouseEnter={e => { if (!predDone) e.currentTarget.style.background = 'rgba(0,230,118,0.18)'; }}
-            onMouseLeave={e => { if (!predDone) e.currentTarget.style.background = 'rgba(0,230,118,0.1)'; }}
-          >
-            {predDone ? '예측 완료!' : '🎯 나도 예측하기'}
-          </button>
-        </div>
-      </div>
-
-      {/* ── ⑤ 핑퐁이 인사이트 카드 ── */}
-      <div style={{ padding: '16px 20px 0' }}>
-        <div style={{
-          background: T.bgSurface,
-          border: `1px solid rgba(0,229,255,0.3)`,
-          borderRadius: 14, padding: '14px 16px',
-          display: 'flex', gap: 12, alignItems: 'flex-start',
-        }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-            background: 'rgba(0,229,255,0.12)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 20,
-          }}>🤖</div>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#00e5ff', marginBottom: 4 }}>
-              핑퐁이 인사이트
-            </div>
-            <div style={{ fontSize: 13, color: T.text, lineHeight: 1.55 }}>
-              {offers.length === 0 ? (
-                <>아직 오퍼가 없어요. 판매자의 제안을 기다려주세요! ⏳</>
-              ) : lowestOffer && pTarget > 0 && lowestOffer.rawPrice <= pTarget ? (
-                <>목표가보다 <span style={{ color: T.green, fontWeight: 700 }}>{(pTarget - lowestOffer.rawPrice).toLocaleString()}원 더 저렴한 오퍼</span>가 있어요! 🎉
-                <br />{offers.filter(o => o.rawPrice <= pTarget).length > 1 ? `PREMIUM 오퍼가 ${offers.filter(o => o.rawPrice <= pTarget).length}개나 경쟁 중이에요. ` : ''}마감 전 참여하면 좋을 것 같아요.</>
-              ) : lowestOffer ? (
-                <>아직 목표가에 도달한 오퍼가 없어요. 가장 가까운 오퍼는 <span style={{ color: '#ff8c42', fontWeight: 700 }}>{lowestOffer.rawPrice.toLocaleString()}원</span>이에요.</>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── ⑥ 딜 채팅 ── */}
+      {/* ── ⑥ 딜 채팅 (moved after timeline) ── */}
       <div style={{ padding: '16px 20px 0' }}>
         <div style={{
           background: T.bgSurface, border: `1px solid ${T.border}`,
@@ -604,7 +446,7 @@ export default function PriceJourneyPage() {
             onClick={() => setChatExpanded(v => !v)}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: T.text }}>💬 딜 채팅</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: T.text }}>🎙️ 실시간 딜 토크!</span>
               <span style={{
                 fontSize: 11, padding: '1px 7px', borderRadius: 10,
                 background: 'rgba(0,229,255,0.12)', color: '#00e5ff',
@@ -755,6 +597,204 @@ export default function PriceJourneyPage() {
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* ── ① 전면: 목표가 vs 최저오퍼 ── */}
+      <PriceFaceSection
+        anchor={pAnchor}
+        target={currentDisplayPrice}
+        lowestPrice={lowestOffer?.rawPrice ?? 0}
+        lowestSeller={lowestOffer?.seller ?? '-'}
+        lowestQty={lowestOffer?.totalQty ?? 0}
+        onEditTarget={canEditTarget ? () => {
+          setNewTargetPrice(currentDisplayPrice);
+          setTargetReason('');
+          setTargetImages([]);
+          setShowTargetEditModal(true);
+        } : undefined}
+      />
+
+
+      {/* ── 목표가 근거 섹션 (근거 있을 때만) ── */}
+      {currentTargetReason && (
+        <div style={{ padding: '0 20px 8px' }}>
+          <div style={{ background: T.bgSurface, border: `1px solid rgba(255,225,86,0.2)`, borderLeft: '3px solid #ffe156', borderRadius: 12, padding: '12px 14px' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#ffe156', letterSpacing: 1, marginBottom: 8 }}>💡 목표가 근거 (방장 제시)</div>
+            <div style={{ fontSize: 13, color: T.text, lineHeight: 1.6, marginBottom: currentTargetImages.length > 0 ? 10 : 0 }}>{currentTargetReason}</div>
+            {currentTargetImages.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {currentTargetImages.map((src, i) => (
+                  <img key={i} src={src} alt="" style={{ width: 70, height: 70, borderRadius: 8, objectFit: 'cover', border: `1px solid ${T.border}` }} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── divider ── */}
+      <div style={{ margin: '24px 20px', height: 2, background: 'linear-gradient(90deg, transparent, rgba(0,240,255,0.4), rgba(57,255,20,0.4), transparent)', borderRadius: 1 }} />
+
+      {/* ── ② 전체 오퍼 리스트 ── */}
+      <OfferListSection
+        offers={offers}
+        target={pTarget}
+        onSelectOffer={setSelectedOffer}
+      />
+
+      {/* 통신판매중개 면책 */}
+      {offers.length > 0 && (
+        <div style={{
+          margin: '0 16px', padding: '10px 14px',
+          background: 'rgba(255,165,0,0.08)', border: '1px solid rgba(255,165,0,0.2)',
+          borderRadius: 10, fontSize: 11, color: '#b0b0b0', lineHeight: 1.5,
+        }}>
+          역핑은 통신판매중개자로서 판매자와 구매자 간 거래를 중개하며, 상품의 품질 및 거래 이행에 대한 책임은 판매자에게 있습니다.
+        </div>
+      )}
+
+      {/* ── ③ 공동구매 기대가격 곡선 ── */}
+      <GroupCurveSection
+        anchor={pAnchor}
+        target={pTarget}
+        currentQ={currentQ}
+        qTarget={qTarget}
+        lowestOfferPrice={lowestOffer?.rawPrice ?? 0}
+      />
+
+      {/* ── 딜 참여하기 플로팅 버튼 (fixed) ── */}
+      <button
+        onClick={() => navigate(`/deal/${dealId ?? ''}/join`)}
+        style={{
+          position: 'fixed',
+          right: 20,
+          bottom: 220,
+          width: 86,
+          height: 86,
+          borderRadius: '50%',
+          background: '#00c853',
+          border: '2.5px solid rgba(0,255,136,0.6)',
+          color: '#0a0e1a',
+          fontSize: 11,
+          fontWeight: 800,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          lineHeight: 1.3,
+          textAlign: 'center' as const,
+          boxShadow: '0 6px 28px rgba(0,200,83,0.55)',
+          zIndex: 997,
+        }}
+      >
+        <span style={{ fontSize: 20 }}>🤝</span>
+        <span style={{ fontSize: 10 }}>이 딜</span>
+        <span style={{ fontSize: 10 }}>참여하기</span>
+      </button>
+
+      {/* ── divider before spectator ── */}
+      <div style={{ margin: '24px 20px', height: 2, background: 'linear-gradient(90deg, transparent, rgba(138,43,226,0.4), rgba(255,215,0,0.4), transparent)', borderRadius: 1 }} />
+
+      {/* ── ④ 관전자 예측 분포 차트 ── */}
+      <div style={{ padding: '24px 20px 0' }}>
+        <div style={{
+          background: T.bgSurface, border: `1px solid ${T.border}`,
+          borderRadius: 14, padding: '16px',
+        }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 4 }}>
+            {predBuckets.length === 0 || predBuckets.every(b => b.count === 0)
+              ? '🔮 아직 아무도 예측하지 않았어요. 첫 예언자가 되어보세요!'
+              : '🔮 관전자들은 얼마를 예측했을까?'}
+          </div>
+          <div style={{ fontSize: 12, color: T.textSec, marginBottom: 14 }}>
+            {chatMessages.length + 45}명이 예측에 참여했어요 · 평균 예측가:&nbsp;
+            <span style={{ color: T.green, fontWeight: 700 }}>
+              {avgPrediction.toLocaleString()}원
+            </span>
+          </div>
+
+          {/* 바 차트 (div-based for design consistency) */}
+          <div style={{ height: 140 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={predBuckets} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
+                <XAxis
+                  dataKey="range"
+                  tick={{ fill: T.textSec, fontSize: 10 }}
+                  axisLine={{ stroke: T.border }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: T.textSec, fontSize: 9 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                  {predBuckets.map((b, i) => (
+                    <Cell
+                      key={i}
+                      fill={b.count === predMax ? T.green : 'rgba(0,230,118,0.25)'}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <button
+            onClick={() => { if (predDone) return; setShowPredModal(true); }}
+            disabled={predDone}
+            style={{
+              marginTop: 12, width: '100%',
+              padding: '11px', borderRadius: 10,
+              background: predDone ? 'rgba(0,230,118,0.05)' : 'rgba(0,230,118,0.1)',
+              border: `1px solid rgba(0,230,118,0.3)`,
+              color: T.green, fontSize: 13, fontWeight: 700,
+              cursor: predDone ? 'default' : 'pointer',
+              opacity: predDone ? 0.6 : 1,
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => { if (!predDone) e.currentTarget.style.background = 'rgba(0,230,118,0.18)'; }}
+            onMouseLeave={e => { if (!predDone) e.currentTarget.style.background = 'rgba(0,230,118,0.1)'; }}
+          >
+            {predDone ? '예측 완료!' : '🎯 나도 예측하기'}
+          </button>
+        </div>
+      </div>
+
+      {/* ── divider before pingpong ── */}
+      <div style={{ margin: '24px 20px', height: 2, background: 'linear-gradient(90deg, transparent, rgba(0,229,255,0.4), rgba(0,240,255,0.3), transparent)', borderRadius: 1 }} />
+
+      {/* ── ⑤ 핑퐁이 인사이트 카드 ── */}
+      <div style={{ padding: '16px 20px 0' }}>
+        <div style={{
+          background: T.bgSurface,
+          border: `1px solid rgba(0,229,255,0.3)`,
+          borderRadius: 14, padding: '14px 16px',
+          display: 'flex', gap: 12, alignItems: 'flex-start',
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+            background: 'rgba(0,229,255,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 20,
+          }}>🤖</div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#00e5ff', marginBottom: 4 }}>
+              🏓 핑퐁이의 가격 분석! 이 딜의 승산은?
+            </div>
+            <div style={{ fontSize: 13, color: T.text, lineHeight: 1.55 }}>
+              {offers.length === 0 ? (
+                <>아직 오퍼가 없어요. 판매자의 제안을 기다려주세요! ⏳</>
+              ) : lowestOffer && pTarget > 0 && lowestOffer.rawPrice <= pTarget ? (
+                <>목표가보다 <span style={{ color: T.green, fontWeight: 700 }}>{(pTarget - lowestOffer.rawPrice).toLocaleString()}원 더 저렴한 오퍼</span>가 있어요! 🎉
+                <br />{offers.filter(o => o.rawPrice <= pTarget).length > 1 ? `PREMIUM 오퍼가 ${offers.filter(o => o.rawPrice <= pTarget).length}개나 경쟁 중이에요. ` : ''}마감 전 참여하면 좋을 것 같아요.</>
+              ) : lowestOffer ? (
+                <>아직 목표가에 도달한 오퍼가 없어요. 가장 가까운 오퍼는 <span style={{ color: '#ff8c42', fontWeight: 700 }}>{lowestOffer.rawPrice.toLocaleString()}원</span>이에요.</>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
 

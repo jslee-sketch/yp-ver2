@@ -6,7 +6,20 @@ import apiClient from '../api/client';
 import { showToast } from '../components/common/Toast';
 import { trackBehavior } from '../utils/behaviorTracker';
 
-const DEFAULT_CARRIERS = ['CJ대한통운', '한진택배', '로젠택배', '우체국택배', 'CU편의점택배', '롯데택배'];
+const DEFAULT_CARRIERS = [
+  'CJ대한통운', '한진택배', '롯데택배', '우체국택배', '로젠택배',
+  '경동택배', '대신택배', '합동택배', '건영택배', 'SLX', '천일택배',
+  '홈픽', '일양로지스', 'GS Postbox', 'CU편의점택배',
+  'EMS', 'DHL', 'FedEx', 'UPS',
+];
+
+const CARRIER_URLS: Record<string, (t: string) => string> = {
+  'CJ대한통운': t => `https://trace.cjlogistics.com/next/tracking.html?wblNo=${t}`,
+  '한진택배': t => `https://www.hanjin.com/kor/CMS/DeliveryMgr/WaybillResult.do?mession=&wblnumText2=${t}`,
+  '롯데택배': t => `https://www.lotteglogis.com/home/reservation/tracking/index?InvNo=${t}`,
+  '우체국택배': t => `https://service.epost.go.kr/trace.RetrieveDomRi498.postal?sid1=${t}`,
+  '로젠택배': t => `https://www.ilogen.com/web/personal/trace/${t}`,
+};
 
 const C = {
   bg: 'var(--bg-primary)', bgCard: 'var(--bg-secondary)', bgEl: 'var(--bg-elevated)',
@@ -60,10 +73,20 @@ export default function SellerShipPage() {
     setTrackLoading(true);
     setTrackOrderId(orderId);
     try {
-      const resp = await apiClient.get(`/delivery/track/${orderId}`);
+      const resp = await apiClient.get(`/delivery/track/${orderId}`, { timeout: 15000 });
       setTrackResult(resp.data as Record<string, unknown>);
-    } catch { setTrackResult({ success: false, error: '조회 실패' }); }
+    } catch {
+      setTrackResult({ success: false, error: '배송 조회 서비스가 일시적으로 불안정합니다. 잠시 후 다시 시도해주세요.' });
+    }
     setTrackLoading(false);
+  };
+
+  const getExternalTrackUrl = (order: SellerOrder): string | null => {
+    const carrier = order.shipping_carrier ?? '';
+    const tracking = order.tracking_number ?? '';
+    if (!tracking) return null;
+    const urlFn = CARRIER_URLS[carrier];
+    return urlFn ? urlFn(tracking) : null;
   };
 
   const deliveryBadge = (status?: string) => {
@@ -227,7 +250,7 @@ export default function SellerShipPage() {
               {order.status === 'PENDING_SHIP' && (
                 <button onClick={() => { setShipTarget(order); setTracking(''); }}
                   style={{ marginTop: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'rgba(0,230,118,0.12)', border: '1px solid rgba(0,230,118,0.35)', color: '#00e676', cursor: 'pointer' }}>
-                  📦 발송 처리
+                  📦 송장 입력
                 </button>
               )}
 
@@ -235,24 +258,55 @@ export default function SellerShipPage() {
                 <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontSize: 11, color: C.orange }}>🚚 {order.shipping_carrier ? `${order.shipping_carrier} ` : ''}{order.tracking_number}</span>
                   {order.status === 'SHIPPED' && (
-                    <button onClick={() => void handleTrack(order.id)} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', color: '#3b82f6', cursor: 'pointer', fontWeight: 600 }}>
-                      {trackLoading && trackOrderId === order.id ? '...' : '조회'}
-                    </button>
+                    <>
+                      <button onClick={() => void handleTrack(order.id)} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', color: '#3b82f6', cursor: 'pointer', fontWeight: 600 }}>
+                        {trackLoading && trackOrderId === order.id ? '...' : '조회'}
+                      </button>
+                      {getExternalTrackUrl(order) && (
+                        <a href={getExternalTrackUrl(order)!} target="_blank" rel="noopener noreferrer"
+                          style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,152,0,0.12)', border: '1px solid rgba(255,152,0,0.3)', color: '#ff9800', textDecoration: 'none', fontWeight: 600 }}>
+                          외부조회
+                        </a>
+                      )}
+                    </>
                   )}
                 </div>
               )}
 
               {/* 배송 추적 결과 */}
               {trackOrderId === order.id && trackResult && (
-                <div style={{ marginTop: 6, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ marginTop: 6, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
                   {trackResult.success ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                      {deliveryBadge(String(trackResult.status))}
-                      <span style={{ color: '#888' }}>{String((trackResult.latest as Record<string, string>)?.kind ?? '')}</span>
-                      <span style={{ color: '#666', fontSize: 11 }}>{String((trackResult.latest as Record<string, string>)?.time ?? '')}</span>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, marginBottom: 8 }}>
+                        {deliveryBadge(String(trackResult.status))}
+                        <span style={{ color: C.textSec }}>{order.shipping_carrier} {order.tracking_number}</span>
+                      </div>
+                      {/* 배송 추적 타임라인 */}
+                      {Array.isArray(trackResult.trackingDetails) && (trackResult.trackingDetails as Record<string, string>[]).length > 0 && (
+                        <div style={{ borderLeft: `2px solid ${C.border}`, marginLeft: 8, paddingLeft: 12 }}>
+                          {(trackResult.trackingDetails as Record<string, string>[]).slice(0, 8).map((d, i) => (
+                            <div key={i} style={{ marginBottom: 6, fontSize: 11 }}>
+                              <div style={{ color: i === 0 ? C.green : C.textDim }}>{d.time || d.timeString || ''}</div>
+                              <div style={{ color: i === 0 ? C.text : C.textSec }}>{d.kind || d.where || ''} — {d.telno || d.level || ''}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div style={{ fontSize: 11, color: '#ff5252' }}>{String(trackResult.error || '조회 실패')}</div>
+                    <div>
+                      <div style={{ fontSize: 11, color: '#ff5252', marginBottom: 6 }}>{String(trackResult.error || '조회 실패')}</div>
+                      {getExternalTrackUrl(order) && (
+                        <a href={getExternalTrackUrl(order)!} target="_blank" rel="noopener noreferrer"
+                          style={{ fontSize: 11, color: '#3b82f6', textDecoration: 'underline' }}>
+                          {order.shipping_carrier} 웹사이트에서 직접 조회 →
+                        </a>
+                      )}
+                      <button onClick={() => void handleTrack(order.id)} style={{ marginLeft: 8, fontSize: 11, padding: '2px 8px', borderRadius: 6, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', color: '#3b82f6', cursor: 'pointer', fontWeight: 600 }}>
+                        재시도
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -278,7 +332,7 @@ export default function SellerShipPage() {
             <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 6 }}>택배사</div>
             <select value={carrier} onChange={e => setCarrier(e.target.value)}
               style={{ width: '100%', padding: '10px 14px', borderRadius: 10, fontSize: 13, background: C.bgEl, border: `1px solid ${C.border}`, color: C.text, marginBottom: 12, appearance: 'auto' }}>
-              {carriers.map(c => <option key={c} value={c}>{c}</option>)}
+              {carriers.map(c => <option key={c} value={c} style={{ color: '#1a1a1a', background: '#fff' }}>{c}</option>)}
             </select>
 
             <div style={{ fontSize: 12, fontWeight: 700, color: C.textDim, marginBottom: 6 }}>운송장 번호</div>
@@ -289,7 +343,7 @@ export default function SellerShipPage() {
               <button onClick={() => setShipTarget(null)} style={{ flex: 1, padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700, background: C.bgEl, border: `1px solid ${C.border}`, color: C.textSec, cursor: 'pointer' }}>취소</button>
               <button disabled={shipLoading || !tracking.trim()} onClick={handleShip}
                 style={{ flex: 1, padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 700, background: shipLoading ? `${C.green}55` : C.green, border: 'none', color: '#0a0a0f', cursor: shipLoading || !tracking.trim() ? 'not-allowed' : 'pointer' }}>
-                {shipLoading ? '처리 중...' : '발송 완료'}
+                {shipLoading ? '처리 중...' : '송장 입력 완료'}
               </button>
             </div>
           </div>

@@ -168,7 +168,7 @@ export default function SellerReviewsPage() {
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 11, color: C.textDim }}>
-                    구매자 #{review.buyer_id} · 주문번호 #{review.reservation_id}
+                    구매자 #{review.buyer_id} · 주문번호 {review.order_number || `R-${review.reservation_id}`}
                   </span>
                   <button
                     onClick={() => { setReplyTarget(review); setReplyText(''); }}

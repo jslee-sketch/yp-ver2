@@ -9,10 +9,10 @@ interface TimelineProps {
 }
 
 const STAGES: { key: TimelineStage; label: string; icon: string; color: string }[] = [
-  { key: 'recruiting',          label: '딜 모집',   icon: '🎯', color: '#3b82f6' },
-  { key: 'offer_competition',   label: '오퍼 경쟁', icon: '⚔️', color: '#f59e0b' },
-  { key: 'reservation_payment', label: '예약/결제', icon: '💳', color: '#8b5cf6' },
-  { key: 'completed',           label: '완료',      icon: '🎉', color: '#10b981' },
+  { key: 'recruiting',          label: '딜 모집',   icon: '🎯', color: '#39ff14' },
+  { key: 'offer_competition',   label: '오퍼 경쟁', icon: '⚔️', color: '#00b0ff' },
+  { key: 'reservation_payment', label: '예약/결제', icon: '💳', color: '#ffe156' },
+  { key: 'completed',           label: '완료',      icon: '🎉', color: '#ff69b4' },
 ];
 
 const BANNER_MESSAGES: Record<TimelineStage, string> = {
@@ -139,11 +139,13 @@ export default function DealTimeline({ currentStage, showBanner = false, onBanne
                 width: 44, height: 44, borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 20,
-                background: isActive ? stage.color : '#222',
-                border: isCurrent ? '3px solid #fff' : '2px solid #444',
-                boxShadow: isCurrent ? `0 0 12px ${stage.color}80` : 'none',
+                background: isActive ? stage.color : 'rgba(255,255,255,0.06)',
+                border: isCurrent ? `3px solid ${stage.color}` : isActive ? `2px solid ${stage.color}88` : '2px solid #333',
+                boxShadow: isCurrent ? `0 0 10px ${stage.color}, 0 0 25px ${stage.color}60` : 'none',
                 transition: 'all 0.5s ease',
-                transform: isCurrent ? 'scale(1.15)' : 'scale(1)',
+                animation: isCurrent ? 'pulseGlow 2s infinite' : 'none',
+                color: isCurrent ? stage.color : undefined,
+                opacity: isActive ? 1 : 0.4,
                 zIndex: 1,
               }}>
                 {isActive ? stage.icon : '○'}
@@ -153,7 +155,7 @@ export default function DealTimeline({ currentStage, showBanner = false, onBanne
               <div style={{
                 marginTop: 8, fontSize: 12,
                 fontWeight: isCurrent ? 700 : 400,
-                color: isActive ? '#fff' : '#666',
+                color: isCurrent ? stage.color : isActive ? '#fff' : 'rgba(255,255,255,0.3)',
                 textAlign: 'center', transition: 'color 0.5s ease',
               }}>
                 {stage.label}
@@ -180,6 +182,10 @@ export default function DealTimeline({ currentStage, showBanner = false, onBanne
         @keyframes tlBannerIn {
           from { opacity: 0; transform: translateY(-20px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 10px currentColor; }
+          50% { transform: scale(1.3); box-shadow: 0 0 25px currentColor; }
         }
       `}</style>
     </div>

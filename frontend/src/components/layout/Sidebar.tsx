@@ -267,6 +267,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="↩️" label="반품/교환"    onClick={() => go('/seller/returns')} />
                     <MenuItem icon="💰" label="정산 관리"    onClick={() => go('/seller/settlements')} />
                     <MenuItem icon="💸" label="환불 관리"    onClick={() => go('/seller/refunds')} />
+                    <MenuItem icon="⚠️" label="분쟁 관리"    onClick={() => go('/seller/disputes')} />
+                    <MenuItem icon="🧮" label="환불 시뮬레이터" onClick={() => go('/seller/refund-simulator')} />
                     <MenuItem icon="💬" label="고객 문의"    onClick={() => go('/seller/inquiries')} />
                     <MenuItem icon="⭐" label="리뷰 관리"    onClick={() => go('/seller/reviews')} />
                     <MenuItem icon="🚚" label="배송 정책"    onClick={() => go('/seller/shipping-policy')} />
@@ -307,6 +309,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onOpen, onClose }) => 
                     <MenuItem icon="🔥" label="내딜 현황"       onClick={() => go('/my-deals')} />
                     <MenuItem icon="💰" label="포인트 내역"     onClick={() => go('/points')} />
                     <MenuItem icon="📦" label="참여/결제/배송"   onClick={() => go('/my-orders')} />
+                    <MenuItem icon="🧮" label="환불 시뮬레이터"  onClick={() => go('/refund-simulator')} />
                     <MenuItem icon="👀" label="관전 모드"       onClick={() => go('/spectating')} />
 
                     <MenuItem icon="💚" label="돈쭐"           onClick={() => go('/donzzul')} />

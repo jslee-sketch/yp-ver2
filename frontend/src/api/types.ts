@@ -151,6 +151,7 @@ export interface Notification {
 export interface Review {
   id: number;
   reservation_id: number;
+  order_number?: string;
   buyer_id: number;
   seller_id: number;
   rating: number;          // 1~5
